@@ -1,0 +1,552 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release_NoOpt_G1|Win32">
+      <Configuration>Release_NoOpt_G1</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_NoOpt|Win32">
+      <Configuration>Release_NoOpt</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4F42CE68-EB4D-4355-9DCA-28F611D3845F}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>D3D11Engine</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(DXSDK_DIR)\include;squish-1.11;include</IncludePath>
+    <LibraryPath>$(IncludePath);$(DXSDK_DIR)\lib\x86;lib;$(LibraryPath)</LibraryPath>
+    <TargetName>ddraw</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(DXSDK_DIR)\include;squish-1.11;include;</IncludePath>
+    <LibraryPath>$(DXSDK_DIR)\lib\x86;lib;$(LibraryPath)</LibraryPath>
+    <TargetName>ddraw</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(DXSDK_DIR)\include;squish-1.11;include</IncludePath>
+    <LibraryPath>$(DXSDK_DIR)\lib\x86;lib;$(LibraryPath)</LibraryPath>
+    <TargetName>ddraw</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>PUBLIC_RELEASE;BUILD_GOTHIC_2_6_fix;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;D3D11ENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ModuleDefinitionFile>ddraw.def</ModuleDefinitionFile>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <DelayLoadDLLs>
+      </DelayLoadDLLs>
+    </Link>
+    <CustomBuildStep>
+      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
+copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
+      <Outputs>xxx</Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>BUILD_GOTHIC_2_6_fix;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;D3D11ENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ModuleDefinitionFile>ddraw.def</ModuleDefinitionFile>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <DelayLoadDLLs>
+      </DelayLoadDLLs>
+    </Link>
+    <CustomBuildStep>
+      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
+copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
+      <Outputs>xxx</Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>BUILD_GOTHIC_1_08k;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;D3D11ENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ModuleDefinitionFile>ddraw.def</ModuleDefinitionFile>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <DelayLoadDLLs>d3dcompiler_46.dll;FW1FontWrapper.dll;Assimp32.dll;AntTweakBar.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+    </Link>
+    <CustomBuildStep>
+      <Command>copy "shaders\*.*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
+copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G1_SYSTEM_PATH)\ddraw.dll"
+copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
+      <Outputs>xxx</Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="AlignedAllocator.h" />
+    <ClInclude Include="AntTweakBar.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\ai_assert.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\anim.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\camera.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\cexport.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\cfileio.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\cimport.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\color4.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Compiler\poppack1.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Compiler\pushpack1.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\config.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\DefaultLogger.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\defs.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Exporter.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Importer.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\importerdesc.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\IOStream.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\IOSystem.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\light.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Logger.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\LogStream.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\material.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\matrix3x3.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\matrix4x4.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\mesh.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\NullLogger.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\postprocess.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\ProgressHandler.hpp" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\quaternion.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\scene.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\texture.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\types.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\vector2.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\vector3.h" />
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\version.h" />
+    <ClInclude Include="BaseAntTweakBar.h" />
+    <ClInclude Include="BaseConstantBuffer.h" />
+    <ClInclude Include="BaseLineRenderer.h" />
+    <ClInclude Include="BasePShader.h" />
+    <ClInclude Include="BaseTexture.h" />
+    <ClInclude Include="BaseTextureArray.h" />
+    <ClInclude Include="BaseVShader.h" />
+    <ClInclude Include="BasicTimer.h" />
+    <ClInclude Include="CGameManager.h" />
+    <ClInclude Include="CSFFT\fft_512x512.h" />
+    <ClInclude Include="D2DDialog.h" />
+    <ClInclude Include="D2DEditorView.h" />
+    <ClInclude Include="D2DSettingsDialog.h" />
+    <ClInclude Include="D2DSubView.h" />
+    <ClInclude Include="D2DView.h" />
+    <ClInclude Include="D2DVobSettingsDialog.h" />
+    <ClInclude Include="D3D11AntTweakBar.h" />
+    <ClInclude Include="D3D11ConstantBuffer.h" />
+    <ClInclude Include="ConstantBufferStructs.h" />
+    <ClInclude Include="D3D11FullscreenQuad.h" />
+    <ClInclude Include="D3D11GraphicsEngine.h" />
+    <ClInclude Include="D3D11GraphicsEngineTest.h" />
+    <ClInclude Include="D3D11HDShader.h" />
+    <ClInclude Include="D3D11LineRenderer.h" />
+    <ClInclude Include="D3D11NVHBAO.h" />
+    <ClInclude Include="D3D11PfxRenderer.h" />
+    <ClInclude Include="D3D11PFX_Blur.h" />
+    <ClInclude Include="D3D11PFX_DistanceBlur.h" />
+    <ClInclude Include="D3D11PFX_Effect.h" />
+    <ClInclude Include="D3D11PFX_HDR.h" />
+    <ClInclude Include="D3D11PFX_HeightFog.h" />
+    <ClInclude Include="D3D11PFX_SMAA.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="D3D11PShader.h" />
+    <ClInclude Include="D3D11ShaderManager.h" />
+    <ClInclude Include="D3D11Texture.h" />
+    <ClInclude Include="D3D11TextureArray.h" />
+    <ClInclude Include="D3D11VertexBuffer.h" />
+    <ClInclude Include="D3D11VShader.h" />
+    <ClInclude Include="D3D7\FakeDirectDrawSurface7.h" />
+    <ClInclude Include="D3D7\MyClipper.h" />
+    <ClInclude Include="D3D7\MyDirect3D7.h" />
+    <ClInclude Include="D3D7\MyDirect3DDevice7.h" />
+    <ClInclude Include="D3D7\MyDirect3DVertexBuffer7.h" />
+    <ClInclude Include="D3D7\MyDirectDraw.h" />
+    <ClInclude Include="D3D7\MyDirectDrawSurface7.h" />
+    <ClInclude Include="Effects11\Binary\EffectBinaryFormat.h" />
+    <ClInclude Include="Effects11\Binary\EffectStateBase11.h" />
+    <ClInclude Include="Effects11\Binary\EffectStates11.h" />
+    <ClInclude Include="Effects11\Binary\SOParser.h" />
+    <ClInclude Include="Effects11\Effect.h" />
+    <ClInclude Include="Effects11\EffectLoad.h" />
+    <ClInclude Include="Effects11\Inc\d3dx11dbg.h" />
+    <ClInclude Include="Effects11\Inc\d3dx11effect.h" />
+    <ClInclude Include="Effects11\Inc\d3dxGlobal.h" />
+    <ClInclude Include="Effects11\pchfx.h" />
+    <ClInclude Include="Engine.h" />
+    <ClInclude Include="GCamera.h" />
+    <ClInclude Include="GFSDK_SSAO.h" />
+    <ClInclude Include="GInventory.h" />
+    <ClInclude Include="GMesh.h" />
+    <ClInclude Include="GMeshSimple.h" />
+    <ClInclude Include="GOcean.h" />
+    <ClInclude Include="GothicAPI.h" />
+    <ClInclude Include="GothicGraphicsState.h" />
+    <ClInclude Include="GothicMemoryLocations.h" />
+    <ClInclude Include="BaseGraphicsEngine.h" />
+    <ClInclude Include="GothicMemoryLocations1_08k.h" />
+    <ClInclude Include="GothicMemoryLocations2_6_fix.h" />
+    <ClInclude Include="GRenderThread.h" />
+    <ClInclude Include="GSky.h" />
+    <ClInclude Include="GSpriteCloud.h" />
+    <ClInclude Include="GVegetationBox.h" />
+    <ClInclude Include="HookExceptionFilter.h" />
+    <ClInclude Include="HookedFunctions.h" />
+    <ClInclude Include="lodepng.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="MemoryTracker.h" />
+    <ClInclude Include="MeshModifier.h" />
+    <ClInclude Include="ocean_simulator.h" />
+    <ClInclude Include="oCGame.h" />
+    <ClInclude Include="oCNPC.h" />
+    <ClInclude Include="oCSpawnManager.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="SV_GMeshInfoView.h" />
+    <ClInclude Include="squish-1.11\alpha.h" />
+    <ClInclude Include="squish-1.11\clusterfit.h" />
+    <ClInclude Include="squish-1.11\colourblock.h" />
+    <ClInclude Include="squish-1.11\colourfit.h" />
+    <ClInclude Include="squish-1.11\colourset.h" />
+    <ClInclude Include="squish-1.11\config.h" />
+    <ClInclude Include="squish-1.11\maths.h" />
+    <ClInclude Include="squish-1.11\rangefit.h" />
+    <ClInclude Include="squish-1.11\simd.h" />
+    <ClInclude Include="squish-1.11\simd_float.h" />
+    <ClInclude Include="squish-1.11\simd_sse.h" />
+    <ClInclude Include="squish-1.11\simd_ve.h" />
+    <ClInclude Include="squish-1.11\singlecolourfit.h" />
+    <ClInclude Include="squish-1.11\squish.h" />
+    <ClInclude Include="StackWalker.h" />
+    <ClInclude Include="SV_Border.h" />
+    <ClInclude Include="SV_Button.h" />
+    <ClInclude Include="SV_Checkbox.h" />
+    <ClInclude Include="SV_Label.h" />
+    <ClInclude Include="SV_NamedSlider.h" />
+    <ClInclude Include="SV_Panel.h" />
+    <ClInclude Include="SV_Slider.h" />
+    <ClInclude Include="SV_TabControl.h" />
+    <ClInclude Include="UpdateCheck.h" />
+    <ClInclude Include="win32ClipboardWrapper.h" />
+    <ClInclude Include="zCArray.h" />
+    <ClInclude Include="zCArrayAdapt.h" />
+    <ClInclude Include="zCCamera.h" />
+    <ClInclude Include="zCDecal.h" />
+    <ClInclude Include="zCInput.h" />
+    <ClInclude Include="zCLightmap.h" />
+    <ClInclude Include="zCMaterial.h" />
+    <ClInclude Include="RenderToTextureBuffer.h" />
+    <ClInclude Include="Toolbox.h" />
+    <ClInclude Include="Types.h" />
+    <ClInclude Include="BaseVertexBuffer.h" />
+    <ClInclude Include="VertexTypes.h" />
+    <ClInclude Include="WorldConverter.h" />
+    <ClInclude Include="zCBspTree.h" />
+    <ClInclude Include="zCMesh.h" />
+    <ClInclude Include="zCMeshSoftSkin.h" />
+    <ClInclude Include="zCModel.h" />
+    <ClInclude Include="zCModelTexAniState.h" />
+    <ClInclude Include="zCMorphMesh.h" />
+    <ClInclude Include="zCObject.h" />
+    <ClInclude Include="zCOption.h" />
+    <ClInclude Include="zCParticleFX.h" />
+    <ClInclude Include="zCPolygon.h" />
+    <ClInclude Include="zCProgMeshProto.h" />
+    <ClInclude Include="zCQuadMark.h" />
+    <ClInclude Include="zCResourceManager.h" />
+    <ClInclude Include="zCRndD3D.h" />
+    <ClInclude Include="zCSkyController_Outdoor.h" />
+    <ClInclude Include="zCTexture.h" />
+    <ClInclude Include="zCThread.h" />
+    <ClInclude Include="zCTimer.h" />
+    <ClInclude Include="zCTree.h" />
+    <ClInclude Include="zCView.h" />
+    <ClInclude Include="zCVisual.h" />
+    <ClInclude Include="zCVob.h" />
+    <ClInclude Include="zCVobLight.h" />
+    <ClInclude Include="zCWorld.h" />
+    <ClInclude Include="ZenGinTypes.h" />
+    <ClInclude Include="zFILE.h" />
+    <ClInclude Include="zSTRING.h" />
+    <ClInclude Include="zTypes.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BaseAntTweakBar.cpp" />
+    <ClCompile Include="BaseConstantBuffer.cpp" />
+    <ClCompile Include="BaseLineRenderer.cpp" />
+    <ClCompile Include="BasePShader.cpp" />
+    <ClCompile Include="BaseTexture.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="BaseTextureArray.cpp" />
+    <ClCompile Include="BaseVShader.cpp" />
+    <ClCompile Include="CSFFT\fft_512x512_c2c.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="D2DDialog.cpp" />
+    <ClCompile Include="D2DEditorView.cpp" />
+    <ClCompile Include="D2DSettingsDialog.cpp" />
+    <ClCompile Include="D2DSubView.cpp" />
+    <ClCompile Include="D2DView.cpp" />
+    <ClCompile Include="D2DVobSettingsDialog.cpp" />
+    <ClCompile Include="D3D11AntTweakBar.cpp" />
+    <ClCompile Include="D3D11ConstantBuffer.cpp" />
+    <ClCompile Include="D3D11FullscreenQuad.cpp" />
+    <ClCompile Include="D3D11GraphicsEngine.cpp" />
+    <ClCompile Include="D3D11GraphicsEngineTest.cpp" />
+    <ClCompile Include="D3D11HDShader.cpp" />
+    <ClCompile Include="D3D11LineRenderer.cpp" />
+    <ClCompile Include="D3D11NVHBAO.cpp" />
+    <ClCompile Include="D3D11PfxRenderer.cpp" />
+    <ClCompile Include="D3D11PFX_Blur.cpp" />
+    <ClCompile Include="D3D11PFX_DistanceBlur.cpp" />
+    <ClCompile Include="D3D11PFX_Effect.cpp" />
+    <ClCompile Include="D3D11PFX_HDR.cpp" />
+    <ClCompile Include="D3D11PFX_HeightFog.cpp" />
+    <ClCompile Include="D3D11PFX_SMAA.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="D3D11PShader.cpp" />
+    <ClCompile Include="D3D11ShaderManager.cpp" />
+    <ClCompile Include="D3D11Texture.cpp" />
+    <ClCompile Include="D3D11TextureArray.cpp" />
+    <ClCompile Include="D3D11Vertexbuffer.cpp" />
+    <ClCompile Include="D3D11VShader.cpp" />
+    <ClCompile Include="D3D7\FakeDirectDrawSurface7.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">../pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">../pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="D3D7\MyDirectDrawSurface7.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">../pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">../pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="DLLMain.cpp" />
+    <ClCompile Include="BaseGraphicsEngine.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="Effects11\d3dx11dbg.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Effects11\d3dxGlobal.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectAPI.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectLoad.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectNonRuntime.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectReflection.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectRuntime.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="GCamera.cpp" />
+    <ClCompile Include="GInventory.cpp" />
+    <ClCompile Include="GMesh.cpp" />
+    <ClCompile Include="GMeshSimple.cpp" />
+    <ClCompile Include="GOcean.cpp" />
+    <ClCompile Include="GothicAPI.cpp" />
+    <ClCompile Include="GRenderThread.cpp" />
+    <ClCompile Include="GSky.cpp" />
+    <ClCompile Include="GSpriteCloud.cpp" />
+    <ClCompile Include="GVegetationBox.cpp" />
+    <ClCompile Include="HookedFunctions.cpp" />
+    <ClCompile Include="lodepng.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="MeshModifier.cpp" />
+    <ClCompile Include="ocean_simulator.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="oCNPC.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="BaseVertexBuffer.cpp" />
+    <ClCompile Include="SV_GMeshInfoView.cpp" />
+    <ClCompile Include="squish-1.11\alpha.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\clusterfit.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\colourblock.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\colourfit.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\colourset.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\maths.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\rangefit.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\singlecolourfit.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\squish.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StackWalker.cpp" />
+    <ClCompile Include="SV_Border.cpp" />
+    <ClCompile Include="SV_Button.cpp" />
+    <ClCompile Include="SV_Checkbox.cpp" />
+    <ClCompile Include="SV_Label.cpp" />
+    <ClCompile Include="SV_NamedSlider.cpp" />
+    <ClCompile Include="SV_Panel.cpp" />
+    <ClCompile Include="SV_Slider.cpp" />
+    <ClCompile Include="SV_TabControl.cpp" />
+    <ClCompile Include="Toolbox.cpp" />
+    <ClCompile Include="UpdateCheck.cpp" />
+    <ClCompile Include="win32ClipboardWrapper.cpp" />
+    <ClCompile Include="WorldConverter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assimp--3.0.1270-sdk\include\assimp\color4.inl" />
+    <None Include="assimp--3.0.1270-sdk\include\assimp\material.inl" />
+    <None Include="assimp--3.0.1270-sdk\include\assimp\matrix3x3.inl" />
+    <None Include="assimp--3.0.1270-sdk\include\assimp\matrix4x4.inl" />
+    <None Include="assimp--3.0.1270-sdk\include\assimp\quaternion.inl" />
+    <None Include="assimp--3.0.1270-sdk\include\assimp\vector2.inl" />
+    <None Include="assimp--3.0.1270-sdk\include\assimp\vector3.inl" />
+    <None Include="ddraw.def" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

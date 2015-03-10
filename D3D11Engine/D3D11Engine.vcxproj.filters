@@ -1,0 +1,921 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{e834689b-bac5-40c2-94af-f552da38eb4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{36dc1366-51c5-450e-b2e7-5d11025d0991}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DataConversion">
+      <UniqueIdentifier>{1a4fbb2a-c870-4e9b-a169-8ca20dffbe31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZenGin">
+      <UniqueIdentifier>{c6655138-6659-47fe-80ad-f625cde5b381}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DLLMain">
+      <UniqueIdentifier>{7985e8fe-ed3e-4ca3-8379-4dce5dfc2f1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D3D7">
+      <UniqueIdentifier>{cd147ab7-87e3-4d75-876e-45154c346d02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Types">
+      <UniqueIdentifier>{0c3505e1-41f3-4a53-b9e3-8172afc03066}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools\D3D11">
+      <UniqueIdentifier>{220eab96-6976-4e27-82d0-d89bcf68c254}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\GAPI">
+      <UniqueIdentifier>{969ffaf7-8911-4596-b461-f8f317a61e36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZenGin\Classes">
+      <UniqueIdentifier>{cac58dd0-03be-4362-b580-2d333e1da70e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Librarys">
+      <UniqueIdentifier>{ea401bea-3eb1-4e22-92b0-6a6a8ebb5259}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Librarys\squish">
+      <UniqueIdentifier>{469edf55-c2bb-4301-b5c1-0e9a35714cbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Librarys\lodepng">
+      <UniqueIdentifier>{161dda37-e7c4-4155-b940-9ae8965c5fa3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\D3D11">
+      <UniqueIdentifier>{2c8b46b4-d862-4873-964d-9fb082f86e57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\GAPI\Objects">
+      <UniqueIdentifier>{291c93a2-0f93-4a10-b857-0d8b86186ca0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Librarys\Assimp">
+      <UniqueIdentifier>{6487603e-9e67-401d-9b73-8b25114dea10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\D3D11\PFX">
+      <UniqueIdentifier>{712a8ecb-ab85-4d86-be17-3c53880b5568}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\D3D11\PFX\Effects">
+      <UniqueIdentifier>{4a636f28-ea7e-4ed1-8f13-f7e1f5e661fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\D2D">
+      <UniqueIdentifier>{b8c0e040-3677-47c0-acb5-a22e91382a36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\D2D\Views">
+      <UniqueIdentifier>{20881692-d4c6-45b9-a810-5f1fbbf7fedd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\D2D\Views\Controls">
+      <UniqueIdentifier>{87f7b47e-676c-4a53-89e8-0d17d2df9586}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Librarys\StackWalker">
+      <UniqueIdentifier>{e45daa27-5530-477e-a17c-9778bd2dfcaf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Librarys\Ocean">
+      <UniqueIdentifier>{c785e8ae-b3cf-484f-a21b-448b1a0deee3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\GAPI\Update">
+      <UniqueIdentifier>{10f4b86e-92b5-45f4-be3c-a1e2d9895e30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Librarys\Effects11">
+      <UniqueIdentifier>{5afe5c22-98e1-4f74-bcae-9c12b3b0e25c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Logger.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="ZenGinTypes.h">
+      <Filter>ZenGin</Filter>
+    </ClInclude>
+    <ClInclude Include="GothicMemoryLocations.h">
+      <Filter>ZenGin</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D7\MyDirect3DVertexBuffer7.h">
+      <Filter>D3D7</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D7\MyDirectDraw.h">
+      <Filter>D3D7</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D7\MyDirectDrawSurface7.h">
+      <Filter>D3D7</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D7\MyClipper.h">
+      <Filter>D3D7</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D7\MyDirect3D7.h">
+      <Filter>D3D7</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D7\MyDirect3DDevice7.h">
+      <Filter>D3D7</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexTypes.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseVertexBuffer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseGraphicsEngine.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseTexture.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Toolbox.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GothicGraphicsState.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderToTextureBuffer.h">
+      <Filter>Tools\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="GothicAPI.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D7\FakeDirectDrawSurface7.h">
+      <Filter>D3D7</Filter>
+    </ClInclude>
+    <ClInclude Include="GothicMemoryLocations1_08k.h">
+      <Filter>ZenGin</Filter>
+    </ClInclude>
+    <ClInclude Include="GothicMemoryLocations2_6_fix.h">
+      <Filter>ZenGin</Filter>
+    </ClInclude>
+    <ClInclude Include="zCBspTree.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="HookedFunctions.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCPolygon.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="WorldConverter.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="zSTRING.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCMaterial.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCTexture.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCResourceManager.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="lodepng.h">
+      <Filter>Librarys\lodepng</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\alpha.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\clusterfit.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\colourblock.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\colourfit.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\colourset.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\config.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\maths.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\rangefit.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\simd.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\simd_float.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\simd_sse.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\simd_ve.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\singlecolourfit.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="squish-1.11\squish.h">
+      <Filter>Librarys\squish</Filter>
+    </ClInclude>
+    <ClInclude Include="zCWorld.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCVisual.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCVob.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCProgMeshProto.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCArrayAdapt.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCCamera.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="oCGame.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCArray.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCModel.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zTypes.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCMeshSoftSkin.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11GraphicsEngine.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11Texture.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PShader.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11VShader.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11ConstantBuffer.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11VertexBuffer.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="zCMorphMesh.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCModelTexAniState.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11ShaderManager.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="zCTree.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCParticleFX.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCTimer.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCMesh.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCSkyController_Outdoor.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="GSky.h">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="GMesh.h">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\color4.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\config.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\DefaultLogger.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\defs.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Exporter.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Importer.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\importerdesc.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\IOStream.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\IOSystem.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\light.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Logger.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\LogStream.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\material.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\matrix3x3.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\matrix4x4.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\mesh.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\NullLogger.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\postprocess.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\ProgressHandler.hpp">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\quaternion.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\scene.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\texture.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\types.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\vector2.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\vector3.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\version.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Compiler\poppack1.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\Compiler\pushpack1.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\ai_assert.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\anim.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\camera.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\cexport.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\cfileio.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\cimport.h">
+      <Filter>Librarys\Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PfxRenderer.h">
+      <Filter>Engine\D3D11\PFX</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PFX_Effect.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PFX_Blur.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11FullscreenQuad.h">
+      <Filter>Tools\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="GInventory.h">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseAntTweakBar.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11AntTweakBar.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="AntTweakBar.h">
+      <Filter>Librarys</Filter>
+    </ClInclude>
+    <ClInclude Include="zCInput.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="GSpriteCloud.h">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseConstantBuffer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="zCLightmap.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11LineRenderer.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseLineRenderer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PFX_HeightFog.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PFX_DistanceBlur.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PFX_HDR.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="zCVobLight.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zFILE.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="GCamera.h">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="zCRndD3D.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCOption.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantBufferStructs.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="zCView.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CGameManager.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryTracker.h">
+      <Filter>Librarys</Filter>
+    </ClInclude>
+    <ClInclude Include="GVegetationBox.h">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="GMeshSimple.h">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="D2DView.h">
+      <Filter>Engine\D2D</Filter>
+    </ClInclude>
+    <ClInclude Include="D2DSubView.h">
+      <Filter>Engine\D2D</Filter>
+    </ClInclude>
+    <ClInclude Include="D2DEditorView.h">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_Border.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_Panel.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_Button.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_Checkbox.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_TabControl.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_Slider.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="StackWalker.h">
+      <Filter>Librarys\StackWalker</Filter>
+    </ClInclude>
+    <ClInclude Include="HookExceptionFilter.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="oCNPC.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCObject.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshModifier.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11HDShader.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_Label.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="win32ClipboardWrapper.h">
+      <Filter>Librarys</Filter>
+    </ClInclude>
+    <ClInclude Include="GRenderThread.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseVShader.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="BasePShader.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GOcean.h">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="CSFFT\fft_512x512.h">
+      <Filter>Librarys\Ocean</Filter>
+    </ClInclude>
+    <ClInclude Include="ocean_simulator.h">
+      <Filter>Librarys\Ocean</Filter>
+    </ClInclude>
+    <ClInclude Include="GFSDK_SSAO.h">
+      <Filter>Librarys</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11NVHBAO.h" />
+    <ClInclude Include="BasicTimer.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="D2DDialog.h">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClInclude>
+    <ClInclude Include="D2DSettingsDialog.h">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClInclude>
+    <ClInclude Include="oCSpawnManager.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="UpdateCheck.h">
+      <Filter>Engine\GAPI\Update</Filter>
+    </ClInclude>
+    <ClInclude Include="AlignedAllocator.h">
+      <Filter>Librarys</Filter>
+    </ClInclude>
+    <ClInclude Include="zCThread.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="zCDecal.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PFX_SMAA.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="zCQuadMark.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11GraphicsEngineTest.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11TextureArray.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseTextureArray.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="D2DVobSettingsDialog.h">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_GMeshInfoView.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="SV_NamedSlider.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\Inc\d3dx11dbg.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\Inc\d3dxGlobal.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\Binary\EffectBinaryFormat.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\EffectLoad.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\Binary\EffectStateBase11.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\Binary\SOParser.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\Inc\d3dx11effect.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\Binary\EffectStates11.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\Effect.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects11\pchfx.h">
+      <Filter>Librarys\Effects11</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="DLLMain.cpp">
+      <Filter>DLLMain</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D7\MyDirectDrawSurface7.cpp">
+      <Filter>D3D7</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseVertexBuffer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseGraphicsEngine.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseTexture.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Toolbox.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="GothicAPI.cpp">
+      <Filter>Engine\GAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D7\FakeDirectDrawSurface7.cpp">
+      <Filter>D3D7</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldConverter.cpp">
+      <Filter>Engine\GAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="HookedFunctions.cpp">
+      <Filter>ZenGin\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="lodepng.cpp">
+      <Filter>Librarys\lodepng</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\alpha.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\clusterfit.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\colourblock.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\colourfit.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\colourset.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\maths.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\rangefit.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\singlecolourfit.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="squish-1.11\squish.cpp">
+      <Filter>Librarys\squish</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11GraphicsEngine.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11Texture.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PShader.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11VShader.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11ConstantBuffer.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11Vertexbuffer.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11ShaderManager.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="GSky.cpp">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="GMesh.cpp">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PfxRenderer.cpp">
+      <Filter>Engine\D3D11\PFX</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_Blur.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11FullscreenQuad.cpp">
+      <Filter>Tools\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="GInventory.cpp">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseAntTweakBar.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11AntTweakBar.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_Effect.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="GSpriteCloud.cpp">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseConstantBuffer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11LineRenderer.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseLineRenderer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_HeightFog.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_DistanceBlur.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_HDR.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="GCamera.cpp">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="GVegetationBox.cpp">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="GMeshSimple.cpp">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="D2DView.cpp">
+      <Filter>Engine\D2D</Filter>
+    </ClCompile>
+    <ClCompile Include="D2DSubView.cpp">
+      <Filter>Engine\D2D</Filter>
+    </ClCompile>
+    <ClCompile Include="D2DEditorView.cpp">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_Border.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_Panel.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_Button.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_Checkbox.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_Slider.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="StackWalker.cpp">
+      <Filter>Librarys\StackWalker</Filter>
+    </ClCompile>
+    <ClCompile Include="oCNPC.cpp">
+      <Filter>ZenGin\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshModifier.cpp">
+      <Filter>Engine\GAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_TabControl.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11HDShader.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_Label.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="win32ClipboardWrapper.cpp">
+      <Filter>Librarys</Filter>
+    </ClCompile>
+    <ClCompile Include="GRenderThread.cpp">
+      <Filter>Engine\GAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="BasePShader.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseVShader.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="GOcean.cpp">
+      <Filter>Engine\GAPI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="CSFFT\fft_512x512_c2c.cpp">
+      <Filter>Librarys\Ocean</Filter>
+    </ClCompile>
+    <ClCompile Include="ocean_simulator.cpp">
+      <Filter>Librarys\Ocean</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11NVHBAO.cpp" />
+    <ClCompile Include="D2DDialog.cpp">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="D2DSettingsDialog.cpp">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="UpdateCheck.cpp">
+      <Filter>Engine\GAPI\Update</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_SMAA.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11GraphicsEngineTest.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11TextureArray.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseTextureArray.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="D2DVobSettingsDialog.cpp">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_GMeshInfoView.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_NamedSlider.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects11\d3dxGlobal.cpp">
+      <Filter>Librarys\Effects11</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectAPI.cpp">
+      <Filter>Librarys\Effects11</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectReflection.cpp">
+      <Filter>Librarys\Effects11</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectRuntime.cpp">
+      <Filter>Librarys\Effects11</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectLoad.cpp">
+      <Filter>Librarys\Effects11</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects11\EffectNonRuntime.cpp">
+      <Filter>Librarys\Effects11</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects11\d3dx11dbg.cpp">
+      <Filter>Librarys\Effects11</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ddraw.def">
+      <Filter>DLLMain</Filter>
+    </None>
+    <None Include="assimp--3.0.1270-sdk\include\assimp\color4.inl">
+      <Filter>Librarys\Assimp</Filter>
+    </None>
+    <None Include="assimp--3.0.1270-sdk\include\assimp\material.inl">
+      <Filter>Librarys\Assimp</Filter>
+    </None>
+    <None Include="assimp--3.0.1270-sdk\include\assimp\matrix3x3.inl">
+      <Filter>Librarys\Assimp</Filter>
+    </None>
+    <None Include="assimp--3.0.1270-sdk\include\assimp\matrix4x4.inl">
+      <Filter>Librarys\Assimp</Filter>
+    </None>
+    <None Include="assimp--3.0.1270-sdk\include\assimp\quaternion.inl">
+      <Filter>Librarys\Assimp</Filter>
+    </None>
+    <None Include="assimp--3.0.1270-sdk\include\assimp\vector2.inl">
+      <Filter>Librarys\Assimp</Filter>
+    </None>
+    <None Include="assimp--3.0.1270-sdk\include\assimp\vector3.inl">
+      <Filter>Librarys\Assimp</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Windows Desktop
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D3D11Engine", "D3D11Engine\D3D11Engine.vcxproj", "{4F42CE68-EB4D-4355-9DCA-28F611D3845F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release_NoOpt_G1|Win32 = Release_NoOpt_G1|Win32
+		Release_NoOpt_L|Win32 = Release_NoOpt_L|Win32
+		Release_NoOpt|Win32 = Release_NoOpt|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Debug|Win32.ActiveCfg = Release|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Debug|Win32.Build.0 = Release|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt_G1|Win32.ActiveCfg = Release_NoOpt_G1|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt_G1|Win32.Build.0 = Release_NoOpt_G1|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt_L|Win32.ActiveCfg = Release_NoOpt_G1|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt_L|Win32.Build.0 = Release_NoOpt_G1|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt|Win32.ActiveCfg = Release|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt|Win32.Build.0 = Release|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release|Win32.ActiveCfg = Release|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
