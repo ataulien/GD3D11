@@ -94,7 +94,7 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 	if( !(projectedTexCoords.x > 1 || projectedTexCoords.y > 1 ||
 		projectedTexCoords.x < 0 || projectedTexCoords.y < 0))
 	{
-		float bias = lerp(0.00005f, 0.01f, distance / 80000);
+		float bias = lerp(0.00005f, 0.0001f, distance / 80000);
 		
 #if SHD_FILTER_16TAP_PCF
 		//return shadowmap.SampleCmpLevelZero( samplerState, projectedTexCoords.xy, vShadowSamplingPos.z - 0.00001f);
@@ -215,6 +215,8 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float3 V = normalize(-vsPosition);
 	float3 H = normalize(SQ_LightDirectionVS + V );
 	float spec = CalcBlinnPhongLighting(normal, H);
+	float specMod = pow(dot(float3(0.333f,0.333f,0.333f), diffuse.rgb), 2);
+	
 	
 	//return float4(diffuse.rgb, 1);
 	
@@ -222,8 +224,11 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float sunStrength = dot(SQ_LightColor.rgb, float3(0.333f,0.333f,0.333f));
 	float3 sun = saturate(dot(normalize(SQ_LightDirectionVS), normal) * shadow) * 1.0f;
 
+	float3 specBare = pow(spec, specPower) * specIntensity * SQ_LightColor.rgb * sun;
+	float3 specColored = lerp(specBare, specBare * diffuse.rgb, specMod);
+	
 	float3 litPixel = lerp(diffuse * 0.35 * sunStrength, diffuse * SQ_LightColor * SQ_LightColor.a, sun) 
-				  + saturate(pow(spec, specPower)) * specIntensity * SQ_LightColor.rgb * diffuse.rgb * saturate(sun);
+				  + specColored;
 	
 	// Run scattering
 	litPixel = ApplyAtmosphericScatteringGround(wsPosition, litPixel.rgb);

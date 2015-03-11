@@ -146,14 +146,16 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float3 V = normalize(-Pl_PositionView);
 	float3 H = normalize(lightDir + V );
 	float spec = CalcBlinnPhongLighting(normal, H);
+	float specMod = pow(dot(float3(0.333f,0.333f,0.333f), diffuse.rgb), 2);
+	float3 specBare = pow(spec, specPower) * specIntensity * PL_Color.rgb * falloff;
+	float3 specColored = lerp(specBare, specBare * diffuse.rgb, specMod);
 	
 	float3 color = falloff * ndl * PL_Color.rgb;
 	color = saturate(color);
 	
 	// Blend this with the lights color and the worlds diffuse color
 	// Also apply specular lighting
-	float3 lighting = 	color * diffuse.rgb + 
-						pow(spec, specPower) * specIntensity * PL_Color.rgb * falloff * diffuse.rgb;
+	float3 lighting = color * diffuse.rgb + specColored;
 	
 	//lighting = GetShadow(uv);
 	

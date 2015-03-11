@@ -23,6 +23,8 @@
 #include "D3D11Texture.h"
 #include "D2DVobSettingsDialog.h"
 #include "zCOption.h"
+#include "SV_NamedSlider.h"
+#include "zCModel.h"
 
 D2DEditorView::D2DEditorView(D2DView* view, D2DSubView* parent) : D2DSubView(view, parent)
 {
@@ -167,8 +169,8 @@ XRESULT D2DEditorView::InitControls()
 
 	// Selection tab
 	SelectionTabControl = new SV_TabControl(MainView, subPanel);
-	SelectionTabControl->SetRect(D2D1::RectF(20, 20, 270, 180));
-	SelectionTabControl->SetSize(D2D1::SizeF(200, 180));
+	SelectionTabControl->SetRect(D2D1::RectF(20, 20, 270, 280));
+	SelectionTabControl->SetSize(D2D1::SizeF(270, 380));
 	SelectionTabControl->AlignUnder(MainTabControl, 40.0f);
 	SelectionTabControl->SetOnlyShowActiveTab(true);
 	//SelectionTabControl->SetTabSwitchedCallback(MainTabSwitched, this);
@@ -179,10 +181,65 @@ XRESULT D2DEditorView::InitControls()
 	SelectionTabControl->AddControlToTab(SelectedImagePanel, "Selection/Texture");
 
 	SelectedImageNameLabel = new SV_Label(MainView, SelectionTabControl->GetTabPanel());
-	SelectedImageNameLabel->SetSize(D2D1::SizeF(270, 100));
+	SelectedImageNameLabel->SetSize(D2D1::SizeF(270, 15));
 	SelectedImageNameLabel->AlignUnder(SelectedImagePanel, 2.0f);
 	SelectedImageNameLabel->SetDrawBackground(true);
 	SelectionTabControl->AddControlToTab(SelectedImageNameLabel, "Selection/Texture");
+
+	// Texture properties
+	float textwidth = 80;
+	float alignDistance = 1.0f;
+	SelectedTexNrmStrSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
+	SelectedTexNrmStrSlider->AlignUnder(SelectedImageNameLabel, 5.0f);
+	SelectedTexNrmStrSlider->GetLabel()->SetCaption("Normalmap:");
+	SelectedTexNrmStrSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedTexNrmStrSlider->GetLabel()->GetSize().height));
+	SelectedTexNrmStrSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
+	SelectedTexNrmStrSlider->UpdateDimensions();
+	SelectedTexNrmStrSlider->GetSlider()->SetSliderChangedCallback(TextureSettingsSliderChanged, this);
+	SelectedTexNrmStrSlider->GetSlider()->SetMinMax(-2.0f, 2.0f);
+	SelectedTexNrmStrSlider->GetSlider()->SetValue(1.0f);
+	SelectionTabControl->AddControlToTab(SelectedTexNrmStrSlider, "Selection/Texture");
+
+	SelectedTexSpecIntensSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
+	SelectedTexSpecIntensSlider->AlignUnder(SelectedTexNrmStrSlider, alignDistance);
+	SelectedTexSpecIntensSlider->GetLabel()->SetCaption("Spec intens:");
+	SelectedTexSpecIntensSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedTexSpecIntensSlider->GetLabel()->GetSize().height));
+	SelectedTexSpecIntensSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
+	SelectedTexSpecIntensSlider->UpdateDimensions();
+	SelectedTexSpecIntensSlider->GetSlider()->SetSliderChangedCallback(TextureSettingsSliderChanged, this);
+	SelectedTexSpecIntensSlider->GetSlider()->SetMinMax(0.0f, 5.0f);
+	SelectedTexSpecIntensSlider->GetSlider()->SetValue(1.0f);
+	SelectionTabControl->AddControlToTab(SelectedTexSpecIntensSlider, "Selection/Texture");
+
+	SelectedTexSpecPowerSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
+	SelectedTexSpecPowerSlider->AlignUnder(SelectedTexSpecIntensSlider, alignDistance);
+	SelectedTexSpecPowerSlider->GetLabel()->SetCaption("Spec power:");
+	SelectedTexSpecPowerSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedTexSpecPowerSlider->GetLabel()->GetSize().height));
+	SelectedTexSpecPowerSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
+	SelectedTexSpecPowerSlider->UpdateDimensions();
+	SelectedTexSpecPowerSlider->GetSlider()->SetSliderChangedCallback(TextureSettingsSliderChanged, this);
+	SelectedTexSpecPowerSlider->GetSlider()->SetMinMax(0.1f, 200.0f);
+	SelectedTexSpecPowerSlider->GetSlider()->SetValue(90.0f);
+	SelectionTabControl->AddControlToTab(SelectedTexSpecPowerSlider, "Selection/Texture");
+
+	/*SelectedTexSpecModulationSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
+	SelectedTexSpecModulationSlider->AlignUnder(SelectedTexSpecPowerSlider, alignDistance);
+	SelectedTexSpecModulationSlider->GetLabel()->SetCaption("Spec. Modulate:");
+	SelectedTexSpecModulationSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedTexSpecModulationSlider->GetLabel()->GetSize().height));
+	SelectedTexSpecModulationSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
+	SelectedTexSpecModulationSlider->UpdateDimensions();
+	SelectedTexSpecModulationSlider->GetSlider()->SetSliderChangedCallback(TextureSettingsSliderChanged, this);
+	SelectedTexSpecModulationSlider->GetSlider()->SetMinMax(0.0f, 1.0f);
+	SelectedTexSpecModulationSlider->GetSlider()->SetValue(1.0f);
+	SelectionTabControl->AddControlToTab(SelectedTexSpecModulationSlider, "Selection/Texture");*/
+
+	
+
+
+
+
+
+
 
 	// Selected vegetation properties (Size)
 	SelectedVegSizeSlider = new SV_Slider(MainView, SelectionTabControl->GetTabPanel());
@@ -453,6 +510,7 @@ void D2DEditorView::DoSelection()
 
 	TracedSkeletalVobInfo = NULL;
 	TracedVobInfo = NULL;
+	TracedMaterial = NULL;
 
 	// Trace mesh-less vegetationboxes
 	TracedVegetationBox = TraceVegetationBoxes(Engine::GAPI->GetCameraPosition(), wDir);
@@ -504,6 +562,8 @@ void D2DEditorView::DoSelection()
 			if(Selection.SelectedMesh != TracedMesh)
 				VisualizeMeshInfo(hitMesh);
 		}
+
+		return;
 	}
 
 	// Check skeletal hit
@@ -513,17 +573,23 @@ void D2DEditorView::DoSelection()
 		Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(TracedSkeletalVobInfo->Vob->GetBBoxLocal().Min + TracedSkeletalVobInfo->Vob->GetPositionWorld(), 
 									TracedSkeletalVobInfo->Vob->GetBBoxLocal().Max + TracedSkeletalVobInfo->Vob->GetPositionWorld(),
 									D3DXVECTOR4(1,1,1,1));
+
+		if(!TracedSkeletalVobInfo->VisualInfo->Meshes.empty())
+			TracedMaterial = (*TracedSkeletalVobInfo->VisualInfo->Meshes.begin()).first;
+
 		return;
 	}
 
 	// Check vob hit
-	if(tVob && lenVob < lenSkel && lenVob < lenSkel)
+	if(tVob && lenVob < lenSkel && lenVob < lenWorld)
 	{
 		TracedVobInfo = tVob;
 		Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(TracedVobInfo->Vob->GetBBoxLocal().Min + TracedVobInfo->Vob->GetPositionWorld(), 
 									TracedVobInfo->Vob->GetBBoxLocal().Max + TracedVobInfo->Vob->GetPositionWorld(),
 									D3DXVECTOR4(1,1,1,1));
 		
+		TracedMaterial = hitMaterialVob;
+
 		if(Selection.SelectedVobInfo != TracedVobInfo && hitMaterialVob)
 		{
 			D3DXMATRIX world; D3DXMatrixTranspose(&world,  TracedVobInfo->Vob->GetWorldMatrixPtr());
@@ -676,14 +742,20 @@ void D2DEditorView::OnMouseClick(int button)
 			if(TracedVobInfo)
 			{
 				Selection.SelectedVobInfo = TracedVobInfo;
+				Selection.SelectedMaterial = TracedMaterial;
 				VobSettingsDialog->SetHidden(false);
 				VobSettingsDialog->SetVobInfo(TracedVobInfo);
+
+				UpdateSelectionPanel();
 
 			}else if(TracedSkeletalVobInfo)
 			{
 				Selection.SelectedSkeletalVob = TracedSkeletalVobInfo;
 				VobSettingsDialog->SetHidden(false);
 				VobSettingsDialog->SetVobInfo(TracedSkeletalVobInfo);
+
+				Selection.SelectedMaterial = TracedMaterial;
+				UpdateSelectionPanel();
 
 			}else if(TracedVegetationBox)
 			{
@@ -703,31 +775,38 @@ void D2DEditorView::OnMouseClick(int button)
 				Selection.SelectedMesh = TracedMesh;
 				Selection.SelectedMaterial = TracedMaterial;
 
-				// Update selection panel
-				if(Selection.SelectedMaterial && Selection.SelectedMaterial->GetTexture())
-				{
-					// Select preferred texture for the texture settings
-					Engine::AntTweakBar->SetPreferredTextureForSettings(Selection.SelectedMaterial->GetTexture()->GetNameWithoutExt());
-					SelectedImageNameLabel->SetCaption(Selection.SelectedMaterial->GetTexture()->GetNameWithoutExt());
-
-					// Update thumbnail
-					MyDirectDrawSurface7* surface = Engine::GAPI->GetSurface(Selection.SelectedMaterial->GetTexture()->GetNameWithoutExt());
-
-					if(surface)
-					{
-						ID3D11Texture2D* thumb = ((D3D11Texture*)surface->GetEngineTexture())->GetThumbnail();
-						if(!thumb)
-						{
-							XLE(((D3D11Texture*)surface->GetEngineTexture())->CreateThumbnail());
-							thumb = ((D3D11Texture*)surface->GetEngineTexture())->GetThumbnail();
-						}
-						SelectedImagePanel->SetD3D11TextureAsImage(thumb, INT2(256, 256));
-					}
-				}
+				UpdateSelectionPanel();
 			}
 		}
 	}
 }
+
+/** Updates the selection-panel */
+void D2DEditorView::UpdateSelectionPanel()
+{
+	// Update selection panel
+	if(Selection.SelectedMaterial && Selection.SelectedMaterial->GetTexture())
+	{
+		// Select preferred texture for the texture settings
+		Engine::AntTweakBar->SetPreferredTextureForSettings(Selection.SelectedMaterial->GetTexture()->GetNameWithoutExt());
+		SelectedImageNameLabel->SetCaption(Selection.SelectedMaterial->GetTexture()->GetNameWithoutExt());
+
+		// Update thumbnail
+		MyDirectDrawSurface7* surface = Engine::GAPI->GetSurface(Selection.SelectedMaterial->GetTexture()->GetNameWithoutExt());
+
+		if(surface)
+		{
+			ID3D11Texture2D* thumb = ((D3D11Texture*)surface->GetEngineTexture())->GetThumbnail();
+			if(!thumb)
+			{
+				XLE(((D3D11Texture*)surface->GetEngineTexture())->CreateThumbnail());
+				thumb = ((D3D11Texture*)surface->GetEngineTexture())->GetThumbnail();
+			}
+			SelectedImagePanel->SetD3D11TextureAsImage(thumb, INT2(256, 256));
+		}
+	}
+}
+
 
 void D2DEditorView::OnMouseWheel(int delta)
 {
@@ -1192,7 +1271,33 @@ void D2DEditorView::VegetationScaleSliderChanged(SV_Slider* sender, void* userda
 	}
 }
 
+void D2DEditorView::TextureSettingsSliderChanged(SV_Slider* sender, void* userdata)
+{
+	D2DEditorView* v = (D2DEditorView *)userdata;
 
+	if(v->Selection.SelectedMaterial && v->Selection.SelectedMaterial->GetTexture())
+	{
+		MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom(v->Selection.SelectedMaterial->GetTexture());
+		
+		if(sender == v->SelectedTexNrmStrSlider->GetSlider())
+		{
+			info->buffer.NormalmapStrength = sender->GetValue();
+		}else if(sender == v->SelectedTexSpecIntensSlider->GetSlider())
+		{
+			info->buffer.SpecularIntensity = sender->GetValue();
+		}else if(sender == v->SelectedTexSpecPowerSlider->GetSlider())
+		{
+			info->buffer.SpecularPower = sender->GetValue();
+		}/*else if(sender == v->SelectedTexSpecModulationSlider->GetSlider())
+		{
+			//info->buffer.NormalmapStrength = sender->GetValue();
+		}*/
+
+		// Update and save the info
+		info->UpdateConstantbuffer();
+		info->WriteToFile(v->Selection.SelectedMaterial->GetTexture()->GetNameWithoutExt());
+	}
+}
 
 /** Smoothes a mesh */
 void D2DEditorView::SmoothMesh(MeshInfo* mesh)

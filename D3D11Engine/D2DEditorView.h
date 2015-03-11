@@ -7,6 +7,7 @@ class SV_Panel;
 class SV_Checkbox;
 class SV_Label;
 class SV_Slider;
+class SV_NamedSlider;
 class D2DVobSettingsDialog;
 class GVegetationBox;
 struct MeshInfo;
@@ -103,6 +104,9 @@ protected:
 	void DoEditorMovement();
 	void ResetEditorCamera();
 
+	/** Updates the selection panel */
+	void UpdateSelectionPanel();
+
 	/** Returns if the mouse is inside the editor window */
 	bool IsMouseInsideEditorWindow();
 
@@ -136,7 +140,9 @@ protected:
 
 	/** Tab in main tab-control was switched */
 	static void VegetationScaleSliderChanged(SV_Slider* sender, void* userdata);
+	static void TextureSettingsSliderChanged(SV_Slider* sender, void* userdata);
 
+	
 	/** Editor enabled? */
 	bool IsEnabled;
 
@@ -148,6 +154,10 @@ protected:
 	/** Selection panel */
 	SV_Panel* SelectedImagePanel;
 	SV_Label* SelectedImageNameLabel;
+
+	SV_NamedSlider* SelectedTexNrmStrSlider;
+	SV_NamedSlider* SelectedTexSpecIntensSlider;
+	SV_NamedSlider* SelectedTexSpecPowerSlider;
 
 	SV_Slider* SelectedVegSizeSlider;
 	SV_Slider* SelectedVegAmountSlider;

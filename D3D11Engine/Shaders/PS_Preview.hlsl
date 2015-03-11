@@ -29,6 +29,8 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float4 tx = pow(TX_Texture0.Sample(SS_Linear, Input.vTexcoord), 1.0f);
 	float4 color;
 	
+	clip(tx.a - 0.5f);
+	
 #if RENDERMODE == 0 // White
 	color = 1.0f;
 #elif RENDERMODE == 1 // Textured
