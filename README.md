@@ -11,5 +11,6 @@ To build the Mod, you need to have the following set up:
 * DirectX SDK (June 2010)
 * Environmentvariables "G2_SYSTEM_PATH" and/or "G1_SYSTEM_PATH", which should point to the "system"-folders of the games
 * The latest Version of the Mod installed for your game
+* Notice: The Gothic 1-Version is probably not working at the moment.
 
 Since we can't use a debug-build, because mixing debug- and release-DLLs is not allowed, there are Release-Targets which turn optimization off so you are actually able to use the debugger from VisualStudio with the DLL. These targets will copy the dll, pdb and the shaders to the games system-folder.
