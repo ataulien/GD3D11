@@ -93,7 +93,7 @@ void D3D11GraphicsEngineTest::DrawWorldMeshTest()
 
 	for(std::list<WorldMeshSectionInfo*>::iterator it = renderList.begin(); it != renderList.end(); it++)
 	{
-		for(std::map<MeshKey, MeshInfo*>::iterator itm = (*it)->WorldMeshes.begin(); itm != (*it)->WorldMeshes.end();itm++)
+		for(std::map<MeshKey, WorldMeshInfo*>::iterator itm = (*it)->WorldMeshes.begin(); itm != (*it)->WorldMeshes.end();itm++)
 		{
 			if(!(*itm).first.Texture)
 				continue;

@@ -412,18 +412,6 @@ void GothicAPI::ResetWorld()
 	
 	ResetVobs();
 
-	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end();it++)
-	{
-		delete (*it).second;
-	}
-	StaticMeshVisuals.clear();
-
-	for(std::hash_map<std::string, SkeletalMeshVisualInfo*>::iterator it = SkeletalMeshVisuals.begin(); it != SkeletalMeshVisuals.end();it++)
-	{
-		delete (*it).second;
-	}
-	SkeletalMeshVisuals.clear();
-
 	delete WrappedWorldMesh;
 	WrappedWorldMesh = NULL;
 
@@ -438,12 +426,6 @@ void GothicAPI::ResetVobs()
 		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
 		{
 			WorldMeshSectionInfo& section = (*ity).second;
-
-			// Delete all vobs from sections
-			for(std::list<VobInfo *>::iterator it = section.Vobs.begin(); it != section.Vobs.end(); it++)
-			{
-				delete (*it);
-			}
 
 			section.Vobs.clear();
 		}
@@ -468,7 +450,20 @@ void GothicAPI::ResetVobs()
 		delete (*it).second;
 	}
 	VobLightMap.clear();
+	VobsByVisual.clear();
 
+	
+	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end();it++)
+	{
+		delete (*it).second;
+	}
+	StaticMeshVisuals.clear();
+
+	for(std::hash_map<std::string, SkeletalMeshVisualInfo*>::iterator it = SkeletalMeshVisuals.begin(); it != SkeletalMeshVisuals.end();it++)
+	{
+		delete (*it).second;
+	}
+	SkeletalMeshVisuals.clear();
 }
 
 /** Called when the game loaded a new level */
@@ -850,7 +845,7 @@ void GothicAPI::OnMaterialDeleted(zCMaterial* mat)
 		return;
 
 	/** Map for static mesh visuals */
-	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
+	/*for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
 	{
 		for(std::map<zCMaterial *, std::vector<MeshInfo*>>::iterator itm = (*it).second->Meshes.begin(); itm != (*it).second->Meshes.end(); itm++)
 		{
@@ -859,7 +854,7 @@ void GothicAPI::OnMaterialDeleted(zCMaterial* mat)
 				(*it).second->UnloadedSomething = true;
 			}
 		}
-	}
+	}*/
 	
 	
 	for(std::hash_map<std::string, SkeletalMeshVisualInfo*>::iterator it = SkeletalMeshVisuals.begin(); it != SkeletalMeshVisuals.end(); it++)
@@ -867,13 +862,13 @@ void GothicAPI::OnMaterialDeleted(zCMaterial* mat)
 		(*it).second->Meshes.erase(mat);
 		(*it).second->SkeletalMeshes.erase(mat);
 
-		for(std::map<int, std::vector<MeshVisualInfo *>>::iterator ait = (*it).second->NodeAttachments.begin(); ait != (*it).second->NodeAttachments.end(); ait++)
+		/*for(std::map<int, std::vector<MeshVisualInfo *>>::iterator ait = (*it).second->NodeAttachments.begin(); ait != (*it).second->NodeAttachments.end(); ait++)
 		{
 			if(!(*ait).second.empty())
 			{
 				(*ait).second[0]->Meshes.erase(mat); // Make sure no skeletal mesh can use an invalid material
 			}
-		}
+		}*/
 	}
 
 	
@@ -909,12 +904,11 @@ void GothicAPI::OnVisualDeleted(zCVisual* visual)
 		OnRemovedVob((*it)->Vob, LoadedWorldInfo->MainWorld);
 	}
 	VobsByVisual[visual].clear();
-	return;
 
 	/** OLD CODE, MAYBE USEFUL */
 
 	// Get the visuals possible file extensions
-	/*int e=0;
+	int e=0;
 	while(strlen(visual->GetFileExtension(e)) > 0)
 	{
 		extv.push_back(visual->GetFileExtension(e));
@@ -964,12 +958,21 @@ void GothicAPI::OnVisualDeleted(zCVisual* visual)
 				}
 			}
 
+			std::string mds = ((zCModel *)visual)->GetModelName().ToChar();
+			
+			//if(mds == "SWARM.MDS")
+			//	LogInfo() << "Swarm!";
+
 			std::string str = ((zCModel *)visual)->GetVisualName();
+
+			if(str.empty()) // Happens when the model has no skeletal-mesh
+				str = mds;
+
 			delete SkeletalMeshVisuals[str];
 			SkeletalMeshVisuals.erase(str);
 			break;
 		}
-	}*/
+	}
 }
 /** Draws a MeshInfo */
 void GothicAPI::DrawMeshInfo(zCMaterial* mat, MeshInfo* msh)
@@ -1058,6 +1061,17 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 	}
 
 	RegisteredVobs.erase(vob);
+
+	// Erase the vob from visual-vob map
+	std::list<BaseVobInfo *>& list = VobsByVisual[vob->GetVisual()];
+	for(std::list<BaseVobInfo *>::iterator it = list.begin(); it != list.end(); it++)
+	{
+		if((*it)->Vob == vob)
+		{
+			it = list.erase(it);
+			//break; // Can (should!) only be in here once
+		}
+	}
 	
 	// Check if this was in some inventory
 	if(Inventory->OnRemovedVob(vob, world))
@@ -1077,16 +1091,7 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 	//if(!tempParticleNames[vob].empty())
 	//	LogInfo() << "Removing Particle-Effect with: " << tempParticleNames[vob];
 
-	// Erase the vob from visual-vob map
-	std::list<BaseVobInfo *>& list = VobsByVisual[vob->GetVisual()];
-	for(std::list<BaseVobInfo *>::iterator it = list.begin(); it != list.end(); it++)
-	{
-		if((*it)->Vob == vob)
-		{
-			list.erase(it);
-			break; // Can (should!) only be in here once
-		}
-	}
+
 
 	// Erase it from the list of lights
 	VobLightMap.erase((zCVobLight*)vob);
@@ -1264,10 +1269,14 @@ void GothicAPI::OnSetVisual(zCVob* vob)
 	OnAddVob(vob, vob->GetHomeWorld());
 }
 
+#include "D3D11ConstantBuffer.h"
+#include "D3D11GraphicsEngine.h"
+
 /** Called when a VOB got added to the BSP-Tree */
 void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 {
 	//LogInfo() << "Adding vob: " << vob;
+
 
 	if(!vob->GetVisual())
 		return; // Don't need it if we can't render it
@@ -1327,6 +1336,25 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 			}
 
 			INT2 section = WorldConverter::GetSectionOfPos(vob->GetPositionWorld());
+			ID3D11Device* device = ((D3D11GraphicsEngine *)Engine::GraphicsEngine)->GetDevice();
+
+			/*for(int i=0;i<INT_MAX;i++)
+			{
+				VS_ExConstantBuffer_PerInstance dt; // Just some 64-byte sized struct
+
+				// Init cb
+				D3D11_SUBRESOURCE_DATA d;
+				d.pSysMem = &dt;
+				d.SysMemPitch = 0;
+				d.SysMemSlicePitch = 0;
+	
+				// Create constantbuffer
+				ID3D11Buffer* buffer;
+				device->CreateBuffer(&CD3D11_BUFFER_DESC(sizeof(VS_ExConstantBuffer_PerInstance), D3D11_BIND_CONSTANT_BUFFER), &d, &buffer);
+				
+				// Release it again
+				int r = buffer->Release();
+			}*/
 
 			VobInfo* vi = new VobInfo;
 			vi->Vob = vob;
@@ -1360,8 +1388,16 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 			break;
 		}else if(ext == ".MDS" || ext == ".ASC")
 		{
-			// Every 
+			std::string mds = ((zCModel *)vob->GetVisual())->GetModelName().ToChar();
+			
+			//if(mds == "SWARM.MDS")
+			//	LogInfo() << "Swarm!";
+
 			std::string str = ((zCModel *)vob->GetVisual())->GetVisualName();
+
+			if(str.empty()) // Happens when the model has no skeletal-mesh
+				str = mds;
+
 			SkeletalMeshVisualInfo* mi = SkeletalMeshVisuals[str];
 
 			if(!mi || mi->Meshes.empty())
@@ -1434,8 +1470,15 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	std::vector<D3DXMATRIX> transforms;
 	zCModel* model = (zCModel *)vi->Vob->GetVisual();
 
+	
+
 	if(!model)// || vi->VisualInfo)
 		return; // Gothic fortunately sets this to 0 when it throws the model out of the cache
+
+	//std::string name = model->GetModelName().ToChar();
+	//if(name.empty())
+	//	return; // This happens for wild bees in Odyssee for example. Not sure what that is, but it crashes horrible.
+
 
 	model->SetIsVisible(true);
 
@@ -1476,6 +1519,13 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		if(!found) // Something changed, reload this
 		{
 			std::string str = model->GetVisualName();
+
+			if(str.empty())
+			{
+				LogWarn() << "Trying to set model-visual to nameless model!";
+				break;
+			}
+
 			SkeletalMeshVisualInfo* mi = SkeletalMeshVisuals[str];
 
 			LogInfo() << "zCModel changed apperance, setting model to: " << str;
@@ -1563,7 +1613,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	zCCamera::GetCamera()->SetTransform(zCCamera::TT_WORLD, identity);*/
 
 	
-	std::map<int, std::vector<MeshVisualInfo *>>& nodeAttachments = ((SkeletalMeshVisualInfo *)vi->VisualInfo)->NodeAttachments;
+	std::map<int, std::vector<MeshVisualInfo *>>& nodeAttachments = vi->NodeAttachments;
 	for(unsigned int i=0;i<transforms.size();i++)
 	{
 		// Check for new visual
@@ -1577,7 +1627,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		if(node->NodeVisual && nodeAttachments.find(i) == nodeAttachments.end())
 		{
 			// It's not, extract it
-			WorldConverter::ExtractNodeVisual(i, node, (SkeletalMeshVisualInfo *)vi->VisualInfo);
+			WorldConverter::ExtractNodeVisual(i, node, nodeAttachments);
 		}
 
 		// Check for changed visual
@@ -1586,21 +1636,35 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 			// Visual changed
 			//delete vi->VisualInfo->NodeAttachments[i][0];
 
-			// check if we already loaded this
-			nodeAttachments[i][0] = StaticMeshVisuals[(zCProgMeshProto *)node->NodeVisual];
-
-			if(!nodeAttachments[i][0])
+			// Check for deleted attachment
+			if(!node->NodeVisual)
 			{
-				if(nodeAttachments[i].size() > 1)
-					LogWarn() << "MEMLEAK: Node has more than one attachment!";
-
+				// Remove attachment
+				delete nodeAttachments[i][0];
 				nodeAttachments[i].clear();
 
+				LogInfo() << "Removed attachment from model " << vi->VisualInfo->VisualName;
+
+				continue; // Go to next attachment
+			}
+
+			// check if we already loaded this
+			//nodeAttachments[i][0] = StaticMeshVisuals[(zCProgMeshProto *)node->NodeVisual];
+
+			//if(!nodeAttachments[i][0])
+			{
+				/*if(nodeAttachments[i].size() > 1)
+					LogWarn() << "MEMLEAK: Node has more than one attachment!";*/
+
+				//nodeAttachments[i].clear();
+
 				// Load the new one
-				WorldConverter::ExtractNodeVisual(i, node, (SkeletalMeshVisualInfo *)vi->VisualInfo);
+				WorldConverter::ExtractNodeVisual(i, node, nodeAttachments);
+
+
 
 				// Store
-				StaticMeshVisuals[(zCProgMeshProto *)node->NodeVisual] = nodeAttachments[i][0];
+				//StaticMeshVisuals[(zCProgMeshProto *)node->NodeVisual] = nodeAttachments[i][0];
 			}
 		}
 
@@ -1612,6 +1676,12 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 			for(unsigned int n=0;n<nodeAttachments[i].size();n++)
 			{
 				SetWorldViewTransform(world * transforms[i], view);
+
+				if(!nodeAttachments[i][n]->Visual)
+				{
+					LogWarn() << "Attachment without visual on model: " << model->GetVisualName();
+					continue;
+				}
 
 				// Update animated textures
 				node->TexAniState.UpdateTexList();
@@ -2213,7 +2283,7 @@ bool GothicAPI::TraceWorldMesh(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir
 	int numProcessed = 0;
 	for(std::list<std::pair<WorldMeshSectionInfo*, float>>::iterator bit = hitSections.begin(); bit != hitSections.end(); bit++)
 	{
-		for(std::map<MeshKey, MeshInfo*>::iterator it = (*bit).first->WorldMeshes.begin(); it != (*bit).first->WorldMeshes.end();it++)
+		for(std::map<MeshKey, WorldMeshInfo*>::iterator it = (*bit).first->WorldMeshes.begin(); it != (*bit).first->WorldMeshes.end();it++)
 		{
 			float u,v,t;
 
@@ -3143,7 +3213,7 @@ void GothicAPI::ApplySuppressedSectionTextures()
 		WorldMeshSectionInfo* section = (*it).first;
 
 		// Look into each mesh of this section and find the texture
-		for(std::map<MeshKey, MeshInfo*>::iterator mit = section->WorldMeshes.begin(); mit != section->WorldMeshes.end();mit++)
+		for(std::map<MeshKey, WorldMeshInfo*>::iterator mit = section->WorldMeshes.begin(); mit != section->WorldMeshes.end();mit++)
 		{
 			for(unsigned int i=0;i<(*it).second.size();i++)
 			{
@@ -3168,7 +3238,7 @@ void GothicAPI::ResetSupressedTextures()
 		WorldMeshSectionInfo* section = (*it).first;
 
 		// Look into each mesh of this section and find the texture
-		for(std::map<MeshKey, MeshInfo*>::iterator mit = section->WorldMeshes.begin(); mit != section->WorldMeshes.end();mit++)
+		for(std::map<MeshKey, WorldMeshInfo*>::iterator mit = section->WorldMeshes.begin(); mit != section->WorldMeshes.end();mit++)
 		{
 			section->WorldMeshes[(*mit).first] = (*mit).second;
 		}

@@ -177,8 +177,8 @@ float ComputeEdgeLOD(float4x4 projMatrix,
            projCpC = ProjectAndScale(projMatrix, cpC).xy, 
            projCpD = ProjectAndScale(projMatrix, cpD).xy; 
             
-    float edgeLOD = distance(projCpA, projCpB) 
-                  + distance(projCpB, projCpC)  
+    float edgeLOD = distance(projCpA, projCpB)
+                  + distance(projCpB, projCpC)
                   + distance(projCpC, projCpD); 
                    
     return max(edgeLOD, 1); 
@@ -279,9 +279,10 @@ HS_ControlPointOutput HSMain(
                                             O.f3ViewPosition[0], 
                                             O.f3ViewPosition[1], 
                                             O.f3ViewPosition[2], 
-                                           I[NextCPID].f3ViewPosition) * VT_TesselationFactor; 
+                                           I[NextCPID].f3ViewPosition); 
     } else { 
-        O.fOppositeEdgeLOD = g_f4TessFactors.x * VT_TesselationFactor; 
+		float maxZ = max(O.f3ViewPosition[0].z, I[NextCPID].f3ViewPosition.z);
+        O.fOppositeEdgeLOD = maxZ < g_f4TessFactors.z ? g_f4TessFactors.x : 1; 
     }     
      
 	//O.fOppositeEdgeLOD *= O.f2TexCoord2.x; // Borders are stored here. Don't tesselate at borders!
@@ -320,9 +321,12 @@ HS_ConstantOutput HS_Constant(
     // TessFactor[0] => Edge(1, 2) 
     // TessFactor[1] => Edge(2, 0) 
     // TessFactor[2] => Edge(0, 1) 
-    O.fTessFactor[0] = I[1].fOppositeEdgeLOD; 
-    O.fTessFactor[1] = I[2].fOppositeEdgeLOD; 
-    O.fTessFactor[2] = I[0].fOppositeEdgeLOD; 
+	
+	float factor = VT_TesselationFactor;
+	
+    O.fTessFactor[0] = I[1].fOppositeEdgeLOD * factor; 
+    O.fTessFactor[1] = I[2].fOppositeEdgeLOD * factor; 
+    O.fTessFactor[2] = I[0].fOppositeEdgeLOD * factor; 
      
     // There's no right or wrong answer here. We've chosen to say that  
     // the interior should be at least as tessellated as the most 

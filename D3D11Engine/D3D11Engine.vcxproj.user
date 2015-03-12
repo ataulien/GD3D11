@@ -23,8 +23,7 @@
     <LocalDebuggerCommand>C:\Games\Gothic II\system\Gothic2.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>C:\Games\Gothic II\system\</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerCommandArguments>
-    </LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-XNoUpdate</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">
     <LocalDebuggerCommand>E:\Games\Data\Gothic\system\gothic.exe</LocalDebuggerCommand>

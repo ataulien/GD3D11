@@ -391,6 +391,7 @@ struct GothicRendererSettings
 		EnableSMAA = true;
 
 		TesselationFactor = 20.0f;
+		TesselationRange = 4000.0f;
 
 		ShadowMapSize = 2048;
 		WorldShadowRangeScale = 8.0f;
@@ -471,6 +472,7 @@ struct GothicRendererSettings
 	INT2 LoadedResolution;
 
 	float TesselationFactor;
+	float TesselationRange;
 	float HDRLumWhite;
 	float HDRMiddleGray;
 	float BloomThreshold;

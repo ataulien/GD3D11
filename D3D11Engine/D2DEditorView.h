@@ -11,6 +11,7 @@ class SV_NamedSlider;
 class D2DVobSettingsDialog;
 class GVegetationBox;
 struct MeshInfo;
+struct WorldMeshInfo;
 struct VobInfo;
 struct SkeletalVobInfo;
 class zCMaterial;
@@ -89,7 +90,7 @@ protected:
 	void DoVegetationRemove();
 
 	/** Smoothes a mesh */
-	void SmoothMesh(MeshInfo* mesh);
+	void SmoothMesh(WorldMeshInfo* mesh);
 
 	/** Called on xBUTTONDOWN */
 	void OnMouseButtonDown(int button);

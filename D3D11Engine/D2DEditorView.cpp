@@ -337,7 +337,8 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 				L"Mouse 1+2 - Pan\n"
 				L"Mousewheel - Scale\n"
 				L"F1 - Close editor\n"
-				L"Shift-Click - Place Hero\n";
+				L"Shift-Click - Place Hero\n"
+				L"Pos: " + Toolbox::ToWideChar(float3(Engine::GAPI->GetCameraPosition()).toString());
 			break;
 
 		case EM_SELECT_POLY:
@@ -360,7 +361,7 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 		MainView->GetBrush()->SetColor(D2D1::ColorF(1,1,1,0.5f));
 		float helpTextX = (MainPanel->GetRect().right + 20) + (MainPanel->GetPosition().x * 2.0f); // Pos.x is negative or zero, so it doubles up and hides the text
 
-		MainView->GetRenderTarget()->DrawText(str.c_str(), str.length(), MainView->GetTextFormatBig(), D2D1::RectF(helpTextX, 0, 600, 600), MainView->GetBrush());
+		MainView->GetRenderTarget()->DrawText(str.c_str(), str.length(), MainView->GetTextFormatBig(), D2D1::RectF(helpTextX, 0, 900, 600), MainView->GetBrush());
 
 		D2DSubView::Draw(clientRectAbs, deltaTime);
 	}
@@ -1013,7 +1014,7 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 		case VK_SPACE:
 			if(Selection.SelectedMesh)
 			{
-				SmoothMesh(Selection.SelectedMesh);
+				SmoothMesh((WorldMeshInfo *)Selection.SelectedMesh);
 
 				if(Selection.SelectedMaterial && Selection.SelectedMaterial->GetTexture())
 				{
@@ -1300,7 +1301,7 @@ void D2DEditorView::TextureSettingsSliderChanged(SV_Slider* sender, void* userda
 }
 
 /** Smoothes a mesh */
-void D2DEditorView::SmoothMesh(MeshInfo* mesh)
+void D2DEditorView::SmoothMesh(WorldMeshInfo* mesh)
 {
 	// Copy old vertices so we can directly write to the vectors again
 	std::vector<ExVertexStruct> vxOld = mesh->Vertices;
@@ -1314,38 +1315,41 @@ void D2DEditorView::SmoothMesh(MeshInfo* mesh)
 	mesh->Indices.clear();
 	MeshModifier::DropTexcoords(vxOld, ixOld, mesh->Vertices, mesh->Indices);*/
 
-	// Tesselate
-	std::vector<ExVertexStruct> meshTess;
-	for(unsigned int i=0;i<mesh->Indices.size();i+=3)
+	// Tesselate if the outcome would still be in 16-bit range
+	if(mesh->Vertices.size() + (mesh->Indices.size() / 3) < 0x0000FFFF)
 	{
-		ExVertexStruct vx[3];
-		vx[0] = mesh->Vertices[mesh->Indices[i]];
-		vx[1] = mesh->Vertices[mesh->Indices[i+1]];
-		vx[2] = mesh->Vertices[mesh->Indices[i+2]];
+		std::vector<ExVertexStruct> meshTess;
+		for(unsigned int i=0;i<mesh->Indices.size();i+=3)
+		{
+			ExVertexStruct vx[3];
+			vx[0] = mesh->Vertices[mesh->Indices[i]];
+			vx[1] = mesh->Vertices[mesh->Indices[i+1]];
+			vx[2] = mesh->Vertices[mesh->Indices[i+2]];
 
 		
-		std::vector<ExVertexStruct> triTess;
-		WorldConverter::TesselateTriangle(vx, triTess, 1);
+			std::vector<ExVertexStruct> triTess;
+			WorldConverter::TesselateTriangle(vx, triTess, 1);
 
-		// Append
-		for(unsigned int v=0;v<triTess.size();v++)
-		{
-			meshTess.push_back(triTess[v]);
+			// Append
+			for(unsigned int v=0;v<triTess.size();v++)
+			{
+				meshTess.push_back(triTess[v]);
+			}
 		}
+	
+
+
+		mesh->Vertices.clear();
+		mesh->Indices.clear();
+
+		// Index
+		WorldConverter::IndexVertices(&meshTess[0], meshTess.size(), mesh->Vertices, mesh->Indices);
 	}
 
-
-
-	mesh->Vertices.clear();
-	mesh->Indices.clear();
-
-	// Index
-	WorldConverter::IndexVertices(&meshTess[0], meshTess.size(), mesh->Vertices, mesh->Indices);
-
 	// Create new normals
-	WorldConverter::GenerateVertexNormals(mesh->Vertices, mesh->Indices);
+	//WorldConverter::GenerateVertexNormals(mesh->Vertices, mesh->Indices);
 
-	MeshModifier::ComputePNAEN18Indices(mesh->Vertices, mesh->Indices, mesh->IndicesPNAEN);
+	MeshModifier::ComputePNAEN18Indices(mesh->Vertices, mesh->Indices, mesh->IndicesPNAEN, true, true);
 	if(mesh->Vertices.size() >= 0xFFFF)
 	{
 		// Too large
@@ -1367,6 +1371,10 @@ void D2DEditorView::SmoothMesh(MeshInfo* mesh)
 	mesh->MeshVertexBuffer->Init(&mesh->Vertices[0], mesh->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
 	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
 	mesh->MeshIndexBuffer->Init(&mesh->Indices[0], mesh->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+
+	mesh->TesselationSettings.buffer.VT_TesselationFactor = 1.0f;
+	mesh->TesselationSettings.buffer.VT_DisplacementStrength = 0.5f;
+	mesh->TesselationSettings.UpdateConstantbuffer();
 }
 
 /** Called when a vob was removed from the world */

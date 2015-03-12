@@ -349,7 +349,7 @@ protected:
 	stdext::hash_map<zCTexture*, int> TexArrayIndexByTexture;
 
 	/** List of water surfaces for this frame */
-	std::hash_map<zCTexture*, std::vector<MeshInfo*>> FrameWaterSurfaces;
+	std::hash_map<zCTexture*, std::vector<WorldMeshInfo*>> FrameWaterSurfaces;
 
 	/** Reflection */
 	ID3D11ShaderResourceView* ReflectionCube;

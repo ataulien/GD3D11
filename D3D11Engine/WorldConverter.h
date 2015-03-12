@@ -112,7 +112,7 @@ struct MeshInfo
 
 	}
 
-	~MeshInfo();
+	virtual ~MeshInfo();
 
 	/** Creates buffers for this mesh info */
 	XRESULT Create(ExVertexStruct* vertices, unsigned int numVertices, VERTEX_INDEX* indices, unsigned int numIndices);
@@ -126,6 +126,11 @@ struct MeshInfo
 	std::vector<VERTEX_INDEX> IndicesPNAEN;	
 	std::vector<ExVertexStruct> VerticesPNAEN;
 	unsigned int BaseIndexLocation;
+};
+
+struct WorldMeshInfo : public MeshInfo
+{
+	VisualTesselationSettings TesselationSettings;
 };
 
 struct QuadMarkInfo
@@ -182,7 +187,7 @@ struct BaseVisualInfo
 		Visual = NULL;
 	}
 
-	~BaseVisualInfo()
+	virtual ~BaseVisualInfo()
 	{
 		for(std::map<zCMaterial *, std::vector<MeshInfo*>>::iterator it = Meshes.begin(); it != Meshes.end(); it++)
 		{
@@ -253,7 +258,7 @@ struct MeshVisualInfo : public BaseVisualInfo
 
 	std::map<MeshKey, std::vector<MeshInfo*>, cmpMeshKey> MeshesByTexture;
 	
-	zCProgMeshProto* Visual;
+	//zCProgMeshProto* Visual;
 	std::vector<VobInstanceInfo> Instances;
 	unsigned int StartInstanceNum;
 
@@ -289,15 +294,15 @@ struct SkeletalMeshVisualInfo : public BaseVisualInfo
 	/** Removes PNAEN info from this visual */
 	void ClearPNAENInfo();
 
-	/** Map of visuals attached to nodes */
-	std::map<int, std::vector<MeshVisualInfo *>> NodeAttachments;
-
 	/** Submeshes of this visual */
 	std::map<zCMaterial *, std::vector<SkeletalMeshInfo*>> SkeletalMeshes;
 };
 
 struct BaseVobInfo
 {
+	virtual ~BaseVobInfo()
+	{
+	}
 	/** Visual for this vob */
 	BaseVisualInfo* VisualInfo;
 
@@ -385,7 +390,16 @@ struct SkeletalVobInfo : public BaseVobInfo
 	~SkeletalVobInfo()
 	{
 		//delete VisualInfo;
+		
+		for(std::map<int, std::vector<MeshVisualInfo *>>::iterator it = NodeAttachments.begin(); it != NodeAttachments.end(); it++)
+		{
+			for(unsigned int i=0;i<(*it).second.size();i++)
+				delete (*it).second[i];
+		}
 	}
+
+	/** Map of visuals attached to nodes */
+	std::map<int, std::vector<MeshVisualInfo *>> NodeAttachments;
 
 	/** Indoor* */
 	bool IndoorVob;
@@ -422,7 +436,7 @@ struct WorldMeshSectionInfo
 
 	~WorldMeshSectionInfo()
 	{
-		for(std::map<MeshKey, MeshInfo*>::iterator it = WorldMeshes.begin(); it != WorldMeshes.end(); it++)
+		for(std::map<MeshKey, WorldMeshInfo*>::iterator it = WorldMeshes.begin(); it != WorldMeshes.end(); it++)
 		{
 			delete (*it).second;
 		}
@@ -452,7 +466,7 @@ struct WorldMeshSectionInfo
 	/** Saves this sections mesh to a file */
 	void SaveSectionMeshToFile(const std::string& name);
 
-	std::map<MeshKey, MeshInfo*, cmpMeshKey> WorldMeshes;
+	std::map<MeshKey, WorldMeshInfo*, cmpMeshKey> WorldMeshes;
 	std::map<BaseTexture *, std::vector<MeshInfo*>> WorldMeshesByCustomTexture;
 	std::map<zCMaterial *, std::vector<MeshInfo*>> WorldMeshesByCustomTextureOriginal;
 	std::map<MeshKey, MeshInfo*, cmpMeshKey> SuppressedMeshes;
@@ -535,7 +549,7 @@ public:
 	static void ExtractSkeletalMeshFromVobPNAEN(zCModel* model, SkeletalMeshVisualInfo* skeletalMeshInfo);
 	
 	/** Extracts a node-visual */
-	static void ExtractNodeVisual(int index, zCModelNodeInst* node, SkeletalMeshVisualInfo* skeletalMeshInfo);
+	static void ExtractNodeVisual(int index, zCModelNodeInst* node, std::map<int, std::vector<MeshVisualInfo *>>& attachments);
 
 	/** Updates a quadmark info */
 	static void UpdateQuadMarkInfo(QuadMarkInfo* info, zCQuadMark* mark, const D3DXVECTOR3& position);

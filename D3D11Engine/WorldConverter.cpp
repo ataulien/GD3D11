@@ -326,7 +326,7 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 
 			if(section.WorldMeshes.find(key) == section.WorldMeshes.end())
 			{
-				section.WorldMeshes[key] = new MeshInfo;
+				section.WorldMeshes[key] = new WorldMeshInfo;
 
 				// Try to load custom texture.
 				std::string rep = ("system\\GD3D11\\Textures\\Custom\\" + textures[m] + ".dds").c_str();
@@ -384,7 +384,7 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 			numSections++;
 			avgSections += D3DXVECTOR2((float)(*itx).first, (float)(*ity).first);
 
-			for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 			{
 				if(vertexBuffers.size() == 653 || vertexBuffers.size() == 31)
 				{
@@ -454,7 +454,7 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 			WorldMeshSectionInfo& section = (*ity).second;
 
 			int numIndices = 0;
-			for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 			{
 				(*it).second->BaseIndexLocation = offsets[i];
 				numIndices += (*it).second->Indices.size();
@@ -588,7 +588,7 @@ HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int nu
 		if((*outSections)[section.x][section.y].WorldMeshes.count(key) == 0)
 		{
 			key.Info = Engine::GAPI->GetMaterialInfoFrom(key.Texture);
-			(*outSections)[section.x][section.y].WorldMeshes[key] = new MeshInfo;
+			(*outSections)[section.x][section.y].WorldMeshes[key] = new WorldMeshInfo;
 		}
 
 		//std::vector<ExVertexStruct> TriangleVertices;
@@ -652,7 +652,7 @@ HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int nu
 			numSections++;
 			avgSections += D3DXVECTOR2((float)(*itx).first, (float)(*ity).first);
 
-			for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 			{
 				std::vector<ExVertexStruct> indexedVertices;
 				std::vector<VERTEX_INDEX> indices;
@@ -709,7 +709,7 @@ HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int nu
 		{
 			WorldMeshSectionInfo& section = (*ity).second;
 
-			for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 			{
 				MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom((*it).first.Texture);
 				info->TesselationShaderPair = "PNAEN_Tesselation";
@@ -836,7 +836,7 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 		if((*outSections)[section.x][section.y].WorldMeshes.count(key) == 0)
 		{
 			key.Info = Engine::GAPI->GetMaterialInfoFrom(key.Texture);
-			(*outSections)[section.x][section.y].WorldMeshes[key] = new MeshInfo;
+			(*outSections)[section.x][section.y].WorldMeshes[key] = new WorldMeshInfo;
 		}
 
 		std::vector<ExVertexStruct> finalVertices;
@@ -890,7 +890,7 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 			numSections++;
 			avgSections += D3DXVECTOR2((float)(*itx).first, (float)(*ity).first);
 
-			for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 			{
 				std::vector<ExVertexStruct> indexedVertices;
 				std::vector<VERTEX_INDEX> indices;
@@ -947,7 +947,7 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 		{
 			WorldMeshSectionInfo& section = (*ity).second;
 
-			for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 			{
 				(*it).second->BaseIndexLocation = offsets[i];
 
@@ -994,7 +994,7 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 void WorldConverter::GenerateFullSectionMesh(WorldMeshSectionInfo& section)
 {
 	std::vector<ExVertexStruct> vx;
-	for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+	for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 	{
 		if(!(*it).first.Material ||
 			(*it).first.Material->HasAlphaTest())
@@ -1127,7 +1127,7 @@ void WorldConverter::SaveSectionsToObjUnindexed(const char* file, const std::map
 		{
 			const WorldMeshSectionInfo& section = (*ity).second;
 
-			for(std::map<MeshKey, MeshInfo*>::const_iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			for(std::map<MeshKey, WorldMeshInfo*>::const_iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 			{
 				for(unsigned int i=0;i<(*it).second->Vertices.size();i++)
 				{
@@ -1328,12 +1328,6 @@ void WorldConverter::ExtractSkeletalMeshFromVobPNAEN(zCModel* model, SkeletalMes
 			skeletalMeshInfo->SkeletalMeshes[mat].push_back(mi);
 		}
 	}
-
-	// Extract all visuals we know at this time
-	for(int i=0;i<model->GetNodeList()->NumInArray;i++)
-	{
-		ExtractNodeVisual(i, model->GetNodeList()->Array[i], skeletalMeshInfo);
-	}
 }
 
 /** Extracts a skeletal mesh from a zCMeshSoftSkin */
@@ -1477,13 +1471,14 @@ void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisu
 		}
 	}
 
-	// Extract all visuals we know at this time
-	for(int i=0;i<model->GetNodeList()->NumInArray;i++)
-	{
-		ExtractNodeVisual(i, model->GetNodeList()->Array[i], skeletalMeshInfo);
-	}
+	static int s_NoMeshesNum = 0;
 
 	skeletalMeshInfo->VisualName = model->GetVisualName();
+	/*if(skeletalMeshInfo->VisualName.empty())
+	{
+		skeletalMeshInfo->VisualName = "MESHLESS_SKEL_" + std::to_string(s_NoMeshesNum);
+		s_NoMeshesNum++;
+	}*/
 
 	// Try to load saved settings for this mesh
 	skeletalMeshInfo->LoadMeshVisualInfo(skeletalMeshInfo->VisualName);
@@ -1494,8 +1489,15 @@ void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisu
 }
 
 /** Extracts a node-visual */
-void WorldConverter::ExtractNodeVisual(int index, zCModelNodeInst* node, SkeletalMeshVisualInfo* skeletalMeshInfo)
+void WorldConverter::ExtractNodeVisual(int index, zCModelNodeInst* node, std::map<int, std::vector<MeshVisualInfo *>>& attachments)
 {
+	// Only allow 1 attachment
+	if(!attachments[index].empty())
+	{
+		delete attachments[index][0];
+		attachments[index].clear();
+	}
+
 	// Extract node visuals
 	if(node->NodeVisual)
 	{
@@ -1505,22 +1507,47 @@ void WorldConverter::ExtractNodeVisual(int index, zCModelNodeInst* node, Skeleta
 		{
 			zCProgMeshProto* pm = (zCProgMeshProto *)node->NodeVisual;
 
+			/*std::string name = pm->GetObjectName();
+			if(name.empty())
+			{
+				return;
+			}*/
+
+			if(pm->GetNumSubmeshes() == 0)
+			{
+				return;
+			}
+
 			MeshVisualInfo* mi = new MeshVisualInfo;
 
 			Extract3DSMeshFromVisual2(pm, mi);
 
-			skeletalMeshInfo->NodeAttachments[index].push_back(mi);
+			
+
+			attachments[index].push_back(mi);
 
 		}else if(strcmp(ext, ".MMS") == 0)
 		{
 			// These are zCMorphMeshes
 			zCProgMeshProto* pm = ((zCMorphMesh *)node->NodeVisual)->GetMorphMesh();
 
+			/*std::string name = pm->GetObjectName();
+			if(name.empty())
+			{
+				return;
+			}*/
+
+			if(pm->GetNumSubmeshes() == 0)
+			{
+				return;
+			}
+
 			MeshVisualInfo* mi = new MeshVisualInfo;
 
 			Extract3DSMeshFromVisual2(pm, mi);
+			mi->Visual = node->NodeVisual;
 
-			skeletalMeshInfo->NodeAttachments[index].push_back(mi);
+			attachments[index].push_back(mi);
 		}
 	}
 }
@@ -1717,7 +1744,10 @@ void WorldConverter::Extract3DSMeshFromVisual2(zCProgMeshProto* visual, MeshVisu
 
 		// Create the indexed mesh
 		if(vertices.empty())
-			return;		
+		{
+			LogWarn() << "Empty submesh (#" << i << ") on Visual " << visual->GetObjectName();
+			continue;		
+		}
 
 		mi->Vertices = vertices;
 		mi->Indices = indices;

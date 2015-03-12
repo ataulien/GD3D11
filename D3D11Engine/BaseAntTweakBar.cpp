@@ -113,6 +113,11 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "TesselationFactor", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationFactor, NULL);
 	TwDefine(" General/TesselationFactor  step=0.1 min=1");
 
+	TwAddVarRW(Bar_General, "TesselationRange", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationRange, NULL);
+	TwDefine(" General/TesselationRange  step=0.1 min=1");
+
+	
+
 	//TwAddVarRW(Bar_General, "Grass AlphaToCoverage", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.VegetationAlphaToCoverage, NULL);	
 	
 

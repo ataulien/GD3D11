@@ -1533,7 +1533,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	vp.TopLeftX = 0.0f;
 	vp.TopLeftY = 0.0f;
 	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
 	vp.Width = (float)GetBackbufferResolution().x;
 	vp.Height = (float)GetBackbufferResolution().y;
 
@@ -1542,6 +1542,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	// If we currently are underwater, then draw underwater effects
 	if(Engine::GAPI->IsUnderWater())
 		DrawUnderwaterEffects();
+
+	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
 
 	return XR_SUCCESS;
 }
@@ -1687,14 +1689,14 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	DrawVertexBufferIndexedUINT(Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer, 
 				Engine::GAPI->GetWrappedWorldMesh()->MeshIndexBuffer, 0, 0);
 
-	std::list<std::pair<MeshKey, MeshInfo *>> meshList;
+	std::list<std::pair<MeshKey, WorldMeshInfo *>> meshList;
 
 	int numUncachedTextures = 0;
 	for(int i=0;i<2;i++)
 	{
 		for(std::list<WorldMeshSectionInfo*>::iterator it = renderList.begin(); it != renderList.end(); it++)
 		{
-			for(std::map<MeshKey, MeshInfo*>::iterator itm = (*it)->WorldMeshes.begin(); itm != (*it)->WorldMeshes.end();itm++)
+			for(std::map<MeshKey, WorldMeshInfo*>::iterator itm = (*it)->WorldMeshes.begin(); itm != (*it)->WorldMeshes.end();itm++)
 			{
 				if((*itm).first.Material)
 				{
@@ -1771,7 +1773,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		Context->PSSetShader(NULL, NULL, NULL);
 		WorldMeshSectionInfo& section = Engine::GAPI->GetWorldSections()[camSection.x][camSection.y];
 
-		for(std::map<MeshKey, MeshInfo*>::iterator itm = section.WorldMeshes.begin(); itm != section.WorldMeshes.end();itm++)
+		for(std::map<MeshKey, WorldMeshInfo*>::iterator itm = section.WorldMeshes.begin(); itm != section.WorldMeshes.end();itm++)
 		{
 			if(!(*itm).first.Texture)
 				continue;
@@ -1782,7 +1784,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			if((*itm).first.Info->MaterialType == MaterialInfo::MT_Water)
 				continue; // Don't pre-render water
 
-			if(!(*itm).first.Info->TesselationShaderPair.empty())
+			if((*itm).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
 				continue; // Don't pre-render tesselated surfaces
 
 			DrawVertexBufferIndexedUINT(NULL, NULL, 
@@ -1797,7 +1799,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	// Now draw the actual pixels
 	zCTexture* bound = NULL;
 	MaterialInfo* boundInfo = NULL;
-	for(std::list<std::pair<MeshKey, MeshInfo *>>::iterator it = meshList.begin(); it != meshList.end(); it++)
+	ID3D11ShaderResourceView* boundNormalmap = NULL;
+	for(std::list<std::pair<MeshKey, WorldMeshInfo *>>::iterator it = meshList.begin(); it != meshList.end(); it++)
 	{
 		int indicesNumMod = 1;
 		if((*it).first.Texture != bound)
@@ -1808,6 +1811,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			// Get diffuse and normalmap
 			srv[0] = ((D3D11Texture *)surface->GetEngineTexture())->GetShaderResourceView();
 			srv[1] = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
+
+			boundNormalmap = srv[1];
 
 			// Bind both
 			Context->PSSetShaderResources(0,2, srv);
@@ -1849,19 +1854,31 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			boundInfo = info;
 			bound = (*it).first.Texture;
 
-			if(!info->TesselationShaderPair.empty())
+			// Bind normalmap to HDS
+			if((*it).second->MeshIndexBufferPNAEN)
+			{
+				Context->DSSetShaderResources(0,1, &boundNormalmap);
+				Context->HSSetShaderResources(0,1, &boundNormalmap);
+			}
+
+			/*if((*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
 			{
 				// Set normal/displacement map
 				Context->DSSetShaderResources(0,1, &srv[1]);
 				Context->HSSetShaderResources(0,1, &srv[1]);
 				Setup_PNAEN(PNAEN_Default);
+
+				(*it).second->TesselationSettings.Constantbuffer->BindToDomainShader(1);
+				(*it).second->TesselationSettings.Constantbuffer->BindToHullShader(1);
 			}else if(ActiveHDS)
 			{
 				Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				Context->DSSetShader(NULL, NULL, NULL);
 				Context->HSSetShader(NULL, NULL, NULL);
 				ActiveHDS = NULL;
-			}
+				SetActiveVertexShader("VS_Ex");
+				ActiveVS->Apply();
+			}*/
 		}
 
 
@@ -1870,6 +1887,34 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		{
 			FrameWaterSurfaces[(*it).first.Texture].push_back((*it).second);
 			continue;
+		}
+
+		// Check for tesselated mesh
+		if(!ActiveHDS && (*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
+		{
+			// Set normal/displacement map
+			Context->DSSetShaderResources(0,1, &boundNormalmap);
+			Context->HSSetShaderResources(0,1, &boundNormalmap);
+			Setup_PNAEN(PNAEN_Default);			
+		}
+
+		// Bind infos for this mesh
+		if((*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
+		{
+			(*it).second->TesselationSettings.Constantbuffer->BindToDomainShader(1);
+			(*it).second->TesselationSettings.Constantbuffer->BindToHullShader(1);
+		}else if(ActiveHDS) // Unbind tesselation-shaders if the mesh doesn't support it
+		{
+			Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			Context->DSSetShader(NULL, NULL, NULL);
+			Context->HSSetShader(NULL, NULL, NULL);
+			ActiveHDS = NULL;
+			SetActiveVertexShader("VS_Ex");
+			ActiveVS->Apply();
+
+			// Bind wrapped mesh again
+			DrawVertexBufferIndexedUINT(Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer, 
+				Engine::GAPI->GetWrappedWorldMesh()->MeshIndexBuffer, 0, 0);
 		}
 
 		if(!ActiveHDS)
@@ -1881,7 +1926,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		}else
 		{
 			// Draw from mesh info
-			DrawVertexBufferIndexed((*it).second->MeshVertexBuffer, (*it).second->MeshIndexBuffer, (*it).second->IndicesPNAEN.size());
+			DrawVertexBufferIndexed((*it).second->MeshVertexBuffer, (*it).second->MeshIndexBufferPNAEN, (*it).second->IndicesPNAEN.size());
 		}
 
 	}
@@ -1972,7 +2017,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMeshW(bool noTextures)
 	//noTextures = true;
 
 	// Static, so we can clear the lists but leave the hashmap intact
-	static std::hash_map<zCTexture*, std::pair<MaterialInfo*, std::vector<MeshInfo*>>> meshesByMaterial;
+	static std::hash_map<zCTexture*, std::pair<MaterialInfo*, std::vector<WorldMeshInfo*>>> meshesByMaterial;
 	static zCMesh* startMesh = Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetMesh();
 
 	if(startMesh != Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetMesh())
@@ -1996,11 +2041,11 @@ XRESULT D3D11GraphicsEngine::DrawWorldMeshW(bool noTextures)
 
 		continue;*/
 
-		for(std::map<MeshKey, MeshInfo*>::iterator it = (*itr)->WorldMeshes.begin(); it != (*itr)->WorldMeshes.end();it++)
+		for(std::map<MeshKey, WorldMeshInfo*>::iterator it = (*itr)->WorldMeshes.begin(); it != (*itr)->WorldMeshes.end();it++)
 		{
 			if((*it).first.Material)
 			{
-				std::pair<MaterialInfo*, std::vector<MeshInfo*>>& p = meshesByMaterial[(*it).first.Material->GetTexture()];
+				std::pair<MaterialInfo*, std::vector<WorldMeshInfo*>>& p = meshesByMaterial[(*it).first.Material->GetTexture()];
 				p.second.push_back((*it).second);
 
 				if(!p.first)
@@ -2019,7 +2064,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMeshW(bool noTextures)
 	// Bind wrapped mesh vertex buffers
 	DrawVertexBufferIndexedUINT(Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer, Engine::GAPI->GetWrappedWorldMesh()->MeshIndexBuffer, 0, 0);
 
-	for(std::hash_map<zCTexture*, std::pair<MaterialInfo*, std::vector<MeshInfo*>>>::iterator it = meshesByMaterial.begin(); it != meshesByMaterial.end();it++)
+	for(std::hash_map<zCTexture*, std::pair<MaterialInfo*, std::vector<WorldMeshInfo*>>>::iterator it = meshesByMaterial.begin(); it != meshesByMaterial.end();it++)
 	{
 		if((*it).second.second.empty())
 			continue;
@@ -2167,13 +2212,13 @@ XRESULT D3D11GraphicsEngine::DrawWorldMeshW(bool noTextures)
 		
 		if(ActiveHDS)
 		{
-			for(std::vector<MeshInfo*>::iterator itr = (*it).second.second.begin(); itr != (*it).second.second.end(); itr++)
+			for(std::vector<WorldMeshInfo*>::iterator itr = (*it).second.second.begin(); itr != (*it).second.second.end(); itr++)
 			{
 				DrawVertexBufferIndexed((*itr)->MeshVertexBuffer, (*itr)->MeshIndexBuffer, (*itr)->Indices.size());
 			}
 		}else
 		{
-			for(std::vector<MeshInfo*>::iterator itr = (*it).second.second.begin(); itr != (*it).second.second.end(); itr++)
+			for(std::vector<WorldMeshInfo*>::iterator itr = (*it).second.second.begin(); itr != (*it).second.second.end(); itr++)
 			{
 				// Draw from wrapped mesh
 				DrawVertexBufferIndexedUINT(NULL, NULL, (*itr)->Indices.size(), (*itr)->BaseIndexLocation);			
@@ -2211,7 +2256,7 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 	// Unbind pixelshader
 	Context->PSSetShader(NULL, NULL, NULL);
 	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
-	for(std::hash_map<zCTexture*, std::vector<MeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
+	for(std::hash_map<zCTexture*, std::vector<WorldMeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
 	{
 		// Draw surfaces
 		for(unsigned int i=0;i<(*it).second.size();i++)
@@ -2270,7 +2315,7 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 
 	for(int i=0;i<1;i++) // Draw twice, but second time only to depth buffer to fix the fog
 	{
-		for(std::hash_map<zCTexture*, std::vector<MeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
+		for(std::hash_map<zCTexture*, std::vector<WorldMeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
 		{
 			if((*it).first)
 			{
@@ -2386,7 +2431,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 							Engine::GAPI->DrawMeshInfo(NULL, section.FullStaticMesh);
 					}else
 					{
-						for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+						for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 						{
 							// Bind texture			
 							if((*it).first.Material && (*it).first.Material->GetTexture())
@@ -3868,8 +3913,12 @@ void D3D11GraphicsEngine::DrawVobSingle(VobInfo* vob)
 	vob->UpdateVobConstantBuffer();
 	vob->VobConstantBuffer->BindToVertexShader(1);
 
-	SetActivePixelShader("PS_DiffuseAlphaTest");
+	SetActivePixelShader("PS_Preview_Textured");
 	SetActiveVertexShader("VS_Ex");
+
+	SetDefaultStates();
+	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
+	Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
 
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
@@ -4443,10 +4492,10 @@ void D3D11GraphicsEngine::Setup_PNAEN(EPNAENRenderMode mode)
 	PNAENConstantBuffer cb;
 	cb.f4Eye = Engine::GAPI->GetCameraPosition();
 	cb.adaptive = INT4(0,0,0,0);
-	cb.clipping = INT4(0,0,0,0);
+	cb.clipping = INT4(1,0,0,0);
 
 	float f = Engine::GAPI->GetRendererState()->RendererSettings.TesselationFactor;
-	cb.f4TessFactors = float4(f,f,f,f);
+	cb.f4TessFactors = float4(f,f,Engine::GAPI->GetRendererState()->RendererSettings.TesselationRange, Engine::GAPI->GetRendererState()->RendererSettings.TesselationFactor);
 	cb.f4ViewportScale.x = (float)GetResolution().x / 2;
 	cb.f4ViewportScale.y = (float)GetResolution().y / 2;
 	cb.f4x4Projection = Engine::GAPI->GetProjectionMatrix();

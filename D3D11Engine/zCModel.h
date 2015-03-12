@@ -203,9 +203,11 @@ public:
 		//return __GetVisualName().ToChar();
 	}
 
-private:
-	zSTRING __GetVisualName()
+	zSTRING GetModelName()
 	{
 		XCALL(GothicMemoryLocations::zCModel::GetVisualName);
 	}
+
+private:
+	
 };
