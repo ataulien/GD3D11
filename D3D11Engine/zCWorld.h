@@ -39,8 +39,9 @@ public:
 
 	static void __fastcall hooked_zCWorldDisposeVobs(void* thisptr, void* unknwn, zCTree<zCVob>* tree)
 	{
-		// If tree is NULL, reset all the vobs
-		Engine::GAPI->ResetVobs();
+		// Reset only if this is the main world, inventory worlds are handled differently
+		if((zCWorld *)thisptr == Engine::GAPI->GetLoadedWorldInfo()->MainWorld)
+			Engine::GAPI->ResetVobs();
 
 		HookedFunctions::OriginalFunctions.original_zCWorldDisposeVobs(thisptr, tree);
 	}
