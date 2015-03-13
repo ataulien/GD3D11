@@ -87,6 +87,7 @@ XRESULT D2DVobSettingsDialog::InitControls()
 	DisplacementStrengthSetting->UpdateDimensions();
 	DisplacementStrengthSetting->GetSlider()->SetSliderChangedCallback(SliderDragged, this);
 	DisplacementStrengthSetting->AlignUnder(RoundnessSetting, 5.0f);
+	DisplacementStrengthSetting->GetSlider()->SetMinMax(-2.0f, 2.0f);
 	DisplacementStrengthSetting->GetSlider()->SetValue(0.5f);
 
 	return XR_SUCCESS;

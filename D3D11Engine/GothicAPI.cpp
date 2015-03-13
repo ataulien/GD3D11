@@ -444,6 +444,8 @@ void GothicAPI::ResetVobs()
 	RegisteredVobs.clear();
 	VobMap.clear();
 	BspLeafVobLists.clear();
+	DynamicallyAddedVobs.clear();
+	DecalVobs.clear();
 
 	for(std::hash_map<zCVobLight*, VobLightInfo*>::iterator it = VobLightMap.begin(); it != VobLightMap.end(); it++)
 	{
@@ -464,6 +466,13 @@ void GothicAPI::ResetVobs()
 		delete (*it).second;
 	}
 	SkeletalMeshVisuals.clear();
+
+	// Delete static mesh vobs
+	for(std::hash_map<zCVob*, VobInfo*>::iterator it = VobMap.begin(); it != VobMap.end(); it++)
+	{
+		delete (*it).second;
+	}
+	VobMap.clear();
 }
 
 /** Called when the game loaded a new level */
@@ -1069,7 +1078,7 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 		if((*it)->Vob == vob)
 		{
 			it = list.erase(it);
-			//break; // Can (should!) only be in here once
+			break; // Can (should!) only be in here once
 		}
 	}
 	
@@ -1269,9 +1278,6 @@ void GothicAPI::OnSetVisual(zCVob* vob)
 	OnAddVob(vob, vob->GetHomeWorld());
 }
 
-#include "D3D11ConstantBuffer.h"
-#include "D3D11GraphicsEngine.h"
-
 /** Called when a VOB got added to the BSP-Tree */
 void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 {
@@ -1336,9 +1342,9 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 			}
 
 			INT2 section = WorldConverter::GetSectionOfPos(vob->GetPositionWorld());
-			ID3D11Device* device = ((D3D11GraphicsEngine *)Engine::GraphicsEngine)->GetDevice();
+			/*ID3D11Device* device = ((D3D11GraphicsEngine *)Engine::GraphicsEngine)->GetDevice();
 
-			/*for(int i=0;i<INT_MAX;i++)
+			for(int i=0;i<INT_MAX;i++)
 			{
 				VS_ExConstantBuffer_PerInstance dt; // Just some 64-byte sized struct
 

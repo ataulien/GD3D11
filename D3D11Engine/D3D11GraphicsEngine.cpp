@@ -1934,6 +1934,14 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_FRONT;
 	Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
 
+	Engine::GAPI->GetRendererState()->BlendState.SetDefault();
+	Engine::GAPI->GetRendererState()->BlendStateDirty = true;
+
+	Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = true;
+	Engine::GAPI->GetRendererState()->DepthStateDirty = true;
+
+	UpdateRenderStates();
+
 	return XR_SUCCESS;
 }
 

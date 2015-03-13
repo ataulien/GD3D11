@@ -26,7 +26,7 @@ public:
 		HookedFunctions::OriginalFunctions.original_zCWorldLoadWorld = (zCWorldLoadWorld)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::LoadWorld, (BYTE *)zCWorld::hooked_LoadWorld);
 		HookedFunctions::OriginalFunctions.original_zCWorldVobRemovedFromWorld = (zCWorldVobRemovedFromWorld)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::VobRemovedFromWorld, (BYTE *)zCWorld::hooked_zCWorldVobRemovedFromWorld);
 		//HookedFunctions::OriginalFunctions.original_zCWorldDisposeWorld = (GenericThiscall)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::DisposeWorld, (BYTE *)zCWorld::hooked_zCWorldDisposeWorld);
-		//HookedFunctions::OriginalFunctions.original_zCWorldDisposeVobs = (zCWorldDisposeVobs)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::DisposeVobs, (BYTE *)zCWorld::hooked_zCWorldDisposeVobs);
+		HookedFunctions::OriginalFunctions.original_zCWorldDisposeVobs = (zCWorldDisposeVobs)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::DisposeVobs, (BYTE *)zCWorld::hooked_zCWorldDisposeVobs);
 
 		
 	}
@@ -40,8 +40,7 @@ public:
 	static void __fastcall hooked_zCWorldDisposeVobs(void* thisptr, void* unknwn, zCTree<zCVob>* tree)
 	{
 		// If tree is NULL, reset all the vobs
-		//if(!tree)
-		//	Engine::GAPI->ResetVobs();
+		Engine::GAPI->ResetVobs();
 
 		HookedFunctions::OriginalFunctions.original_zCWorldDisposeVobs(thisptr, tree);
 	}

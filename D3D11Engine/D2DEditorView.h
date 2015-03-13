@@ -159,6 +159,10 @@ protected:
 	SV_NamedSlider* SelectedTexNrmStrSlider;
 	SV_NamedSlider* SelectedTexSpecIntensSlider;
 	SV_NamedSlider* SelectedTexSpecPowerSlider;
+	SV_NamedSlider* SelectedTexDisplacementSlider;
+
+	SV_NamedSlider* SelectedMeshTessAmountSlider;
+	SV_NamedSlider* SelectedMeshRoundnessSlider;
 
 	SV_Slider* SelectedVegSizeSlider;
 	SV_Slider* SelectedVegAmountSlider;

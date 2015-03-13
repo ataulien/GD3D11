@@ -222,6 +222,42 @@ XRESULT D2DEditorView::InitControls()
 	SelectedTexSpecPowerSlider->GetSlider()->SetValue(90.0f);
 	SelectionTabControl->AddControlToTab(SelectedTexSpecPowerSlider, "Selection/Texture");
 
+	SelectedTexDisplacementSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
+	SelectedTexDisplacementSlider->AlignUnder(SelectedTexSpecPowerSlider, alignDistance);
+	SelectedTexDisplacementSlider->GetLabel()->SetCaption("Displacement:");
+	SelectedTexDisplacementSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedTexDisplacementSlider->GetLabel()->GetSize().height));
+	SelectedTexDisplacementSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
+	SelectedTexDisplacementSlider->UpdateDimensions();
+	SelectedTexDisplacementSlider->GetSlider()->SetSliderChangedCallback(TextureSettingsSliderChanged, this);
+	SelectedTexDisplacementSlider->GetSlider()->SetMinMax(-2.0f, 2.0f);
+	SelectedTexDisplacementSlider->GetSlider()->SetValue(1.0f);
+	SelectionTabControl->AddControlToTab(SelectedTexDisplacementSlider, "Selection/Texture");
+
+	SelectedMeshTessAmountSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
+	SelectedMeshTessAmountSlider->AlignUnder(SelectedTexDisplacementSlider, alignDistance * 2);
+	SelectedMeshTessAmountSlider->GetLabel()->SetCaption("Tesselation:");
+	SelectedMeshTessAmountSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedMeshTessAmountSlider->GetLabel()->GetSize().height));
+	SelectedMeshTessAmountSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
+	SelectedMeshTessAmountSlider->UpdateDimensions();
+	SelectedMeshTessAmountSlider->GetSlider()->SetSliderChangedCallback(TextureSettingsSliderChanged, this);
+	SelectedMeshTessAmountSlider->GetSlider()->SetMinMax(0.0f, 1.0f);
+	SelectedMeshTessAmountSlider->GetSlider()->SetValue(0.0f);
+	SelectionTabControl->AddControlToTab(SelectedMeshTessAmountSlider, "Selection/Texture");
+
+	SelectedMeshRoundnessSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
+	SelectedMeshRoundnessSlider->AlignUnder(SelectedMeshTessAmountSlider, alignDistance);
+	SelectedMeshRoundnessSlider->GetLabel()->SetCaption("Roundness:");
+	SelectedMeshRoundnessSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedMeshRoundnessSlider->GetLabel()->GetSize().height));
+	SelectedMeshRoundnessSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
+	SelectedMeshRoundnessSlider->UpdateDimensions();
+	SelectedMeshRoundnessSlider->GetSlider()->SetSliderChangedCallback(TextureSettingsSliderChanged, this);
+	SelectedMeshRoundnessSlider->GetSlider()->SetMinMax(0.0f, 1.0f);
+	SelectedMeshRoundnessSlider->GetSlider()->SetValue(1.0f);
+	SelectionTabControl->AddControlToTab(SelectedMeshRoundnessSlider, "Selection/Texture");
+	
+
+	
+
 	/*SelectedTexSpecModulationSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
 	SelectedTexSpecModulationSlider->AlignUnder(SelectedTexSpecPowerSlider, alignDistance);
 	SelectedTexSpecModulationSlider->GetLabel()->SetCaption("Spec. Modulate:");
@@ -806,6 +842,15 @@ void D2DEditorView::UpdateSelectionPanel()
 			SelectedImagePanel->SetD3D11TextureAsImage(thumb, INT2(256, 256));
 		}
 	}
+
+	if(Selection.SelectedMesh)
+	{
+		WorldMeshInfo* info = (WorldMeshInfo *)Selection.SelectedMesh;
+
+		SelectedTexDisplacementSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_DisplacementStrength);
+		SelectedMeshRoundnessSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_Roundness);
+		SelectedMeshTessAmountSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_TesselationFactor);
+	}
 }
 
 
@@ -1289,7 +1334,24 @@ void D2DEditorView::TextureSettingsSliderChanged(SV_Slider* sender, void* userda
 		}else if(sender == v->SelectedTexSpecPowerSlider->GetSlider())
 		{
 			info->buffer.SpecularPower = sender->GetValue();
-		}/*else if(sender == v->SelectedTexSpecModulationSlider->GetSlider())
+		}else if(sender == v->SelectedTexDisplacementSlider->GetSlider() && v->Selection.SelectedMesh)
+		{
+			WorldMeshInfo* mesh = (WorldMeshInfo *)v->Selection.SelectedMesh; // FIXME: Make this nicer
+			mesh->TesselationSettings.buffer.VT_DisplacementStrength = sender->GetValue();
+			mesh->TesselationSettings.UpdateConstantbuffer();
+		}else if(sender == v->SelectedMeshTessAmountSlider->GetSlider() && v->Selection.SelectedMesh)
+		{
+			WorldMeshInfo* mesh = (WorldMeshInfo *)v->Selection.SelectedMesh; // FIXME: Make this nicer
+			mesh->TesselationSettings.buffer.VT_TesselationFactor = sender->GetValue();
+			mesh->TesselationSettings.UpdateConstantbuffer();
+		}else if(sender == v->SelectedMeshRoundnessSlider->GetSlider() && v->Selection.SelectedMesh)
+		{
+			WorldMeshInfo* mesh = (WorldMeshInfo *)v->Selection.SelectedMesh; // FIXME: Make this nicer
+			mesh->TesselationSettings.buffer.VT_Roundness = sender->GetValue();
+			mesh->TesselationSettings.UpdateConstantbuffer();
+		}
+		
+		/*else if(sender == v->SelectedTexSpecModulationSlider->GetSlider())
 		{
 			//info->buffer.NormalmapStrength = sender->GetValue();
 		}*/

@@ -20,8 +20,8 @@
 #include <set>
 #include <signal.h>
 
-const char* const VERSION_NUMBER = "11.1";
-const char* const VERSION_STRING = "Version X11.1";
+const char* const VERSION_NUMBER = "12";
+const char* const VERSION_STRING = "Version X12";
 
 /** D3D7-Call logging */
 #define DebugWriteValue(value, check) if(value == check){LogInfo() << " - " << #check;}
