@@ -34,7 +34,7 @@ MyDirectDrawSurface7::~MyDirectDrawSurface7()
 {
 	Engine::GAPI->RemoveSurface(this);
 
-	// Sometimes gothic doesn't unlock a surface
+	// Sometimes gothic doesn't unlock a surface or this is a movie-buffer
 	delete[] LockedData;
 
 	delete EngineTexture;
@@ -293,6 +293,8 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
 
 	LockType = dwFlags;
 
+	*lpDDSurfaceDesc = OriginalSurfaceDesc;
+
 	// This has to be a backbuffer-copy
 	if((LockType & DDLOCK_READONLY) != 0 && LockType != DDLOCK_READONLY) // Gothic uses DDLOCK_READONLY + some other flags for getting the framebuffer. DDLOCK_READONLY only is for movie playback. 
 	{
@@ -329,8 +331,19 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
 	if(bpp == 16)
 		divisor = 2;
 
-	// Allocate some temporary data
-	LockedData = new unsigned char[EngineTexture->GetSizeInBytes(0) / divisor];
+	if(bpp == 24)
+	{
+		// Handle movie frame,
+		// don't deallocate the memory after unlock, since only the changing parts in videos will get updated
+		if(!LockedData)
+			LockedData = new unsigned char[EngineTexture->GetSizeInBytes(0) / divisor];
+
+	}else
+	{
+		// Allocate some temporary data
+		LockedData = new unsigned char[EngineTexture->GetSizeInBytes(0) / divisor];
+	}
+
 	lpDDSurfaceDesc->lpSurface = LockedData;
 	lpDDSurfaceDesc->lPitch = EngineTexture->GetRowPitchBytes(0) / divisor;
 
@@ -490,9 +503,12 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 		}
 	}
 
-	// Clean up
-	delete[] LockedData;
-	LockedData = NULL;
+	if(bpp != 24)
+	{
+		// Clean up if not a movie frame
+		delete[] LockedData;
+		LockedData = NULL;
+	}
 
 	return S_OK;
 }

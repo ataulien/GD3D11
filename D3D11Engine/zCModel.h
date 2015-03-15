@@ -104,32 +104,52 @@ public:
 
 	int GetIsVisible()
 	{
+#ifndef BUILD_GOTHIC_1_08k
 		return (*(int *)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_Flags)) & 1;
+#else
+		return 1;
+#endif
 	}
 
 	void SetIsVisible(bool visible)
 	{
+#ifndef BUILD_GOTHIC_1_08k
 		int v = visible ? 1 : 0;
 
 		byte* flags = (byte *)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_Flags);
 
 		*flags &= ~1;
 		*flags |= v;
+#else
+		// Do nothing yet
+		// FIXME
+#endif
 	}
 
 	D3DXVECTOR3 GetModelScale()
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		return D3DXVECTOR3(1,1,1);
+#endif
+
 		return *(D3DXVECTOR3 *)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_ModelScale);
 	}
 
 	float GetModelFatness()
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		return 1.0f;
+#endif
 		return *(float *)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_ModelFatness);
 	}
 
 	int GetDrawHandVisualsOnly()
 	{
+#ifndef BUILD_GOTHIC_1_08k
 		return *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_DrawHandVisualsOnly);
+#else
+		return 0; // First person not implemented in G1
+#endif
 	}
 
 	zCArray<zCModelNodeInst *>* GetNodeList()
@@ -170,7 +190,7 @@ public:
 			return;
 
 		std::vector<D3DXMATRIX*> tptr;
-		tptr.resize(GetNodeList()->NumInArray);
+		tptr.resize(GetNodeList()->NumInArray, NULL);
 		for (int i=0; i<GetNodeList()->NumInArray; i++) 
 		{
 			zCModelNodeInst* node = GetNodeList()->Array[i];
@@ -190,7 +210,8 @@ public:
 		// Put them into our vector
 		for(unsigned int i=0;i<tptr.size();i++)
 		{
-			transforms->push_back((*tptr[i]));
+			D3DXMATRIX m = *tptr[i];
+			transforms->push_back(m);
 		}
 	}
 

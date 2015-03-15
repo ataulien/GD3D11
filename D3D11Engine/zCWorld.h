@@ -22,13 +22,15 @@ public:
 	{
 		HookedFunctions::OriginalFunctions.original_zCWorldRender = (zCWorldRender)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::Render, (BYTE *)zCWorld::hooked_Render);
 		HookedFunctions::OriginalFunctions.original_zCWorldVobAddedToWorld = (zCWorldVobAddedToWorld)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::VobAddedToWorld, (BYTE *)zCWorld::hooked_VobAddedToWorld);
-		//HookedFunctions::OriginalFunctions.original_zCWorldInsertVobInWorld = (zCWorldVobAddedToWorld)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::InsertVobInWorld, (BYTE *)zCWorld::hooked_InsertVobInWorld);
+
 		HookedFunctions::OriginalFunctions.original_zCWorldLoadWorld = (zCWorldLoadWorld)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::LoadWorld, (BYTE *)zCWorld::hooked_LoadWorld);
 		HookedFunctions::OriginalFunctions.original_zCWorldVobRemovedFromWorld = (zCWorldVobRemovedFromWorld)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::VobRemovedFromWorld, (BYTE *)zCWorld::hooked_zCWorldVobRemovedFromWorld);
 		//HookedFunctions::OriginalFunctions.original_zCWorldDisposeWorld = (GenericThiscall)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::DisposeWorld, (BYTE *)zCWorld::hooked_zCWorldDisposeWorld);
 		HookedFunctions::OriginalFunctions.original_zCWorldDisposeVobs = (zCWorldDisposeVobs)DetourFunction((BYTE *)GothicMemoryLocations::zCWorld::DisposeVobs, (BYTE *)zCWorld::hooked_zCWorldDisposeVobs);
 
-		
+#ifdef BUILD_GOTHIC_1_08k
+		HookedFunctions::OriginalFunctions.original_oCWorldInsertVobInWorld = (zCWorldVobAddedToWorld)DetourFunction((BYTE *)GothicMemoryLocations::oCWorld::InsertVobInWorld, (BYTE *)zCWorld::hooked_InsertVobInWorld);		
+#endif
 	}
 
 	static void __fastcall hooked_zCWorldDisposeWorld(void* thisptr, void* unknwn)
@@ -79,11 +81,12 @@ public:
 	static void __fastcall hooked_InsertVobInWorld(void* thisptr, void* unknwn, zCVob* vob)
 	{
 		hook_infunc
-		HookedFunctions::OriginalFunctions.original_zCWorldInsertVobInWorld(thisptr, vob);
+		HookedFunctions::OriginalFunctions.original_oCWorldInsertVobInWorld(thisptr, vob);
 		if(vob->GetVisual())
 		{
 			//LogInfo() << vob->GetVisual()->GetFileExtension(0);
 			//Engine::GAPI->OnAddVob(vob); 
+			Engine::GAPI->OnAddVob(vob, (zCWorld *)thisptr);
 		}
 		hook_outfunc
 	}

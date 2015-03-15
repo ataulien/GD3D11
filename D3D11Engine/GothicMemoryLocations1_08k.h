@@ -16,13 +16,14 @@ struct GothicMemoryLocations
 		static const unsigned int zCCamera = 0x0089A0FC;
 		static const unsigned int oCGame = 0x0090168C;
 		static const unsigned int zCTimer = 0x008F6170;
-		static const unsigned int DInput7DeviceMouse = 0x00894048;
-		static const unsigned int DInput7DeviceKeyboard = 0x008D1D64;
+		static const unsigned int DInput7DeviceMouse = 0x00894058;
+		static const unsigned int DInput7DeviceKeyboard = 0x0089404C;
 		static const unsigned int zCInput = 0x00893A00;
 		static const unsigned int s_globFreePart = 0x0089B2B4;
+		static const unsigned int zCOption = 0x008902FC;
 	};
 
-		struct zCQuadMark
+	struct zCQuadMark
 	{
 		static const unsigned int Constructor = 0x005BCCF0;
 		static const unsigned int Destructor = 0x005BCF40;
@@ -42,6 +43,7 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int ReadInt = 0x00463120;
 		static const unsigned int ReadBool = 0x00462EA0;
+		static const unsigned int Offset_CommandLine = 0x284;
 	};
 
 	struct zFILE
@@ -119,7 +121,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_GroundPoly = 0x0AC;
 		static const unsigned int DoFrameActivity = 0x005E9DE0;
 		static const unsigned int GetBBoxLocal = 0x00600F30;
-		static const unsigned int Offset_HomeWorld = 0x0B8;
+		static const unsigned int Offset_HomeWorld = 0x0A8;
 
 		static const unsigned int Offset_Flags = 0x104;
 		static const unsigned int MASK_ShowVisual = 0x1;
@@ -242,6 +244,7 @@ struct GothicMemoryLocations
 	struct oCSpawnManager
 	{
 		static const unsigned int SpawnNpc = 0x006EDD80;
+
 	};
 
 	struct zCDecal
@@ -273,6 +276,12 @@ struct GothicMemoryLocations
 		static const unsigned int Call_Render_zCBspTreeRender = 0x00607475;
 		static const unsigned int GetActiveSkyController = 0x006060A0;
 		static const unsigned int Offset_SkyControllerOutdoor = 0x0D0;
+		static const unsigned int DisposeVobs = 0x00608AD0;
+	};
+
+	struct oCWorld
+	{
+		static const unsigned int InsertVobInWorld = 0x006F4C60;
 	};
 
 	struct zCBspNode
@@ -290,6 +299,7 @@ struct GothicMemoryLocations
 	struct oCNPC
 	{
 		static const unsigned int ResetPos = 0x007723E0;
+		static const unsigned int Enable = 0x006BDAC0;
 	};
 
 	struct oCGame
@@ -352,9 +362,10 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_MeshLibList = 0xB0;
 		static const unsigned int Offset_AttachedVobList = 0x8C;
 		static const unsigned int Offset_Flags = 0x1F8;
-		static const unsigned int Offset_DrawHandVisualsOnly = 0x174;
-		static const unsigned int Offset_ModelFatness = 0x128;
-		static const unsigned int Offset_ModelScale = 0x12C;
-		static const unsigned int Offset_DistanceModelToCamera = 0x120;
+		//static const unsigned int Offset_DrawHandVisualsOnly = 0x174;
+		static const unsigned int Offset_ModelFatness = 0x118;
+		static const unsigned int Offset_ModelScale = 0x11C;
+		static const unsigned int Offset_DistanceModelToCamera = 0x114;
+		static const unsigned int GetVisualName = 0x005727F0;
 	};
 };

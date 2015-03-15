@@ -813,7 +813,9 @@ XRESULT D3D11GraphicsEngine::Present()
 	}
 
 	// Draw ant tweak bar
+	SetDefaultStates();
 	Engine::AntTweakBar->Draw();
+	SetDefaultStates();
 	//LineRenderer->ClearCache();
 
 	if(UIView)UIView->Render(Engine::GAPI->GetFrameTimeSec());
@@ -1465,6 +1467,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 
 	// Draw world
 	Engine::GAPI->DrawWorldMeshNaive();
+
+	
 
 	// Draw HBAO
 	if(Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.Enabled)
@@ -2680,6 +2684,8 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 		// Draw skeletal meshes
 		for(std::list<SkeletalVobInfo *>::iterator it = Engine::GAPI->GetSkeletalMeshVobs().begin(); it != Engine::GAPI->GetSkeletalMeshVobs().end(); it++)
 		{
+			//Engine::GraphicsEngine->GetLineRenderer()->AddAABB((*it)->Vob->GetPositionWorld(), D3DXVECTOR3(10,10,10));
+
 			if(!(*it)->VisualInfo)
 				continue;
 

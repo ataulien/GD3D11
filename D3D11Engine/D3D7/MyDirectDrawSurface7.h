@@ -92,6 +92,9 @@ public:
 
 	/** returns if this surface is ready or not */
 	bool IsSurfaceReady(){return IsReady;}
+
+	/** Returns true if this surface is used to render a movie to */
+	bool IsMovieSurface(){return LockedData != NULL;}
 private:
 	
 	/** Faked attached surfaces for the mipmaps */

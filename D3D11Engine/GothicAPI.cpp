@@ -334,6 +334,10 @@ void GothicAPI::SetEnableGothicInput(bool value)
 	input->SetDeviceEnabled(2, value);
 	input->SetDeviceEnabled(1, value);
 
+/*#ifdef BUILD_GOTHIC_1_08k
+	return;
+#endif*/
+
 	// GOTHIC 2 SPECIFIC
 	IDirectInputDevice7A* dInputMouse = *(IDirectInputDevice7A **)GothicMemoryLocations::GlobalObjects::DInput7DeviceMouse;
 	IDirectInputDevice7A* dInputKeyboard = *(IDirectInputDevice7A **)GothicMemoryLocations::GlobalObjects::DInput7DeviceKeyboard;
@@ -1488,13 +1492,16 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 
 	model->SetIsVisible(true);
 
+#ifndef BUILD_GOTHIC_1_08k
 	if(!vi->Vob->GetShowVisual())
 		return;
+#endif
 
 	if(model->GetDrawHandVisualsOnly())
 		return; // Not supported yet
 
 	g->SetDefaultStates();
+
 
 	// Validate model
 	// Draw submeshes
@@ -1597,7 +1604,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	}
 
 	float fatness = model->GetModelFatness();
-
+	 
 	// Draw submeshes
 	for(std::map<zCMaterial *, std::vector<SkeletalMeshInfo*>>::iterator itm = ((SkeletalMeshVisualInfo *)vi->VisualInfo)->SkeletalMeshes.begin(); itm != ((SkeletalMeshVisualInfo *)vi->VisualInfo)->SkeletalMeshes.end();itm++)
 	{

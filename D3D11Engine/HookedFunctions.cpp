@@ -20,6 +20,7 @@
 #include "zCThread.h"
 #include "zCResourceManager.h"
 #include "zCQuadMark.h"
+#include "oCNPC.h"
 
 #if _MSC_VER >= 1300
 #include <Tlhelp32.h>
@@ -57,6 +58,7 @@ void HookedFunctionInfo::InitHooks()
 	zCThread::Hook();
 	//zCResourceManager::Hook();
 	zCQuadMark::Hook();
+	oCNPC::Hook();
 
 	//original_zCExceptionHandler_UnhandledExceptionFilter = (zCExceptionHandlerUnhandledExceptionFilter)DetourFunction((BYTE *)GothicMemoryLocations::Functions::zCExceptionHandler_UnhandledExceptionFilter, (BYTE *)HookedFunctionInfo::hooked_zCExceptionHandlerUnhandledExceptionFilter);
 	//original_HandledWinMain = (HandledWinMain)DetourFunction((BYTE *)GothicMemoryLocations::Functions::HandledWinMain, (BYTE *)HookedFunctionInfo::hooked_HandledWinMain);
@@ -95,8 +97,8 @@ long __fastcall HookedFunctionInfo::hooked_zBinkPlayerGetPixelFormat(void* thisp
 	int* cd = (int *)&desc;
 
 	// Resolution is at pos [2] and [3]
-	cd[2] = Engine::GraphicsEngine->GetResolution().x;
-	cd[3] = Engine::GraphicsEngine->GetResolution().y;
+	//cd[2] = Engine::GraphicsEngine->GetResolution().x;
+	//cd[3] = Engine::GraphicsEngine->GetResolution().y;
 
 	/*for(int i=0;i<0x7C;i++)
 	{

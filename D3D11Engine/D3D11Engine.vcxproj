@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release_G1|Win32">
+      <Configuration>Release_G1</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release_NoOpt_G1|Win32">
       <Configuration>Release_NoOpt_G1</Configuration>
       <Platform>Win32</Platform>
@@ -27,6 +31,13 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -47,6 +58,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -55,6 +69,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(DXSDK_DIR)\include;squish-1.11;include</IncludePath>
+    <LibraryPath>$(IncludePath);$(DXSDK_DIR)\lib\x86;lib;$(LibraryPath)</LibraryPath>
+    <TargetName>ddraw</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(IncludePath);$(DXSDK_DIR)\include;squish-1.11;include</IncludePath>
     <LibraryPath>$(IncludePath);$(DXSDK_DIR)\lib\x86;lib;$(LibraryPath)</LibraryPath>
@@ -97,6 +117,34 @@
       <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
+      <Outputs>xxx</Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>PUBLIC_RELEASE;BUILD_GOTHIC_1_08k;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;D3D11ENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ModuleDefinitionFile>ddraw.def</ModuleDefinitionFile>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <DelayLoadDLLs>
+      </DelayLoadDLLs>
+    </Link>
+    <CustomBuildStep>
+      <Command>copy "shaders\*.*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
+copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G1_SYSTEM_PATH)\ddraw.dll"
+copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
@@ -225,7 +273,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="D3D11PFX_HeightFog.h" />
     <ClInclude Include="D3D11PFX_SMAA.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="D3D11PShader.h" />
     <ClInclude Include="D3D11ShaderManager.h" />
@@ -353,9 +401,11 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="BasePShader.cpp" />
     <ClCompile Include="BaseTexture.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -363,6 +413,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="BaseVShader.cpp" />
     <ClCompile Include="CSFFT\fft_512x512_c2c.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -388,7 +439,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11PFX_HeightFog.cpp" />
     <ClCompile Include="D3D11PFX_SMAA.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="D3D11PShader.cpp" />
     <ClCompile Include="D3D11ShaderManager.cpp" />
@@ -398,50 +449,68 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11VShader.cpp" />
     <ClCompile Include="D3D7\FakeDirectDrawSurface7.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">../pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="D3D7\MyDirectDrawSurface7.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">../pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="DLLMain.cpp" />
     <ClCompile Include="BaseGraphicsEngine.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="Effects11\d3dx11dbg.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Effects11\d3dxGlobal.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Effects11\EffectAPI.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Effects11\EffectLoad.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Effects11\EffectNonRuntime.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Effects11\EffectReflection.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Effects11\EffectRuntime.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="GCamera.cpp" />
@@ -459,19 +528,23 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MeshModifier.cpp" />
     <ClCompile Include="ocean_simulator.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="oCNPC.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -481,46 +554,55 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="squish-1.11\clusterfit.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="squish-1.11\colourblock.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="squish-1.11\colourfit.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="squish-1.11\colourset.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="squish-1.11\maths.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="squish-1.11\rangefit.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="squish-1.11\singlecolourfit.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="squish-1.11\squish.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="StackWalker.cpp" />
     <ClCompile Include="SV_Border.cpp" />

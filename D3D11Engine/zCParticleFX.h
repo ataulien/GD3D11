@@ -18,7 +18,10 @@ class zCMesh;
 struct zTParticle 
 {
 	zTParticle* Next;
-	D3DXVECTOR3	Position; // local
+
+#ifdef BUILD_GOTHIC_2_6_fix
+	D3DXVECTOR3	PositionLocal;
+#endif
 	D3DXVECTOR3	PositionWS;
 	D3DXVECTOR3	Vel;
 	float LifeSpan;

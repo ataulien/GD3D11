@@ -22,7 +22,8 @@ class zCVisual;
 typedef int (__thiscall* zCBspTreeLoadBIN)(void*,zCFileBIN&, int);
 typedef void (__thiscall* zCWorldRender)(void*,zCCamera&);
 typedef void (__thiscall* zCWorldVobAddedToWorld)(void*, zCVob*);
-typedef void (__thiscall* zCWorldInsertVobInWorld)(void*, zCVob*);
+typedef void (__thiscall* oCNPCEnable)(void*, D3DXVECTOR3&);
+typedef void (__thiscall* oCWorldInsertVobInWorld)(void*, zCVob*);
 typedef void (__thiscall* zCBspTreeAddVob)(void*, zCVob*);
 typedef void (__thiscall* zCWorldLoadWorld)(void*, const zSTRING& fileName, const int loadMode);
 typedef void (__thiscall* oCGameEnterWorld)(void*, oCNpc* playerVob, int changePlayerPos, const zSTRING& startpoint);
@@ -46,6 +47,7 @@ typedef const zSTRING* (__thiscall* zCVisualGetFileExtension)(void*, int);
 typedef long (__stdcall* zCExceptionHandlerUnhandledExceptionFilter)(void*);
 typedef void (__thiscall* zCWorldDisposeVobs)(void *, zCTree<zCVob> *);
 typedef void (__thiscall* oCSpawnManagerSpawnNpc)(void*, class oCNpc *, const D3DXVECTOR3&, float);
+typedef void (__thiscall* oCSpawnManagerInsertNpc)(void*, class oCNpc *, const D3DXVECTOR3&);
 typedef void (__thiscall* zCVobSetVisual)(void*, zCVisual*);
 typedef int (__thiscall* zCTex_D3DXTEX_BuildSurfaces)(void*, int);
 typedef int (__thiscall* zCTextureLoadResourceData)(void*);
@@ -63,7 +65,7 @@ struct HookedFunctionInfo
 	zCWorldRender original_zCWorldRender;
 	zCWorldVobAddedToWorld original_zCWorldVobAddedToWorld;
 	zCBspTreeAddVob original_zCBspTreeAddVob;
-	zCWorldInsertVobInWorld original_zCWorldInsertVobInWorld;
+	oCWorldInsertVobInWorld original_oCWorldInsertVobInWorld;
 	zCWorldLoadWorld original_zCWorldLoadWorld;
 	oCGameEnterWorld original_oCGameEnterWorld;
 	zCWorldVobRemovedFromWorld original_zCWorldVobRemovedFromWorld;
@@ -92,6 +94,8 @@ struct HookedFunctionInfo
 	zCQuadMarkCreateQuadMark original_zCQuadMarkCreateQuadMark;
 	GenericDestructor original_zCQuadMarkDestructor;
 	GenericThiscall original_zCQuadMarkConstructor;
+	oCSpawnManagerInsertNpc original_oCSpawnManagerInsertNpc;
+	oCNPCEnable original_oCNPCEnable;
 
 	/** Function hooks */
 	static int __stdcall hooked_HandledWinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR szCmdLine, int sw);

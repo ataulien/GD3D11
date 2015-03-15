@@ -77,6 +77,10 @@ public:
 
 	bool GetShowVisual()
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		return true; // FIXME
+#endif
+
 		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_Flags);
 
 		return (flags & GothicMemoryLocations::zCVob::MASK_ShowVisual) != 0;
@@ -84,6 +88,10 @@ public:
 
 	EVisualCamAlignType GetAlignment()
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		return EVisualCamAlignType::zVISUAL_CAM_ALIGN_FULL; // FIXME
+#endif
+
 		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_CameraAlignment);
 		
 		//.text:00601652                 shl     eax, 1Eh
