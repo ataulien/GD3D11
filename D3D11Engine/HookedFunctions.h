@@ -87,6 +87,7 @@ struct HookedFunctionInfo
 	zCWorldDisposeVobs original_zCWorldDisposeVobs;
 	oCSpawnManagerSpawnNpc original_oCSpawnManagerSpawnNpc;
 	zCVobSetVisual original_zCVobSetVisual;
+	GenericDestructor original_zCVobDestructor;
 	zCTex_D3DXTEX_BuildSurfaces original_zCTex_D3DXTEX_BuildSurfaces;
 	zCTextureLoadResourceData ofiginal_zCTextureLoadResourceData;
 	zCThreadSuspendThread original_zCThreadSuspendThread;

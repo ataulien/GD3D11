@@ -244,6 +244,25 @@ XRESULT D3D11ShaderManager::Init()
 
 	makros.clear();
 	m.Name = "NORMALMAPPING";
+	m.Definition = "1";
+	makros.push_back(m);
+
+	m.Name = "ALPHATEST";
+	m.Definition = "0";
+	makros.push_back(m);
+
+	m.Name = "FXMAP";
+	m.Definition = "1";
+	makros.push_back(m);
+
+	Shaders.push_back(ShaderInfo("PS_DiffuseNormalmappedFxMap", "PS_Diffuse.hlsl", "p", makros));
+	Shaders.back().cBufferSizes.push_back(sizeof(GothicGraphicsState));
+	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(MaterialInfo::Buffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));
+
+	makros.clear();
+	m.Name = "NORMALMAPPING";
 	m.Definition = "0";
 	makros.push_back(m);
 
@@ -271,6 +290,28 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
 	Shaders.back().cBufferSizes.push_back(sizeof(MaterialInfo::Buffer));
 	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));
+
+	makros.clear();
+	m.Name = "NORMALMAPPING";
+	m.Definition = "1";
+	makros.push_back(m);
+
+	m.Name = "ALPHATEST";
+	m.Definition = "1";
+	makros.push_back(m);
+
+	m.Name = "FXMAP";
+	m.Definition = "1";
+	makros.push_back(m);
+								  
+	Shaders.push_back(ShaderInfo("PS_DiffuseNormalmappedAlphaTestFxMap", "PS_Diffuse.hlsl", "p", makros));
+	Shaders.back().cBufferSizes.push_back(sizeof(GothicGraphicsState));
+	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(MaterialInfo::Buffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));
+
+
+	
 
 	makros.clear();
 	m.Name = "RENDERMODE";

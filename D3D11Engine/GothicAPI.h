@@ -244,6 +244,12 @@ public:
 	/** Removes the given quadmark */
 	void RemoveQuadMark(zCQuadMark* mark);
 
+	/** Saves all sections information */
+	void SaveSectionInfos();
+
+	/** Loads all sections information */
+	void LoadSectionInfos();
+
 	/** Returns wether the camera is underwater or not */
 	bool IsUnderWater();
 

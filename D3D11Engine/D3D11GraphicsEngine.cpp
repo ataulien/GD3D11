@@ -206,8 +206,11 @@ XRESULT D3D11GraphicsEngine::Init()
 	
 	if(hr == DXGI_ERROR_UNSUPPORTED)
 	{
-		LogErrorBox() <<	"Your GPU (" << deviceDescription.c_str() << ") does not support the required featurelevel to run GD3D11! (DXGI_ERROR_UNSUPPORTED)\n"
-							"It has to be at least D3D11 (Featurelevel 11_0) compatible!\n\nThe game will now close.";
+		LogErrorBox() <<	"Your GPU (" << deviceDescription.c_str() << ") does not support Direct3D 11, so it can't run GD3D11!\n"
+			"It has to be at least Featurelevel 11_0 compatible, which requires at least:"
+			" *	Nvidia GeForce GTX4xx or higher"
+			" *	AMD Radeon 5xxx or higher\n\n"
+			"The game will now close.";
 		exit(0);
 	}
 	
@@ -646,6 +649,8 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame()
 	SetActivePixelShader("PS_Simple");
 	SetActiveVertexShader("VS_Ex");
 
+	PS_DiffuseNormalmappedFxMap = ShaderManager->GetPShader("PS_DiffuseNormalmappedFxMap");
+	PS_DiffuseNormalmappedAlphatestFxMap = ShaderManager->GetPShader("PS_DiffuseNormalmappedAlphatestFxMap");
 	PS_DiffuseNormalmapped = ShaderManager->GetPShader("PS_DiffuseNormalmapped");
 	PS_Diffuse = ShaderManager->GetPShader("PS_Diffuse");
 	PS_DiffuseNormalmappedAlphatest = ShaderManager->GetPShader("PS_DiffuseNormalmappedAlphaTest");
@@ -998,6 +1003,20 @@ XRESULT D3D11GraphicsEngine::DrawVertexArray(ExVertexStruct* vertices, unsigned 
 
 	SetupVS_ExMeshDrawCall();
 
+	D3D11_BUFFER_DESC desc;
+	((D3D11VertexBuffer *)TempVertexBuffer)->GetVertexBuffer()->GetDesc(&desc);
+
+	if(desc.ByteWidth < stride * numVertices)
+	{
+		LogInfo() << "TempVertexBuffer too small (" << desc.ByteWidth << "), need " << stride * numVertices << " bytes. Recreating buffer.";
+
+		// Buffer too small, recreate it
+		delete TempVertexBuffer;
+		TempVertexBuffer = new D3D11VertexBuffer();
+
+		TempVertexBuffer->Init(NULL, stride * numVertices, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	}
+
 	TempVertexBuffer->UpdateBuffer(vertices, stride * numVertices);
 
 	UINT offset = 0;
@@ -1166,7 +1185,9 @@ XRESULT D3D11GraphicsEngine::DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffe
 		// Buffer too small, recreate it
 		delete DynamicInstancingBuffer;
 		DynamicInstancingBuffer = new D3D11VertexBuffer();
-		DynamicInstancingBuffer->Init(NULL, instanceDataStride * numInstances, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+
+		// Put in some little extra space (16) so we don't need to recreate this every frame when approaching a field of stones or something.
+		DynamicInstancingBuffer->Init(NULL, instanceDataStride * (numInstances + 16), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
 	}
 
 	// Update the vertexbuffer
@@ -1810,16 +1831,17 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		if((*it).first.Texture != bound)
 		{
 			MyDirectDrawSurface7* surface = (*it).first.Texture->GetSurface();
-			ID3D11ShaderResourceView* srv[2];
+			ID3D11ShaderResourceView* srv[3];
 			
 			// Get diffuse and normalmap
 			srv[0] = ((D3D11Texture *)surface->GetEngineTexture())->GetShaderResourceView();
 			srv[1] = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
+			srv[2] = surface->GetFxMap() ? ((D3D11Texture *)surface->GetFxMap())->GetShaderResourceView() : NULL;
 
 			boundNormalmap = srv[1];
 
 			// Bind both
-			Context->PSSetShaderResources(0,2, srv);
+			Context->PSSetShaderResources(0,3, srv);
 
 			// Get the right shader for it
 
@@ -2870,14 +2892,15 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 						if(tx->CacheIn(0.6f) == zRES_CACHED_IN)
 						{
 							MyDirectDrawSurface7* surface = tx->GetSurface();
-							ID3D11ShaderResourceView* srv[2];
+							ID3D11ShaderResourceView* srv[3];
 			
 							// Get diffuse and normalmap
 							srv[0] = ((D3D11Texture *)surface->GetEngineTexture())->GetShaderResourceView();
 							srv[1] = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
+							srv[2] = surface->GetFxMap() ? ((D3D11Texture *)surface->GetFxMap())->GetShaderResourceView() : NULL;
 
 							// Bind both
-							Context->PSSetShaderResources(0,2, srv);
+							Context->PSSetShaderResources(0,3, srv);
 
 							// Set normal/displacement map
 							Context->DSSetShaderResources(0,1, &srv[1]);
@@ -4227,7 +4250,13 @@ void D3D11GraphicsEngine::BindShaderForTexture(zCTexture* texture, bool forceAlp
 	{
 		if(texture->GetSurface()->GetNormalmap())
 		{
-			newShader = PS_DiffuseNormalmappedAlphatest;
+			if(texture->GetSurface()->GetFxMap())
+			{
+				newShader = PS_DiffuseNormalmappedAlphatestFxMap;
+			}else
+			{
+				newShader = PS_DiffuseNormalmappedAlphatest;
+			}
 		}else
 		{
 			newShader = PS_DiffuseAlphatest;
@@ -4236,7 +4265,13 @@ void D3D11GraphicsEngine::BindShaderForTexture(zCTexture* texture, bool forceAlp
 	{
 		if(texture->GetSurface()->GetNormalmap())
 		{
-			newShader = PS_DiffuseNormalmapped;
+			if(texture->GetSurface()->GetFxMap())
+			{
+				newShader = PS_DiffuseNormalmappedFxMap;
+			}else
+			{
+				newShader = PS_DiffuseNormalmapped;
+			}
 		}else
 		{
 			newShader = PS_Diffuse;

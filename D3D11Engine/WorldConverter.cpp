@@ -24,6 +24,7 @@
 #include "zCQuadMark.h"
 
 const int VISUALINFO_VERSION = 1;
+const int WORLDMESHINFO_VERSION = 1;
 
 WorldConverter::WorldConverter(void)
 {
@@ -32,6 +33,59 @@ WorldConverter::WorldConverter(void)
 
 WorldConverter::~WorldConverter(void)
 {
+}
+
+/** Saves the info for this visual */
+void WorldMeshInfo::SaveWorldMeshInfo(const std::string& name)
+{
+	FILE* f = fopen(("system\\GD3D11\\meshes\\infos\\" + name + ".wi").c_str(), "wb");
+
+	if(!f)
+	{
+		LogError() << "Failed to open file '" << ("system\\GD3D11\\meshes\\infos\\" + name + ".wi") << "' for writing! Make sure the game runs in Admin mode "
+					  "to get the rights to write to that directory!";
+
+		return;
+	}
+
+	// Write the version first
+	fwrite(&WORLDMESHINFO_VERSION, sizeof(WORLDMESHINFO_VERSION), 1, f);
+
+	// Then the TesselationInfo
+	fwrite(&TesselationSettings.buffer, sizeof(TesselationSettings), 1, f);
+	Toolbox::SaveStringToFILE(f, TesselationSettings.TesselationShader);
+
+	fclose(f);
+}
+
+/** Loads the info for this visual */
+void WorldMeshInfo::LoadWorldMeshInfo(const std::string& name)
+{
+	FILE* f = fopen(("system\\GD3D11\\meshes\\infos\\" + name + ".wi").c_str(), "rb");
+
+	if(!f)
+	{
+		// Silently fail here, since it is totally valid for a visual to not have an info-file
+		return;
+	}
+
+	// Read the version first
+	int version;
+	fread(&version, sizeof(version), 1, f);
+
+	// Then the TesselationInfo
+	fread(&TesselationSettings.buffer, sizeof(TesselationSettings), 1, f);
+	TesselationSettings.TesselationShader = Toolbox::LoadStringFromFILE(f);
+
+	TesselationSettings.UpdateConstantbuffer();
+
+	// Create actual PNAEN-Info if needed
+	if(TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
+	{
+		WorldConverter::CreatePNAENInfoFor(this, TesselationSettings.buffer.VT_DisplacementStrength > 0.0f);
+	}
+
+	fclose(f);
 }
 
 /** Updates the vobs constantbuffer */
@@ -125,7 +179,7 @@ void BaseVisualInfo::SaveMeshVisualInfo(const std::string& name)
 
 	if(!f)
 	{
-		LogError() << "Failed to open file '" << ("system\\GD3D11\\textures\\infos\\" + name + ".mi") << "' for writing! Make sure the game runs in Admin mode "
+		LogError() << "Failed to open file '" << ("system\\GD3D11\\meshes\\infos\\" + name + ".vi") << "' for writing! Make sure the game runs in Admin mode "
 					  "to get the rights to write to that directory!";
 
 		return;
@@ -218,6 +272,39 @@ void WorldMeshSectionInfo::SaveSectionMeshToFile(const std::string& name)
 
 }
 
+
+/** Saves the mesh infos for this section */
+void WorldMeshSectionInfo::SaveMeshInfos(const std::string& worldName, INT2 sectionPos)
+{
+	for(auto it = WorldMeshes.begin(); it != WorldMeshes.end(); it++)
+	{
+		// TODO: Custom mesh!
+		if((*it).first.Texture)
+		{
+			std::string tx = (*it).first.Texture->GetNameWithoutExt();
+			std::string name = "WS_" + worldName + "_" + std::to_string(sectionPos.x) + "_" + std::to_string(sectionPos.y) + "_" + tx;
+
+			(*it).second->SaveWorldMeshInfo(name);
+		}
+	}
+}
+
+/** Saves the mesh infos for this section */
+void WorldMeshSectionInfo::LoadMeshInfos(const std::string& worldName, INT2 sectionPos)
+{
+	for(auto it = WorldMeshes.begin(); it != WorldMeshes.end(); it++)
+	{
+		// TODO: Custom mesh!
+		if((*it).first.Texture)
+		{
+			std::string tx = (*it).first.Texture->GetNameWithoutExt();
+			std::string name = "WS_" + worldName + "_" + std::to_string(sectionPos.x) + "_" + std::to_string(sectionPos.y) + "_" + tx;
+
+			(*it).second->LoadWorldMeshInfo(name);
+		}
+	}
+}
+
 /** Creates buffers for this mesh info */
 XRESULT MeshInfo::Create(ExVertexStruct* vertices, unsigned int numVertices, VERTEX_INDEX* indices, unsigned int numIndices)
 {
@@ -283,6 +370,7 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 		zCMaterial* mat = Engine::GAPI->GetMaterialByTextureName(textures[m]);
 		MeshKey key;
 		key.Material = mat;
+		key.Texture = mat != NULL ? mat->GetTexture() : NULL;
 
 		//key.Lightmap = poly->GetLightmap();
 
@@ -326,10 +414,12 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 
 			if(section.WorldMeshes.find(key) == section.WorldMeshes.end())
 			{
+				key.Info = Engine::GAPI->GetMaterialInfoFrom(key.Texture);
+
 				section.WorldMeshes[key] = new WorldMeshInfo;
 
 				// Try to load custom texture.
-				std::string rep = ("system\\GD3D11\\Textures\\Custom\\" + textures[m] + ".dds").c_str();
+				/*std::string rep = ("system\\GD3D11\\Textures\\Custom\\" + textures[m] + ".dds").c_str();
 
 				if(loadedTextures.find(rep) == loadedTextures.end())
 				{
@@ -355,7 +445,7 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 				}else
 				{
 					section.WorldMeshesByCustomTexture[loadedTextures[rep]].push_back(section.WorldMeshes[key]);
-				}
+				}*/
 
 			}
 
@@ -806,7 +896,7 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 				t.Color = DEFAULT_LIGHTMAP_POLY_COLOR;
 			}else
 			{
-				t.Color = 0xFFFFFFFF;
+				//t.Color = 0xFFFFFFFF;
 				t.TexCoord2.x = 0.0f;
 				t.TexCoord2.y = 0.0f;
 
@@ -1895,7 +1985,7 @@ void WorldConverter::IndexVertices(ExVertexStruct* input, unsigned int numInputV
     }
 
 	// TODO: Remove this and fix it properly!
-	for (std::set<std::pair<ExVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
+	/*for (std::set<std::pair<ExVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
 	{
 		if((unsigned int)it->second >= vertices.size())
 		{
@@ -1913,7 +2003,7 @@ void WorldConverter::IndexVertices(ExVertexStruct* input, unsigned int numInputV
 			it = outIndices.erase(it);
 			continue;
 		}
-	}
+	}*/
 
     // Notice that the vertices in the set are not sorted by the index
     // so you'll have to rearrange them like this:
@@ -2216,6 +2306,22 @@ void WorldConverter::UpdateQuadMarkInfo(QuadMarkInfo* info, zCQuadMark* mark, co
 
 /** Turns a MeshInfo into PNAEN */
 void WorldConverter::CreatePNAENInfoFor(MeshInfo* mesh, bool softNormals)
+{
+	delete mesh->MeshIndexBufferPNAEN;
+	Engine::GraphicsEngine->CreateVertexBuffer(&mesh->MeshIndexBufferPNAEN);
+
+	delete mesh->MeshVertexBuffer;
+	Engine::GraphicsEngine->CreateVertexBuffer(&mesh->MeshVertexBuffer);
+
+	mesh->VerticesPNAEN = mesh->Vertices;
+
+	MeshModifier::ComputePNAEN18Indices(mesh->VerticesPNAEN, mesh->Indices, mesh->IndicesPNAEN, true, softNormals);
+	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	mesh->MeshVertexBuffer->Init(&mesh->VerticesPNAEN[0], mesh->VerticesPNAEN.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+}
+
+
+void WorldConverter::CreatePNAENInfoFor(WorldMeshInfo* mesh, bool softNormals)
 {
 	delete mesh->MeshIndexBufferPNAEN;
 	Engine::GraphicsEngine->CreateVertexBuffer(&mesh->MeshIndexBufferPNAEN);

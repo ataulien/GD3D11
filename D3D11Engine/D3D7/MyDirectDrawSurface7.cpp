@@ -15,6 +15,7 @@ MyDirectDrawSurface7::MyDirectDrawSurface7()
 	refCount = 1;
 	EngineTexture = NULL;
 	Normalmap = NULL;
+	FxMap = NULL;
 	LockedData = NULL;
 	GothicTexture = NULL;
 	IsReady = false;
@@ -39,6 +40,7 @@ MyDirectDrawSurface7::~MyDirectDrawSurface7()
 
 	delete EngineTexture;
 	delete Normalmap;
+	delete FxMap;
 }
 
 /** Returns the engine texture of this surface */
@@ -51,6 +53,12 @@ BaseTexture* MyDirectDrawSurface7::GetEngineTexture()
 BaseTexture* MyDirectDrawSurface7::GetNormalmap()
 {
 	return Normalmap;
+}
+
+/** Returns the fx-map for this surface */
+BaseTexture* MyDirectDrawSurface7::GetFxMap()
+{
+	return FxMap;
 }
 
 /** Binds this texture */
@@ -85,32 +93,54 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 	{
 		delete Normalmap;
 		Normalmap = NULL;
-		//LogWarn() << "LoadAdditionalResources on surface with additional resources already loaded!";
 	}
 
-	if(!TextureName.size() || Normalmap)
+	if(FxMap)
+	{
+		delete FxMap;
+		FxMap = NULL;
+	}
+
+	if(!TextureName.size() || Normalmap || FxMap)
 		return;
 
 	std::string normalmap = "system\\GD3D11\\textures\\replacements\\" + TextureName + "_normal.dds";
 	FILE* f = fopen(normalmap.c_str(), "rb");
-	if(!f)
-		return;
-
-	//LogInfo() << "Loading normalmap: " << normalmap;
-
-	// Create the texture object this is linked with
-	BaseTexture* nrmmap;
-	Engine::GraphicsEngine->CreateTexture(&nrmmap);
-	
-
-	if(XR_SUCCESS != nrmmap->Init(normalmap))
+	BaseTexture* nrmmapTexture = NULL;
+	if(f)
 	{
-		delete nrmmap;
-		nrmmap = NULL;
-		LogWarn() << "Failed to load normalmap!";
+		// Create the texture object this is linked with
+		
+		Engine::GraphicsEngine->CreateTexture(&nrmmapTexture);
+	
+		if(XR_SUCCESS != nrmmapTexture->Init(normalmap))
+		{
+			delete nrmmapTexture;
+			nrmmapTexture = NULL;
+			LogWarn() << "Failed to load normalmap!";
+		}
 	}
 
-	Normalmap = nrmmap;
+	std::string fxMap = "system\\GD3D11\\textures\\replacements\\" + TextureName + "_fx.dds";
+	f = fopen(fxMap.c_str(), "rb");
+	BaseTexture* fxMapTexture = NULL;
+	if(f)
+	{
+		// Create the texture object this is linked with
+		Engine::GraphicsEngine->CreateTexture(&fxMapTexture);
+	
+		if(XR_SUCCESS != fxMapTexture->Init(fxMap))
+		{
+			delete fxMapTexture;
+			fxMapTexture = NULL;
+			LogWarn() << "Failed to load normalmap!";
+		}
+	}
+
+
+
+	Normalmap = nrmmapTexture;
+	FxMap = fxMapTexture;
 }
 
 HRESULT MyDirectDrawSurface7::QueryInterface( REFIID riid, LPVOID* ppvObj )

@@ -80,7 +80,7 @@ float IsInShadow(float3 wsPosition, Texture2D shadowmap, SamplerComparisonState 
 	return shadowmap.SampleCmpLevelZero(samplerState, projectedTexCoords.xy, vShadowSamplingPos.z);
 }
 
-float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, float distance)
+float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, float distance, float vertLighting)
 {
 	// Reconstruct VS World ShadowViewPosition from depth
 	float4 vShadowSamplingPos = mul(float4(wsPosition, 1), mul(SQ_ShadowView, SQ_ShadowProj));
@@ -140,13 +140,15 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 		shadow = shadowmap.SampleCmpLevelZero( samplerState, projectedTexCoords.xy, vShadowSamplingPos.z - bias);
 #endif
 	
-		float border;
-		border = pow(abs(projectedTexCoords.x), 16.0f);
-		border += pow(abs(projectedTexCoords.y), 16.0f);
-		border += pow(abs(1.0f-projectedTexCoords.x), 16.0f);
-		border += pow(abs(1.0f-projectedTexCoords.y), 16.0f);
-		shadow = lerp(shadow, 1.0f, border);
+		
 	}
+	
+	float border;
+	border = pow(abs(projectedTexCoords.x), 16.0f);
+	border += pow(abs(projectedTexCoords.y), 16.0f);
+	border += pow(abs(1.0f-projectedTexCoords.x), 16.0f);
+	border += pow(abs(1.0f-projectedTexCoords.y), 16.0f);
+	shadow = lerp(shadow, vertLighting, saturate(border));
 	
 	return saturate(shadow);
 }
@@ -188,10 +190,10 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	//return float4(mul(float4(wsPosition, 1), mul(SQ_ShadowView, SQ_ShadowProj)).xyz, 1);
 	
 	// Get shadowing
-	float shadow = ComputeShadowValue(uv, wsPosition, TX_Shadowmap, SS_Comp, vsPosition.z);
+	float shadow = ComputeShadowValue(uv, wsPosition, TX_Shadowmap, SS_Comp, vsPosition.z, vertLighting);
 	
 #else
-	float shadow = 1.0f;
+	float shadow = vertLighting;
 #endif
 	//shadow = 1.0f;
 
@@ -222,12 +224,15 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	
 	// Apply sunlight
 	float sunStrength = dot(SQ_LightColor.rgb, float3(0.333f,0.333f,0.333f));
-	float3 sun = saturate(dot(normalize(SQ_LightDirectionVS), normal) * shadow) * 1.0f;
+	
+	float vertAO = lerp(pow(saturate(vertLighting * 2), 2), 1.0f, 0.5f);
+	float sun = saturate(dot(normalize(SQ_LightDirectionVS), normal) * shadow) * 1.0f;
 
 	float3 specBare = pow(spec, specPower) * specIntensity * SQ_LightColor.rgb * sun;
 	float3 specColored = lerp(specBare, specBare * diffuse.rgb, specMod);
 	
-	float3 litPixel = lerp(diffuse * 0.35 * sunStrength, diffuse * SQ_LightColor * SQ_LightColor.a, sun) 
+	
+	float3 litPixel = lerp(diffuse * 0.35 * sunStrength * vertAO, diffuse * SQ_LightColor * SQ_LightColor.a, sun) 
 				  + specColored;
 	
 	// Run scattering

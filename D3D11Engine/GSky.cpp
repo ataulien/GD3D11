@@ -150,7 +150,12 @@ XRESULT GSky::LoadSkyResources()
 
 	
 	XLE(Engine::GraphicsEngine->CreateTexture(&CloudTexture));
+
+#ifdef BUILD_GOTHIC_1_08k
+	XLE(CloudTexture->Init("system\\GD3D11\\Textures\\SkyDay_G1.dds"));
+#else
 	XLE(CloudTexture->Init("system\\GD3D11\\Textures\\SkyDay.dds"));
+#endif
 
 	VERTEX_INDEX indices[] = {0,1,2,3,4,5};
 	SkyPlane = new MeshInfo;

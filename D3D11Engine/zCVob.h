@@ -25,6 +25,20 @@ public:
 	static void Hook()
 	{
 		HookedFunctions::OriginalFunctions.original_zCVobSetVisual = (zCVobSetVisual)DetourFunction((BYTE *)GothicMemoryLocations::zCVob::SetVisual, (BYTE *)zCVob::Hooked_SetVisual);
+		HookedFunctions::OriginalFunctions.original_zCVobDestructor = (GenericDestructor)DetourFunction((BYTE *)GothicMemoryLocations::zCVob::Destructor, (BYTE *)zCVob::Hooked_Destructor);
+	}
+
+	static void __fastcall Hooked_Destructor(void* thisptr, void* unknwn)
+	{
+		hook_infunc
+
+		// Notify the world. We are doing this here for safety so nothing possibly deleted remains in our world.
+		if(Engine::GAPI)
+			Engine::GAPI->OnRemovedVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());
+
+		HookedFunctions::OriginalFunctions.original_zCVobDestructor(thisptr);
+
+		hook_outfunc
 	}
 
 	static void __fastcall Hooked_SetVisual(void* thisptr, void* unknwn, zCVisual* visual)
@@ -77,10 +91,6 @@ public:
 
 	bool GetShowVisual()
 	{
-#ifdef BUILD_GOTHIC_1_08k
-		return true; // FIXME
-#endif
-
 		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_Flags);
 
 		return (flags & GothicMemoryLocations::zCVob::MASK_ShowVisual) != 0;
@@ -88,10 +98,6 @@ public:
 
 	EVisualCamAlignType GetAlignment()
 	{
-#ifdef BUILD_GOTHIC_1_08k
-		return EVisualCamAlignType::zVISUAL_CAM_ALIGN_FULL; // FIXME
-#endif
-
 		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_CameraAlignment);
 		
 		//.text:00601652                 shl     eax, 1Eh

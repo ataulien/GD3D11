@@ -130,7 +130,21 @@ struct MeshInfo
 
 struct WorldMeshInfo : public MeshInfo
 {
+	WorldMeshInfo()
+	{
+		SaveInfo = false;
+	}
+
+	/** Saves the info for this visual */
+	void SaveWorldMeshInfo(const std::string& name);
+
+	/** Loads the info for this visual */
+	void LoadWorldMeshInfo(const std::string& name);
+
 	VisualTesselationSettings TesselationSettings;
+
+	/** If true we will save an info-file on next zen-resource-save */
+	bool SaveInfo;
 };
 
 struct QuadMarkInfo
@@ -466,6 +480,12 @@ struct WorldMeshSectionInfo
 	/** Saves this sections mesh to a file */
 	void SaveSectionMeshToFile(const std::string& name);
 
+	/** Saves the mesh infos for this section */
+	void SaveMeshInfos(const std::string& worldName, INT2 sectionPos);
+
+	/** Saves the mesh infos for this section */
+	void LoadMeshInfos(const std::string& worldName, INT2 sectionPos);
+
 	std::map<MeshKey, WorldMeshInfo*, cmpMeshKey> WorldMeshes;
 	std::map<BaseTexture *, std::vector<MeshInfo*>> WorldMeshesByCustomTexture;
 	std::map<zCMaterial *, std::vector<MeshInfo*>> WorldMeshesByCustomTextureOriginal;
@@ -580,5 +600,6 @@ public:
 	/** Turns a MeshInfo into PNAEN */
 	static void CreatePNAENInfoFor(MeshInfo* mesh, bool softNormals = false);
 	static void CreatePNAENInfoFor(SkeletalMeshInfo* mesh, MeshInfo* bindPoseMesh, bool softNormals = false);
+	static void CreatePNAENInfoFor(WorldMeshInfo* mesh, bool softNormals = false);
 };
 

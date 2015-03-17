@@ -60,7 +60,8 @@ struct HS_RenderSceneInput
     float3 f3WorldNormal    : TEXCOORD1;
     float3 f3ViewNormal     : TEXCOORD2;    
     float2 f2TexCoord       : TEXCOORD3;
-	float2 f2TexCoord2       : TEXCOORD4;
+	float2 f2TexCoord2      : TEXCOORD4;
+	float4 f4Diffuse		: TEXCOORD5;
 }; 
  
 struct HS_ConstantOutput 
@@ -78,6 +79,7 @@ struct HS_ControlPointOutput
     float3 f3ViewNormal        : NORMAL; 
     float2 f2TexCoord           : TEXCOORD0; 
 	float2 f2TexCoord2           : TEXCOORD1;
+	float4 f4Diffuse			: TEXCOORD2;
 	float2 f2DomVertUV		: DOMTEXCOORDS;
 	float2 f2DomEdgeUV[2]		: DOMEDGECOORDS;
 	float fEdgeIsBorder[3]		: EDGEBORDER;
@@ -220,6 +222,7 @@ HS_ControlPointOutput HSMain(
     O.f3ViewNormal     = I[uCPID].f3ViewNormal; 
     O.f2TexCoord        = I[uCPID].f2TexCoord; 
 	O.f2TexCoord2        = I[uCPID].f2TexCoord2; 
+	O.f4Diffuse = I[uCPID].f4Diffuse; 
 
 	/**O.f2TexCoord2.y = 	I[uCPID].f2TexCoord2.y == I[AdditionalData].f2TexCoord2.y && 
 						I[NextCPID].f2TexCoord2.y == I[NextAdditionalData].f2TexCoord2.y;*/
@@ -443,6 +446,10 @@ DS_Output DSMain( HS_ConstantOutput cdata,
                  + I[1].f2TexCoord2 * fV  
                  + I[2].f2TexCoord2 * fW; 
 				 
+	float4 f4Diffuse = I[0].f4Diffuse * fU 
+	                 + I[1].f4Diffuse * fV 
+	                 + I[2].f4Diffuse * fW;
+				 
 				 
 	//O.vTexCoord2 *= 1-interior;
 	
@@ -492,5 +499,6 @@ DS_Output DSMain( HS_ConstantOutput cdata,
     O.vPosition = f4ClipPosition; 
 	O.vViewPosition = f3EyePosition;
 	O.vNormalVS = f3Normal;
+	O.vDiffuse = f4Diffuse;
     return O; 
 } 

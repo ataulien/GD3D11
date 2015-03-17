@@ -364,16 +364,24 @@ struct GothicRendererSettings
 
 		
 
-		FogGlobalDensity = 0.00014f;
-		FogHeightFalloff = 0.0005f;
+		
 
 #ifdef BUILD_GOTHIC_1_08k
-		FogGlobalDensity = 0.00051f;
-		FogHeightFalloff = 0.00037f;
+		FogGlobalDensity = 0.00012f;
+		FogHeightFalloff = 0.00018f;
+
+		FogColorMod = float3::FromColor(189,146,107);
+		FogHeight = 4000;
+#else
+		FogGlobalDensity = 0.00014f;
+		FogHeightFalloff = 0.0005f;
+		FogColorMod = float3::FromColor(180,180,255);
+		FogHeight = 800;
 #endif
 
-		FogHeight = 800;
-		FogColorMod = float3::FromColor(180,180,255);
+		
+
+		
 		SunLightColor = float3::FromColor(255,255,255);
 		SunLightStrength = 1.5f;
 

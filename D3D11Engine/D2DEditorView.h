@@ -90,7 +90,7 @@ protected:
 	void DoVegetationRemove();
 
 	/** Smoothes a mesh */
-	void SmoothMesh(WorldMeshInfo* mesh);
+	void SmoothMesh(WorldMeshInfo* mesh, bool tesselate = false);
 
 	/** Called on xBUTTONDOWN */
 	void OnMouseButtonDown(int button);

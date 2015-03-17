@@ -691,7 +691,7 @@ enum aiComponent
  *
  * Normally, a texture is loaded as a colormap, if no target is specified in the
  * materialfile. Is this switch is enabled, texture names ending with _n, _l, _s
- * are used as normalmaps, lightmaps or specularmaps. 
+ * are used as normalmaps, lightmaps or FxMaps. 
  * <br>
  * Property type: Bool. Default value: false.
  */

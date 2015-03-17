@@ -15,7 +15,10 @@ public:
 	/** Hooks the functions of this Class */
 	static void Hook()
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		// Only G1 needs this, because newly added NPCs only get enabled, but not re-added to the world like in G2
 		HookedFunctions::OriginalFunctions.original_oCNPCEnable = (oCNPCEnable)DetourFunction((BYTE *)GothicMemoryLocations::oCNPC::Enable, (BYTE *)oCNPC::hooked_oCNPCEnable);
+#endif
 	}
 
 	/** Reads config stuff */

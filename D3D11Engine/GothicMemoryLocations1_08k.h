@@ -123,10 +123,12 @@ struct GothicMemoryLocations
 		static const unsigned int GetBBoxLocal = 0x00600F30;
 		static const unsigned int Offset_HomeWorld = 0x0A8;
 
-		static const unsigned int Offset_Flags = 0x104;
+		static const unsigned int Offset_Flags = 0xE4;
 		static const unsigned int MASK_ShowVisual = 0x1;
 		static const unsigned int Offset_CameraAlignment = 0x110;
 		static const unsigned int SHIFTLR_CameraAlignment = 0x1E;
+
+		static const unsigned int Destructor = 0x005E59D0;
 
 		static const unsigned int Offset_WorldPosX = 0x48;
 		static const unsigned int Offset_WorldPosY = 0x58;

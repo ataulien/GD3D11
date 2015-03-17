@@ -283,9 +283,13 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_CameraAlignment = 0x110;
 		static const unsigned int SHIFTLR_CameraAlignment = 0x1E;
 
+		static const unsigned int Destructor = 0x005FE470;
+
 		static const unsigned int Offset_WorldPosX = 0x48;
 		static const unsigned int Offset_WorldPosY = 0x58;
 		static const unsigned int Offset_WorldPosZ = 0x68;
+
+		
 	};
 
 	struct zCVisual

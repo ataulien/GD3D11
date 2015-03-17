@@ -313,8 +313,10 @@ protected:
 
 	/** Useful shaders */
 	D3D11PShader* PS_DiffuseNormalmapped;
+	D3D11PShader* PS_DiffuseNormalmappedFxMap;
 	D3D11PShader* PS_Diffuse;
 	D3D11PShader* PS_DiffuseNormalmappedAlphatest;
+	D3D11PShader* PS_DiffuseNormalmappedAlphatestFxMap;
 	D3D11PShader* PS_DiffuseAlphatest;
 	D3D11PShader* PS_Simple;
 

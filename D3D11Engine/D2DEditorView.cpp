@@ -169,7 +169,7 @@ XRESULT D2DEditorView::InitControls()
 
 	// Selection tab
 	SelectionTabControl = new SV_TabControl(MainView, subPanel);
-	SelectionTabControl->SetRect(D2D1::RectF(20, 20, 270, 280));
+	SelectionTabControl->SetRect(D2D1::RectF(20, 20, 250, 280));
 	SelectionTabControl->SetSize(D2D1::SizeF(270, 380));
 	SelectionTabControl->AlignUnder(MainTabControl, 40.0f);
 	SelectionTabControl->SetOnlyShowActiveTab(true);
@@ -182,15 +182,16 @@ XRESULT D2DEditorView::InitControls()
 
 	SelectedImageNameLabel = new SV_Label(MainView, SelectionTabControl->GetTabPanel());
 	SelectedImageNameLabel->SetSize(D2D1::SizeF(270, 15));
-	SelectedImageNameLabel->AlignUnder(SelectedImagePanel, 2.0f);
+	SelectedImageNameLabel->AlignUnder(SelectedImagePanel, 5.0f);
 	SelectedImageNameLabel->SetDrawBackground(true);
 	SelectionTabControl->AddControlToTab(SelectedImageNameLabel, "Selection/Texture");
 
+
 	// Texture properties
 	float textwidth = 80;
-	float alignDistance = 1.0f;
+	float alignDistance = -3.0f;
 	SelectedTexNrmStrSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
-	SelectedTexNrmStrSlider->AlignUnder(SelectedImageNameLabel, 5.0f);
+	SelectedTexNrmStrSlider->AlignUnder(SelectedImageNameLabel, alignDistance + 5.0f);
 	SelectedTexNrmStrSlider->GetLabel()->SetCaption("Normalmap:");
 	SelectedTexNrmStrSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedTexNrmStrSlider->GetLabel()->GetSize().height));
 	SelectedTexNrmStrSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
@@ -222,8 +223,16 @@ XRESULT D2DEditorView::InitControls()
 	SelectedTexSpecPowerSlider->GetSlider()->SetValue(90.0f);
 	SelectionTabControl->AddControlToTab(SelectedTexSpecPowerSlider, "Selection/Texture");
 
+	
+	SV_Label* worldMeshSettingsInfoLabel = new SV_Label(MainView, SelectionTabControl->GetTabPanel());
+	worldMeshSettingsInfoLabel->SetSize(D2D1::SizeF(270, 15));
+	worldMeshSettingsInfoLabel->AlignUnder(SelectedTexSpecPowerSlider, alignDistance);
+	worldMeshSettingsInfoLabel->SetDrawBackground(true);
+	worldMeshSettingsInfoLabel->SetCaption(" WorldMesh-Settings:");
+	SelectionTabControl->AddControlToTab(worldMeshSettingsInfoLabel, "Selection/Texture");
+
 	SelectedTexDisplacementSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
-	SelectedTexDisplacementSlider->AlignUnder(SelectedTexSpecPowerSlider, alignDistance);
+	SelectedTexDisplacementSlider->AlignUnder(worldMeshSettingsInfoLabel, alignDistance + 3.0f);
 	SelectedTexDisplacementSlider->GetLabel()->SetCaption("Displacement:");
 	SelectedTexDisplacementSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedTexDisplacementSlider->GetLabel()->GetSize().height));
 	SelectedTexDisplacementSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
@@ -255,7 +264,12 @@ XRESULT D2DEditorView::InitControls()
 	SelectedMeshRoundnessSlider->GetSlider()->SetValue(1.0f);
 	SelectionTabControl->AddControlToTab(SelectedMeshRoundnessSlider, "Selection/Texture");
 	
-
+	SV_Label* subdivInfoLabel = new SV_Label(MainView, SelectionTabControl->GetTabPanel());
+	subdivInfoLabel->SetSize(D2D1::SizeF(270, 15));
+	subdivInfoLabel->AlignUnder(SelectedMeshRoundnessSlider, 2.0f);
+	subdivInfoLabel->SetDrawBackground(false);
+	subdivInfoLabel->SetCaption("Press Space to subdivide the selected surface.\n(Not saved yet)");
+	SelectionTabControl->AddControlToTab(subdivInfoLabel, "Selection/Texture");
 	
 
 	/*SelectedTexSpecModulationSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
@@ -1342,6 +1356,12 @@ void D2DEditorView::TextureSettingsSliderChanged(SV_Slider* sender, void* userda
 		}else if(sender == v->SelectedMeshTessAmountSlider->GetSlider() && v->Selection.SelectedMesh)
 		{
 			WorldMeshInfo* mesh = (WorldMeshInfo *)v->Selection.SelectedMesh; // FIXME: Make this nicer
+
+			if(!mesh->MeshIndexBufferPNAEN)
+			{
+				v->SmoothMesh(mesh, false);
+			}
+
 			mesh->TesselationSettings.buffer.VT_TesselationFactor = sender->GetValue();
 			mesh->TesselationSettings.UpdateConstantbuffer();
 		}else if(sender == v->SelectedMeshRoundnessSlider->GetSlider() && v->Selection.SelectedMesh)
@@ -1363,7 +1383,7 @@ void D2DEditorView::TextureSettingsSliderChanged(SV_Slider* sender, void* userda
 }
 
 /** Smoothes a mesh */
-void D2DEditorView::SmoothMesh(WorldMeshInfo* mesh)
+void D2DEditorView::SmoothMesh(WorldMeshInfo* mesh, bool tesselate)
 {
 	// Copy old vertices so we can directly write to the vectors again
 	std::vector<ExVertexStruct> vxOld = mesh->Vertices;
@@ -1378,7 +1398,7 @@ void D2DEditorView::SmoothMesh(WorldMeshInfo* mesh)
 	MeshModifier::DropTexcoords(vxOld, ixOld, mesh->Vertices, mesh->Indices);*/
 
 	// Tesselate if the outcome would still be in 16-bit range
-	if(mesh->Vertices.size() + (mesh->Indices.size() / 3) < 0x0000FFFF)
+	if(tesselate && mesh->Vertices.size() + (mesh->Indices.size() / 3) < 0x0000FFFF)
 	{
 		std::vector<ExVertexStruct> meshTess;
 		for(unsigned int i=0;i<mesh->Indices.size();i+=3)
@@ -1437,6 +1457,9 @@ void D2DEditorView::SmoothMesh(WorldMeshInfo* mesh)
 	mesh->TesselationSettings.buffer.VT_TesselationFactor = 1.0f;
 	mesh->TesselationSettings.buffer.VT_DisplacementStrength = 0.5f;
 	mesh->TesselationSettings.UpdateConstantbuffer();
+
+	// Mark dirty
+	mesh->SaveInfo = true;
 }
 
 /** Called when a vob was removed from the world */

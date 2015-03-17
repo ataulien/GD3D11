@@ -1510,8 +1510,9 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		if((*itm).second.empty())
 			continue;
 
+		
 		// Find this submesh, this might be bad, but we should be fine if all meshes have few submeshes
-		bool found=false;
+		/*bool found=false;
 		for(int i=0;i<model->GetMeshSoftSkinList()->NumInArray;i++)
 		{
 			zCMeshSoftSkin* s = model->GetMeshSoftSkinList()->Array[i];
@@ -1530,6 +1531,10 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		}
 
 		if(!found) // Something changed, reload this
+		{*/
+
+		// FIXME: This can be bad, but not sure how to fix raging-visual-changing-sheeps otherwise
+		if(strcmp(model->GetVisualName(), vi->VisualInfo->VisualName.c_str()) != 0)
 		{
 			std::string str = model->GetVisualName();
 
@@ -1704,7 +1709,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 				
 
 				bool isMMS = false;
-				if(distance < 4000 && std::string(node->NodeVisual->GetFileExtension(0)) == ".MMS")
+				if(distance < 2000 && std::string(node->NodeVisual->GetFileExtension(0)) == ".MMS")
 				{
 					zCMorphMesh* mm = (zCMorphMesh *)node->NodeVisual;
 					mm->GetTexAniState()->UpdateTexList();
@@ -2156,9 +2161,8 @@ VobInfo* GothicAPI::TraceStaticMeshVobsBB(const D3DXVECTOR3& origin, const D3DXV
 	{
 		D3DXMATRIX world; D3DXMatrixTranspose(&world, (*it).first->GetWorldMatrixPtr());
 
-		zTBBox3D box = (*it).first->GetBBoxLocal();
-		D3DXVECTOR3 min; D3DXVec3TransformCoord(&min, &box.Min, &world);
-		D3DXVECTOR3 max; D3DXVec3TransformCoord(&max, &box.Max, &world);
+		D3DXVECTOR3 min; D3DXVec3TransformCoord(&min, &(*it).second->VisualInfo->BBox.Min, &world);
+		D3DXVECTOR3 max; D3DXVec3TransformCoord(&max, &(*it).second->VisualInfo->BBox.Max, &world);
 
 		float t = 0;
 		if(Toolbox::IntersectBox(min, max, origin, dir, t))
@@ -2382,6 +2386,9 @@ D3DXVECTOR3 GothicAPI::UnprojectCursor()
 /** Returns the current cameraposition */
 D3DXVECTOR3 GothicAPI::GetCameraPosition()
 {
+	if(!oCGame::GetGame()->_zCSession_camVob)
+		return D3DXVECTOR3(0,0,0);
+
 	if(CameraReplacementPtr)
 		return CameraReplacementPtr->PositionReplacement;
 
@@ -3202,6 +3209,9 @@ void GothicAPI::LoadCustomZENResources()
 
 	// Load vegetation
 	LoadVegetation(zen + ".veg");
+
+	// Load world mesh information
+	LoadSectionInfos();
 }
 
 /** Saves resources created for this .ZEN */
@@ -3216,6 +3226,9 @@ void GothicAPI::SaveCustomZENResources()
 
 	// Save vegetation
 	SaveVegetation(zen + ".veg");
+
+	// Save world mesh information
+	SaveSectionInfos();
 }
 
 /** Applys the suppressed textures */
@@ -3596,18 +3609,20 @@ void GothicAPI::DrawMorphMesh(zCMorphMesh* msh, float fatness)
 	for(int i=0; i < morphMesh->GetNumSubmeshes(); i++)
 	{
 		std::vector<ExVertexStruct> vertices;
-		vertices.reserve(morphMesh->GetSubmeshes()[i].TriList.NumInArray * 3);
+
+		zCSubMesh& sub = morphMesh->GetSubmeshes()[i];
+		vertices.reserve(sub.TriList.NumInArray * 3);
 
 		// Get vertices
-		for(int t=0;t<morphMesh->GetSubmeshes()[i].TriList.NumInArray;t++)
+		for(int t=0;t<sub.TriList.NumInArray;t++)
 		{				
 			for(int v=0;v<3;v++)
 			{
 				ExVertexStruct vx;
-				vx.Position = posList[morphMesh->GetSubmeshes()[i].WedgeList.Array[morphMesh->GetSubmeshes()[i].TriList.Array[t].wedge[v]].position];
-				vx.TexCoord	= morphMesh->GetSubmeshes()[i].WedgeList.Array[morphMesh->GetSubmeshes()[i].TriList.Array[t].wedge[v]].texUV;
+				vx.Position = posList[sub.WedgeList.Array[morphMesh->GetSubmeshes()[i].TriList.Array[t].wedge[v]].position];
+				vx.TexCoord	= morphMesh->GetSubmeshes()[i].WedgeList.Array[sub.TriList.Array[t].wedge[v]].texUV;
 				vx.Color = 0xFFFFFFFF;
-				vx.Normal = morphMesh->GetSubmeshes()[i].WedgeList.Array[morphMesh->GetSubmeshes()[i].TriList.Array[t].wedge[v]].normal;
+				vx.Normal = morphMesh->GetSubmeshes()[i].WedgeList.Array[sub.TriList.Array[t].wedge[v]].normal;
 
 				// Do this on GPU probably?
 				*vx.Position.toD3DXVECTOR3() += (*vx.Normal.toD3DXVECTOR3()) * fatness;
@@ -3615,6 +3630,29 @@ void GothicAPI::DrawMorphMesh(zCMorphMesh* msh, float fatness)
 				vertices.push_back(vx);
 			}	
 		}
+
+		/*std::vector<VERTEX_INDEX> indices;
+		indices.reserve(sub.TriList.NumInArray * 3);
+
+		// Get vertices
+		for(int t=0;t<sub.TriList.NumInArray;t++)
+		{				
+			for(int v=0;v<3;v++)
+			{
+				indices.push_back(sub.TriList.Array[t].wedge[v]);
+			}
+		}
+
+		for(int v=0;v<indices.size();v++)
+		{
+			ExVertexStruct vx;
+			vx.Position = posList[sub.WedgeList.Array[indices[v]].position];
+			vx.TexCoord	= sub.WedgeList.Array[indices[v]].texUV;
+			vx.Color = 0xFFFFFFFF;
+			vx.Normal = sub.WedgeList.Array[indices[v]].normal;
+
+			vertices.push_back(vx);
+		}*/
 
 		morphMesh->GetSubmeshes()[i].Material->BindTexture(0);
 
@@ -3653,4 +3691,34 @@ bool GothicAPI::IsUnderWater()
 	}
 
 	return false;
+}
+
+/** Saves all sections information */
+void GothicAPI::SaveSectionInfos()
+{
+	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
+	{
+		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
+		{
+			WorldMeshSectionInfo& section = (*ity).second;
+
+			// Save this section to file
+			section.SaveMeshInfos(LoadedWorldInfo->WorldName, INT2((*itx).first, (*ity).first));
+		}
+	}
+}
+
+/** Loads all sections information */
+void GothicAPI::LoadSectionInfos()
+{
+	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
+	{
+		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
+		{
+			WorldMeshSectionInfo& section = (*ity).second;
+
+			// Load this section from file
+			section.LoadMeshInfos(LoadedWorldInfo->WorldName, INT2((*itx).first, (*ity).first));
+		}
+	}
 }

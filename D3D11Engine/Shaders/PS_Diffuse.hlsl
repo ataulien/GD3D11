@@ -34,6 +34,7 @@ SamplerState SS_Linear : register( s0 );
 SamplerState SS_samMirror : register( s1 );
 Texture2D	TX_Texture0 : register( t0 );
 Texture2D	TX_Texture1 : register( t1 );
+Texture2D	TX_Texture2 : register( t2 );
 
 
 //--------------------------------------------------------------------------------------
@@ -116,6 +117,12 @@ DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
 	float3 nrm = normalize(Input.vNormalVS);
 #endif
 
+	float4 fx;
+#if FXMAP == 1
+	fx = TX_Texture2.Sample(SS_Linear, Input.vTexcoord);
+#else
+	fx = 1.0f;
+#endif
 	
 	DEFERRED_PS_OUTPUT output;
 	output.vDiffuse = float4(color.rgb, Input.vDiffuse.y);
@@ -123,8 +130,8 @@ DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
 	//output.vDiffuse = float4(Input.vNormalVS, 1);
 	
 	output.vNrm_SI_SP.xy = EncodeNormal(nrm);
-	output.vNrm_SI_SP.z = MI_SpecularIntensity;
-	output.vNrm_SI_SP.w = MI_SpecularPower;
+	output.vNrm_SI_SP.z = MI_SpecularIntensity * fx.r;
+	output.vNrm_SI_SP.w = MI_SpecularPower * fx.g;
 	return output;
 }
 

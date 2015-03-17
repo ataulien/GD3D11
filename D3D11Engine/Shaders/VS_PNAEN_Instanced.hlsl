@@ -32,6 +32,7 @@ struct VS_OUTPUT
 	float3 vNormalVS		: TEXCOORD2; 
 	float2 vTexcoord		: TEXCOORD3;
 	float2 vTexcoord2		: TEXCOORD4;
+	float4 vDiffuse			: TEXCOORD5;
 };
 
 //--------------------------------------------------------------------------------------
@@ -46,6 +47,7 @@ VS_OUTPUT VSMain( VS_INPUT Input )
 	Output.vNormalVS = normalize(mul(Input.vNormal, (float3x3)mul(Input.InstanceWorldMatrix, M_View)));
 	Output.vNormalWS = normalize(mul(Input.vNormal, (float3x3)Input.InstanceWorldMatrix));
 	Output.vViewPosition = mul(float4(Input.vPosition,1), mul(Input.InstanceWorldMatrix, M_View)).xyz;
+	Output.vDiffuse = 1.0f;//Input.vDiffuse;
 	
 	return Output;
 }

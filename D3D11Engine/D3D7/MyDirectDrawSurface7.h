@@ -81,6 +81,9 @@ public:
 	/** Returns the normalmap of this surface */
 	BaseTexture* GetNormalmap();
 
+	/** Returns the fx-map for this surface */
+	BaseTexture* GetFxMap();
+
 	/** Loads additional resources if possible */
 	void LoadAdditionalResources(zCTexture* ownedTexture);
 
@@ -116,6 +119,7 @@ private:
 
 	/** Additional maps */
 	BaseTexture* Normalmap;
+	BaseTexture* FxMap;
 
 	/** Locktype */
 	DWORD LockType;
