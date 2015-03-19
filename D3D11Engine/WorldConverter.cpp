@@ -395,8 +395,9 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 										&meshes[m]->Vertices[meshes[m]->Indices[i+1]]};
 
 
-			// Use the section of the first point for the whole polygon
-			INT2 sxy = GetSectionOfPos(*v[0]->Position.toD3DXVECTOR3());
+			// Calculate midpoint of this triange to get the section
+			D3DXVECTOR3 avgPos = (*v[0]->Position.toD3DXVECTOR3() + *v[1]->Position.toD3DXVECTOR3() + *v[2]->Position.toD3DXVECTOR3()) / 3.0f;
+			INT2 sxy = GetSectionOfPos(avgPos);
 
 			WorldMeshSectionInfo& section = (*outSections)[sxy.x][sxy.y];
 			section.WorldCoordinates = sxy;
@@ -852,8 +853,9 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 		//if(polygons[i]->GetNumPolyVertices() != 3)
 		//	continue;
 
-		// Use the section of the first point for the whole polygon
-		INT2 section = GetSectionOfPos(*poly->getVertices()[0]->Position.toD3DXVECTOR3());
+		// Calculate midpoint of this triange to get the section
+		D3DXVECTOR3 avgPos = (*poly->getVertices()[0]->Position.toD3DXVECTOR3() + *poly->getVertices()[1]->Position.toD3DXVECTOR3() + *poly->getVertices()[2]->Position.toD3DXVECTOR3()) / 3.0f;
+		INT2 section = GetSectionOfPos(avgPos);
 		(*outSections)[section.x][section.y].WorldCoordinates = section;
 
 		if(poly->GetMaterial() && poly->GetMaterial()->GetMatGroup() == zMAT_GROUP_WATER)

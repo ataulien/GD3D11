@@ -229,7 +229,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float sun = saturate(dot(normalize(SQ_LightDirectionVS), normal) * shadow) * 1.0f * vertAO;
 
 	float3 specBare = pow(spec, specPower) * specIntensity * SQ_LightColor.rgb * sun;
-	float3 specColored = lerp(specBare, specBare * diffuse.rgb, specMod);
+	float3 specColored = saturate(lerp(specBare, specBare * diffuse.rgb, specMod));
 	
 	
 	float3 litPixel = lerp(diffuse * 0.35 * sunStrength, diffuse * SQ_LightColor * SQ_LightColor.a, sun) 

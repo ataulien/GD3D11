@@ -1075,7 +1075,7 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 		case VK_SPACE:
 			if(Selection.SelectedMesh)
 			{
-				SmoothMesh((WorldMeshInfo *)Selection.SelectedMesh);
+				SmoothMesh((WorldMeshInfo *)Selection.SelectedMesh, true);
 
 				if(Selection.SelectedMaterial && Selection.SelectedMaterial->GetTexture())
 				{

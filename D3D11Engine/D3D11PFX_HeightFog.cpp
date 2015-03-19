@@ -80,8 +80,60 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 
 	cb.HF_GlobalDensity = Engine::GAPI->GetRendererState()->RendererSettings.FogGlobalDensity;
 	cb.HF_HeightFalloff = Engine::GAPI->GetRendererState()->RendererSettings.FogHeightFalloff;
-	cb.HF_FogHeight = Engine::GAPI->GetRendererState()->RendererSettings.FogHeight;
-	cb.HF_FogColorMod = Engine::GAPI->GetRendererState()->RendererSettings.FogColorMod;
+	
+	float height = Engine::GAPI->GetRendererState()->RendererSettings.FogHeight;
+	D3DXVECTOR3 color = *Engine::GAPI->GetRendererState()->RendererSettings.FogColorMod.toD3DXVECTOR3();
+
+	float fnear = Engine::GAPI->GetRendererState()->GraphicsState.FF_FogNear;
+	float ffar = Engine::GAPI->GetRendererState()->GraphicsState.FF_FogFar;
+	float secScale = Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius;
+
+	cb.HF_WeightZNear = WORLD_SECTION_SIZE * ((secScale - 0.5f) * 0.7f) - (ffar - fnear); // Keep distance from original fog but scale the near-fog up to section draw distance
+	cb.HF_WeightZFar = WORLD_SECTION_SIZE * ((secScale - 0.5f) * 0.8f);
+
+	if(Engine::GAPI->GetFogOverride() > 0.0f)
+	{
+		// Make sure the camera is inside the fog when in fog zone
+		height = Toolbox::lerp(height, Engine::GAPI->GetCameraPosition().y + 10000, Engine::GAPI->GetFogOverride()); // TODO: Get this from the actual fog-distance in the fogzone!
+		
+		// Override fog color when in fog zone
+		color = Engine::GAPI->GetFogColor();
+
+		// Make it z-Fog
+		cb.HF_HeightFalloff = Toolbox::lerp(cb.HF_HeightFalloff, 0.000001f, Engine::GAPI->GetFogOverride());
+
+		// Use other fog-values for fog-zones
+		float distNear = WORLD_SECTION_SIZE * ((ffar - fnear) / ffar);
+		cb.HF_WeightZNear = Toolbox::lerp(cb.HF_WeightZNear, WORLD_SECTION_SIZE * 0.05f, Engine::GAPI->GetFogOverride());
+		cb.HF_WeightZFar = Toolbox::lerp(cb.HF_WeightZFar, WORLD_SECTION_SIZE * 0.4, Engine::GAPI->GetFogOverride());
+	}
+
+	/*static float s_smoothHeight = Engine::GAPI->GetRendererState()->RendererSettings.FogHeight;
+	static float s_smoothZF = cb.HF_WeightZFar;
+	static float s_smoothZN = cb.HF_WeightZNear;
+
+	// Fade Z-Far and z-Near
+	s_smoothZF = Toolbox::lerp(s_smoothZF, cb.HF_WeightZFar, std::min(Engine::GAPI->GetFrameTimeSec() * 5.0f, 1.0f));
+	s_smoothZN = Toolbox::lerp(s_smoothZN, cb.HF_WeightZNear, std::min(Engine::GAPI->GetFrameTimeSec() * 5.0f, 1.0f));
+
+	cb.HF_WeightZNear = s_smoothZN;
+	cb.HF_WeightZFar = s_smoothZF;*/
+
+	//static D3DXVECTOR3 s_smoothColor = *Engine::GAPI->GetRendererState()->RendererSettings.FogColorMod.toD3DXVECTOR3();
+
+	// Fade fog height in case it changes
+	//s_smoothHeight = Toolbox::lerp(s_smoothHeight, height, std::min(Engine::GAPI->GetFrameTimeSec() * 5.0f, 1.0f));
+
+	// Fade color, because leaving a fogzone would make the fog-color pop otherwise
+	//D3DXVec3Lerp(&s_smoothColor, &s_smoothColor, &color, std::min(Engine::GAPI->GetFrameTimeSec() * 5.0f, 1.0f));
+
+	//D3DXVECTOR3 fogColorMod = Engine::GAPI->GetRendererState()->RendererSettings.FogColorMod;
+	cb.HF_FogColorMod = color;//Engine::GAPI->GetRendererState()->RendererSettings.FogColorMod;
+
+	cb.HF_FogHeight = height;
+
+
+
 	//cb.HF_FogColorMod = Engine::GAPI->GetRendererState()->GraphicsState.FF_FogColor;
 	cb.HF_ProjAB = float2(	Engine::GAPI->GetProjectionMatrix()._33,
 							Engine::GAPI->GetProjectionMatrix()._34);

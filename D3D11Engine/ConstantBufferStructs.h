@@ -93,10 +93,11 @@ struct HeightfogConstantBuffer
 
 	float HF_HeightFalloff;
 	float HF_GlobalDensity;
-	float2 HF_pad;
+	float HF_WeightZNear;
+	float HF_WeightZFar;
 
 	float3 HF_FogColorMod;
-	float HF_Pad2;
+	float HF_pad2;
 
 	float2 HF_ProjAB;
 	float2 HF_Pad3;

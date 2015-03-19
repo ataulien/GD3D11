@@ -367,13 +367,13 @@ struct GothicRendererSettings
 		
 
 #ifdef BUILD_GOTHIC_1_08k
-		FogGlobalDensity = 0.00012f;
+		FogGlobalDensity = 0.00002f;
 		FogHeightFalloff = 0.00018f;
 
 		FogColorMod = float3::FromColor(189,146,107);
 		FogHeight = 4000;
 #else
-		FogGlobalDensity = 0.00014f;
+		FogGlobalDensity = 0.00004f;
 		FogHeightFalloff = 0.0005f;
 		FogColorMod = float3::FromColor(180,180,255);
 		FogHeight = 800;
@@ -561,6 +561,8 @@ struct GothicRendererInfo
 	{
 		VOBVerticesDataSize = 0;
 		SkeletalVerticesDataSize = 0;
+		PlayingMovieResolution = INT2(0,0);
+		Reset();
 	}
 
 	void Reset()
@@ -591,6 +593,9 @@ struct GothicRendererInfo
 
 	unsigned int VOBVerticesDataSize;
 	unsigned int SkeletalVerticesDataSize;
+
+	/** Resolution of the currently playing video, only valid when a movie plays! */
+	INT2 PlayingMovieResolution;
 };
 
 /** This handles more device specific settings */

@@ -13,10 +13,11 @@ cbuffer PFXBuffer : register( b0 )
 
 	float HF_HeightFalloff;
 	float HF_GlobalDensity;
-	float2 HF_pad;
+	float HF_WeightZNear;
+	float HF_WeightZFar;
 
 	float3 HF_FogColorMod;
-	float HF_Pad2;
+	float HF_pad2;
 
 	float2 HF_ProjAB;
 	float2 HF_Pad3;
@@ -44,19 +45,27 @@ float3 VSPositionFromDepth(float depth, float2 vTexCoord)
     return vPositionVS.xyz / vPositionVS.w;   
 }
 
-float ComputeVolumetricFog(float3 cameraToWorldPos)
+float ComputeVolumetricFog(float3 cameraToWorldPos, float3 posOriginal)
 {	
 	float cVolFogHeightDensityAtViewer = exp( -HF_HeightFalloff * HF_CameraPosition.y );
 	
-	float fogInt = length( cameraToWorldPos ) *	cVolFogHeightDensityAtViewer;
+	float lenOrig = length(posOriginal - HF_CameraPosition);
+	float len = length(cameraToWorldPos);
+	float fogInt = len * cVolFogHeightDensityAtViewer;
 	const float	cSlopeThreshold = 0.01;
+	
+	float w = saturate((lenOrig-HF_WeightZNear)/(HF_WeightZFar-HF_WeightZNear));
 
 	if(abs( cameraToWorldPos.y ) > cSlopeThreshold )
 	{
-		float t = HF_HeightFalloff * cameraToWorldPos.y;
+		float t = HF_HeightFalloff * cameraToWorldPos.y * w;
 		fogInt *= (	1.0	- exp( -t ) ) / t;
+		
 	}
-	return	exp( -HF_GlobalDensity * fogInt  * 0.1f);
+	
+	
+	
+	return	exp( -HF_GlobalDensity * w * fogInt);
 }
 
 //--------------------------------------------------------------------------------------
@@ -77,11 +86,18 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float expDepth = TX_Depth.Sample(SS_Linear, Input.vTexcoord).r;
 	
 	float3 position = VSPositionFromDepth(expDepth, Input.vTexcoord);
+	
+	
 	position = mul(float4(position, 1), HF_InvView).xyz;
+	float3 posOriginal = position;
+	
+	position -= HF_CameraPosition;
 	
 	position.y -= HF_FogHeight;
 	
-	float fog = 1.0f - ComputeVolumetricFog(position - HF_CameraPosition);
+	float fog = 1.0f - ComputeVolumetricFog(position, posOriginal);
+	
+	
 	
 	float3 color = ApplyAtmosphericScatteringGround(position, HF_FogColorMod, false);
 	

@@ -81,6 +81,9 @@ struct GothicMemoryLocations
 		static const unsigned int Interpolate = 0x005E8C20;
 		static const unsigned int Offset_InitDone = 0x7C;
 		static const unsigned int Init = 0x005E6A00;*/
+
+		static const unsigned int Offset_OverrideColor = 0x558;
+		static const unsigned int Offset_OverrideFlag = 0x564;
 	};
 
 	struct zCParticleEmitter
@@ -241,6 +244,8 @@ struct GothicMemoryLocations
 	struct zCBinkPlayer
 	{
 		static const unsigned int GetPixelFormat = 0x0043C9E0;
+		//static const unsigned int OpenVideo = 0x0043E0F0;
+		//static const unsigned int Offset_DecodeResolution = 0x254;
 	};
 
 	struct oCSpawnManager

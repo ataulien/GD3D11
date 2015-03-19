@@ -42,6 +42,9 @@ public:
 		}else if(strcmp(var, "zStartupWindowed") == 0)
 		{
 			return 1;
+		}else if(strcmp(var, "scaleVideos") == 0) // Force scaleVideos to get them into the upper left corner
+		{
+			return 1;
 		}
 
 		return HookedFunctions::OriginalFunctions.original_zCOptionReadBool(thisptr, section, var, def);

@@ -31,6 +31,8 @@ struct GothicMemoryLocations
 	struct zCBinkPlayer
 	{
 		static const unsigned int GetPixelFormat = 0x00440790;
+		static const unsigned int OpenVideo = 0x0043E0F0;
+		static const unsigned int Offset_VideoHandle = 0x30;
 	};
 
 	struct CGameManager
@@ -96,6 +98,8 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_SkyLayerState = 0x5A0;		
 		static const unsigned int Offset_SkyLayerState0 = 0x120;
 		static const unsigned int Offset_SkyLayerState1 = 0x124;
+		static const unsigned int Offset_OverrideColor = 0x558;
+		static const unsigned int Offset_OverrideFlag = 0x564;
 		static const unsigned int Interpolate = 0x005E8C20;
 		static const unsigned int Offset_InitDone = 0x7C;
 		static const unsigned int Init = 0x005E6A00;

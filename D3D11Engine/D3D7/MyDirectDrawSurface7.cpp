@@ -523,7 +523,23 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 			EngineTexture->BindToPixelShader(0);
 			Engine::GAPI->GetRendererState()->BlendState.SetDefault();
 			Engine::GAPI->GetRendererState()->BlendStateDirty = true;
-			Engine::GraphicsEngine->DrawQuad(INT2(0,0), Engine::GraphicsEngine->GetResolution());
+
+			INT2 vidRes = Engine::GAPI->GetRendererState()->RendererInfo.PlayingMovieResolution;
+
+			// Catch unset resolution 
+			if(vidRes.x == 0 || vidRes.y == 0)
+				vidRes = Engine::GraphicsEngine->GetResolution();
+
+			// Video is in the upper left corner, since we force ScaleVideos = 1. 
+			// Scale the rendered quad to make the video match the screen size.
+			float x = Engine::GraphicsEngine->GetResolution().x / vidRes.x;
+			float y = Engine::GraphicsEngine->GetResolution().y / vidRes.y;
+
+			INT2 scaledRes;
+			scaledRes.x = (int)((Engine::GraphicsEngine->GetResolution().x * x) + 0.5f);
+			scaledRes.y = (int)((Engine::GraphicsEngine->GetResolution().y * y) + 0.5f);
+
+			Engine::GraphicsEngine->DrawQuad(INT2(0,0), scaledRes);
 		}else
 		{
 			// No conversion needed

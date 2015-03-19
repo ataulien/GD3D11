@@ -67,6 +67,8 @@ void HookedFunctionInfo::InitHooks()
 	// Hook the single bink-function
 	DetourFunction((BYTE *)GothicMemoryLocations::zCBinkPlayer::GetPixelFormat, (BYTE *)HookedFunctionInfo::hooked_zBinkPlayerGetPixelFormat);
 
+	original_zCBinkPlayerOpenVideo = (zCBinkPlayerOpenVideo)DetourFunction((BYTE *)GothicMemoryLocations::zCBinkPlayer::OpenVideo, (BYTE *)HookedFunctionInfo::hooked_zBinkPlayerOpenVideo);
+
 	original_Alg_Rotation3DNRad = (Alg_Rotation3DNRad)GothicMemoryLocations::Functions::Alg_Rotation3DNRad;
 }
 
@@ -107,4 +109,27 @@ long __fastcall HookedFunctionInfo::hooked_zBinkPlayerGetPixelFormat(void* thisp
 
 	return 4; // 4 satisfies gothic enough to play the video
 	//Global::HookedFunctions.zBinkPlayerGetPixelFormat(thisptr, desc);
+}
+
+int __fastcall HookedFunctionInfo::hooked_zBinkPlayerOpenVideo(void* thisptr, void* unknwn, zSTRING str)
+{
+	int r = HookedFunctions::OriginalFunctions.original_zCBinkPlayerOpenVideo(thisptr, str);
+
+	struct BinkInfo
+	{
+		unsigned int ResX;
+		unsigned int ResY;
+		// ... unimportant
+	};
+
+	// Grab the resolution
+	// This structure stores width and height as first two parameters, as ints.
+	BinkInfo* res = *(BinkInfo **)(((char *)thisptr) + (GothicMemoryLocations::zCBinkPlayer::Offset_VideoHandle));
+
+	if(res)
+	{
+		Engine::GAPI->GetRendererState()->RendererInfo.PlayingMovieResolution = INT2(res->ResX, res->ResY);
+	}
+
+	return r;
 }

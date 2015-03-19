@@ -57,6 +57,7 @@ typedef void (__thiscall* zCQuadMarkCreateQuadMark)(void*, zCPolygon*, const D3D
 typedef void (__thiscall* oCWorldEnableVob)(void*, zCVob*,zCVob*);
 typedef void (__thiscall* oCWorldDisableVob)(void*, zCVob*);
 typedef void (__fastcall* oCWorldRemoveFromLists)(void*, zCVob*);
+typedef int (__thiscall* zCBinkPlayerOpenVideo)(void*, class zSTRING);
 
 struct zTRndSurfaceDesc;
 struct HookedFunctionInfo
@@ -104,6 +105,7 @@ struct HookedFunctionInfo
 	oCWorldDisableVob original_oCWorldDisableVob;
 	oCWorldEnableVob original_oCWorldEnableVob;
 	oCWorldRemoveFromLists original_oCWorldRemoveFromLists;
+	zCBinkPlayerOpenVideo original_zCBinkPlayerOpenVideo;
 
 	/** Function hooks */
 	static int __stdcall hooked_HandledWinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR szCmdLine, int sw);
@@ -115,6 +117,7 @@ struct HookedFunctionInfo
 	/** Single function for making the bink-player working again */
 	/** Returns the pixelformat of a bink-surface */
 	static long __fastcall hooked_zBinkPlayerGetPixelFormat(void* thisptr, void* unknwn, zTRndSurfaceDesc& desc);
+	static int __fastcall hooked_zBinkPlayerOpenVideo(void* thisptr, void* unknwn, zSTRING str);
 };
 
 namespace HookedFunctions

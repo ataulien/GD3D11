@@ -8,6 +8,8 @@ class BaseAntTweakBar;
 
 __declspec( selectany ) const char* ENGINE_BASE_DIR = "system\\GD3D11\\";
 
+const char* const VERSION_STRING = "Version X" VERSION_NUMBER " ("__DATE__")";
+
 namespace Engine
 {
 	struct DLLInfo

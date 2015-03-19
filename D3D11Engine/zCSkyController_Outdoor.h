@@ -113,6 +113,26 @@ public:
 #endif
 	}
 
+	D3DXVECTOR3 GetOverrideColor()
+	{
+#ifndef BUILD_GOTHIC_1_08k
+		return *(D3DXVECTOR3*)THISPTR_OFFSET(GothicMemoryLocations::zCSkyController_Outdoor::Offset_OverrideColor);
+#else
+		return D3DXVECTOR3(0,0,0);
+#endif
+	}
+
+	bool GetOverrideFlag()
+	{
+#ifndef BUILD_GOTHIC_1_08k
+		int f = *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCSkyController_Outdoor::Offset_OverrideFlag);
+
+		return f != 0;
+#else
+		return 0;
+#endif
+	}
+
 	/** Returns the sun position in world coords */
 	D3DXVECTOR3 GetSunWorldPosition(float timeScale = 1.0f)
 	{

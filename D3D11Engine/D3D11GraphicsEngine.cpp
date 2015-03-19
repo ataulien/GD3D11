@@ -1947,7 +1947,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		{
 			// Draw the section-part
 			DrawVertexBufferIndexedUINT(NULL, NULL, 
-				(*it).second->Indices.size() * indicesNumMod,
+				(*it).second->Indices.size(),
 				(*it).second->BaseIndexLocation);
 		}else
 		{
@@ -2735,7 +2735,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 
 	const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
 
-	//SetDefaultStates();
+	SetDefaultStates();
 
 	SetActivePixelShader("PS_AtmosphereGround");
 	D3D11PShader* nrmPS = ActivePS;
@@ -2767,6 +2767,10 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 	{
 		Engine::GAPI->GetRendererState()->RasterizerState.Wireframe = true;
 	}
+
+	// Vobs need this
+	Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = true;
+	Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
 
 	// Init drawcalls
 	SetupVS_ExMeshDrawCall();

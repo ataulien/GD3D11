@@ -327,6 +327,23 @@ void GothicAPI::SetEnableGothicInput(bool value)
 	if(!input)
 		return;
 
+	static int disableCounter = 0;
+
+	// Check if everything has disabled input
+	if(disableCounter > 0 && value)
+	{
+		disableCounter--;
+
+		if(disableCounter < 0)
+			disableCounter = 0;
+
+		if(disableCounter > 0)
+			return; // Do nothing, we decremented the counter and it's still not 0
+	}
+
+	if(!value)
+		disableCounter++;
+
 	// zMouse, false
 	input->SetDeviceEnabled(2, value ? 1 : 0);
 	input->SetDeviceEnabled(1, value ? 1 : 0);
@@ -2395,6 +2412,43 @@ GInventory* GothicAPI::GetInventory()
 	return Inventory;
 }
 
+/** Returns the fog-color */
+D3DXVECTOR3 GothicAPI::GetFogColor()
+{
+	zCSkyController_Outdoor* sc = oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor();
+
+	// Only give the overridden color out if the flag is set
+	if(!sc || !sc->GetOverrideFlag())
+		return *RendererState.RendererSettings.FogColorMod.toD3DXVECTOR3();
+
+	D3DXVECTOR3 color = sc->GetOverrideColor();
+
+	// Clamp to length of 1
+	float len = D3DXVec3Length(&color);
+	if(len > 1.0f)
+	{
+		D3DXVec3Normalize(&color, &color);
+		len = 1.0f;
+	}
+
+	// Mix these, so the fog won't get black at transitions
+	D3DXVec3Lerp(&color, RendererState.RendererSettings.FogColorMod.toD3DXVECTOR3(), &color, len);
+
+	return color;
+}
+
+/** Returns true if the game is overwriting the fog color with a fog-zone */
+float GothicAPI::GetFogOverride()
+{
+	zCSkyController_Outdoor* sc = oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor();
+
+	// Catch invalid controller
+	if(!sc)
+		return 0.0f;
+
+	return sc->GetOverrideFlag() ? std::min(D3DXVec3Length(&sc->GetOverrideColor()), 1.0f) : 0.0f;
+}
+
 /** Draws the inventory */
 void GothicAPI::DrawInventory(zCWorld* world, zCCamera& camera)
 {
@@ -3454,6 +3508,27 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 	fread(&s.EnableSoftShadows, sizeof(s.EnableSoftShadows), 1, f);
 	fread(&s.ShadowMapSize, sizeof(s.ShadowMapSize), 1, f);
 	fread(&s.WorldShadowRangeScale, sizeof(s.WorldShadowRangeScale), 1, f);
+
+	// Fix the shadow range
+	switch(s.ShadowMapSize)
+	{
+	case 512:
+		s.WorldShadowRangeScale = 16.0f;
+		break;
+
+	case 1024:
+		s.WorldShadowRangeScale = 16.0f;
+		break;
+
+	case 2048:
+		s.WorldShadowRangeScale = 8.0f;
+		break;
+
+	case 4096:
+		s.WorldShadowRangeScale = 4.0f;
+		break;
+	}
+
 
 	INT2 res;
 	fread(&res, sizeof(res), 1, f);

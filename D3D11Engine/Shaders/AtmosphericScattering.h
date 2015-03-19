@@ -263,7 +263,7 @@ float3 ApplyAtmosphericScatteringOuter(float3 worldPosition)
 	}
 	
 	// Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
-	float3 c0 = vFrontColor * (vInvWavelength * AC_KrESun);
+	float3 c0 = vFrontColor * (vInvWavelength * AC_KrESun) * 2.0f;
 	
 	float3 c1 = vFrontColor * AC_KmESun;	
 	float3 vDirection = camPos - vPos;

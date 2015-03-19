@@ -304,13 +304,19 @@ public:
 	/** Returns the GSky-Object */
 	GSky* GetSky();
 
+	/** Returns the fog-color */
+	D3DXVECTOR3 GetFogColor();
+
+	/** Returns true if the game is overwriting the fog color with a fog-zone */
+	float GetFogOverride();
+
 	/** Returns the inventory */
 	GInventory* GetInventory();
 
 	/** Returns if the material is currently active */
 	bool IsMaterialActive(zCMaterial* mat);
 
-	/** Sets the current input state */
+	/** Sets the current input state. Keeps an internal count of how many times it was disabled. */
 	void SetEnableGothicInput(bool value);
 
 	/** Returns the midpoint of the current world */
