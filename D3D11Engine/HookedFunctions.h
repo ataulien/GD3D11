@@ -54,6 +54,9 @@ typedef int (__thiscall* zCTextureLoadResourceData)(void*);
 typedef int (__thiscall* zCThreadSuspendThread)(void*);
 typedef void (__thiscall* zCResourceManagerCacheOut)(void*,class zCResource*);
 typedef void (__thiscall* zCQuadMarkCreateQuadMark)(void*, zCPolygon*, const D3DXVECTOR3&, const D3DXVECTOR2&, struct zTEffectParams*);
+typedef void (__thiscall* oCWorldEnableVob)(void*, zCVob*,zCVob*);
+typedef void (__thiscall* oCWorldDisableVob)(void*, zCVob*);
+typedef void (__fastcall* oCWorldRemoveFromLists)(void*, zCVob*);
 
 struct zTRndSurfaceDesc;
 struct HookedFunctionInfo
@@ -97,6 +100,10 @@ struct HookedFunctionInfo
 	GenericThiscall original_zCQuadMarkConstructor;
 	oCSpawnManagerInsertNpc original_oCSpawnManagerInsertNpc;
 	oCNPCEnable original_oCNPCEnable;
+	GenericThiscall original_oCNPCInitModel;
+	oCWorldDisableVob original_oCWorldDisableVob;
+	oCWorldEnableVob original_oCWorldEnableVob;
+	oCWorldRemoveFromLists original_oCWorldRemoveFromLists;
 
 	/** Function hooks */
 	static int __stdcall hooked_HandledWinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR szCmdLine, int sw);

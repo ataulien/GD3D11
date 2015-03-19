@@ -13,8 +13,9 @@ public:
 	/** Hooks the functions of this Class */
 	static void Hook()
 	{
+#ifndef BUILD_GOTHIC_1_08k
 		HookedFunctions::OriginalFunctions.original_zCThreadSuspendThread = (zCThreadSuspendThread)DetourFunction((BYTE *)GothicMemoryLocations::zCThread::SuspendThread, (BYTE *)zCThread::hooked_SuspendThread);
-	
+#endif
 		//ThreadSleeping = false;
 	}
 

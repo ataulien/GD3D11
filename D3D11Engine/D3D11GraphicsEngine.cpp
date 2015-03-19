@@ -3731,6 +3731,9 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		if(!vob->IsEnabled())
 			continue;
 
+		// Animate the light
+		vob->DoAnimation();
+
 		plcb.PL_Color = float4(vob->GetLightColor());
 		plcb.PL_Range = vob->GetLightRange();
 		plcb.Pl_PositionWorld = vob->GetPositionWorld();

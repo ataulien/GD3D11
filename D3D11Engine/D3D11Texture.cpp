@@ -65,7 +65,7 @@ XRESULT D3D11Texture::Init(const std::string& file)
 	HRESULT hr;
 	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
 
-	LogInfo() << "Loading Engine-Texture: " << file;
+	//LogInfo() << "Loading Engine-Texture: " << file;
 
 	//Engine::GAPI->EnterResourceCriticalSection();
 

@@ -256,9 +256,6 @@ GothicAPI::~GothicAPI(void)
 /** Called to update the world, before rendering */
 void GothicAPI::OnWorldUpdate()
 {
-	if(Engine::AntTweakBar->GetActive())
-		SetEnableGothicInput(false);
-
 	RendererState.RendererInfo.Reset();
 	RendererState.RendererInfo.FPS = GetFramesPerSecond();
 	RendererState.GraphicsState.FF_Time = GetTimeSeconds();
@@ -331,14 +328,13 @@ void GothicAPI::SetEnableGothicInput(bool value)
 		return;
 
 	// zMouse, false
-	input->SetDeviceEnabled(2, value);
-	input->SetDeviceEnabled(1, value);
+	input->SetDeviceEnabled(2, value ? 1 : 0);
+	input->SetDeviceEnabled(1, value ? 1 : 0);
 
 /*#ifdef BUILD_GOTHIC_1_08k
 	return;
 #endif*/
 
-	// GOTHIC 2 SPECIFIC
 	IDirectInputDevice7A* dInputMouse = *(IDirectInputDevice7A **)GothicMemoryLocations::GlobalObjects::DInput7DeviceMouse;
 	IDirectInputDevice7A* dInputKeyboard = *(IDirectInputDevice7A **)GothicMemoryLocations::GlobalObjects::DInput7DeviceKeyboard;
 	if(dInputMouse)
@@ -346,6 +342,8 @@ void GothicAPI::SetEnableGothicInput(bool value)
 		//LogInfo() << "Got DInput (Mouse)!";
 		if(!value)
 			dInputMouse->Unacquire();
+		else
+			dInputMouse->Acquire();
 	}
 
 	if(dInputKeyboard)
@@ -353,6 +351,8 @@ void GothicAPI::SetEnableGothicInput(bool value)
 		//LogInfo() << "Got DInput (Keyboard)!";
 		if(!value)
 			dInputKeyboard->Unacquire();
+		else
+			dInputKeyboard->Acquire();
 	}
 
 }
@@ -425,6 +425,7 @@ void GothicAPI::ResetWorld()
 /** Resets only the vobs */
 void GothicAPI::ResetVobs()
 {
+	// Clear sections
 	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
 	{
 		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
@@ -435,48 +436,52 @@ void GothicAPI::ResetVobs()
 		}
 	}
 
+	// Remove vegetation
 	ResetVegetation();
 
-	for(std::list<SkeletalVobInfo *>::iterator it = SkeletalMeshVobs.begin(); it != SkeletalMeshVobs.end(); it++)
-	{
-		delete (*it);
-	}
-	SkeletalMeshVobs.clear();
-
+	// Clear helper-lists
 	ParticleEffectVobs.clear();
-
 	RegisteredVobs.clear();
-	VobMap.clear();
 	BspLeafVobLists.clear();
 	DynamicallyAddedVobs.clear();
 	DecalVobs.clear();
-
-	for(std::hash_map<zCVobLight*, VobLightInfo*>::iterator it = VobLightMap.begin(); it != VobLightMap.end(); it++)
-	{
-		delete (*it).second;
-	}
-	VobLightMap.clear();
 	VobsByVisual.clear();
+	SkeletalVobMap.clear();
 
-	
-	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end();it++)
+	// Delete static mesh visuals
+	for(auto it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end();it++)
 	{
 		delete (*it).second;
 	}
 	StaticMeshVisuals.clear();
 
-	for(std::hash_map<std::string, SkeletalMeshVisualInfo*>::iterator it = SkeletalMeshVisuals.begin(); it != SkeletalMeshVisuals.end();it++)
+	// Delete skeletal mesh visuals
+	for(auto it = SkeletalMeshVisuals.begin(); it != SkeletalMeshVisuals.end();it++)
 	{
 		delete (*it).second;
 	}
 	SkeletalMeshVisuals.clear();
 
 	// Delete static mesh vobs
-	for(std::hash_map<zCVob*, VobInfo*>::iterator it = VobMap.begin(); it != VobMap.end(); it++)
+	for(auto it = VobMap.begin(); it != VobMap.end(); it++)
 	{
 		delete (*it).second;
 	}
 	VobMap.clear();
+
+	// Delete skeletal mesh vobs
+	for(std::list<SkeletalVobInfo *>::iterator it = SkeletalMeshVobs.begin(); it != SkeletalMeshVobs.end(); it++)
+	{
+		delete (*it);
+	}
+	SkeletalMeshVobs.clear();
+
+	// Delete light vobs
+	for(std::hash_map<zCVobLight*, VobLightInfo*>::iterator it = VobLightMap.begin(); it != VobLightMap.end(); it++)
+	{
+		delete (*it).second;
+	}
+	VobLightMap.clear();
 }
 
 /** Called when the game loaded a new level */
@@ -486,15 +491,23 @@ void GothicAPI::OnGeometryLoaded(zCPolygon** polys, unsigned int numPolygons)
 	 
 	ResetWorld();
 
-	WorldConverter::ConvertWorldMesh(polys, numPolygons, &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
+	//WorldConverter::ConvertWorldMesh(polys, numPolygons, &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
 	//WorldConverter::ConvertWorldMeshPNAEN(polys, numPolygons, &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
 
+	
+	std::string worldStr = "system\\GD3D11\\meshes\\WLD_" + LoadedWorldInfo->WorldName + ".obj";
 	// Convert world to our own format
-/*#ifdef BUILD_GOTHIC_2_6_fix
+#ifdef BUILD_GOTHIC_2_6_fix
 	WorldConverter::ConvertWorldMesh(polys, numPolygons, &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
 #else
-	WorldConverter::LoadWorldMeshFromFile("system\\GD3D11\\meshes\\GRM_DX11_test.obj", &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
-#endif*/
+	if(Toolbox::FileExists(worldStr))
+	{
+		WorldConverter::LoadWorldMeshFromFile(worldStr, &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
+	}else
+	{
+		WorldConverter::ConvertWorldMesh(polys, numPolygons, &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
+	}
+#endif
 	LogInfo() << "Done extracting world!";
 }
 
@@ -600,7 +613,7 @@ void GothicAPI::BuildStaticMeshInstancingCache()
 	}
 
 	// Cache everything
-	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
+	/*for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
 	{
 		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
 		{
@@ -624,6 +637,7 @@ void GothicAPI::BuildStaticMeshInstancingCache()
 			// Generate constantbuffers
 			for(std::map<MeshVisualInfo *, std::vector<VS_ExConstantBuffer_PerInstance>>::iterator it = section.InstanceCache.InstanceCacheData.begin(); it != section.InstanceCache.InstanceCacheData.end(); it++)
 			{				
+
 				Engine::GraphicsEngine->CreateVertexBuffer(&section.InstanceCache.InstanceCache[(*it).first]);
 				
 				section.InstanceCache.InstanceCache[(*it).first]->Init(&(*it).second[0], (*it).second.size() * sizeof(VS_ExConstantBuffer_PerInstance));
@@ -632,7 +646,7 @@ void GothicAPI::BuildStaticMeshInstancingCache()
 			// Generate full section mesh for the current section
 			//WorldConverter::GenerateFullSectionMesh(section);
 		}
-	}
+	}*/
 }
 
 /** Draws the world-mesh */
@@ -1197,7 +1211,7 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 			delete vi;
 
 			//LogInfo() << "Removed vob (SKELETAL): " << vob;
-			//break;
+			break;
 		}
 	}
 
@@ -1501,80 +1515,6 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		return; // Not supported yet
 
 	g->SetDefaultStates();
-
-
-	// Validate model
-	// Draw submeshes
-	for(std::map<zCMaterial *, std::vector<SkeletalMeshInfo*>>::iterator itm = ((SkeletalMeshVisualInfo *)vi->VisualInfo)->SkeletalMeshes.begin(); itm != ((SkeletalMeshVisualInfo *)vi->VisualInfo)->SkeletalMeshes.end();itm++)
-	{
-		if((*itm).second.empty())
-			continue;
-
-		
-		// Find this submesh, this might be bad, but we should be fine if all meshes have few submeshes
-		/*bool found=false;
-		for(int i=0;i<model->GetMeshSoftSkinList()->NumInArray;i++)
-		{
-			zCMeshSoftSkin* s = model->GetMeshSoftSkinList()->Array[i];
-
-			//for(int a=0;a<s->GetNumSubmeshes();a++)
-			{
-				for(unsigned int b=0;b<(*itm).second.size();b++)
-				{
-					if((*itm).second[b]->visual == s)
-					{
-						found = true;
-						break;
-					}
-				}
-			}
-		}
-
-		if(!found) // Something changed, reload this
-		{*/
-
-		// FIXME: This can be bad, but not sure how to fix raging-visual-changing-sheeps otherwise
-		if(strcmp(model->GetVisualName(), vi->VisualInfo->VisualName.c_str()) != 0)
-		{
-			std::string str = model->GetVisualName();
-
-			if(str.empty())
-			{
-				LogWarn() << "Trying to set model-visual to nameless model!";
-				break;
-			}
-
-			SkeletalMeshVisualInfo* mi = SkeletalMeshVisuals[str];
-
-			LogInfo() << "zCModel changed apperance, setting model to: " << str;
-
-			if(!mi || mi->Meshes.empty())
-			{
-				// Load the new visual
-				if(!mi)
-					mi = new SkeletalMeshVisualInfo;
-				
-				
-
-				// Delete old mesh
-				//SkeletalMeshVisuals.erase(model);
-				//delete vi->VisualInfo; // MEMLEAK
-
-				// Load new one
-				mi = new SkeletalMeshVisualInfo;
-				WorldConverter::ExtractSkeletalMeshFromVob(model, mi);
-
-				mi->Visual = model;
-				SkeletalMeshVisuals[model->GetVisualName()] = mi;
-			}
-
-			// TODO: Make a function for this
-			Engine::GraphicsEngine->OnVobRemovedFromWorld(vi->Vob);
-
-			vi->VisualInfo = mi;
-			break;
-		}
-	}
 
 	D3DXMATRIX world;
 	vi->Vob->GetWorldMatrix(&world);
@@ -2482,7 +2422,10 @@ LRESULT GothicAPI::OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 		{
 		case VK_F11:
 			if(!zCOption::GetOptions()->IsParameter("XNoDevMenu"))
+			{
 				Engine::AntTweakBar->SetActive(!Engine::AntTweakBar->GetActive());
+				SetEnableGothicInput(!Engine::AntTweakBar->GetActive());
+			}
 			else
 				Engine::GraphicsEngine->OnUIEvent(BaseGraphicsEngine::EUIEvent::UI_OpenSettings);
 			break;
@@ -3037,6 +2980,7 @@ void GothicAPI::CleanBSPNodes()
 /** Disables a problematic method which causes the game to conflict with other applications on startup */
 void GothicAPI::DisableErrorMessageBroadcast()
 {
+#ifndef BUILD_GOTHIC_1_08k
 	LogInfo() << "Disabling global message broadcast";
 
 	// Unlock the memory region
@@ -3046,6 +2990,8 @@ void GothicAPI::DisableErrorMessageBroadcast()
 
 	// NOP it
 	REPLACE_RANGE(GothicMemoryLocations::zERROR::BroadcastStart, GothicMemoryLocations::zERROR::BroadcastEnd-1, INST_NOP);
+#endif
+
 }
 
 /** Sets/Gets the far-plane */
@@ -3721,4 +3667,10 @@ void GothicAPI::LoadSectionInfos()
 			section.LoadMeshInfos(LoadedWorldInfo->WorldName, INT2((*itx).first, (*ity).first));
 		}
 	}
+}
+
+/** Returns if the given vob is registered in the world */
+SkeletalVobInfo* GothicAPI::GetSkeletalVobByVob(zCVob* vob)
+{
+	return SkeletalVobMap[vob];
 }

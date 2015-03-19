@@ -10,7 +10,7 @@ public:
 	/** Hooks the functions of this Class */
 	static void Hook()
 	{
-#ifdef BUILD_GOTHIC_1_08k
+/*#ifdef BUILD_GOTHIC_1_08k
 		// There is a sleep in Gothic 1 which slows the whole game down here
 
 		DWORD dwProtect;
@@ -19,7 +19,7 @@ public:
 		// Replace this glorious sleep-call
 		REPLACE_RANGE(0x005E089A, 0x005E08A1-1, INST_NOP);
 
-#endif
+#endif*/
 	}
 
    float factorMotion;        //zREAL        //nicht zu klein machen. Sonst: Freeze bei hoher Framerate!

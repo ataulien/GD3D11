@@ -35,6 +35,12 @@ MyDirectDrawSurface7::~MyDirectDrawSurface7()
 {
 	Engine::GAPI->RemoveSurface(this);
 
+	for(int i=0;i<attachedSurfaces.size();i++)
+	{
+		attachedSurfaces[i]->Release();
+	}
+	attachedSurfaces.clear();
+
 	// Sometimes gothic doesn't unlock a surface or this is a movie-buffer
 	delete[] LockedData;
 
@@ -371,6 +377,7 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
 	}else
 	{
 		// Allocate some temporary data
+		delete[] LockedData; LockedData = NULL;
 		LockedData = new unsigned char[EngineTexture->GetSizeInBytes(0) / divisor];
 	}
 

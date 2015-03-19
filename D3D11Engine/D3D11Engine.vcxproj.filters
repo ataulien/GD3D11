@@ -632,6 +632,9 @@
     <ClInclude Include="Effects11\pchfx.h">
       <Filter>Librarys\Effects11</Filter>
     </ClInclude>
+    <ClInclude Include="VersionCheck.h">
+      <Filter>DLLMain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -890,6 +893,9 @@
     </ClCompile>
     <ClCompile Include="Effects11\d3dx11dbg.cpp">
       <Filter>Librarys\Effects11</Filter>
+    </ClCompile>
+    <ClCompile Include="VersionCheck.cpp">
+      <Filter>DLLMain</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

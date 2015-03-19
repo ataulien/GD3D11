@@ -11,12 +11,14 @@
 #include "BaseAntTweakBar.h"
 #include "HookedFunctions.h"
 #include <signal.h>
+#include "VersionCheck.h"
 
 #pragma comment(lib, "d3dx.lib")
 #pragma comment(lib, "d3dx11.lib")
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "Imagehlp.lib")
 
 //#pragma pack(1)
 
@@ -50,16 +52,16 @@ HRESULT DoHookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  i
 }
 
 extern "C" HRESULT WINAPI HookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  iid,IUnknown FAR *pUnkOuter) {
-    //LogInfo() << "HookedDirectDrawCreateEx!";
+	//LogInfo() << "HookedDirectDrawCreateEx!";
 	HRESULT hr = S_OK; 
 
 	hook_infunc
 
-	return DoHookedDirectDrawCreateEx(lpGuid, lplpDD, iid, pUnkOuter);
-	
+		return DoHookedDirectDrawCreateEx(lpGuid, lplpDD, iid, pUnkOuter);
+
 	hook_outfunc
 
-    return hr;
+		return hr;
 }
 
 
@@ -120,38 +122,41 @@ __declspec(naked) void FakeGetSurfaceFromDC()				{ _asm { jmp [ddraw.GetSurfaceF
 __declspec(naked) void FakeRegisterSpecialCase()			{ _asm { jmp [ddraw.RegisterSpecialCase] } }
 __declspec(naked) void FakeReleaseDDThreadLock()			{ _asm { jmp [ddraw.ReleaseDDThreadLock] } }
 
- void EnableCrashingOnCrashes()
- {
-	 typedef BOOL (WINAPI *tGetPolicy)(LPDWORD lpFlags);
-	 typedef BOOL (WINAPI *tSetPolicy)(DWORD dwFlags);
-	 const DWORD EXCEPTION_SWALLOWING = 0x1;
+void EnableCrashingOnCrashes()
+{
+	typedef BOOL (WINAPI *tGetPolicy)(LPDWORD lpFlags);
+	typedef BOOL (WINAPI *tSetPolicy)(DWORD dwFlags);
+	const DWORD EXCEPTION_SWALLOWING = 0x1;
 
-	 HMODULE kernel32 = LoadLibraryA("kernel32.dll");
-	 tGetPolicy pGetPolicy = (tGetPolicy)GetProcAddress(kernel32,
-		 "GetProcessUserModeExceptionPolicy");
-	 tSetPolicy pSetPolicy = (tSetPolicy)GetProcAddress(kernel32,
-		 "SetProcessUserModeExceptionPolicy");
-	 if (pGetPolicy && pSetPolicy)
-	 {
-		 DWORD dwFlags;
-		 if (pGetPolicy(&dwFlags))
-		 {
-			 // Turn off the filter
-			 pSetPolicy(dwFlags & ~EXCEPTION_SWALLOWING);
-		 }
-	 }
- }
+	HMODULE kernel32 = LoadLibraryA("kernel32.dll");
+	tGetPolicy pGetPolicy = (tGetPolicy)GetProcAddress(kernel32,
+		"GetProcessUserModeExceptionPolicy");
+	tSetPolicy pSetPolicy = (tSetPolicy)GetProcAddress(kernel32,
+		"SetProcessUserModeExceptionPolicy");
+	if (pGetPolicy && pSetPolicy)
+	{
+		DWORD dwFlags;
+		if (pGetPolicy(&dwFlags))
+		{
+			// Turn off the filter
+			pSetPolicy(dwFlags & ~EXCEPTION_SWALLOWING);
+		}
+	}
+}
 
 
 BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID) {
-    if (reason == DLL_PROCESS_ATTACH) {
-        //DebugWrite_i("DDRAW Proxy DLL starting.\n", 0);
-        hLThis = hInst;
+	if (reason == DLL_PROCESS_ATTACH) {
+		//DebugWrite_i("DDRAW Proxy DLL starting.\n", 0);
+		hLThis = hInst;
 
 		//_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 
 		Log::Clear();
 		LogInfo() << "Starting DDRAW Proxy DLL.";
+
+		// Check for right version
+		VersionCheck::CheckExecutable();
 
 		HookedFunctions::OriginalFunctions.InitHooks();
 
@@ -164,7 +169,7 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID) {
 		EnableCrashingOnCrashes();
 		//SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
 
-        char infoBuf[MAX_PATH];
+		char infoBuf[MAX_PATH];
 		GetSystemDirectoryA(infoBuf, MAX_PATH);
 		// We then append \ddraw.dll, which makes the string:
 		// C:\windows\system32\ddraw.dll
@@ -195,13 +200,13 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID) {
 		ddraw.RegisterSpecialCase			= GetProcAddress(ddraw.dll, "RegisterSpecialCase");
 		ddraw.ReleaseDDThreadLock			= GetProcAddress(ddraw.dll, "ReleaseDDThreadLock");
 
-        *(void**)&DirectDrawCreateEx_t = (void*)GetProcAddress(ddraw.dll, "DirectDrawCreateEx");
-    } else if (reason == DLL_PROCESS_DETACH) {
-        FreeLibrary(hDDRAW);
+		*(void**)&DirectDrawCreateEx_t = (void*)GetProcAddress(ddraw.dll, "DirectDrawCreateEx");
+	} else if (reason == DLL_PROCESS_DETACH) {
+		FreeLibrary(hDDRAW);
 
 		Engine::OnShutDown();
 
-        LogInfo() << "DDRAW Proxy DLL signing off.\n";
-    }
-    return TRUE;
+		LogInfo() << "DDRAW Proxy DLL signing off.\n";
+	}
+	return TRUE;
 };

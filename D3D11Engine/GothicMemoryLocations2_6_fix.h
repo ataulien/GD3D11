@@ -68,6 +68,7 @@ struct GothicMemoryLocations
 	struct oCNPC
 	{
 		static const unsigned int ResetPos = 0x006824D0;
+		static const unsigned int InitModel = 0x00738480;
 	};
 
 	struct zCView
@@ -201,6 +202,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_Range = 0x144;
 		static const unsigned int Offset_LightInfo =  0x164;
 		static const unsigned int Mask_LightEnabled = 0x20;
+		static const unsigned int DoAnimation = 0x006081C0;
 	};
 
 	struct zFILE
@@ -392,6 +394,14 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int CacheIn = 0x005DD040;
 		static const unsigned int CacheOut = 0x005DD350;
+	};
+
+	struct oCWorld
+	{
+		//static const unsigned int InsertVobInWorld = 0x006D7120;
+		static const unsigned int EnableVob = 0x00780340;
+		static const unsigned int DisableVob = 0x00780460;
+		static const unsigned int RemoveFromLists = 0x00780990;
 	};
 
 	struct zCWorld

@@ -148,7 +148,7 @@ public:
 private:
 	const zSTRING& __GetName()
 	{
-		XCALL(GothicMemoryLocations::zCTexture::GetName);
+		XCALL(GothicMemoryLocations::zCObject::GetObjectName);
 	}
 };
 

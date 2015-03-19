@@ -55,7 +55,7 @@ struct MaterialInfo
 
 	MaterialInfo()
 	{
-		buffer.SpecularIntensity = 0.3f;
+		buffer.SpecularIntensity = 0.1f;
 		buffer.SpecularPower = 60.0f;
 		buffer.NormalmapStrength = 1.0f;
 		buffer.DisplacementFactor = 1.0f;
@@ -475,6 +475,10 @@ public:
 
 	/** Sets loaded textures of this frame ready */
 	void SetFrameLoadedTexturesReady();
+
+	/** Returns if the given vob is registered in the world */
+	SkeletalVobInfo* GetSkeletalVobByVob(zCVob* vob);
+
 private:
 	/** Cleans empty BSPNodes */
 	void CleanBSPNodes();

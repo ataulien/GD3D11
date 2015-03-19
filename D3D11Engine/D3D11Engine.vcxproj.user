@@ -13,7 +13,7 @@
     </LocalDebuggerEnvironment>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">
-    <LocalDebuggerCommand>$(G1_SYSTEM_PATH)\Gothic.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(G1_SYSTEM_PATH)\Gothicmod.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(G1_SYSTEM_PATH)</LocalDebuggerWorkingDirectory>
     <LocalDebuggerCommandArguments>-zRes:1920,1080,32 -zWindow</LocalDebuggerCommandArguments>
@@ -33,7 +33,7 @@
     <LocalDebuggerCommandArguments>-XNoUpdate</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">
-    <LocalDebuggerCommand>E:\Games\Data\Gothic\system\gothic.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>E:\Games\Data\Gothic\system\gothicmod.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>E:\Games\Data\Gothic\system</LocalDebuggerWorkingDirectory>
     <LocalDebuggerCommandArguments>-zRes:1920,1080,32 -zWindow</LocalDebuggerCommandArguments>

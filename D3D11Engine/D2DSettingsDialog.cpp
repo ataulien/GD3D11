@@ -253,6 +253,7 @@ void D2DSettingsDialog::CloseButtonPressed(SV_Button* sender, void* userdata)
 	d->SetHidden(true);
 
 	Engine::GAPI->SaveMenuSettings(MENU_SETTINGS_FILE);
+	Engine::GAPI->SetEnableGothicInput(true);
 }
 
 /** Apply button */

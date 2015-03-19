@@ -59,7 +59,7 @@ public:
 		//(zCBspNodeRenderIndoor)DetourFunction((BYTE *)GothicMemoryLocations::zCBspNode::RenderIndoor, (BYTE *)zCBspNode::hooked_zCBspNodeRenderIndoor);
 		//(zCBspNodeRenderOutdoor)DetourFunction((BYTE *)GothicMemoryLocations::zCBspNode::RenderOutdoor, (BYTE *)zCBspNode::hooked_zCBspNodeRenderOutdoor);
 	
-		DWORD dwProtect;
+		/*DWORD dwProtect;
 		VirtualProtect((void *)GothicMemoryLocations::zCBspNode::RenderOutdoor, GothicMemoryLocations::zCBspNode::SIZE_RenderOutdoor, PAGE_EXECUTE_READWRITE, &dwProtect);
 		VirtualProtect((void *)GothicMemoryLocations::zCBspNode::RenderIndoor, GothicMemoryLocations::zCBspNode::REPL_RenderIndoorEnd - GothicMemoryLocations::zCBspNode::RenderIndoor, PAGE_EXECUTE_READWRITE, &dwProtect);
 		
@@ -67,7 +67,7 @@ public:
 		// NOP some render-calls
 		REPLACE_RANGE(GothicMemoryLocations::zCBspNode::RenderOutdoor, GothicMemoryLocations::zCBspNode::REPL_RenderOutdoorEnd - 1, INST_NOP);
 		REPLACE_RANGE(GothicMemoryLocations::zCBspNode::RenderIndoor, GothicMemoryLocations::zCBspNode::REPL_RenderIndoorEnd - 1, INST_NOP);
-
+		*/
 		/*REPLACE_CALL(GothicMemoryLocations::zCBspTree::CALL_RenderOutdoor, INST_NOP);
 		REPLACE_CALL(GothicMemoryLocations::zCBspTree::CALL_RenderOutdoor2, INST_NOP);
 		REPLACE_CALL(GothicMemoryLocations::zCBspTree::CALL_RenderIndoor, INST_NOP);

@@ -351,6 +351,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="SV_Slider.h" />
     <ClInclude Include="SV_TabControl.h" />
     <ClInclude Include="UpdateCheck.h" />
+    <ClInclude Include="VersionCheck.h" />
     <ClInclude Include="win32ClipboardWrapper.h" />
     <ClInclude Include="zCArray.h" />
     <ClInclude Include="zCArrayAdapt.h" />
@@ -615,6 +616,12 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="SV_TabControl.cpp" />
     <ClCompile Include="Toolbox.cpp" />
     <ClCompile Include="UpdateCheck.cpp" />
+    <ClCompile Include="VersionCheck.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="win32ClipboardWrapper.cpp" />
     <ClCompile Include="WorldConverter.cpp" />
   </ItemGroup>

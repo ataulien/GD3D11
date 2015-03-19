@@ -284,7 +284,8 @@ void WorldMeshSectionInfo::SaveMeshInfos(const std::string& worldName, INT2 sect
 			std::string tx = (*it).first.Texture->GetNameWithoutExt();
 			std::string name = "WS_" + worldName + "_" + std::to_string(sectionPos.x) + "_" + std::to_string(sectionPos.y) + "_" + tx;
 
-			(*it).second->SaveWorldMeshInfo(name);
+			if((*it).second->SaveInfo) /// Save only if marked dirty
+				(*it).second->SaveWorldMeshInfo(name);
 		}
 	}
 }

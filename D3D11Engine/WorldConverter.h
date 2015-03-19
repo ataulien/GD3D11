@@ -258,7 +258,7 @@ struct MeshVisualInfo : public BaseVisualInfo
 
 	~MeshVisualInfo()
 	{
-
+		delete FullMesh;
 	}
 
 	/** Starts a new frame for this mesh */

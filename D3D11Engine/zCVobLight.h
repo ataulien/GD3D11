@@ -19,4 +19,9 @@ public:
 	{
 		return ((*(DWORD *)THISPTR_OFFSET(GothicMemoryLocations::zCVobLight::Offset_LightInfo)) & GothicMemoryLocations::zCVobLight::Mask_LightEnabled) != 0;
 	}
+
+	void DoAnimation()
+	{
+		XCALL(GothicMemoryLocations::zCVobLight::DoAnimation);
+	}
 };

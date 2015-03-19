@@ -1,5 +1,8 @@
 #pragma once
-#include "pch.h"
+#include <Windows.h>
+#include <D3DX10.h>
+#include <string>
+#include "Types.h"
 
 /** Misc. tools */
 

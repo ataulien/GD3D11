@@ -232,7 +232,7 @@ XRESULT D2DEditorView::InitControls()
 	SelectionTabControl->AddControlToTab(worldMeshSettingsInfoLabel, "Selection/Texture");
 
 	SelectedTexDisplacementSlider = new SV_NamedSlider(MainView, SelectionTabControl->GetTabPanel());
-	SelectedTexDisplacementSlider->AlignUnder(worldMeshSettingsInfoLabel, alignDistance + 3.0f);
+	SelectedTexDisplacementSlider->AlignUnder(worldMeshSettingsInfoLabel, alignDistance + 5.0f);
 	SelectedTexDisplacementSlider->GetLabel()->SetCaption("Displacement:");
 	SelectedTexDisplacementSlider->GetLabel()->SetSize(D2D1::SizeF(textwidth, SelectedTexDisplacementSlider->GetLabel()->GetSize().height));
 	SelectedTexDisplacementSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
@@ -1046,6 +1046,8 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 		{
 			// Disable free-cam, the easy way
 			oCGame::GetGame()->TestKey(GOTHIC_KEY_F4);
+
+			Engine::GAPI->SetEnableGothicInput(true);
 		}
 		return false;
 	}
