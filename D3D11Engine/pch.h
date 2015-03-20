@@ -22,8 +22,8 @@
 #include <set>
 #include <signal.h>
 
-#define VERSION_NUMBER "12.1"
-static const char* VERSION_NUMBER_STR = VERSION_NUMBER;
+#define VERSION_NUMBER "13"
+__declspec(selectany) const char* VERSION_NUMBER_STR = VERSION_NUMBER;
 
 /** D3D7-Call logging */
 #define DebugWriteValue(value, check) if(value == check){LogInfo() << " - " << #check;}

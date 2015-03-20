@@ -23,6 +23,12 @@ struct INT2
 		this->y = y;
 	}
 
+	INT2(const D3DXVECTOR2& v)
+	{
+		this->x = (int)(v.x + 0.5f);
+		this->y = (int)(v.y + 0.5f);
+	}
+
 	INT2(){}
 
 	int x;

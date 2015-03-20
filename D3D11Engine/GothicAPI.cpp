@@ -163,7 +163,7 @@ GothicAPI::GothicAPI(void)
 
 GothicAPI::~GothicAPI(void)
 {
-	ResetWorld();
+	//ResetWorld(); // Just let it leak for now. // FIXME: Do this properly
 
 	delete Ocean;
 	delete SkyRenderer;
@@ -2423,16 +2423,18 @@ D3DXVECTOR3 GothicAPI::GetFogColor()
 
 	D3DXVECTOR3 color = sc->GetOverrideColor();
 
-	// Clamp to length of 1
+	// Clamp to length of 0.5f. Gothic does it at an intensity of 120 / 255.
 	float len = D3DXVec3Length(&color);
-	if(len > 1.0f)
+	if(len > 0.5f)
 	{
 		D3DXVec3Normalize(&color, &color);
-		len = 1.0f;
+
+		color *= 0.5f;
+		len = 0.5f;
 	}
 
 	// Mix these, so the fog won't get black at transitions
-	D3DXVec3Lerp(&color, RendererState.RendererSettings.FogColorMod.toD3DXVECTOR3(), &color, len);
+	D3DXVec3Lerp(&color, RendererState.RendererSettings.FogColorMod.toD3DXVECTOR3(), &color, len * 2.0f);
 
 	return color;
 }
@@ -2446,7 +2448,7 @@ float GothicAPI::GetFogOverride()
 	if(!sc)
 		return 0.0f;
 
-	return sc->GetOverrideFlag() ? std::min(D3DXVec3Length(&sc->GetOverrideColor()), 1.0f) : 0.0f;
+	return sc->GetOverrideFlag() ? std::min(D3DXVec3Length(&sc->GetOverrideColor()), 0.5f) * 2.0f : 0.0f;
 }
 
 /** Draws the inventory */

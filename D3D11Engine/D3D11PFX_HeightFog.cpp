@@ -84,11 +84,11 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 	float height = Engine::GAPI->GetRendererState()->RendererSettings.FogHeight;
 	D3DXVECTOR3 color = *Engine::GAPI->GetRendererState()->RendererSettings.FogColorMod.toD3DXVECTOR3();
 
-	float fnear = Engine::GAPI->GetRendererState()->GraphicsState.FF_FogNear;
-	float ffar = Engine::GAPI->GetRendererState()->GraphicsState.FF_FogFar;
+	float fnear = 15000.0f;
+	float ffar = 60000.0f;
 	float secScale = Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius;
 
-	cb.HF_WeightZNear = WORLD_SECTION_SIZE * ((secScale - 0.5f) * 0.7f) - (ffar - fnear); // Keep distance from original fog but scale the near-fog up to section draw distance
+	cb.HF_WeightZNear = std::max(0.0f, WORLD_SECTION_SIZE * ((secScale - 0.5f) * 0.7f) - (ffar - fnear)); // Keep distance from original fog but scale the near-fog up to section draw distance
 	cb.HF_WeightZFar = WORLD_SECTION_SIZE * ((secScale - 0.5f) * 0.8f);
 
 	if(Engine::GAPI->GetFogOverride() > 0.0f)
@@ -101,6 +101,9 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 
 		// Make it z-Fog
 		cb.HF_HeightFalloff = Toolbox::lerp(cb.HF_HeightFalloff, 0.000001f, Engine::GAPI->GetFogOverride());
+
+		// Turn up density
+		cb.HF_GlobalDensity = Toolbox::lerp(cb.HF_GlobalDensity, cb.HF_GlobalDensity * 2, Engine::GAPI->GetFogOverride());
 
 		// Use other fog-values for fog-zones
 		float distNear = WORLD_SECTION_SIZE * ((ffar - fnear) / ffar);

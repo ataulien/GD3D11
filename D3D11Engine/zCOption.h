@@ -44,7 +44,7 @@ public:
 			return 1;
 		}else if(strcmp(var, "scaleVideos") == 0) // Force scaleVideos to get them into the upper left corner
 		{
-			return 1;
+			return 0;
 		}
 
 		return HookedFunctions::OriginalFunctions.original_zCOptionReadBool(thisptr, section, var, def);

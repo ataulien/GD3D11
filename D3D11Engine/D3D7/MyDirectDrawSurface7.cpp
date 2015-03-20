@@ -404,6 +404,7 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 		return S_OK;
 	}
 
+	// Textureslot 7 is filled only on load-time. This is used to get the zCTexture from this Surface.
 	if(Engine::GAPI->GetBoundTexture(7) != NULL)
 	{
 		// Comming from LoadResourceData
@@ -530,16 +531,27 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 			if(vidRes.x == 0 || vidRes.y == 0)
 				vidRes = Engine::GraphicsEngine->GetResolution();
 
-			// Video is in the upper left corner, since we force ScaleVideos = 1. 
-			// Scale the rendered quad to make the video match the screen size.
-			float x = Engine::GraphicsEngine->GetResolution().x / vidRes.x;
-			float y = Engine::GraphicsEngine->GetResolution().y / vidRes.y;
+			D3DXVECTOR2 mid = D3DXVECTOR2(Engine::GraphicsEngine->GetResolution().x / 2, Engine::GraphicsEngine->GetResolution().y / 2);
+			D3DXVECTOR2 tl = mid - D3DXVECTOR2(vidRes.x, vidRes.y) * 0.5f;
+			D3DXVECTOR2 br = mid + D3DXVECTOR2(vidRes.x, vidRes.y) * 0.5f;
 
-			INT2 scaledRes;
-			scaledRes.x = (int)((Engine::GraphicsEngine->GetResolution().x * x) + 0.5f);
-			scaledRes.y = (int)((Engine::GraphicsEngine->GetResolution().y * y) + 0.5f);
+			// Compute how much we would have to scale the video on both axis
+			float scaleX = Engine::GraphicsEngine->GetResolution().x / (float)vidRes.x;
+			float scaleY = Engine::GraphicsEngine->GetResolution().y / (float)vidRes.y;
 
-			Engine::GraphicsEngine->DrawQuad(INT2(0,0), scaledRes);
+			// select the smaller one
+			float scale = std::min(scaleX, scaleY) * 0.75f;
+
+			
+			// I am honestly not sure how this is correct, but after an hour of fiddeling this works fine. You probably don't want to touch it.
+			float tlx = -Engine::GraphicsEngine->GetResolution().x * scale + (float)Engine::GraphicsEngine->GetResolution().x;
+			float tly = -Engine::GraphicsEngine->GetResolution().y * scale + (float)Engine::GraphicsEngine->GetResolution().y;
+
+			float brx = Engine::GraphicsEngine->GetResolution().x * scale;
+			float bry = Engine::GraphicsEngine->GetResolution().y * scale;
+
+			Engine::GraphicsEngine->DrawQuad(	INT2(tlx, tly), 
+												INT2(brx - tlx, bry - tly));
 		}else
 		{
 			// No conversion needed

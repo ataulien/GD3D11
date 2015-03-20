@@ -183,7 +183,7 @@ XRESULT BaseAntTweakBar::Init()
 	Bar_Info = TwNewBar("FrameStats");
 	TwDefine(" FrameStats refresh=0.3");
 	TwDefine(" FrameStats position='800 0'");
-	TwAddVarRO(Bar_Info, "Version", TW_TYPE_CDSTRING, VERSION_NUMBER_STR, NULL);
+	//TwAddVarRO(Bar_Info, "Version", TW_TYPE_CDSTRING, VERSION_NUMBER_STR, NULL);
 	TwAddVarRO(Bar_Info, "FPS", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererInfo.FPS, NULL);
 	TwAddVarRO(Bar_Info, "DrawnVobs", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnVobs, NULL);
 	TwAddVarRO(Bar_Info, "DrawnTriangles", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnTriangles, NULL);
