@@ -92,7 +92,7 @@ bool D2DDialog::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, LPAR
 }
 
 /** Adds a button to the right side of the dialog */
-void D2DDialog::AddButton(const std::string& caption, SV_ButtonPressedCallback callback, void* userdata, float width)
+SV_Button* D2DDialog::AddButton(const std::string& caption, SV_ButtonPressedCallback callback, void* userdata, float width)
 {
 	SV_Button* button = new SV_Button(MainView, MainPanel);
 
@@ -104,6 +104,8 @@ void D2DDialog::AddButton(const std::string& caption, SV_ButtonPressedCallback c
 		button->AlignLeftTo(Buttons.back(), 5);
 
 	Buttons.push_back(button);
+
+	return button;
 }
 
 

@@ -21,6 +21,10 @@ public:
 	/** Returns true if the given string is in the commandline of the game */
 	bool IsParameter(const std::string& str)
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		return false; // FIXME
+#endif
+
 		zSTRING* zCmdline = (zSTRING *)THISPTR_OFFSET(GothicMemoryLocations::zCOption::Offset_CommandLine);
 		std::string cmdLine = zCmdline->ToChar();
 		std::string cmd = str;

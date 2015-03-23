@@ -13,9 +13,11 @@ public:
 	/** Hooks the functions of this Class */
 	static void Hook()
 	{
+#ifndef BUILD_GOTHIC_1_08k
 		HookedFunctions::OriginalFunctions.original_zCQuadMarkCreateQuadMark = (zCQuadMarkCreateQuadMark)DetourFunction((BYTE *)GothicMemoryLocations::zCQuadMark::CreateQuadMark, (BYTE *)zCQuadMark::Hooked_CreateQuadMark);
 		//HookedFunctions::OriginalFunctions.original_zCQuadMarkConstructor = (GenericThiscall)DetourFunction((BYTE *)GothicMemoryLocations::zCQuadMark::Constructor, (BYTE *)zCQuadMark::Hooked_Constructor);
 		HookedFunctions::OriginalFunctions.original_zCQuadMarkDestructor = (GenericDestructor)DetourFunction((BYTE *)GothicMemoryLocations::zCQuadMark::Destructor, (BYTE *)zCQuadMark::Hooked_Destructor);
+#endif
 	}
 
 	static void __fastcall Hooked_CreateQuadMark(void* thisptr, void* unknwn, zCPolygon* poly, const D3DXVECTOR3& position, const D3DXVECTOR2& size, struct zTEffectParams* params)

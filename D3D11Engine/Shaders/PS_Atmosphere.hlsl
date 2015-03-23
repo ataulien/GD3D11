@@ -31,7 +31,7 @@ struct PS_INPUT
 //--------------------------------------------------------------------------------------
 float4 PSMain( PS_INPUT Input ) : SV_TARGET
 {
-	float3 atmoColor = ApplyAtmosphericScatteringSky(Input.vWorldPosition);
+	float3 atmoColor = ApplyAtmosphericScatteringSky(Input.vWorldPosition) * 2.0f;
 	
 	float4 clouds = TX_Texture0.Sample(SS_Linear, Input.vWorldPosition.xz / 200000.0f + frac(AC_Time * 0.001f));
 	//float cloudsAlpha = TX_Texture0.SampleLevel(SS_Linear, Input.vWorldPosition.xz / 700000.0f + frac(AC_Time * 0.001f), 5).a;

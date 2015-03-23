@@ -9,6 +9,7 @@ class D3D11ShaderManager;
 
 enum D3D11ENGINE_RENDER_STAGE
 {
+	DES_Z_PRE_PASS,
 	DES_MAIN,
 	DES_SHADOWMAP
 };
@@ -254,6 +255,9 @@ public:
 
 	/** Draws particle effects */
 	void DrawFrameParticles(std::map<zCTexture*, std::vector<ParticleInstanceInfo>>& particles, std::map<zCTexture*, ParticleRenderInfo>& info);
+
+	/** Returns the UI-View */
+	D2DView* GetUIView(){return UIView;}
 protected:
 
 	/** Creates the main UI-View */

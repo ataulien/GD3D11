@@ -370,6 +370,8 @@ void D2DView::Render(float deltaTime)
 /** Updates the view */
 void D2DView::Update(float deltaTime)
 {
+	CheckDeadMessageBoxes();
+
 	MainSubView->Update(deltaTime);
 }
 
@@ -589,4 +591,31 @@ float D2DView::GetTextHeight(IDWriteTextLayout* layout, const std::string& text)
 POINT D2DView::GetCursorPosition()
 {
 	return Engine::GAPI->GetCursorPosition();
+}
+
+/** Adds a message box */
+void D2DView::AddMessageBox(const std::string& caption, const std::string& message, D2DMessageBoxCallback callback, void* userdata, ED2D_MB_TYPE type)
+{
+	D2DMessageBox* box = new D2DMessageBox(this, MainSubView, type);
+
+	box->SetCallback(callback, userdata);
+	box->SetHeaderText(caption);
+	box->SetMessage(message);
+
+	MessageBoxes.push_back(box);
+}
+
+/** Checks dead message boxes and removes them */
+void D2DView::CheckDeadMessageBoxes()
+{
+	for(auto it = MessageBoxes.begin(); it != MessageBoxes.end(); it++)
+	{
+		// Delete the messagebox if it is hidden
+		if((*it)->IsHidden())
+		{
+			MainSubView->DeleteChild((*it));
+
+			it = MessageBoxes.erase(it);
+		}
+	}
 }

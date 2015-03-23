@@ -15,6 +15,11 @@ cbuffer DS_ScreenQuadConstantBuffer : register( b0 )
 	float4 SQ_LightColor;
 	matrix SQ_ShadowView;
 	matrix SQ_ShadowProj;
+	
+	float SQ_ShadowStrength;
+	float SQ_ShadowAOStrength;
+	float SQ_WorldAOStrength;
+	float SQ_Pad;
 };
 
 //--------------------------------------------------------------------------------------
@@ -226,13 +231,16 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float sunStrength = dot(SQ_LightColor.rgb, float3(0.333f,0.333f,0.333f));
 	
 	float vertAO = lerp(pow(saturate(vertLighting * 2), 2), 1.0f, 0.5f);
-	float sun = saturate(dot(normalize(SQ_LightDirectionVS), normal) * shadow) * 1.0f * vertAO;
+	float sun = saturate(dot(normalize(SQ_LightDirectionVS), normal) * shadow) * 1.0f;
 
 	float3 specBare = pow(spec, specPower) * specIntensity * SQ_LightColor.rgb * sun;
 	float3 specColored = saturate(lerp(specBare, specBare * diffuse.rgb, specMod));
 	
+	float shadowAO = lerp(1.0f, vertLighting, SQ_ShadowAOStrength);
+	float worldAO = lerp(1.0f, vertLighting, SQ_WorldAOStrength);
 	
-	float3 litPixel = lerp(diffuse * 0.35 * sunStrength, diffuse * SQ_LightColor * SQ_LightColor.a, sun) 
+	float3 litPixel = lerp( diffuse * SQ_ShadowStrength * sunStrength * shadowAO, 
+							diffuse * SQ_LightColor * SQ_LightColor.a * worldAO, sun) 
 				  + specColored;
 	
 	// Run scattering

@@ -2,6 +2,7 @@
 #include "pch.h"
 #include <d2d1_1.h>
 #include <dwrite_1.h>
+#include "D2DMessageBox.h"
 
 const D2D1_COLOR_F SV_DEF_INNER_LINE_COLOR = D2D1::ColorF(0.3f,0.3f,0.6f,1.0f);
 const float SV_DEF_SHADOW_RANGE = 19.0f;
@@ -32,6 +33,9 @@ public:
 
 	/** Updates the view */
 	virtual void Update(float deltaTime);
+
+	/** Adds a message box */
+	void AddMessageBox(const std::string& caption, const std::string& message, D2DMessageBoxCallback callback = NULL, void* userdata = NULL, ED2D_MB_TYPE type = D2D_MBT_OK);
 
 	/** Drass a smooth shadow around the given rectangle */
 	void DrawSmoothShadow(const D2D1_RECT_F* Rectangle, 
@@ -105,6 +109,9 @@ protected:
 	/** Create resources */
 	HRESULT InitResources();
 
+	/** Checks dead message boxes and removes them */
+	void CheckDeadMessageBoxes();
+
 	ID2D1Factory* Factory;
 	ID2D1RenderTarget* RenderTarget;
 	IDWriteFactory1* WriteFactory;
@@ -124,5 +131,8 @@ protected:
 	D2DSubView* MainSubView;
 	D2DEditorView* EditorView;
 	D2DDialog* SettingsDialog;
+
+	/** List of message boxes */
+	std::vector<D2DMessageBox *> MessageBoxes;
 };
 

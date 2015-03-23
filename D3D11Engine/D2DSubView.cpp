@@ -161,6 +161,14 @@ void D2DSubView::AddChild(D2DSubView* child)
 	Children.push_back(child);
 }
 
+/** Deletes a child from this subview */
+void D2DSubView::DeleteChild(D2DSubView* child)
+{
+	child->SetHidden(true); // FIXME
+	//Children.remove(child);
+	//delete child;
+}
+
 /** Sets the position and size */
 void D2DSubView::SetPositionAndSize(const D2D1_POINT_2F& position, const D2D1_SIZE_F& size)
 {
@@ -239,3 +247,4 @@ bool D2DSubView::IsHidden()
 {
 	return Hidden;
 }
+

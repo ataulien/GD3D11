@@ -271,7 +271,10 @@ struct MeshVisualInfo : public BaseVisualInfo
 	void CreatePNAENInfo(bool softNormals = false);
 
 	std::map<MeshKey, std::vector<MeshInfo*>, cmpMeshKey> MeshesByTexture;
-	
+
+	// Vector of the MeshesByTexture-Map for faster access, since map iterations aren't Cache friendly
+	std::vector<std::pair<MeshKey, std::vector<MeshInfo*>>> MeshesCached;
+
 	//zCProgMeshProto* Visual;
 	std::vector<VobInstanceInfo> Instances;
 	unsigned int StartInstanceNum;

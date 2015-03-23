@@ -14,6 +14,7 @@
 #include "D3D11VertexBuffer.h"
 #include "D3D11ConstantBuffer.h"
 #include "BaseLineRenderer.h"
+#include "D3D11VShader.h"
 
 D3D11GraphicsEngineTest::D3D11GraphicsEngineTest(void)
 {
@@ -44,7 +45,7 @@ XRESULT D3D11GraphicsEngineTest::OnStartWorldRendering()
 		DrawWorldMeshTest();
 	
 	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs)
-		DrawVobsTest();
+		DrawSceneLightPrePass();
 
 	SetDefaultStates();
 
@@ -167,238 +168,106 @@ void D3D11GraphicsEngineTest::DrawWorldMeshTest()
 	}
 }
 
-/** Draws vobs */
-void D3D11GraphicsEngineTest::DrawVobsTest()
+/** Draws the scene using the light-pre-pass technique */
+void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 {
-	START_TIMING();
+	// Make sure nothing from the previous stage remained
+	SetDefaultStates();
 
-	const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
+	// Collect visible vobs and lights
+	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs || 
+		Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting)
+	{
+		if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum ||
+			(Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum && FrameVisibleVobs.empty()))
+			Engine::GAPI->CollectVisibleVobs(FrameVisibleVobs, FrameVisibleLights);
 
-	//SetDefaultStates();
+		// Push the data to the GPU
+		FillInstancingBuffer(FrameVisibleVobs);
 
-	SetActivePixelShader("PS_AtmosphereGround");
-	D3D11PShader* nrmPS = ActivePS;
-	SetActivePixelShader("PS_Diffuse");
-	D3D11PShader* defaultPS = ActivePS;
-	SetActiveVertexShader("VS_ExInstancedObj");
+		// Reset the collected vobs for next frame
+		MarkVobNonVisibleInFrame(FrameVisibleVobs);
+	}
 
-	// Set constant buffer
-	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&Engine::GAPI->GetRendererState()->GraphicsState);
-	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
+	/** Init graphics */
 
-	GSky* sky = Engine::GAPI->GetSky();
-	ActivePS->GetConstantBuffer()[1]->UpdateBuffer(&sky->GetAtmosphereCB());
-	ActivePS->GetConstantBuffer()[1]->BindToPixelShader(1);
+	// Vobs need this
+	Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = true;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
-	// Use default material info for now
-	MaterialInfo defInfo;
-	ActivePS->GetConstantBuffer()[2]->UpdateBuffer(&defInfo);
-	ActivePS->GetConstantBuffer()[2]->BindToPixelShader(2);
-
-	D3DXVECTOR3 camPos = Engine::GAPI->GetCameraPosition();
-	INT2 camSection = WorldConverter::GetSectionOfPos(camPos);
-
+	// Set current view-matrix
 	D3DXMATRIX view;
 	Engine::GAPI->GetViewMatrix(&view);
 	Engine::GAPI->SetViewTransform(view);
 
+	// Wireframe?
 	if(Engine::GAPI->GetRendererState()->RendererSettings.WireframeVobs)
 	{
 		Engine::GAPI->GetRendererState()->RasterizerState.Wireframe = true;
 	}
 
+	// Set shaders
+	SetActivePixelShader("PS_Simple");
+	SetActiveVertexShader("VS_ExInstancedObj");
+
 	// Init drawcalls
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
 
-	static std::vector<VobInfo *> vobs;
-	static std::vector<VobLightInfo *> lights;
-	
-	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs || 
-		Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting)
+	// Get reference to visual-map
+	std::hash_map<zCProgMeshProto*, MeshVisualInfo*> vis = Engine::GAPI->GetStaticMeshVisuals();
+
+	/** z-pre-pass */
+
+	// Unbind Pixelshader
+	Context->PSSetShader(NULL, NULL, 0);
+
+	// Unbind rendertarget
+	ID3D11RenderTargetView* nrtv = NULL;
+	Context->OMSetRenderTargets(1, &nrtv, DepthStencilBuffer->GetDepthStencilView());
+
+	// Set stage
+	SetRenderingStage(DES_Z_PRE_PASS);
+
+	// Draw the instances of every visual, if available
+	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 	{
-		if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum ||
-			(Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum && vobs.empty()))
-			Engine::GAPI->CollectVisibleVobs(vobs, lights);
+		// Draw all submeshes of this in the world in one batch each
+		if(!(*it).second->Instances.empty())
+			DrawVisualInstances((*it).second);
 	}
-	
-	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs)
+
+	/** Diffuse pass */
+
+	// Bind Rendertaget
+	Context->OMSetRenderTargets(1, GBuffer0_Diffuse->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
+
+	// Set stage
+	SetRenderingStage(DES_MAIN);
+
+	SetActivePixelShader("PS_Simple");
+	SetActiveVertexShader("VS_ExInstancedObj");
+
+	// Init drawcalls
+	SetupVS_ExMeshDrawCall();
+	SetupVS_ExConstantBuffer();
+
+	// Set depth-func to equal only to make use of the z-pre pass
+	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_EQUAL;
+	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
+
+	UpdateRenderStates();
+
+	// Draw the instances of every visual, if available
+	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 	{
+		if(!(*it).second->Instances.empty())
+		{
+			// Draw all submeshes of this in the world in one batch each
+			DrawVisualInstances((*it).second);
 
-			/*static std::vector<VobInstanceInfo, AlignmentAllocator<VobInstanceInfo, 16> > s_InstanceData;
-			for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
-			{
-	#ifdef BUILD_GOTHIC_1_08k // G1 has this sometimes?
-				if(!(*it).second->Visual)
-					continue;
-	#endif
-
-				(*it).second->StartInstanceNum = s_InstanceData.size();
-				s_InstanceData.insert(s_InstanceData.end(), (*it).second->Instances.begin(), (*it).second->Instances.end());
-			}*/
-
-			//if(!s_InstanceData.empty())
-			{
-
-			/*if(s_InstanceData.size() * sizeof(VobInstanceInfo) % 16 != 0)
-			{
-				int d = 16 - (s_InstanceData.size() * sizeof(VobInstanceInfo) % 16); // Calculate missing bytes
-				int numToAdd = d / sizeof(VobInstanceInfo); // Amount of instances we have to add (max 7)
-
-
-				VobInstanceInfo zi;
-				memset(&zi, 0, sizeof(zi));
-
-				// Add missing data to make it aligned
-				s_InstanceData.resize(s_InstanceData.size() + numToAdd, zi);
-			}*/
-
-			/*if(s_InstanceData.size() < 2)
-			{
-				VobInstanceInfo zi;
-				memset(&zi, 0, sizeof(zi));
-
-				s_InstanceData.push_back(zi);
-			}*/
-
-			// Create instancebuffer for this frame
-			D3D11_BUFFER_DESC desc;
-			((D3D11VertexBuffer *)DynamicInstancingBuffer)->GetVertexBuffer()->GetDesc(&desc);
-
-			if(desc.ByteWidth < sizeof(VobInstanceInfo) * vobs.size())
-			{
-				LogInfo() << "Instancing buffer too small (" << desc.ByteWidth << "), need " << sizeof(VobInstanceInfo) * vobs.size() << " bytes. Recreating buffer.";
-
-				// Buffer too small, recreate it
-				delete DynamicInstancingBuffer;
-				DynamicInstancingBuffer = new D3D11VertexBuffer();
-				DynamicInstancingBuffer->Init(NULL, sizeof(VobInstanceInfo) * vobs.size(), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
-			}
-
-			
-				// Update the vertexbuffer
-				//DynamicInstancingBuffer->UpdateBufferAligned16(&s_InstanceData[0], sizeof(VobInstanceInfo) * s_InstanceData.size());
-
-			byte* data;
-			UINT size;
-			UINT loc = 0;
-			DynamicInstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&data, &size);
-				static std::vector<VobInstanceInfo, AlignmentAllocator<VobInstanceInfo, 16> > s_InstanceData;
-				for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
-				{
-					(*it).second->StartInstanceNum = loc;
-					memcpy(data + loc * sizeof(VobInstanceInfo), &(*it).second->Instances[0], sizeof(VobInstanceInfo) * (*it).second->Instances.size());
-					loc += (*it).second->Instances.size();
-				}
-			DynamicInstancingBuffer->Unmap();
-
-			for(unsigned int i=0;i<vobs.size();i++)
-			{
-				vobs[i]->VisibleInRenderPass = false; // Reset this for the next frame
-				//RenderedVobs.push_back(vobs[i]);
-			}
-
-			// Reset buffer
-			s_InstanceData.resize(0);
-
-			for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
-			{
-				if((*it).second->Instances.empty())
-					continue;
-
-				if((*it).second->MeshSize < Engine::GAPI->GetRendererState()->RendererSettings.SmallVobSize)
-				{
-					OutdoorSmallVobsConstantBuffer->UpdateBuffer(&D3DXVECTOR4(Engine::GAPI->GetRendererState()->RendererSettings.OutdoorSmallVobDrawRadius - (*it).second->MeshSize, 0, 0, 0));
-					OutdoorSmallVobsConstantBuffer->BindToPixelShader(3);
-				}
-				else
-				{
-					OutdoorVobsConstantBuffer->UpdateBuffer(&D3DXVECTOR4(Engine::GAPI->GetRendererState()->RendererSettings.OutdoorVobDrawRadius - (*it).second->MeshSize, 0, 0, 0));
-					OutdoorVobsConstantBuffer->BindToPixelShader(3);
-				}
-
-				for(std::map<MeshKey, std::vector<MeshInfo*>>::iterator itt = (*it).second->MeshesByTexture.begin(); itt != (*it).second->MeshesByTexture.end(); itt++)
-				{
-					std::vector<MeshInfo *>& mlist = (*it).second->MeshesByTexture[(*itt).first];
-					if(mlist.empty())
-						continue;
-
-					for(unsigned int i=0;i<mlist.size();i++)
-					{
-						zCTexture* tx = (*itt).first.Texture;
-
-						if(!tx)
-							continue;
-
-						// Bind texture
-
-						if(tx->CacheIn(0.6f) == zRES_CACHED_IN)
-						{
-							MyDirectDrawSurface7* surface = tx->GetSurface();
-							ID3D11ShaderResourceView* srv[2];
-			
-							// Get diffuse and normalmap
-							srv[0] = ((D3D11Texture *)surface->GetEngineTexture())->GetShaderResourceView();
-							srv[1] = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
-
-							// Bind both
-							Context->PSSetShaderResources(0,2, srv);
-
-
-							// Force alphatest on vobs for now
-							BindShaderForTexture(tx, true);
-
-							MaterialInfo* info = (*itt).first.Info;
-							if(!info->Constantbuffer)
-								info->UpdateConstantbuffer();
-
-							info->Constantbuffer->BindToPixelShader(2);
-
-							if(!info->TesselationShaderPair.empty())
-							{
-								// Set normal/displacement map
-								Context->DSSetShaderResources(0,1, &srv[1]);
-								Context->HSSetShaderResources(0,1, &srv[1]);
-								Setup_PNAEN(PNAEN_Instanced);
-							}else if(ActiveHDS)
-							{
-								Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-								Context->DSSetShader(NULL, NULL, NULL);
-								Context->HSSetShader(NULL, NULL, NULL);
-								ActiveHDS = NULL;
-							}
-
-						}
-						else
-						{
-#ifndef PUBLIC_RELEASE
-							for(int s=0;s<(*it).second->Instances.size();s++)
-							{
-								D3DXVECTOR3 pos = D3DXVECTOR3((*it).second->Instances[s].world._14, (*it).second->Instances[s].world._24, (*it).second->Instances[s].world._34); 
-								GetLineRenderer()->AddAABBMinMax(pos - (*it).second->BBox.Min, pos + (*it).second->BBox.Max, D3DXVECTOR4(1,0,0,1));
-							}
-#endif
-							//continue;
-						}
-
-						MeshInfo* mi = mlist[i];
-
-						
-						// Draw batch
-						DrawInstanced(mi->MeshVertexBuffer, mi->MeshIndexBuffer, mi->Indices.size(), DynamicInstancingBuffer, sizeof(VobInstanceInfo), (int)(*it).second->Instances.size(), sizeof(ExVertexStruct), (*it).second->StartInstanceNum);
-						//DrawVertexBufferIndexed((*it).second->FullMesh->MeshVertexBuffer, (*it).second->FullMesh->MeshIndexBuffer, 0);
-
-						//Engine::GraphicsEngine->DrawVertexBufferIndexed(mi->MeshVertexBuffer, mi->MeshIndexBuffer, mi->Indices.size());
-					}
-
-				}
-
-				// Reset visual
-				if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum)
-				{
-					(*it).second->StartNewFrame();
-				}
-			}
+			// Start new frame on the visual, since we don't need the instancing data anymore
+			(*it).second->StartNewFrame();
 		}
 	}
 
@@ -411,8 +280,282 @@ void D3D11GraphicsEngineTest::DrawVobsTest()
 		Engine::GAPI->GetRendererState()->RasterizerState.Wireframe = false;
 	}
 
-	vobs.clear();
-	lights.clear();
+	FrameVisibleVobs.clear();
+	FrameVisibleLights.clear();
+}
 
-	STOP_TIMING(GothicRendererTiming::TT_Vobs);
+/** Draws a StaticMeshVisual instanced */
+void D3D11GraphicsEngineTest::DrawVisualInstances(MeshVisualInfo* visual)
+{
+	// Bind distance information to make fade-out working
+	BindDistanceInformationFor(visual);
+
+	// Check if cache exists
+	// There should be no visuals without meshes here, so we don't have to check the map for being empty, too.
+	if(visual->MeshesCached.empty())
+	{
+		int i=0; // Counter for materials
+		visual->MeshesCached.resize(visual->MeshesByTexture.size());
+		for(std::map<MeshKey, std::vector<MeshInfo*>>::iterator it = visual->MeshesByTexture.begin(); it != visual->MeshesByTexture.end(); it++)
+		{
+			// Add key and vector
+			visual->MeshesCached[i].first = (*it).first;
+			visual->MeshesCached[i].second = (*it).second;
+			i++;
+		}
+	}
+
+	// Loop through the materials
+	for(int m=0;m<visual->MeshesCached.size();m++)
+	{
+		const MeshKey& key = visual->MeshesCached[m].first;
+		std::vector<MeshInfo*>& mlist = visual->MeshesCached[m].second;
+
+		// Bind shader and texture for every submesh (Should only be one, maybe more for very high-poly meshes)
+		BindShaderForKey(key);
+
+		// Loop through the submeshes and draw them all in one batch
+		for(int i=0;i<mlist.size();i++)
+		{
+			// Bind tesselation info if possible
+			//TryBindPNAENShaderForVisual(visual, mlist[i]);
+
+			// Draw using normal- or PNAEN-Indices whether we have tesselation enabled or not
+			if(!ActiveHDS)
+			{
+				// Draw batch
+				DrawInstanced(	mlist[i]->MeshVertexBuffer, 
+								mlist[i]->MeshIndexBuffer, 
+								mlist[i]->Indices.size(), 
+								DynamicInstancingBuffer, 
+								sizeof(VobInstanceInfo), 
+								visual->Instances.size(), 
+								sizeof(ExVertexStruct), 
+								visual->StartInstanceNum);
+			}else
+			{
+				// Draw batch tesselated
+				DrawInstanced(	mlist[i]->MeshVertexBuffer, 
+								mlist[i]->MeshIndexBufferPNAEN, 
+								mlist[i]->IndicesPNAEN.size(), 
+								DynamicInstancingBuffer, 
+								sizeof(VobInstanceInfo), 
+								visual->Instances.size(), 
+								sizeof(ExVertexStruct), 
+								visual->StartInstanceNum);
+			}
+		}
+	}
+}
+
+/** Binds the texture for the given mesh-key.
+	- Returns false if not cached in */
+bool D3D11GraphicsEngineTest::BindShaderForKey(const MeshKey& key)
+{
+	zCTexture* tx = key.Texture;
+
+	if(!tx)
+		return false; // FIXME: Gregs hat has this! Returning here causes it to not render at all
+
+	// Bind texture
+	if(tx->CacheIn(0.6f) == zRES_CACHED_IN) // FIXME: Don't always use a texture in a z-pre-pass!
+	{
+		MyDirectDrawSurface7* surface = tx->GetSurface();
+		ID3D11ShaderResourceView* srv[2];
+
+		// Get diffuse and normalmap
+		srv[0] = ((D3D11Texture *)surface->GetEngineTexture())->GetShaderResourceView();
+		srv[1] = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
+
+		// Bind both
+		Context->PSSetShaderResources(0,2, srv);
+
+		if(RenderingStage == DES_Z_PRE_PASS)
+		{
+			// Force alphatest on vobs for now
+			BindShaderForTexturePrePass(tx, true);
+		}else
+		{
+			BindShaderForTextureDiffusePass(tx);
+		}
+
+		// Get and update info if neccessary
+		MaterialInfo* info = key.Info;
+		if(!info->Constantbuffer)
+			info->UpdateConstantbuffer();
+
+		// Bind info to pixel shader
+		info->Constantbuffer->BindToPixelShader(2);
+	}
+}
+
+/** Binds the right shader for the given texture */
+void D3D11GraphicsEngineTest::BindShaderForTexturePrePass(zCTexture* texture, bool forceAlphaTest, int zMatAlphaFunc)
+{
+	D3D11PShader* active = ActivePS;
+	D3D11PShader* newShader = ActivePS;
+
+	if(texture->HasAlphaChannel() || forceAlphaTest)
+	{
+		newShader = PS_DiffuseAlphatest;	
+	}else
+	{
+		// If there is no alphatesting we don't need a pixel-shader
+		newShader = NULL;
+	}
+
+	// Bind, if changed
+	if(active != newShader)
+	{
+		ActivePS = newShader;
+		if(ActivePS)
+		{
+			ActivePS->Apply();
+		}
+		else
+		{
+			// Unbind pixelshader
+			Context->PSSetShader(NULL, NULL, 0);
+		}
+	}
+}
+
+/** Binds the right shader for the given texture */
+void D3D11GraphicsEngineTest::BindShaderForTextureDiffusePass(zCTexture* texture)
+{
+	D3D11PShader* active = ActivePS;
+	D3D11PShader* newShader = ActivePS;
+
+	// Alphatest not needed for second pass since the depthbuffer is already filled, go straight for diffuse
+	if(texture->GetSurface()->GetNormalmap())
+	{
+		if(texture->GetSurface()->GetFxMap())
+		{
+			newShader = PS_DiffuseNormalmappedFxMap;
+		}else
+		{
+			newShader = PS_DiffuseNormalmapped;
+		}
+	}else
+	{
+		newShader = PS_Diffuse;
+	}
+
+
+	// Bind, if changed
+	if(active != newShader)
+	{
+		ActivePS = newShader;
+		ActivePS->Apply();
+	}
+}
+
+/** Binds the PNAEN-Tesselation shaders if possible. Removes them from the pipeline otherwise */
+bool D3D11GraphicsEngineTest::TryBindPNAENShaderForVisual(MeshVisualInfo* visual, MeshInfo* mesh)
+{
+	// Check if the input-mesh supports tesselation and has it enabled
+	// Also don't enable tesselation during Shadow- or Reflection-Passes
+	if(	!mesh->IndicesPNAEN.empty() && 
+		(RenderingStage == DES_MAIN || RenderingStage == DES_Z_PRE_PASS) && 
+		visual->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
+	{
+		Setup_PNAEN(PNAEN_Instanced);
+		visual->TesselationInfo.Constantbuffer->BindToDomainShader(1);
+		visual->TesselationInfo.Constantbuffer->BindToHullShader(1);
+	}else if(ActiveHDS) // Remove bound tesselation shaders if we don't want them
+	{
+		Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		Context->DSSetShader(NULL, NULL, NULL);
+		Context->HSSetShader(NULL, NULL, NULL);
+		ActiveHDS = NULL;
+		SetActiveVertexShader("VS_ExInstancedObj");
+		ActiveVS->Apply();
+	}
+
+	return XR_SUCCESS;
+}
+
+/** Fills the Instancing-Buffer with the collected visible vobs */
+XRESULT D3D11GraphicsEngineTest::FillInstancingBuffer(const std::vector<VobInfo *>& vobs)
+{
+	D3D11_BUFFER_DESC desc;
+	((D3D11VertexBuffer *)DynamicInstancingBuffer)->GetVertexBuffer()->GetDesc(&desc);
+
+	// Check size of instancing buffer. Increase if needed.
+	if(desc.ByteWidth < sizeof(VobInstanceInfo) * vobs.size())
+	{
+		LogInfo() << "Instancing buffer too small (" << desc.ByteWidth << "), need " << sizeof(VobInstanceInfo) * vobs.size() << " bytes. Recreating buffer.";
+
+		// Buffer too small, recreate it
+		delete DynamicInstancingBuffer;
+		DynamicInstancingBuffer = new D3D11VertexBuffer();
+		DynamicInstancingBuffer->Init(NULL, sizeof(VobInstanceInfo) * vobs.size(), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	}
+
+	// Map-Information of the buffer
+	byte* data;
+	UINT size;
+
+	// Current instance index location
+	UINT loc = 0;
+
+	// Get reference to visual-map
+	std::hash_map<zCProgMeshProto*, MeshVisualInfo*> vis = Engine::GAPI->GetStaticMeshVisuals();
+
+	// Map the buffer, don't care about its previous content
+	if(XR_SUCCESS == DynamicInstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&data, &size))
+	{
+		// Check every visual for instances and add the instances to the buffer
+		for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+		{
+			if(!(*it).second->Instances.empty())
+			{
+				// This is the starting offset of the buffer for this visual.
+				// Saves us binding different smaller buffers over and over again
+				(*it).second->StartInstanceNum = loc;
+
+				// Copy instances of thiss visual
+				memcpy(data + loc * sizeof(VobInstanceInfo), &(*it).second->Instances[0], sizeof(VobInstanceInfo) * (*it).second->Instances.size());
+
+				// Increase base index for the next visual
+				loc += (*it).second->Instances.size();
+			}
+		}
+		DynamicInstancingBuffer->Unmap();
+	}
+
+	return XR_SUCCESS;
+}
+
+/** Marks all given vobs as not visible in the current frame */
+void D3D11GraphicsEngineTest::MarkVobNonVisibleInFrame(const std::vector<VobInfo *>& vobs)
+{
+	for(unsigned int i=0;i<vobs.size();i++)
+	{
+		vobs[i]->VisibleInRenderPass = false;
+	}
+}
+
+/** Binds the distance-buffer for the given visual.
+Needed for smooth fade-out in the distance */
+void D3D11GraphicsEngineTest::BindDistanceInformationFor(MeshVisualInfo* visual, int slot)
+{
+	if(!visual)
+	{
+		// Bind the infinite buffer in this case
+		InfiniteRangeConstantBuffer->BindToPixelShader(slot);
+		return;
+	}
+
+	// Bind the right distance buffer for this visual
+	if(visual->MeshSize < Engine::GAPI->GetRendererState()->RendererSettings.SmallVobSize)
+	{
+		OutdoorSmallVobsConstantBuffer->UpdateBuffer(&D3DXVECTOR4(Engine::GAPI->GetRendererState()->RendererSettings.OutdoorSmallVobDrawRadius - visual->MeshSize, 0, 0, 0));
+		OutdoorSmallVobsConstantBuffer->BindToPixelShader(slot);
+	}
+	else
+	{
+		OutdoorVobsConstantBuffer->UpdateBuffer(&D3DXVECTOR4(Engine::GAPI->GetRendererState()->RendererSettings.OutdoorVobDrawRadius - visual->MeshSize, 0, 0, 0));
+		OutdoorVobsConstantBuffer->BindToPixelShader(slot);
+	}
 }

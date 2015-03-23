@@ -407,10 +407,10 @@ XRESULT GSky::RenderSkyLayer(zCSkyLayer* layer, zCSkyState* state)
 	Engine::GAPI->GetRendererState()->DepthState.SetDefault();
 	Engine::GAPI->GetRendererState()->DepthState.DepthBufferEnabled = false;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDefault();
-	Engine::GAPI->GetRendererState()->DepthStateDirty = true;
-	Engine::GAPI->GetRendererState()->BlendStateDirty = true;
+	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
-	Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
 	if(!SkyPlaneVertexBuffer)
 	{
@@ -422,10 +422,10 @@ XRESULT GSky::RenderSkyLayer(zCSkyLayer* layer, zCSkyState* state)
 	Engine::GraphicsEngine->DrawVertexBuffer(SkyPlaneVertexBuffer, 6);
 
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_FRONT;
-	Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
 	Engine::GAPI->GetRendererState()->DepthState.DepthBufferEnabled = true;
-	Engine::GAPI->GetRendererState()->DepthStateDirty = true;
+	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
 
 	//Engine::GAPI->DrawTriangle();
 	// Draw sky plane

@@ -42,7 +42,7 @@ XRESULT D3D11PFX_HDR::Render(RenderToTextureBuffer* fxbuffer)
 	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
 	
 	Engine::GAPI->GetRendererState()->BlendState.BlendEnabled = false;
-	Engine::GAPI->GetRendererState()->BlendStateDirty = true;
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 
 	// Save old rendertargets
 	ID3D11RenderTargetView* oldRTV = NULL;

@@ -347,7 +347,7 @@ void GVegetationBox::RenderVegetation(const D3DXVECTOR3& eye)
 	VegetationTexture->BindToPixelShader(1);
 
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
-	Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
 	// Enable alpha-to-coverage
 	
@@ -358,7 +358,7 @@ void GVegetationBox::RenderVegetation(const D3DXVECTOR3& eye)
 		Engine::GAPI->GetRendererState()->BlendState.AlphaToCoverage = Engine::GAPI->GetRendererState()->RendererSettings.VegetationAlphaToCoverage;
 	}
 
-	Engine::GAPI->GetRendererState()->BlendStateDirty = true;
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 
 	Engine::GraphicsEngine->SetActiveVertexShader("VS_GrassInstanced");
 	Engine::GraphicsEngine->SetActivePixelShader("PS_Grass");
@@ -398,10 +398,10 @@ void GVegetationBox::RenderVegetation(const D3DXVECTOR3& eye)
 		Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(BoxMin, BoxMax);
 
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_FRONT;
-	Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
 	Engine::GAPI->GetRendererState()->BlendState.AlphaToCoverage = false;
-	Engine::GAPI->GetRendererState()->BlendStateDirty = true;
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 }
 
 /** Sets bounding box rendering */

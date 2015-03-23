@@ -107,6 +107,18 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "WorldShadowRangeScale", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.WorldShadowRangeScale, NULL);
 	TwDefine(" General/WorldShadowRangeScale  step=0.01 min=0");
 
+	TwAddVarRW(Bar_General, "ShadowStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.ShadowStrength, NULL);
+	TwDefine(" General/ShadowStrength  step=0.01 min=0");
+
+	TwAddVarRW(Bar_General, "ShadowAOStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.ShadowAOStrength, NULL);
+	TwDefine(" General/ShadowAOStrength  step=0.01 min=0");
+
+	TwAddVarRW(Bar_General, "WorldAOStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.WorldAOStrength, NULL);
+	TwDefine(" General/WorldAOStrength  step=0.01 min=0");
+
+	TwAddVarRW(Bar_General, "ShadowStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.ShadowStrength, NULL);
+	TwDefine(" General/ShadowStrength  step=0.01 min=0");
+
 		TwAddVarRW(Bar_General, "WireframeWorld", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.WireframeWorld, NULL);	
 	TwAddVarRW(Bar_General, "WireframeVobs", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.WireframeVobs, NULL);	
 	

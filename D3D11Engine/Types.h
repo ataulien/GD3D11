@@ -66,6 +66,17 @@ struct float3
 		this->z = z;
 	}
 
+	float3(const DWORD& color)
+	{
+		BYTE r = (color >> 16) & 0xFF;
+		BYTE g = (color >> 8 ) & 0xFF;
+		BYTE b = color & 0xFF;
+
+		x = r / 255.0f;
+		y = g / 255.0f;
+		z = b / 255.0f;
+	}
+
 	float3(const D3DXVECTOR3& v)
 	{
 		x = ((float3 *)&v)->x;

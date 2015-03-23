@@ -10,6 +10,7 @@
 #include "D3D11ConstantBuffer.h"
 #include "ConstantBufferStructs.h"
 #include "GothicAPI.h"
+#include "GSky.h"
 
 D3D11PFX_HeightFog::D3D11PFX_HeightFog(D3D11PfxRenderer* rnd) : D3D11PFX_Effect(rnd)
 {
@@ -90,6 +91,12 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 
 	cb.HF_WeightZNear = std::max(0.0f, WORLD_SECTION_SIZE * ((secScale - 0.5f) * 0.7f) - (ffar - fnear)); // Keep distance from original fog but scale the near-fog up to section draw distance
 	cb.HF_WeightZFar = WORLD_SECTION_SIZE * ((secScale - 0.5f) * 0.8f);
+	
+	float atmoMax = 83200.0f; // Fixme: Calculate!	
+	float atmoMin = 27799.9922f;
+
+	cb.HF_WeightZFar = std::min(cb.HF_WeightZFar, atmoMax);
+	cb.HF_WeightZNear = std::min(cb.HF_WeightZNear, atmoMin);
 
 	if(Engine::GAPI->GetFogOverride() > 0.0f)
 	{
@@ -110,6 +117,7 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 		cb.HF_WeightZNear = Toolbox::lerp(cb.HF_WeightZNear, WORLD_SECTION_SIZE * 0.05f, Engine::GAPI->GetFogOverride());
 		cb.HF_WeightZFar = Toolbox::lerp(cb.HF_WeightZFar, WORLD_SECTION_SIZE * 0.4, Engine::GAPI->GetFogOverride());
 	}
+
 
 	/*static float s_smoothHeight = Engine::GAPI->GetRendererState()->RendererSettings.FogHeight;
 	static float s_smoothZF = cb.HF_WeightZFar;
@@ -155,7 +163,7 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 	Engine::GAPI->GetRendererState()->BlendState.SetDefault();
 	//Engine::GAPI->GetRendererState()->BlendState.SetAdditiveBlending();
 	Engine::GAPI->GetRendererState()->BlendState.BlendEnabled = true;
-	Engine::GAPI->GetRendererState()->BlendStateDirty = true;
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 
 	// Copy
 	FxRenderer->DrawFullScreenQuad();

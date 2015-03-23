@@ -116,7 +116,7 @@ void SV_GMeshInfoView::UpdateView()
 
 	g->SetDefaultStates();
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
-	Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
 	D3DXMATRIX oldProj = Engine::GAPI->GetProjTransform();
 
@@ -171,10 +171,10 @@ void SV_GMeshInfoView::UpdateView()
 	case RM_Wireframe:
 		g->SetActivePixelShader("PS_Preview_White");
 		Engine::GAPI->GetRendererState()->RasterizerState.Wireframe = true;
-		Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+		Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 		DrawMeshes();
 		Engine::GAPI->GetRendererState()->RasterizerState.Wireframe = false;
-		Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+		Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 		break;
 	}
 	// Reset viewport
