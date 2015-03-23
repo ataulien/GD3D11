@@ -9,11 +9,12 @@
 class zCParser 
 {
 public:
-	static void CallFunc(zCParser* p, int symbolId, ...)
+	static void CallFunc(int symbolId, ...)
 	{
-		__asm { mov eax, GothicMemoryLocations::zCParser::CallFunc  };
-        __asm { jmp eax };
-		//XCALL(GothicMemoryLocations::zCParser::CallFunc);
+		va_list vl;
+
+		zCParser* parser = zCParser::GetParser();
+		((void (*)(zCParser*, ...))GothicMemoryLocations::zCParser::CallFunc)(parser, symbolId, vl);
 	}
 
 	static zCParser* GetParser(){return (zCParser *)GothicMemoryLocations::GlobalObjects::zCParser;}

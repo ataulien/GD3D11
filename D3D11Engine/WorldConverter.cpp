@@ -2008,6 +2008,27 @@ void WorldConverter::IndexVertices(ExVertexStruct* input, unsigned int numInputV
 		}
 	}*/
 
+	// Check for overlaying triangles and throw them out
+	// Some mods do that for the worldmesh for example
+	std::set<std::tuple<VERTEX_INDEX,VERTEX_INDEX,VERTEX_INDEX>> triangles;
+	for(int i=0;i<outIndices.size();i+=3)
+	{
+		// Insert every combination of indices here. Duplicates will be ignored
+		triangles.insert(std::make_tuple(outIndices[i+0], outIndices[i+1], outIndices[i+2]));
+	}
+
+	if(triangles.size() != outIndices.size() / 3)
+		LogWarn() << "Found mesh with " << (outIndices.size() / 3) - triangles.size() << " overlaying Triangles!";
+
+	// Extract the cleaned triangles to the indices vector
+	outIndices.clear();
+	for(auto it = triangles.begin(); it != triangles.end(); it++)
+	{
+		outIndices.push_back(std::get<0>((*it)));
+		outIndices.push_back(std::get<1>((*it)));
+		outIndices.push_back(std::get<2>((*it)));
+	}
+
     // Notice that the vertices in the set are not sorted by the index
     // so you'll have to rearrange them like this:
 	outVertices.clear();
