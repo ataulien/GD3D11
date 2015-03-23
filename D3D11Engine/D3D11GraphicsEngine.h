@@ -258,10 +258,12 @@ public:
 
 	/** Returns the UI-View */
 	D2DView* GetUIView(){return UIView;}
-protected:
 
 	/** Creates the main UI-View */
 	void CreateMainUIView();
+protected:
+
+	
 
 	/** Test draw world */
 	void TestDrawWorldMesh();

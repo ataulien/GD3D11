@@ -2616,7 +2616,7 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 	if(zCCamera::GetCamera())
 		zCCamera::GetCamera()->Activate();
 
-	/*for(auto it = VobMap.begin(); it != VobMap.end(); it++)
+	for(auto it = VobMap.begin(); it != VobMap.end(); it++)
 	{
 		vobs.push_back((*it).second);
 
@@ -2625,7 +2625,7 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 		((MeshVisualInfo *)(*it).second->VisualInfo)->Instances.push_back(vii);
 	}
 
-	return;*/
+	return;
 
 	// Recursively go through the tree and draw all nodes
 	CollectVisibleVobsHelper(root, root->BBox3D, 63, vobs, lights);
