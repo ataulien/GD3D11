@@ -354,7 +354,13 @@ struct GothicRendererSettings
 		DrawVOBs = true;
 		DrawWorldMesh = true;
 		DrawSkeletalMeshes = true;	
+
+#ifdef BUILD_GOTHIC_1_08k
+		DrawParticleEffects = false;
+#else
 		DrawParticleEffects = true;
+#endif
+
 		DrawSky = true;
 		DrawFog = true;
 		EnableHDR = false;

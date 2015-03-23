@@ -9,6 +9,7 @@
 class zCParser 
 {
 public:
+#ifndef BUILD_GOTHIC_1_08k
 	static void CallFunc(int symbolId, ...)
 	{
 		va_list vl;
@@ -18,4 +19,12 @@ public:
 	}
 
 	static zCParser* GetParser(){return (zCParser *)GothicMemoryLocations::GlobalObjects::zCParser;}
+#else
+	static void CallFunc(int symbolId, ...)
+	{
+		
+	}
+
+	static zCParser* GetParser(){return NULL;}
+#endif
 };

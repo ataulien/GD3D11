@@ -63,6 +63,10 @@ namespace VersionCheck
 				"This DLL only works for Gothic 1 - Version 1.08k_mod or the System-Pack.\n\n"
 				"You can continue and try anyways but the game will most likely crash.\n";
 		}
+
+		LogInfoBox() << "You are using the Gothic 1 Version of GD3D11. This is not an official release, so please keep that in mind!\n"
+						"Not everything is working yet and it may crash frequently. You don't need to report every bug you see, because I likely have seen it myself by now.\n\n"
+						"Particlesystems are disabled to make the game more stable.\n";
 #endif
 
 	}
