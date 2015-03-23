@@ -67,8 +67,9 @@ void HookedFunctionInfo::InitHooks()
 	// Hook the single bink-function
 	DetourFunction((BYTE *)GothicMemoryLocations::zCBinkPlayer::GetPixelFormat, (BYTE *)HookedFunctionInfo::hooked_zBinkPlayerGetPixelFormat);
 
+#ifdef BUILD_GOTHIC_2_6_fix
 	original_zCBinkPlayerOpenVideo = (zCBinkPlayerOpenVideo)DetourFunction((BYTE *)GothicMemoryLocations::zCBinkPlayer::OpenVideo, (BYTE *)HookedFunctionInfo::hooked_zBinkPlayerOpenVideo);
-
+#endif
 	original_Alg_Rotation3DNRad = (Alg_Rotation3DNRad)GothicMemoryLocations::Functions::Alg_Rotation3DNRad;
 }
 

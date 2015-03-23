@@ -106,10 +106,19 @@ struct GothicGraphicsState
 	FixedFunctionStage FF_Stages[2];
 };
 
+struct GothicPipelineState
+{
+	/** Sets this state dirty, which means that it will be updated before next rendering */
+	void SetDirty()
+	{
+		StateDirty = true;
+	}
 
+	bool StateDirty;
+};
 
 /** Depth buffer state information */
-struct GothicDepthBufferStateInfo
+struct GothicDepthBufferStateInfo : public GothicPipelineState
 {
 	/** Layed out for D3D11 */
 	enum ECompareFunc
@@ -139,7 +148,7 @@ struct GothicDepthBufferStateInfo
 };
 
 /** Blend state information */
-struct GothicBlendStateInfo
+struct GothicBlendStateInfo : public GothicPipelineState
 {
 	/** Layed out for D3D11 */
 	enum EBlendFunc
@@ -239,7 +248,7 @@ struct GothicBlendStateInfo
 };
 
 /** Blend state information */
-struct GothicRasterizerStateInfo
+struct GothicRasterizerStateInfo : public GothicPipelineState
 {
 	/** Layed out for D3D11 */
 	enum ECullMode
@@ -269,7 +278,7 @@ struct GothicRasterizerStateInfo
 };
 
 /** Sampler state information */
-struct GothicSamplerStateInfo
+struct GothicSamplerStateInfo : public GothicPipelineState
 {
 	/** Layed out for D3D11 */
 	enum ETextureAddress
@@ -404,6 +413,10 @@ struct GothicRendererSettings
 		ShadowMapSize = 2048;
 		WorldShadowRangeScale = 8.0f;
 
+		ShadowStrength = 0.60f;
+		ShadowAOStrength = 0.70f;
+		WorldAOStrength = 0.70f;
+
 		BloomStrength = 1.0f;
 		GlobalWindStrength = 1.0f;
 		VegetationAlphaToCoverage = true;
@@ -458,6 +471,7 @@ struct GothicRendererSettings
 	bool DoZPrepass;
 	bool EnableAutoupdates;
 
+
 	int MaxNumFaces;
 
 	int SectionDrawRadius;
@@ -488,6 +502,10 @@ struct GothicRendererSettings
 	float GothicUIScale;
 	float FOVHoriz;
 	float FOVVert;
+
+	float ShadowStrength;
+	float ShadowAOStrength;
+	float WorldAOStrength;
 
 	HBAOSettings HbaoSettings;
 
@@ -611,25 +629,21 @@ struct GothicRendererState
 		TransformState.SetDefault();
 		RendererSettings.SetDefault();
 
-		DepthStateDirty = false;
-		BlendStateDirty = false;
-		RasterizerStateDirty = false;
-		SamplerStateDirty = false;
+		DepthState.SetDirty();
+		BlendState.SetDirty();
+		RasterizerState.SetDirty(); 
+		SamplerState.SetDirty();
 
 
 	}
 
 	GothicDepthBufferStateInfo DepthState;
-	bool DepthStateDirty;
 
 	GothicBlendStateInfo BlendState;
-	bool BlendStateDirty;
 
 	GothicRasterizerStateInfo RasterizerState;
-	bool RasterizerStateDirty;
 
 	GothicSamplerStateInfo SamplerState;
-	bool SamplerStateDirty;
 
 	GothicGraphicsState GraphicsState;
 	GothicTransformInfo TransformState;

@@ -35,11 +35,13 @@ MyDirectDrawSurface7::~MyDirectDrawSurface7()
 {
 	Engine::GAPI->RemoveSurface(this);
 
-	for(int i=0;i<attachedSurfaces.size();i++)
+#ifndef BUILD_GOTHIC_1_08k
+	/*for(int i=0;i<attachedSurfaces.size();i++)
 	{
 		attachedSurfaces[i]->Release();
 	}
-	attachedSurfaces.clear();
+	attachedSurfaces.clear();*/
+#endif
 
 	// Sometimes gothic doesn't unlock a surface or this is a movie-buffer
 	delete[] LockedData;
@@ -523,7 +525,7 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 
 			EngineTexture->BindToPixelShader(0);
 			Engine::GAPI->GetRendererState()->BlendState.SetDefault();
-			Engine::GAPI->GetRendererState()->BlendStateDirty = true;
+			Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 
 			INT2 vidRes = Engine::GAPI->GetRendererState()->RendererInfo.PlayingMovieResolution;
 
@@ -550,8 +552,13 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 			float brx = Engine::GraphicsEngine->GetResolution().x * scale;
 			float bry = Engine::GraphicsEngine->GetResolution().y * scale;
 
+#ifdef BUILD_GOTHIC_2_6_fix
 			Engine::GraphicsEngine->DrawQuad(	INT2(tlx, tly), 
 												INT2(brx - tlx, bry - tly));
+#else
+			Engine::GraphicsEngine->DrawQuad(	INT2(0,0), 
+												Engine::GraphicsEngine->GetResolution());
+#endif
 		}else
 		{
 			// No conversion needed

@@ -553,7 +553,6 @@
     <ClInclude Include="GFSDK_SSAO.h">
       <Filter>Librarys</Filter>
     </ClInclude>
-    <ClInclude Include="D3D11NVHBAO.h" />
     <ClInclude Include="BasicTimer.h">
       <Filter>Engine\GAPI</Filter>
     </ClInclude>
@@ -634,6 +633,18 @@
     </ClInclude>
     <ClInclude Include="VersionCheck.h">
       <Filter>DLLMain</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11NVHBAO.h">
+      <Filter>Engine\D3D11\PFX</Filter>
+    </ClInclude>
+    <ClInclude Include="D2DMessageBox.h">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClInclude>
+    <ClInclude Include="IkarusBindings.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="zCParser.h">
+      <Filter>ZenGin\Classes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -842,7 +853,6 @@
     <ClCompile Include="ocean_simulator.cpp">
       <Filter>Librarys\Ocean</Filter>
     </ClCompile>
-    <ClCompile Include="D3D11NVHBAO.cpp" />
     <ClCompile Include="D2DDialog.cpp">
       <Filter>Engine\D2D\Views</Filter>
     </ClCompile>
@@ -896,6 +906,15 @@
     </ClCompile>
     <ClCompile Include="VersionCheck.cpp">
       <Filter>DLLMain</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11NVHBAO.cpp">
+      <Filter>Engine\D3D11\PFX</Filter>
+    </ClCompile>
+    <ClCompile Include="D2DMessageBox.cpp">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="IkarusBindings.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

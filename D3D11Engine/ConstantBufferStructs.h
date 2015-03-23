@@ -155,8 +155,12 @@ struct DS_ScreenQuadConstantBuffer
 	D3DXMATRIX SQ_ShadowView;
 	D3DXMATRIX SQ_ShadowProj;
 
-	float2 SQ_ProjAB;
-	float2 SQ_Pad2;
+	//float2 SQ_ProjAB;
+	//float2 SQ_Pad2;
+	float SQ_ShadowStrength;
+	float SQ_ShadowAOStrength;
+	float SQ_WorldAOStrength;
+	float SQ_Pad;
 };
 
 struct CloudConstantBuffer

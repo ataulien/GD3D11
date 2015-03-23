@@ -341,7 +341,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 	for (unsigned int i = 0; i < Shaders.size(); i++)
 	{
 		//Check if shader src-file exists
-		std::string fileName = "system\\GD3D11\\shaders\\" + Shaders[i].fileName;
+		std::string fileName = Engine::GAPI->GetStartDirectory() + "\\system\\GD3D11\\shaders\\" + Shaders[i].fileName;
 		if (FILE* f = fopen(fileName.c_str(), "r"))
 		{
 			//Check shader's type

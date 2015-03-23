@@ -211,15 +211,15 @@ public:
 			}
 			break;
 			
-		case D3DRENDERSTATE_ZENABLE            		: state->DepthState.DepthBufferEnabled = Value != 0; state->DepthStateDirty = true; break;
+		case D3DRENDERSTATE_ZENABLE            		: state->DepthState.DepthBufferEnabled = Value != 0; state->DepthState.SetDirty(); break;
 		case D3DRENDERSTATE_ALPHATESTENABLE    		: state->GraphicsState.SetGraphicsSwitch(GSWITCH_ALPHAREF, Value != 0);	break;
-		case D3DRENDERSTATE_SRCBLEND           		: state->BlendState.SrcBlend = (GothicBlendStateInfo::EBlendFunc)Value; state->BlendStateDirty = true; break;
-		case D3DRENDERSTATE_DESTBLEND          		: state->BlendState.DestBlend = (GothicBlendStateInfo::EBlendFunc)Value; state->BlendStateDirty = true; break;
-		case D3DRENDERSTATE_CULLMODE           		: state->RasterizerState.CullMode = (GothicRasterizerStateInfo::ECullMode)Value; state->RasterizerStateDirty = true; break;
-		case D3DRENDERSTATE_ZFUNC              		: state->DepthState.DepthBufferCompareFunc = (GothicDepthBufferStateInfo::ECompareFunc)Value; state->DepthStateDirty = true; break;
+		case D3DRENDERSTATE_SRCBLEND           		: state->BlendState.SrcBlend = (GothicBlendStateInfo::EBlendFunc)Value; state->BlendState.SetDirty(); break;
+		case D3DRENDERSTATE_DESTBLEND          		: state->BlendState.DestBlend = (GothicBlendStateInfo::EBlendFunc)Value; state->BlendState.SetDirty(); break;
+		case D3DRENDERSTATE_CULLMODE           		: state->RasterizerState.CullMode = (GothicRasterizerStateInfo::ECullMode)Value; state->RasterizerState.SetDirty(); break;
+		case D3DRENDERSTATE_ZFUNC              		: state->DepthState.DepthBufferCompareFunc = (GothicDepthBufferStateInfo::ECompareFunc)Value; state->DepthState.SetDirty(); break;
 		case D3DRENDERSTATE_ALPHAREF           		: state->GraphicsState.FF_AlphaRef = (float)Value / 255.0f; break; // Ref for masked
-		case D3DRENDERSTATE_ALPHABLENDENABLE   		: state->BlendState.BlendEnabled = Value != 0; state->BlendStateDirty = true; break;	
-		case D3DRENDERSTATE_ZBIAS              		: state->RasterizerState.ZBias = Value; state->DepthStateDirty = true; break;
+		case D3DRENDERSTATE_ALPHABLENDENABLE   		: state->BlendState.BlendEnabled = Value != 0; state->BlendState.SetDirty(); break;	
+		case D3DRENDERSTATE_ZBIAS              		: state->RasterizerState.ZBias = Value; state->DepthState.SetDirty(); break;
 		case D3DRENDERSTATE_TEXTUREFACTOR      		: state->GraphicsState.FF_TextureFactor = float4(Value); break;
 		case D3DRENDERSTATE_LIGHTING           		: state->GraphicsState.SetGraphicsSwitch(GSWITCH_LIGHING, Value != 0); break;
 
@@ -498,15 +498,15 @@ public:
 
 			case D3DTSS_ADDRESS: state->SamplerState.AddressU = (GothicSamplerStateInfo::ETextureAddress)Value;
 				state->SamplerState.AddressV = (GothicSamplerStateInfo::ETextureAddress)Value;
-				state->SamplerStateDirty = true;
+				state->SamplerState.SetDirty();
 				break;
 
 			case D3DTSS_ADDRESSU:   state->SamplerState.AddressU = (GothicSamplerStateInfo::ETextureAddress)Value; 
-				state->SamplerStateDirty = true; 
+				state->SamplerState.SetDirty(); 
 				break;	   
 
 			case D3DTSS_ADDRESSV:   state->SamplerState.AddressV = (GothicSamplerStateInfo::ETextureAddress)Value; 
-				state->SamplerStateDirty = true; 
+				state->SamplerState.SetDirty(); 
 				break;   
 
 			case D3DTSS_BORDERCOLOR: break;   
@@ -694,7 +694,7 @@ public:
 
 				// Gothic wants that for the sky
 				Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = true;
-				Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+				Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 				Engine::GraphicsEngine->SetActiveVertexShader("VS_TransformedEx");
 				Engine::GraphicsEngine->BindViewportInformation("VS_TransformedEx", 0);
 				break;
@@ -719,7 +719,7 @@ public:
 
 		
 		/*Engine::GAPI->GetRendererState()->DepthState.DepthBufferEnabled = false;
-		Engine::GAPI->GetRendererState()->DepthStateDirty = true;*/
+		Engine::GAPI->GetRendererState()->DepthState.SetDirty();*/
 
 		Engine::GraphicsEngine->SetActivePixelShader("PS_FixedFunctionPipe");
 
@@ -770,7 +770,7 @@ public:
 
 				// Gothic wants that for the sky
 				Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = true;
-				Engine::GAPI->GetRendererState()->RasterizerStateDirty = true;
+				Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 				Engine::GraphicsEngine->DrawVertexBufferFF(((MyDirect3DVertexBuffer7 *)lpd3dVertexBuffer)->GetVertexBuffer(), dwNumVertices, dwStartVertex, sizeof(Gothic_XYZRHW_DIF_T1_Vertex));
 				break;
 

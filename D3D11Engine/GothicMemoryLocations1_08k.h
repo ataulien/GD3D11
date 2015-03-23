@@ -244,8 +244,8 @@ struct GothicMemoryLocations
 	struct zCBinkPlayer
 	{
 		static const unsigned int GetPixelFormat = 0x0043C9E0;
-		//static const unsigned int OpenVideo = 0x0043E0F0;
-		//static const unsigned int Offset_DecodeResolution = 0x254;
+		static const unsigned int OpenVideo = 0x00424E90;
+		static const unsigned int Offset_VideoHandle = 0x30;
 	};
 
 	struct oCSpawnManager

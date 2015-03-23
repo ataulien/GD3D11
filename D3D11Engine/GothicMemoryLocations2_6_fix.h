@@ -174,6 +174,12 @@ struct GothicMemoryLocations
 		static const unsigned int DInput7DeviceKeyboard = 0x008D1D64;
 		static const unsigned int zCInput = 0x008D1650;
 		static const unsigned int zCOption = 0x008CD988;
+		static const unsigned int zCParser = 0xAB40C0;
+	};
+
+	struct zCParser
+	{
+		static const unsigned int CallFunc = 0x7929F0;
 	};
 
 	struct zCMorphMesh
@@ -303,6 +309,8 @@ struct GothicMemoryLocations
 		static const unsigned int VTBL_GetFileExtension = 17;
 		static const unsigned int Destructor = 0x00606800;
 	};
+
+	
 
 	struct zCDecal
 	{

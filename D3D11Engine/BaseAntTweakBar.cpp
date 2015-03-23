@@ -107,6 +107,18 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "WorldShadowRangeScale", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.WorldShadowRangeScale, NULL);
 	TwDefine(" General/WorldShadowRangeScale  step=0.01 min=0");
 
+	TwAddVarRW(Bar_General, "ShadowStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.ShadowStrength, NULL);
+	TwDefine(" General/ShadowStrength  step=0.01 min=0");
+
+	TwAddVarRW(Bar_General, "ShadowAOStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.ShadowAOStrength, NULL);
+	TwDefine(" General/ShadowAOStrength  step=0.01 min=0");
+
+	TwAddVarRW(Bar_General, "WorldAOStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.WorldAOStrength, NULL);
+	TwDefine(" General/WorldAOStrength  step=0.01 min=0");
+
+	TwAddVarRW(Bar_General, "ShadowStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.ShadowStrength, NULL);
+	TwDefine(" General/ShadowStrength  step=0.01 min=0");
+
 		TwAddVarRW(Bar_General, "WireframeWorld", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.WireframeWorld, NULL);	
 	TwAddVarRW(Bar_General, "WireframeVobs", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.WireframeVobs, NULL);	
 	
@@ -211,19 +223,19 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_HBAO, "Enable HBAO+", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.Enabled, NULL);
 
 	TwAddVarRW(Bar_HBAO, "Radius", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.Radius, NULL);
-	TwDefine(" HBAO/Radius  step=0.01");
+	TwDefine(" HBAO+/Radius  step=0.01");
 	
 	TwAddVarRW(Bar_HBAO, "MetersToViewSpaceUnits", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.MetersToViewSpaceUnits, NULL);
-	TwDefine(" HBAO/MetersToViewSpaceUnits  step=0.01");
+	TwDefine(" HBAO+/MetersToViewSpaceUnits  step=0.01");
 
 	TwAddVarRW(Bar_HBAO, "PowerExponent", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.PowerExponent, NULL);
-	TwDefine(" HBAO/PowerExponent  step=0.01");
+	TwDefine(" HBAO+/PowerExponent  step=0.01");
 
 	TwAddVarRW(Bar_HBAO, "Bias", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.Bias, NULL);
-	TwDefine(" HBAO/Bias  step=0.01");
+	TwDefine(" HBAO+/Bias  step=0.01");
 
 	TwAddVarRW(Bar_HBAO, "BlurSharpness", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.BlurSharpness, NULL);
-	TwDefine(" HBAO/BlurSharpness  step=0.01");
+	TwDefine(" HBAO+/BlurSharpness  step=0.01");
 
 	TwType tbm = TwDefineEnumFromString("BlendModeEnum", "0 {Replace}, 1 {Multiply}");
 	TwAddVarRW(Bar_HBAO, "BlendMode", tbm, &Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.BlendMode, NULL);

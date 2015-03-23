@@ -25,6 +25,7 @@
 #include "zCOption.h"
 #include "SV_NamedSlider.h"
 #include "zCModel.h"
+#include "D2DView.h"
 
 D2DEditorView::D2DEditorView(D2DView* view, D2DSubView* parent) : D2DSubView(view, parent)
 {
@@ -284,7 +285,6 @@ XRESULT D2DEditorView::InitControls()
 	SelectionTabControl->AddControlToTab(SelectedTexSpecModulationSlider, "Selection/Texture");*/
 
 	
-
 
 
 
@@ -1290,7 +1290,9 @@ void D2DEditorView::SaveLevelPressed(SV_Button* sender, void* userdata)
 {
 	D2DEditorView* v = (D2DEditorView *)userdata;
 
-	Engine::GAPI->SaveCustomZENResources();
+	//Engine::GAPI->SaveCustomZENResources();
+
+	v->MainView->AddMessageBox("Saved!", "Custom ZEN-Resources were saved!");
 }
 
 void D2DEditorView::LoadLevelPressed(SV_Button* sender, void* userdata)

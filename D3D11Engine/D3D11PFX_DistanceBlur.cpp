@@ -34,7 +34,7 @@ XRESULT D3D11PFX_DistanceBlur::Render(RenderToTextureBuffer* fxbuffer)
 	D3D11PShader* ps = engine->GetShaderManager()->GetPShader("PS_PFX_DistanceBlur");
 
 	Engine::GAPI->GetRendererState()->BlendState.SetDefault();
-	Engine::GAPI->GetRendererState()->BlendStateDirty = true;
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 
 	// Copy scene
 	engine->GetContext()->ClearRenderTargetView(FxRenderer->GetTempBuffer()->GetRenderTargetView(), (float *)&D3DXVECTOR4(0,0,0,0));

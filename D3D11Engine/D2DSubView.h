@@ -15,6 +15,9 @@ public:
 	/** Adds a child to this subview */
 	void AddChild(D2DSubView* child);
 
+	/** Deletes a child from this subview */
+	void DeleteChild(D2DSubView* child);
+
 	/** Sets the position and size of this sub-view */
 	virtual void SetRect(const D2D1_RECT_F& rect);
 

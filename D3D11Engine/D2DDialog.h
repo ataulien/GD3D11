@@ -32,7 +32,7 @@ public:
 	virtual bool OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, LPARAM lParam, const D2D1_RECT_F& clientRectAbs);
 
 	/** Adds a button to the right side of the dialog */
-	void AddButton(const std::string& caption, SV_ButtonPressedCallback callback, void* userdata, float width = 85);
+	SV_Button* AddButton(const std::string& caption, SV_ButtonPressedCallback callback, void* userdata, float width = 85);
 
 	/** Sets the position and size of this sub-view */
 	virtual void SetRect(const D2D1_RECT_F& rect);

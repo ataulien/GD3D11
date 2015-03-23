@@ -3,7 +3,7 @@
 
 const int OCEAN_PATCH_SIZE = 2048;
 const float OCEAN_DEFAULT_WAVE_HEIGHT = 1.0f;
-const float OCEAN_DEFAULT_PATCH_HEIGHT = -700.0f;
+const float OCEAN_DEFAULT_PATCH_HEIGHT = -2206.0f;
 
 struct WaterPatchInfo
 {

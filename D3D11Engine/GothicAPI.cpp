@@ -554,6 +554,8 @@ void GothicAPI::OnLoadWorld(const std::string& levelName, int loadMode)
 	// Reset caches
 	BspLeafVobLists.clear();
 	ResetVobs();
+
+	
 }
 
 
@@ -764,7 +766,7 @@ void GothicAPI::DrawWorldMeshNaive()
 	STOP_TIMING(GothicRendererTiming::TT_SkeletalMeshes);
 
 	RendererState.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_FRONT;
-	RendererState.RasterizerStateDirty = true;
+	RendererState.RasterizerState.SetDirty();
 
 	// Reset vob-state
 	/*for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
@@ -1580,7 +1582,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 
 	g->SetDefaultStates();
 	RendererState.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_FRONT;
-	RendererState.RasterizerStateDirty = true;
+	RendererState.RasterizerState.SetDirty();
 	g->UpdateRenderStates();
 
 	/*D3DXMATRIX identity;
@@ -2492,12 +2494,16 @@ LRESULT GothicAPI::OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 			break;
 
 		case VK_NUMPAD2:
+#ifdef PUBLIC_RELEASE
 			if(!Engine::AntTweakBar->GetActive())
+#endif
 				Ocean->AddWaterPatchAt((unsigned int)(GetCameraPosition().x / OCEAN_PATCH_SIZE), (unsigned int)(GetCameraPosition().z / OCEAN_PATCH_SIZE));
 			break;
 
 		case VK_NUMPAD3:
+#ifdef PUBLIC_RELEASE
 			if(!Engine::AntTweakBar->GetActive())
+#endif
 			{
 				for(int x=-1;x<=1;x++)
 					for(int y=-1;y<=1;y++)
@@ -2514,7 +2520,9 @@ LRESULT GothicAPI::OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 	Engine::GraphicsEngine->OnWindowMessage(hWnd, msg, wParam, lParam);
 
 	if(OriginalGothicWndProc)
-		return (*(WNDPROC)(OriginalGothicWndProc))(hWnd, msg, wParam, lParam);
+	{
+		return CallWindowProc((WNDPROC)OriginalGothicWndProc, hWnd, msg, wParam, lParam);
+	}
 	else
 		return 0;
 }
