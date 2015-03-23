@@ -83,7 +83,7 @@ extern "C"
 		int* id = (int *)userdata;
 
 		// Call script-callback
-		zCParser::CallFunc(*id, action);
+		zCPARSER_CALL_FUNC(*id, action);
 
 		delete id;
 	}

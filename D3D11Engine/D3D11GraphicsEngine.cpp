@@ -437,10 +437,13 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 		scd.BufferDesc.Height = bbres.y;
 		scd.BufferDesc.Width = bbres.x;
 		scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+		bool windowed = Engine::GAPI->HasCommandlineParameter("ZWINDOW") ||
+						Engine::GAPI->GetIntParamFromConfig("zStartupWindowed");
 #ifdef PUBLIC_RELEASE
-		scd.Windowed = false;
+		scd.Windowed = windowed;
 #else
-		scd.Windowed = true;
+		scd.Windowed = windowed;
 #endif
 
 

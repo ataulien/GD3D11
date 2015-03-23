@@ -42,9 +42,9 @@ HRESULT DoHookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  i
 {
 	*lplpDD = new MyDirectDraw(NULL);
 
-	if(!Engine::GAPI)
+	if(!Engine::GraphicsEngine)
 	{		
-		Engine::CreateGothicAPI();
+		Engine::GAPI->OnGameStart();
 		Engine::CreateGraphicsEngine();
 	}
 
@@ -162,6 +162,9 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID) {
 
 		Engine::GAPI = NULL;
 		Engine::GraphicsEngine = NULL;
+
+		// Create GothicAPI here to make all hooks work
+		Engine::CreateGothicAPI();
 
 		GothicAPI::DisableErrorMessageBroadcast();
 		Engine::LoadDLLFiles();

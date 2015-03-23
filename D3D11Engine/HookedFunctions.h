@@ -62,6 +62,7 @@ typedef int (__thiscall* zCBinkPlayerOpenVideo)(void*, class zSTRING);
 struct zTRndSurfaceDesc;
 struct HookedFunctionInfo
 {
+
 	/** Init all hooks here */
 	void InitHooks();
 

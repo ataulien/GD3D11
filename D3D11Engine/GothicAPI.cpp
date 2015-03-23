@@ -114,28 +114,6 @@ GothicAPI::GothicAPI(void)
 {
 	//UpdateCheck::CheckForUpdate();
 
-	LoadMenuSettings(MENU_SETTINGS_FILE);
-
-	if(RendererState.RendererSettings.EnableAutoupdates && !zCOption::GetOptions()->IsParameter("XNOUPDATE"))
-		UpdateCheck::RunUpdater();
-
-	LoadedWorldInfo = new WorldInfo;
-	LoadedWorldInfo->HighestVertex = 2;
-	LoadedWorldInfo->LowestVertex = 3;
-	LoadedWorldInfo->MidPoint = D3DXVECTOR2(4,5);
-
-	// Get start directory
-	char dir[MAX_PATH];
-	GetCurrentDirectoryA(MAX_PATH, dir);
-	StartDirectory = dir;
-
-	InitializeCriticalSection(&ResourceCriticalSection);
-
-	SkyRenderer = new GSky;
-	SkyRenderer->InitSky();
-
-	Inventory = new GInventory; 
-
 	OriginalGothicWndProc = 0;
 
 	TextureTestBindMode = false;
@@ -171,6 +149,33 @@ GothicAPI::~GothicAPI(void)
 	delete LoadedWorldInfo;
 	delete WrappedWorldMesh;
 	delete RenderThread;
+}
+
+/** Called when the game starts */
+void GothicAPI::OnGameStart()
+{
+	LoadMenuSettings(MENU_SETTINGS_FILE);
+
+	if(RendererState.RendererSettings.EnableAutoupdates && !zCOption::GetOptions()->IsParameter("XNOUPDATE"))
+		UpdateCheck::RunUpdater();
+
+	
+	LoadedWorldInfo = new WorldInfo;
+	LoadedWorldInfo->HighestVertex = 2;
+	LoadedWorldInfo->LowestVertex = 3;
+	LoadedWorldInfo->MidPoint = D3DXVECTOR2(4,5);
+
+	// Get start directory
+	char dir[MAX_PATH];
+	GetCurrentDirectoryA(MAX_PATH, dir);
+	StartDirectory = dir;
+
+	InitializeCriticalSection(&ResourceCriticalSection);
+
+	SkyRenderer = new GSky;
+	SkyRenderer->InitSky();
+
+	Inventory = new GInventory; 
 }
 
 /** Caches the current world mesh */
@@ -375,6 +380,7 @@ void GothicAPI::SetEnableGothicInput(bool value)
 }
 
 
+
 /** Called when the window got set */
 void GothicAPI::OnSetWindow(HWND hWnd)
 {
@@ -555,7 +561,8 @@ void GothicAPI::OnLoadWorld(const std::string& levelName, int loadMode)
 	BspLeafVobLists.clear();
 	ResetVobs();
 
-	
+	// Disable input here, so you can tab out
+	SetEnableGothicInput(false);
 }
 
 
@@ -591,6 +598,9 @@ void GothicAPI::OnWorldLoaded()
 	//LoadCustomZENResources();
 
 	LogInfo() << "Done!";
+
+	// Enable input again, disabled it when loading started
+	SetEnableGothicInput(true);
 }
 
 
@@ -3769,4 +3779,22 @@ void GothicAPI::LoadSectionInfos()
 SkeletalVobInfo* GothicAPI::GetSkeletalVobByVob(zCVob* vob)
 {
 	return SkeletalVobMap[vob];
+}
+
+/** Returns true if the given string can be found in the commandline */
+bool GothicAPI::HasCommandlineParameter(const std::string& param)
+{
+	return zCOption::GetOptions()->IsParameter(param);
+}
+
+/** Gets the int-param from the ini. String must be UPPERCASE. */
+int GothicAPI::GetIntParamFromConfig(const std::string& param)
+{
+	return ConfigIntValues[param];
+}
+
+/** Sets the given int param into the internal ini-cache. That does not set the actual value for the game! */
+void GothicAPI::SetIntParamFromConfig(const std::string& param, int value)
+{
+	ConfigIntValues[param] = value;
 }

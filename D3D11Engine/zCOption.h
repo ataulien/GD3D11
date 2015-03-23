@@ -9,7 +9,7 @@
 class zCOption
 {
 public:
-
+	
 	/** Hooks the functions of this Class */
 	static void Hook()
 	{
@@ -33,28 +33,33 @@ public:
 		std::transform(cmdLine.begin(), cmdLine.end(),cmdLine.begin(), ::toupper);
 		std::transform(cmd.begin(), cmd.end(),cmd.begin(), ::toupper);
 
-		return cmd.find("-" + cmd) != std::string::npos;
+		return cmdLine.find("-" + cmd) != std::string::npos;
 	}
 
 	/** Reads config stuff */
 	static int __fastcall hooked_zOptionReadBool(void* thisptr, void* unknwn,zSTRING const& section, char const* var, int def)
 	{
-		hook_infunc
-		if(strcmp(var, "zWaterAniEnabled") == 0)
+		
+		int r = 0;
+		if(_stricmp(var, "zWaterAniEnabled") == 0)
 		{
+			Engine::GAPI->SetIntParamFromConfig("zWaterAniEnabled", 0);
 			return 0; // Disable water animations
-		}else if(strcmp(var, "zStartupWindowed") == 0)
+		}else if(_stricmp(var, "scaleVideos") == 0) // Force scaleVideos to get them into the upper left corner
 		{
-			return 1;
-		}else if(strcmp(var, "scaleVideos") == 0) // Force scaleVideos to get them into the upper left corner
-		{
+			Engine::GAPI->SetIntParamFromConfig("scaleVideos", 0);
 			return 0;
-		}
+		}/*else if(stricmp(var, "zStartupWindowed") == 0)
+		{
+			Engine::GAPI->SetIntParamFromConfig(1);
+			return 1;
+		}*/
 
-		return HookedFunctions::OriginalFunctions.original_zCOptionReadBool(thisptr, section, var, def);
-		hook_outfunc
+		
 
-		return 0;
+		r = HookedFunctions::OriginalFunctions.original_zCOptionReadBool(thisptr, section, var, def);
+		Engine::GAPI->SetIntParamFromConfig(var, r);
+		return r;
 	}
 
 	/** Reads config stuff */
@@ -63,21 +68,21 @@ public:
 		BaseGraphicsEngine* engine = Engine::GraphicsEngine;
 		LogInfo() << "Reading Gothic-Config: " << var;
 
-		if(strcmp(var, "zVidResFullscreenX") == 0)
+		if(_stricmp(var, "zVidResFullscreenX") == 0)
 		{
 			LogInfo() << "Forcing zVidResFullscreenX: " << engine->GetResolution().x;
 			return engine->GetResolution().x;
-		}else if(strcmp(var, "zVidResFullscreenY") == 0)
+		}else if(_stricmp(var, "zVidResFullscreenY") == 0)
 		{
 			LogInfo() << "Forcing zVidResFullscreenY: " << engine->GetResolution().y;
 			return engine->GetResolution().y;
-		}else if(strcmp(var, "zVidResFullscreenBPP") == 0)
+		}else if(_stricmp(var, "zVidResFullscreenBPP") == 0)
 		{
 			return 32;
-		}else if(strcmp(var, "zTexMaxSize") == 0)
+		}else if(_stricmp(var, "zTexMaxSize") == 0)
 		{
 			return 16384;
-		}else if(strcmp(var, "zTexCacheSizeMaxBytes") == 0)
+		}else if(_stricmp(var, "zTexCacheSizeMaxBytes") == 0)
 		{
 			return INT_MAX;
 		}
@@ -86,14 +91,13 @@ public:
 	}
 
 	static long __fastcall hooked_zOptionReadInt(void* thisptr, void* unknwn,zSTRING const& section, char const* var, int def)
-	{
-		hook_infunc
-		
-		return Do_hooked_zOptionReadInt(thisptr,section, var, def);
+	{		
+		int i = Do_hooked_zOptionReadInt(thisptr,section, var, def);
 
-		hook_outfunc
+		// Save the variable
+		Engine::GAPI->SetIntParamFromConfig("var", i);
 
-		return 0;
+		return i;
 	}
 
 	static zCOption* GetOptions(){return *(zCOption**)GothicMemoryLocations::GlobalObjects::zCOption;}
