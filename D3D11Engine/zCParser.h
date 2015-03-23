@@ -6,18 +6,16 @@
 
 
 
+#ifndef BUILD_GOTHIC_1_08k
+#define zCPARSER_CALL_FUNC(symbolId, ...)  do {((void (*)(zCParser*, ...))GothicMemoryLocations::zCParser::CallFunc)(zCParser::GetParser(), symbolId, __VA_ARGS__); } while (0)
+#else
+#define zCPARSER_CALL_FUNC(symbolId, ...)
+#endif
+
 class zCParser 
 {
 public:
 #ifndef BUILD_GOTHIC_1_08k
-	static void CallFunc(int symbolId, ...)
-	{
-		va_list vl;
-
-		zCParser* parser = zCParser::GetParser();
-		((void (*)(zCParser*, ...))GothicMemoryLocations::zCParser::CallFunc)(parser, symbolId, vl);
-	}
-
 	static zCParser* GetParser(){return (zCParser *)GothicMemoryLocations::GlobalObjects::zCParser;}
 #else
 	static void CallFunc(int symbolId, ...)

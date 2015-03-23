@@ -128,6 +128,9 @@ public:
 	GothicAPI(void);
 	~GothicAPI(void);
 
+	/** Called when the game starts */
+	void OnGameStart();
+
 	/** Called when the window got set */
 	void OnSetWindow(HWND hWnd);
 
@@ -365,6 +368,15 @@ public:
 	/** Sets/Gets the far-plane */
 	void SetNearPlane(float value);
 	float GetNearPlane();
+
+	/** Returns true if the given string can be found in the commandline */
+	bool HasCommandlineParameter(const std::string& param);
+
+	/** Gets the int-param from the ini. String must be UPPERCASE. */
+	int GetIntParamFromConfig(const std::string& param);
+
+	/** Sets the given int param into the internal ini-cache. That does not set the actual value for the game! */
+	void SetIntParamFromConfig(const std::string& param, int value);
 
 	/** Resets the object, like at level load */
 	void ResetWorld();
@@ -625,5 +637,8 @@ private:
 
 	/** Quad marks loaded in the world */
 	stdext::hash_map<zCQuadMark*, QuadMarkInfo> QuadMarks;
+
+	/** Map of parameters from the .ini */
+	std::map<std::string, int> ConfigIntValues;
 };
 
