@@ -175,18 +175,24 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	SetDefaultStates();
 
 	// Collect visible vobs and lights
-	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs || 
-		Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting)
+	static bool s_done = false;
+	if(!s_done)
 	{
-		if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum ||
-			(Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum && FrameVisibleVobs.empty()))
-			Engine::GAPI->CollectVisibleVobs(FrameVisibleVobs, FrameVisibleLights);
+		if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs || 
+			Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting)
+		{
+			if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum ||
+				(Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum && FrameVisibleVobs.empty()))
+				Engine::GAPI->CollectVisibleVobs(FrameVisibleVobs, FrameVisibleLights);
 
-		// Push the data to the GPU
-		FillInstancingBuffer(FrameVisibleVobs);
+			// Push the data to the GPU
+			FillInstancingBuffer(FrameVisibleVobs);
 
-		// Reset the collected vobs for next frame
-		MarkVobNonVisibleInFrame(FrameVisibleVobs);
+			// Reset the collected vobs for next frame
+			//MarkVobNonVisibleInFrame(FrameVisibleVobs);
+
+			s_done = true;
+		}
 	}
 
 	/** Init graphics */
@@ -267,7 +273,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 			DrawVisualInstances((*it).second);
 
 			// Start new frame on the visual, since we don't need the instancing data anymore
-			(*it).second->StartNewFrame();
+			//(*it).second->StartNewFrame();
 		}
 	}
 
