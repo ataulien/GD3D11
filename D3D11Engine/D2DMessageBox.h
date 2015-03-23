@@ -3,9 +3,9 @@
 
 enum ED2D_MB_ACTION
 {
-	D2D_MB_OK,
-	D2D_MB_YES,
-	D2D_MB_NO
+	D2D_MB_OK = 0,
+	D2D_MB_YES = 1,
+	D2D_MB_NO = 2
 };
 
 enum ED2D_MB_TYPE

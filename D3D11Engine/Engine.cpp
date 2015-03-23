@@ -15,7 +15,7 @@ namespace Engine
 	void CreateGraphicsEngine()
 	{
 		LogInfo() << "Creating Main graphics engine";
-		GraphicsEngine = new D3D11GraphicsEngine;
+		GraphicsEngine = new D3D11GraphicsEngineTest;
 
 		if(!GraphicsEngine)
 		{
