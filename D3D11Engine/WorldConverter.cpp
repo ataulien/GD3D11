@@ -953,7 +953,8 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 		//if(mat && mat->GetTexture())
 		//	LogInfo() << "Got texture name: " << mat->GetTexture()->GetName();
 
-		if(poly->GetMaterial() && poly->GetMaterial()->GetMatGroup() == zMAT_GROUP_WATER)
+		if(poly->GetMaterial() && poly->GetMaterial()->GetMatGroup() == zMAT_GROUP_WATER // Check for water
+			&& poly->GetMaterial()->GetAlphaFunc() != zMAT_ALPHA_FUNC_TEST) // Fix foam on waterfalls
 		{
 			// Give water surfaces a water-shader
 			MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom(poly->GetMaterial()->GetTexture());

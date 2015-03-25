@@ -1994,8 +1994,11 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 	// Create new particles?
 	fx->CreateParticlesUpdateDependencies();
 
+	// This causes an infinite loop on G1. TODO: Investigate!
+#ifndef BUILD_GOTHIC_1_08k
 	// Do something I dont exactly know what it does :)
 	fx->GetStaticPFXList()->TouchPfx(fx);
+#endif
 }
 
 /** Debugging */
@@ -2626,7 +2629,7 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 	if(zCCamera::GetCamera())
 		zCCamera::GetCamera()->Activate();
 
-	for(auto it = VobMap.begin(); it != VobMap.end(); it++)
+	/*for(auto it = VobMap.begin(); it != VobMap.end(); it++)
 	{
 		vobs.push_back((*it).second);
 
@@ -2635,7 +2638,7 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 		((MeshVisualInfo *)(*it).second->VisualInfo)->Instances.push_back(vii);
 	}
 
-	return;
+	return;*/
 
 	// Recursively go through the tree and draw all nodes
 	CollectVisibleVobsHelper(root, root->BBox3D, 63, vobs, lights);
@@ -2714,8 +2717,105 @@ void GothicAPI::CollectVisibleSections(std::list<WorldMeshSectionInfo*>& section
 	}
 }
 
+/** Moves the given vob from a BSP-Node to the dynamic vob list */
+void GothicAPI::MoveVobFromBspToDynamic(VobInfo* vob)
+{
+	// Remove from all nodes
+	for(int i=0;i<vob->ParentBSPNodes.size();i++)
+	{
+		BspVobInfo* node = vob->ParentBSPNodes[i];
+
+		// Remove from possible lists
+		for(std::vector<VobInfo *>::iterator it = node->IndoorVobs.begin(); it != node->IndoorVobs.end(); it++)
+		{
+			if((*it) == vob)
+			{
+				node->IndoorVobs.erase(it);
+				break;
+			}
+		}
+
+		for(std::vector<VobInfo *>::iterator it = node->SmallVobs.begin(); it != node->SmallVobs.end(); it++)
+		{
+			if((*it) == vob)
+			{
+				node->SmallVobs.erase(it);
+				break;
+			}
+		}
+
+		for(std::vector<VobInfo *>::iterator it = node->Vobs.begin(); it != node->Vobs.end(); it++)
+		{
+			if((*it) == vob)
+			{
+				node->Vobs.erase(it);
+				break;
+			}
+		}
+	}
+
+	// Add to dynamic vob list
+	DynamicallyAddedVobs.push_back(vob);
+}
+
+std::vector<VobInfo *>::iterator GothicAPI::MoveVobFromBspToDynamic(VobInfo* vob, std::vector<VobInfo *>* source)
+{
+	std::vector<VobInfo *>::iterator itn = source->end();
+	std::vector<VobInfo *>::iterator itc;
+
+	// Remove from all nodes
+	for(int i=0;i<vob->ParentBSPNodes.size();i++)
+	{
+		BspVobInfo* node = vob->ParentBSPNodes[i];
+
+		// Remove from possible lists
+		for(std::vector<VobInfo *>::iterator it = node->IndoorVobs.begin(); it != node->IndoorVobs.end(); it++)
+		{
+			if((*it) == vob)
+			{
+				itc = node->IndoorVobs.erase(it);
+				break;
+			}
+		}
+
+		if(&node->IndoorVobs == source)
+			itn = itc;
+
+		for(std::vector<VobInfo *>::iterator it = node->SmallVobs.begin(); it != node->SmallVobs.end(); it++)
+		{
+			if((*it) == vob)
+			{
+				itc = node->SmallVobs.erase(it);
+				break;
+			}
+		}
+
+		if(&node->SmallVobs == source)
+			itn = itc;
+
+		for(std::vector<VobInfo *>::iterator it = node->Vobs.begin(); it != node->Vobs.end(); it++)
+		{
+			if((*it) == vob)
+			{
+				itc = node->Vobs.erase(it);
+				break;
+			}
+		}
+
+		if(&node->Vobs == source)
+			itn = itc;
+	}
+
+	// Add to dynamic vob list
+	DynamicallyAddedVobs.push_back(vob);
+
+	return itn;
+}
+
 static void CVVH_AddNotDrawnVobToList(std::vector<VobInfo *>& target, std::vector<VobInfo *>& source, float dist)
 {
+	std::vector<VobInfo *> remVobs;
+
 	for(std::vector<VobInfo *>::iterator it = source.begin(); it != source.end(); it++)
 	{
 		if(!(*it)->VisibleInRenderPass)
@@ -2729,9 +2829,13 @@ static void CVVH_AddNotDrawnVobToList(std::vector<VobInfo *>& target, std::vecto
 				if(vd < dist / 4 && memcmp(&(*it)->LastRenderPosition, (*it)->Vob->GetPositionWorld(), sizeof(D3DXVECTOR3)) != 0)
 				{
 					(*it)->LastRenderPosition = (*it)->Vob->GetPositionWorld();
-					(*it)->UpdateVobConstantBuffer();
+					(*it)->UpdateVobConstantBuffer();				
 
 					Engine::GAPI->GetRendererState()->RendererInfo.FrameVobUpdates++;
+
+					remVobs.push_back((*it));
+			
+					continue; // Render with the other dynamic vobs
 				}
 
 				VobInstanceInfo vii;
@@ -2747,6 +2851,12 @@ static void CVVH_AddNotDrawnVobToList(std::vector<VobInfo *>& target, std::vecto
 				(*it)->VisibleInRenderPass = true;
 			}
 		}
+	}
+
+	for(std::vector<VobInfo *>::iterator it = remVobs.begin(); it != remVobs.end(); it++)
+	{
+		// Move to dynamic vob-list since these vobs have moved this frame
+		Engine::GAPI->MoveVobFromBspToDynamic((*it));
 	}
 }
 

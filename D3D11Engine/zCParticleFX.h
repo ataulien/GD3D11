@@ -31,6 +31,11 @@ struct zTParticle
 	D3DXVECTOR2	SizeVel;
 	D3DXVECTOR3	Color;
 	D3DXVECTOR3	ColorVel;
+
+#ifdef BUILD_GOTHIC_1_08k
+	float TexAniFrame;
+#endif
+
 	zCPolyStrip* PolyStrip; // TODO: Use this too
 };
 
@@ -49,6 +54,13 @@ public:
 		return *(zTRnd_AlphaBlendFunc *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_VisAlphaBlendFunc); 
 	}
 
+	int GetVisIsQuadPoly()
+	{
+		return *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_VisIsQuadPoly);
+	}
+
+
+
 #ifndef BUILD_GOTHIC_1_08k
 	int GetVisAlignment()
 	{
@@ -60,9 +72,9 @@ public:
 		return *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_VisTexAniIsLooping);
 	}
 
-	int GetVisIsQuadPoly()
+	float GetVisAlphaStart()
 	{
-		return *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_VisIsQuadPoly);
+		return *(float *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_VisAlphaStart);
 	}
 
 	float GetAlphaDist()
@@ -70,10 +82,7 @@ public:
 		return *(float *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_AlphaDist); 
 	}
 
-	float GetVisAlphaStart()
-	{
-		return *(float *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_VisAlphaStart);
-	}
+	
 
 #else
 	int GetVisAlignment()
@@ -84,11 +93,6 @@ public:
 	int GetVisTexAniIsLooping()
 	{
 		return 0;
-	}
-
-	int GetVisIsQuadPoly()
-	{
-		return 1;
 	}
 
 	float GetAlphaDist()
@@ -218,6 +222,7 @@ public:
 		*(float *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleFX::Offset_LocalFrameTimeF) = t;
 	}
 
+
 	void UpdateTime()
 	{
 		SetLocalTimeF(GetTimeScale() * zCTimer::GetTimer()->frameTimeFloat);
@@ -237,5 +242,29 @@ public:
 	{
 		XCALL(GothicMemoryLocations::zCParticleFX::SetVisualUsedBy);
 	}
+
+
+#ifdef BUILD_GOTHIC_1_08k
+	/** Data for this class */
+	struct tData
+	{
+		byte f0[52];
+		zTParticle *firstPart;
+		byte f38[28];
+		void *Emitters;
+		byte f58[24];
+		DWORD dword70;
+		byte f74[4];
+		byte byte78;
+		byte f79[3];
+		DWORD dword7C;
+		DWORD dword80;
+		byte f84[8];
+		float timeScale;
+		float localFrameTime;
+		DWORD dword94;
+	};
+	tData Data;
+#endif
 };
 

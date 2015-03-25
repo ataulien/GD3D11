@@ -440,10 +440,14 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 
 		bool windowed = Engine::GAPI->HasCommandlineParameter("ZWINDOW") ||
 						Engine::GAPI->GetIntParamFromConfig("zStartupWindowed");
+		scd.Windowed = windowed;
+
+#ifdef BUILD_GOTHIC_1_08k
 #ifdef PUBLIC_RELEASE
-		scd.Windowed = windowed;
+		scd.Windowed = false;
 #else
-		scd.Windowed = windowed;
+		scd.Windowed = true;
+#endif
 #endif
 
 
