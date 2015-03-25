@@ -608,6 +608,7 @@ void D2DView::AddMessageBox(const std::string& caption, const std::string& messa
 /** Checks dead message boxes and removes them */
 void D2DView::CheckDeadMessageBoxes()
 {
+	// FIXME
 	/*for(auto it = MessageBoxes.begin(); it != MessageBoxes.end(); it++)
 	{
 		// Delete the messagebox if it is hidden

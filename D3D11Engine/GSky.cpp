@@ -136,6 +136,7 @@ XRESULT GSky::LoadSkyResources()
 {
 	SkyDome = new GMesh;
 	SkyDome->LoadMesh("system\\GD3D11\\meshes\\unitSphere.obj");
+	//SkyDome->LoadMesh("system\\GD3D11\\meshes\\skySphere.obj");
 
 	//AddCloudMesh("system\\GD3D11\\meshes\\cloud0.obj");
 	//AddCloudMesh("system\\GD3D11\\meshes\\cloud1.obj");

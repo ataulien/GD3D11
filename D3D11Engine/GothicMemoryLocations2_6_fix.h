@@ -137,6 +137,8 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_LocalFrameTimeF = 0x90; // Offset_TimeScale + 4
 		static const unsigned int Offset_PrivateTotalTime = 0x84; // Offset_TimeScale - 8
 		static const unsigned int Offset_Emitters = 0x54;
+		static const unsigned int Offset_LastTimeRendered = 0x88;
+
 		static const unsigned int Offset_ConnectedVob = 0x70;
 		static const unsigned int UpdateParticle = 0x005AF500;
 		static const unsigned int OBJ_s_pfxList = 0x008D9214;

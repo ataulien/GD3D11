@@ -349,6 +349,10 @@ public:
 	/** Draws particles, in a simple way */
 	void DrawParticlesSimple();
 
+	/** Moves the given vob from a BSP-Node to the dynamic vob list */
+	void MoveVobFromBspToDynamic(VobInfo* vob);
+	std::vector<VobInfo *>::iterator MoveVobFromBspToDynamic(VobInfo* vob, std::vector<VobInfo *>* source);
+
 	/** Collects vobs using gothics BSP-Tree */
 	void CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<VobLightInfo *>& lights);
 

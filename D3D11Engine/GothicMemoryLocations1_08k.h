@@ -88,6 +88,7 @@ struct GothicMemoryLocations
 
 	struct zCParticleEmitter
 	{
+		static const unsigned int Offset_VisIsQuadPoly = 0x190;
 		static const unsigned int Offset_VisTexture = 0x2DC;
 		static const unsigned int Offset_VisAlphaBlendFunc = 0x308;
 	};
@@ -348,12 +349,13 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_TimeScale = 0x8C;
 		static const unsigned int Offset_LocalFrameTimeF = 0x90; // Offset_TimeScale + 4
 		static const unsigned int Offset_PrivateTotalTime = 0x84; // Offset_TimeScale - 8
+		static const unsigned int Offset_LastTimeRendered = 0x88;
 		static const unsigned int Offset_Emitters = 0x54;
 
 		static const unsigned int OBJ_s_pfxList = 0x0089B2A0;
 		static const unsigned int OBJ_s_partMeshQuad = 0x0089B2BC;
 		static const unsigned int CheckDependentEmitter = 0x005913C0;
-		static const unsigned int UpdateParticle = 0x0058F130;
+		static const unsigned int UpdateParticle = 0x0058F4C0;
 
 		//static const unsigned int OBJ_s_pfxList = 0x008D9214;
 

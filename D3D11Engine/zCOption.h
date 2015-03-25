@@ -40,7 +40,7 @@ public:
 	static int __fastcall hooked_zOptionReadBool(void* thisptr, void* unknwn,zSTRING const& section, char const* var, int def)
 	{
 		
-		int r = 0;
+		int r = HookedFunctions::OriginalFunctions.original_zCOptionReadBool(thisptr, section, var, def);
 		if(_stricmp(var, "zWaterAniEnabled") == 0)
 		{
 			Engine::GAPI->SetIntParamFromConfig("zWaterAniEnabled", 0);
@@ -49,15 +49,15 @@ public:
 		{
 			Engine::GAPI->SetIntParamFromConfig("scaleVideos", 0);
 			return 0;
-		}/*else if(stricmp(var, "zStartupWindowed") == 0)
+		}else if(stricmp(var, "zStartupWindowed") == 0)
 		{
-			Engine::GAPI->SetIntParamFromConfig(1);
+			Engine::GAPI->SetIntParamFromConfig("zStartupWindowed", r);
 			return 1;
-		}*/
+		}
 
 		
 
-		r = HookedFunctions::OriginalFunctions.original_zCOptionReadBool(thisptr, section, var, def);
+		
 		Engine::GAPI->SetIntParamFromConfig(var, r);
 		return r;
 	}
