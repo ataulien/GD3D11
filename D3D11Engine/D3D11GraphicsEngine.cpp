@@ -2886,6 +2886,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 					OutdoorVobsConstantBuffer->BindToPixelShader(3);
 				}
 
+				bool doReset = true; // Don't reset alpha-vobs here
 				for(std::map<MeshKey, std::vector<MeshInfo*>>::iterator itt = (*it).second->MeshesByTexture.begin(); itt != (*it).second->MeshesByTexture.end(); itt++)
 				{
 					std::vector<MeshInfo *>& mlist = (*it).second->MeshesByTexture[(*itt).first];
@@ -2905,12 +2906,14 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 						// Check for alphablending on world mesh
 						bool blendAdd = (*itt).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD;
 						bool blendBlend = (*itt).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND;
-						if(blendAdd||blendBlend)
+						if(!doReset || blendAdd || blendBlend) // FIXME: if one part of the mesh uses blending, all do. 
 						{
 							MeshVisualInfo* info = (*it).second;
 							MeshInfo* mesh = mlist[i];
 
 							AlphaMeshes.push_back(std::make_pair((*itt).first, std::make_pair(info, mesh)));
+
+							doReset = false;
 							continue;
 						}
 
@@ -2989,6 +2992,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 							DrawInstanced(mi->MeshVertexBuffer, mi->MeshIndexBufferPNAEN, mi->IndicesPNAEN.size(), DynamicInstancingBuffer, sizeof(VobInstanceInfo), (*it).second->Instances.size(), sizeof(ExVertexStruct), (*it).second->StartInstanceNum);
 						}
 						
+						
 						//DrawVertexBufferIndexed((*it).second->FullMesh->MeshVertexBuffer, (*it).second->FullMesh->MeshIndexBuffer, 0);
 
 						//Engine::GraphicsEngine->DrawVertexBufferIndexed(mi->MeshVertexBuffer, mi->MeshIndexBuffer, mi->Indices.size());
@@ -2997,7 +3001,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 				}
 
 				// Reset visual
-				if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum)
+				if(doReset && !Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum)
 				{
 					(*it).second->StartNewFrame();
 				}
@@ -3040,6 +3044,14 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 	// Make sure lighting doesn't mess up our state
 	SetDefaultStates();
 
+	SetActivePixelShader("PS_Simple");
+	SetActiveVertexShader("VS_ExInstancedObj");
+
+	SetupVS_ExMeshDrawCall();
+	SetupVS_ExConstantBuffer();
+
+	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
+
 	for(auto itt = AlphaMeshes.begin(); itt != AlphaMeshes.end(); itt++)
 	{
 		zCTexture* tx = (*itt).first.Texture;
@@ -3069,9 +3081,6 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 			// Bind both
 			Context->PSSetShaderResources(0,3, srv);
 
-			// Force alphatest on vobs for now
-			BindShaderForTexture(tx, true, (*itt).first.Material->GetAlphaFunc());
-
 			if((blendAdd || blendBlend) && !Engine::GAPI->GetRendererState()->BlendState.BlendEnabled)
 			{
 				if(blendAdd)
@@ -3096,7 +3105,12 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 
 		// Draw batch
 		DrawInstanced(mi->MeshVertexBuffer, mi->MeshIndexBuffer, mi->Indices.size(), DynamicInstancingBuffer, sizeof(VobInstanceInfo), vi->Instances.size(), sizeof(ExVertexStruct), vi->StartInstanceNum);
-		
+
+		// Reset visual
+		if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum)
+		{
+			vi->StartNewFrame();
+		}
 	}
 
 	if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum)

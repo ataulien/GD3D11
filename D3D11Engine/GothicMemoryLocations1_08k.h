@@ -41,8 +41,8 @@ struct GothicMemoryLocations
 
 	struct zCOption
 	{
-		static const unsigned int ReadInt = 0x0043D500;
-		static const unsigned int ReadBool = 0x0043D440;
+		static const unsigned int ReadInt = 0x0045CDB0;
+		static const unsigned int ReadBool = 0x0045CB80;
 		static const unsigned int Offset_CommandLine = 0x284;
 	};
 

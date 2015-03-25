@@ -69,5 +69,16 @@ namespace VersionCheck
 						"Particlesystems are disabled to make the game more stable.\n";
 #endif
 
+		// Check for game data
+		// Do this by checking one file in the folder which should always be there
+		// Not the best solution, but we'll just roll with it at this point as
+		// this is only a hint for the user that he forgot to copy over the GD3D11-Folder
+		if(!Toolbox::FileExists("GD3D11\\data\\DeviceEnum.bin"))
+		{
+			LogErrorBox() << "Failed to find GD3D11 systemfiles!\n"
+							 "This means: The GD3D11-folder is missing or corrupt. This can be the result of only copying the ddraw.dll into Gothics system-folder, which isn't enough!\n\n"
+							 "Please check your installation.\n";
+			exit(0);
+		}
 	}
 }
