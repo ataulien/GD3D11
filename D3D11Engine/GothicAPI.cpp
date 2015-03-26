@@ -514,6 +514,7 @@ void GothicAPI::OnGeometryLoaded(zCPolygon** polys, unsigned int numPolygons)
 	 
 	ResetWorld();
 
+
 	//WorldConverter::ConvertWorldMesh(polys, numPolygons, &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
 	//WorldConverter::ConvertWorldMeshPNAEN(polys, numPolygons, &WorldSections, LoadedWorldInfo, &WrappedWorldMesh);
 
@@ -1773,6 +1774,7 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 		return;
 	}*/
 
+	//Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(source->GetPositionWorld());
 	
 
 	// Get our view-matrix
@@ -1832,13 +1834,13 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 
 		case zRND_ALPHA_FUNC_BLEND:
 		default:
-			inf.BlendState.SetDefault();
-			inf.BlendState.BlendEnabled = true;
+			inf.BlendState.SetAlphaBlending();
 			inf.BlendMode = zRND_ALPHA_FUNC_BLEND;
 			break;
 		}
 
 		FrameParticleInfo[texture] = inf;
+		std::vector<ParticleInstanceInfo>& part = FrameParticles[texture];
 
 		// Check for kill
 		zTParticle*	kill = NULL;
@@ -1867,6 +1869,9 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 		{
 			//if(i == fx->GetNumParticlesThisFrame() || i == 2048)
 			//	break;
+
+
+			//Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(p->PositionWS);
 
 			for ( ;; ) 
 			{
@@ -1980,7 +1985,7 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 			color.w = std::max(color.w, 0.0f);
 
 			ii.color = color.ToDWORD();
-			FrameParticles[texture].push_back(ii);
+			part.push_back(ii);
 
 			//if(FrameParticles[texture].size() > 1024)
 			//	break;
@@ -1991,6 +1996,7 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 		}
 
 	}
+
 	// Create new particles?
 	fx->CreateParticlesUpdateDependencies();
 

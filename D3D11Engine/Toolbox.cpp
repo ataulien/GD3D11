@@ -106,6 +106,12 @@ namespace Toolbox
 		return std::wstring(str.begin(), str.end());
 	}
 
+	/** Converts a wide-char-string to  multi-byte*/
+	std::string ToMultiByte(const std::wstring& str)
+	{
+		return std::string(str.begin(), str.end());
+	}
+
 	/** Returns a random number between 0 and 1 */
 	float frand()
 	{

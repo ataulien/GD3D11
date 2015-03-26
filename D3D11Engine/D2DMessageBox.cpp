@@ -32,7 +32,7 @@ XRESULT D2DMessageBox::InitControls(ED2D_MB_TYPE type)
 	Message = new SV_Label(MainView, MainPanel);
 	Message->SetSize(GetSize());
 	Message->AlignUnder(Header, 5.0f);
-	
+	Message->SetRect(D2D1::RectF(5.0f, Message->GetRect().top, ViewRect.right - 5.0f, ViewRect.bottom - 5.0f));
 	Message->SetCaption("Text");
 
 	SetPositionCentered(D2D1::Point2F(MainView->GetRenderTarget()->GetSize().width / 2, MainView->GetRenderTarget()->GetSize().height / 2), D2D1::SizeF(400, 150));

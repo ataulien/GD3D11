@@ -8,7 +8,7 @@ const std::string UPDATE_URL = "http://www.gothic-dx11.de/download/updates/g2d3d
 const std::string UPDATER_EXE = "G2D3D11Updater.exe";
 const std::string UPDATER_PATH = "system\\GD3D11\\Data\\" + UPDATER_EXE;
 
-class DownloadProgress : public IBindStatusCallback {
+/*class DownloadProgress : public IBindStatusCallback {
 public:
 	HRESULT __stdcall QueryInterface(const IID &,void **) { 
 		return E_NOINTERFACE;
@@ -52,7 +52,7 @@ public:
 	}
 
 	bool isDone;
-};
+};*/
 
 
 UpdateCheck::UpdateCheck(void)
@@ -67,7 +67,7 @@ UpdateCheck::~UpdateCheck(void)
 /** Checks for update, returns new version URL if found */
 std::string UpdateCheck::CheckForUpdate()
 {
-	DownloadProgress progress;
+	/*DownloadProgress progress;
 	progress.isDone = false;
 	HRESULT hr = URLDownloadToFile(NULL, UPDATE_URL.c_str(), "Versions.txt", 0, &progress);
 
@@ -109,7 +109,7 @@ std::string UpdateCheck::CheckForUpdate()
 		LogInfo() << versionNum << " " << zip << " " << changes;
 	}
 
-	fclose(f);
+	fclose(f);*/
 }
 
 void deleteDirectory(const std::string &path) 

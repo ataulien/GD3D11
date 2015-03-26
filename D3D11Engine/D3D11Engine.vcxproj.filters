@@ -613,6 +613,21 @@
     <ClInclude Include="zCParser.h">
       <Filter>ZenGin\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="SV_ProgressBar.h">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="D2DContentDownloadDialog.h">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClInclude>
+    <ClInclude Include="FileDownloader.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="XUnzip.h">
+      <Filter>Librarys</Filter>
+    </ClInclude>
+    <ClInclude Include="ZipArchive.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -861,6 +876,21 @@
     </ClCompile>
     <ClCompile Include="IkarusBindings.cpp">
       <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="SV_ProgressBar.cpp">
+      <Filter>Engine\D2D\Views\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="D2DContentDownloadDialog.cpp">
+      <Filter>Engine\D2D\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="FileDownloader.cpp">
+      <Filter>Engine\GAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="XUnzip.cpp">
+      <Filter>Librarys</Filter>
+    </ClCompile>
+    <ClCompile Include="ZipArchive.cpp">
+      <Filter>Engine\GAPI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
