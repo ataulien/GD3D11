@@ -250,6 +250,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="BasicTimer.h" />
     <ClInclude Include="CGameManager.h" />
     <ClInclude Include="CSFFT\fft_512x512.h" />
+    <ClInclude Include="D2DContentDownloadDialog.h" />
     <ClInclude Include="D2DDialog.h" />
     <ClInclude Include="D2DEditorView.h" />
     <ClInclude Include="D2DMessageBox.h" />
@@ -300,6 +301,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="Effects11\Inc\d3dxGlobal.h" />
     <ClInclude Include="Effects11\pchfx.h" />
     <ClInclude Include="Engine.h" />
+    <ClInclude Include="FileDownloader.h" />
     <ClInclude Include="GCamera.h" />
     <ClInclude Include="GFSDK_SSAO.h" />
     <ClInclude Include="GInventory.h" />
@@ -350,11 +352,13 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="SV_Label.h" />
     <ClInclude Include="SV_NamedSlider.h" />
     <ClInclude Include="SV_Panel.h" />
+    <ClInclude Include="SV_ProgressBar.h" />
     <ClInclude Include="SV_Slider.h" />
     <ClInclude Include="SV_TabControl.h" />
     <ClInclude Include="UpdateCheck.h" />
     <ClInclude Include="VersionCheck.h" />
     <ClInclude Include="win32ClipboardWrapper.h" />
+    <ClInclude Include="XUnzip.h" />
     <ClInclude Include="zCArray.h" />
     <ClInclude Include="zCArrayAdapt.h" />
     <ClInclude Include="zCCamera.h" />
@@ -395,6 +399,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="zCWorld.h" />
     <ClInclude Include="ZenGinTypes.h" />
     <ClInclude Include="zFILE.h" />
+    <ClInclude Include="ZipArchive.h" />
     <ClInclude Include="zSTRING.h" />
     <ClInclude Include="zTypes.h" />
   </ItemGroup>
@@ -421,6 +426,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="D2DContentDownloadDialog.cpp" />
     <ClCompile Include="D2DDialog.cpp" />
     <ClCompile Include="D2DEditorView.cpp" />
     <ClCompile Include="D2DMessageBox.cpp" />
@@ -518,6 +524,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="FileDownloader.cpp" />
     <ClCompile Include="GCamera.cpp" />
     <ClCompile Include="GInventory.cpp" />
     <ClCompile Include="GMesh.cpp" />
@@ -617,6 +624,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="SV_Label.cpp" />
     <ClCompile Include="SV_NamedSlider.cpp" />
     <ClCompile Include="SV_Panel.cpp" />
+    <ClCompile Include="SV_ProgressBar.cpp" />
     <ClCompile Include="SV_Slider.cpp" />
     <ClCompile Include="SV_TabControl.cpp" />
     <ClCompile Include="Toolbox.cpp" />
@@ -629,6 +637,11 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     </ClCompile>
     <ClCompile Include="win32ClipboardWrapper.cpp" />
     <ClCompile Include="WorldConverter.cpp" />
+    <ClCompile Include="XUnzip.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZipArchive.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assimp--3.0.1270-sdk\include\assimp\color4.inl" />

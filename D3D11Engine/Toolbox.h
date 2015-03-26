@@ -32,6 +32,9 @@ namespace Toolbox
 	/** Converts a multi-byte-string to wide-char */
 	std::wstring ToWideChar(const std::string& str);
 	
+	/** Converts a wide-char-string to  multi-byte*/
+	std::string ToMultiByte(const std::wstring& str);
+
 	/** Does a ray vs aabb test */
 	bool IntersectBox(const D3DXVECTOR3& min, const D3DXVECTOR3& max, const D3DXVECTOR3& origin, const D3DXVECTOR3& direction, float& t);
 

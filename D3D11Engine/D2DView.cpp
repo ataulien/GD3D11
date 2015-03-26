@@ -6,6 +6,7 @@
 #include "D2DSettingsDialog.h"
 #include "Engine.h"
 #include "GothicAPI.h"
+#include "D2DContentDownloadDialog.h"
 
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "d3d11.lib")
@@ -349,6 +350,8 @@ HRESULT D2DView::InitResources()
 
 	SettingsDialog = new D2DSettingsDialog(this, MainSubView);
 	SettingsDialog->SetHidden(true);
+
+	//D2DContentDownloadDialog* downloader = new D2DContentDownloadDialog(this, MainSubView, EDL_Normalmaps_Original);
 
 	return XR_SUCCESS;
 }

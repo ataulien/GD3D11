@@ -2667,6 +2667,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 				if((*it).second->Instances.empty())
 					continue;
 
+				bool doReset = true;
 				for(std::map<MeshKey, std::vector<MeshInfo*>>::iterator itt = (*it).second->MeshesByTexture.begin(); itt != (*it).second->MeshesByTexture.end(); itt++)
 				{
 					std::vector<MeshInfo *>& mlist = (*it).second->MeshesByTexture[(*itt).first];
@@ -2676,6 +2677,15 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 					for(unsigned int i=0;i<mlist.size();i++)
 					{
 						zCTexture* tx = (*itt).first.Texture;
+
+						// Check for alphablend
+						bool blendAdd = (*itt).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD;
+						bool blendBlend = (*itt).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND;
+						if(!doReset || blendAdd || blendBlend) // FIXME: if one part of the mesh uses blending, all do. 
+						{
+							doReset = false;
+							continue;
+						}
 
 						// Bind texture
 						if(tx && tx->HasAlphaChannel())
@@ -2706,7 +2716,8 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 				}
 
 				// Reset visual
-				(*it).second->StartNewFrame();
+				if(doReset)
+					(*it).second->StartNewFrame();
 			}
 		}
 	}
@@ -3047,6 +3058,9 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 	SetActivePixelShader("PS_Simple");
 	SetActiveVertexShader("VS_ExInstancedObj");
 
+	Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = true;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
 
@@ -3106,11 +3120,17 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 		// Draw batch
 		DrawInstanced(mi->MeshVertexBuffer, mi->MeshIndexBuffer, mi->Indices.size(), DynamicInstancingBuffer, sizeof(VobInstanceInfo), vi->Instances.size(), sizeof(ExVertexStruct), vi->StartInstanceNum);
 
-		// Reset visual
-		if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum)
-		{
-			vi->StartNewFrame();
-		}
+
+	}
+
+	// Loop again, now that all alpha-meshes have been rendered
+	// so we can reset their visuals, too.
+	for(auto itt = AlphaMeshes.begin(); itt != AlphaMeshes.end(); itt++)
+	{
+		MeshVisualInfo* vi = (*itt).second.first;
+
+		// Reset visual		
+		vi->StartNewFrame();	
 	}
 
 	if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum)
@@ -4757,6 +4777,7 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 	state.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
 	state.RasterizerState.SetDirty();
 
+	SetActivePixelShader("PS_Simple");
 	PS_Simple->Apply();
 
 	// Draw distortion for additive particles
@@ -4790,6 +4811,9 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 	// Draw actual particles
 	for(std::map<zCTexture*, std::vector<ParticleInstanceInfo>>::iterator it = particles.begin(); it != particles.end();it++)
 	{
+		if((*it).second.empty())
+			continue;
+
 		if((*it).first)
 		{
 			// Bind it
