@@ -20,6 +20,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_QuadMesh = 0x34;
 		static const unsigned int Offset_Material = 0x3C;
 		static const unsigned int Offset_ConnectedVob = 0x38;
+		static const unsigned int Offset_DontRepositionConnectedVob = 0x48;
 	};
 
 	struct zCThread

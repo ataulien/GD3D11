@@ -26,6 +26,9 @@ public:
 
 		HookedFunctions::OriginalFunctions.original_zCQuadMarkCreateQuadMark(thisptr, poly, position, size, params);
 
+		if(((zCQuadMark *)thisptr)->GetDontRepositionConnectedVob())
+			return; // Don't create quad-marks for particle-effects because it's kinda slow at the moment
+
 		QuadMarkInfo* info = Engine::GAPI->GetQuadMarkInfo((zCQuadMark *)thisptr);
 
 		WorldConverter::UpdateQuadMarkInfo(info, (zCQuadMark *)thisptr, position);
@@ -69,5 +72,11 @@ public:
 	zCVob* GetConnectedVob()
 	{
 		return *(zCVob **)THISPTR_OFFSET(GothicMemoryLocations::zCQuadMark::Offset_ConnectedVob);
+	}
+
+	/** This gets only set for quad-marks created by a particle-effect. */
+	int GetDontRepositionConnectedVob()
+	{
+		return *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCQuadMark::Offset_DontRepositionConnectedVob);
 	}
 };
