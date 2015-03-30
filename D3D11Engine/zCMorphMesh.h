@@ -22,16 +22,12 @@ public:
 
 	void CalcVertexPositions()
 	{
-#ifndef BUILD_GOTHIC_1_08k
 		XCALL(GothicMemoryLocations::zCMorphMesh::CalcVertexPositions);
-#endif
 	}
 
 	void AdvanceAnis()
 	{
-#ifndef BUILD_GOTHIC_1_08k
 		XCALL(GothicMemoryLocations::zCMorphMesh::AdvanceAnis);
-#endif
 	}
 
 	void UpdateBuffer(BaseVertexBuffer* buffer)

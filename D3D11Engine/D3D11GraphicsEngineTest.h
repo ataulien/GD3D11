@@ -16,6 +16,12 @@ public:
 	/** Called when we started to render the world */
 	virtual XRESULT OnStartWorldRendering();
 
+	/** Collects the renderlist for the world-mesh */
+	void GetWorldMeshRenderList(std::list<std::pair<MeshKey, MeshInfo *>>& list);
+
+	/** Draws a world mesh render list for the given stage */
+	void DrawWorldMeshRenderList(int stage, const std::list<std::pair<MeshKey, MeshInfo *>>& list);
+
 	/** Draws the scene using the light-pre-pass technique. */
 	void DrawSceneLightPrePass();
 
@@ -53,5 +59,7 @@ protected:
 	/** List of visible vobs for the current frame */
 	std::vector<VobInfo *> FrameVisibleVobs;
 	std::vector<VobLightInfo *> FrameVisibleLights;
+
+	D3D11PShader* PS_LPP;
 };
 

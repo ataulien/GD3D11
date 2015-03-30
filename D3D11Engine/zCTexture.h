@@ -104,8 +104,15 @@ public:
 		if (GetCacheState()==zRES_CACHED_IN)
 		{
 			TouchTimeStamp();
-		} else 
+		} else if(GetCacheState()==zRES_CACHED_OUT)
 		{
+#ifndef PUBLIC_RELEASE
+			if(1 == 0) // Small debugger-only section to get the name of currently cachedin texture
+			{
+				std::string name = GetName();
+				LogInfo() << "CacheIn on Texture: " << name;
+			}
+#endif
 			Engine::GAPI->SetBoundTexture(7, this); // Index 7 is reserved for cacheIn
 			TouchTimeStampLocal();
 			zCResourceManager::GetResourceManager()->CacheIn(this, priority);

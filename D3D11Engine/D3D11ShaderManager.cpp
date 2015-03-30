@@ -332,6 +332,24 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.push_back(ShaderInfo("PS_Preview_TexturedLit", "PS_Preview.hlsl", "p", makros));
 
 
+	// --- LPP
+	makros.clear();
+	m.Name = "NORMALMAPPING";
+	m.Definition = "1";
+	makros.push_back(m);
+
+	m.Name = "ALPHATEST";
+	m.Definition = "1";
+	makros.push_back(m);
+								  
+	/*Shaders.push_back(ShaderInfo("PS_LPPNormalmappedAlphaTest", "PS_LPP.hlsl", "p", makros));
+	Shaders.back().cBufferSizes.push_back(sizeof(GothicGraphicsState));
+	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(MaterialInfo::Buffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));*/
+
+
+
 	return XR_SUCCESS;
 }
 

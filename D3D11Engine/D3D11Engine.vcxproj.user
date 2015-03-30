@@ -30,7 +30,7 @@
     <LocalDebuggerCommand>$(G2_SYSTEM_PATH)\Gothic2.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(G2_SYSTEM_PATH)</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerCommandArguments>-XNoUpdate -zWindow -game:dunkel.ini</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-XNoUpdate -zWindow</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">
     <LocalDebuggerCommand>E:\Games\Data\Gothic\system\gothicmod.exe</LocalDebuggerCommand>
