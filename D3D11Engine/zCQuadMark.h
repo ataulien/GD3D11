@@ -24,10 +24,11 @@ public:
 	{
 		hook_infunc
 
-		HookedFunctions::OriginalFunctions.original_zCQuadMarkCreateQuadMark(thisptr, poly, position, size, params);
-
 		if(((zCQuadMark *)thisptr)->GetDontRepositionConnectedVob())
 			return; // Don't create quad-marks for particle-effects because it's kinda slow at the moment
+					// And even for the original game using some emitters? (L'Hiver Light, Swampdragon)
+
+		HookedFunctions::OriginalFunctions.original_zCQuadMarkCreateQuadMark(thisptr, poly, position, size, params);
 
 		QuadMarkInfo* info = Engine::GAPI->GetQuadMarkInfo((zCQuadMark *)thisptr);
 
