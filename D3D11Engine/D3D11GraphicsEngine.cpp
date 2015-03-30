@@ -32,6 +32,7 @@
 #include "zCDecal.h"
 #include "zCQuadMark.h"
 #include "D2DEditorView.h"
+#include <algorithm>
 
 //#include "MemoryTracker.h"
 
@@ -2595,14 +2596,14 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 				{
 					Engine::GraphicsEngine->DrawVertexBufferIndexed((*itm).second[i]->MeshVertexBuffer, (*itm).second[i]->MeshIndexBuffer, (*itm).second[i]->Indices.size());
 				}
-			}
-		}*/
-		
+				}
+				}*/
+
 		// Reset instances
 		const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
 		/*for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 		{
-			(*it).second->StartNewFrame();
+		(*it).second->StartNewFrame();
 		}*/
 
 		D3DXVECTOR3 camPos = Engine::GAPI->GetCameraPosition();
@@ -2622,44 +2623,44 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 		ActiveVS->Apply();
 		Context->PSSetShader(NULL, NULL, NULL);
 
+		D3D11_BUFFER_DESC desc;
+		((D3D11VertexBuffer *)DynamicInstancingBuffer)->GetVertexBuffer()->GetDesc(&desc);
+
+		/*if(desc.ByteWidth < sizeof(VobInstanceInfo) * vobs.size())
+		{
+			LogInfo() << "Instancing buffer too small (" << desc.ByteWidth << "), need " << sizeof(VobInstanceInfo) * vobs.size() << " bytes. Recreating buffer.";
+
+			// Buffer too small, recreate it
+			delete DynamicInstancingBuffer;
+			DynamicInstancingBuffer = new D3D11VertexBuffer();
+			DynamicInstancingBuffer->Init(NULL, sizeof(VobInstanceInfo) * vobs.size(), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		}*/
+
+
+		// Update the vertexbuffer
+		//DynamicInstancingBuffer->UpdateBufferAligned16(&s_InstanceData[0], sizeof(VobInstanceInfo) * s_InstanceData.size());
+
+		byte* data;
+		UINT size;
+		UINT loc = 0;
+		DynamicInstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&data, &size);
 		static std::vector<VobInstanceInfo, AlignmentAllocator<VobInstanceInfo, 16> > s_InstanceData;
 		for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 		{
-			(*it).second->StartInstanceNum = s_InstanceData.size();
-			s_InstanceData.insert(s_InstanceData.end(), (*it).second->Instances.begin(), (*it).second->Instances.end());
-		}
+			if((*it).second->Instances.empty())
+				continue;
 
-		if(!s_InstanceData.empty())
+			if((loc + (*it).second->Instances.size()) * sizeof(VobInstanceInfo) >= desc.ByteWidth)
+				break; // Should never happen
+
+			(*it).second->StartInstanceNum = loc;
+			memcpy(data + loc * sizeof(VobInstanceInfo), &(*it).second->Instances[0], sizeof(VobInstanceInfo) * (*it).second->Instances.size());
+			loc += (*it).second->Instances.size();
+		}
+		DynamicInstancingBuffer->Unmap();
+
 		{
 
-			if(s_InstanceData.size() < 2)
-			{
-				VobInstanceInfo zi;
-				memset(&zi, 0, sizeof(zi));
-
-				s_InstanceData.push_back(zi);
-			}
-
-			// Create instancebuffer for this frame
-			D3D11_BUFFER_DESC desc;
-			((D3D11VertexBuffer *)DynamicInstancingBuffer)->GetVertexBuffer()->GetDesc(&desc);
-
-			if(desc.ByteWidth < sizeof(VobInstanceInfo) * s_InstanceData.size())
-			{
-				LogInfo() << "Instancing buffer too small (" << desc.ByteWidth << "), need " << sizeof(VobInstanceInfo) * s_InstanceData.size() << " bytes. Recreating buffer.";
-
-				// Buffer too small, recreate it
-				delete DynamicInstancingBuffer;
-				DynamicInstancingBuffer = new D3D11VertexBuffer();
-				DynamicInstancingBuffer->Init(&s_InstanceData[0], sizeof(VobInstanceInfo) * s_InstanceData.size() * 2, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
-			}else
-			{
-				// Update the vertexbuffer
-				DynamicInstancingBuffer->UpdateBufferAligned16(&s_InstanceData[0], sizeof(VobInstanceInfo) * s_InstanceData.size());
-			}
-
-			// Reset buffer
-			s_InstanceData.resize(0);
 
 			// Draw all vobs the player currently sees
 			for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
@@ -3872,7 +3873,6 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		plcb.PL_Range = vob->GetLightRange();
 		plcb.Pl_PositionWorld = vob->GetPositionWorld();
 		plcb.PL_Outdoor = (*itv)->IsIndoorVob ? 0.0f : 1.0f;
-		
 
 		//if(plcb.PL_Range > 10000.0f)
 		//	continue;
@@ -3921,8 +3921,8 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnLights++;
 	}
 
-	if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_INDOOR)
-		return XR_SUCCESS; // No sunlight for indoor worlds
+	//if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_INDOOR)
+	//	return XR_SUCCESS; // No sunlight for indoor worlds
 
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
@@ -4808,28 +4808,53 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 		}
 	}*/
 
-	// Draw actual particles
+	std::vector<std::tuple<zCTexture*, ParticleRenderInfo*, std::vector<ParticleInstanceInfo>*>> pvec;
 	for(std::map<zCTexture*, std::vector<ParticleInstanceInfo>>::iterator it = particles.begin(); it != particles.end();it++)
 	{
 		if((*it).second.empty())
 			continue;
+		
+		pvec.push_back(std::make_tuple((*it).first, &info[(*it).first], &(*it).second));
+	}
 
-		if((*it).first)
+	struct cmp
+	{
+		static bool cmppt(const std::tuple<zCTexture*, ParticleRenderInfo*, std::vector<ParticleInstanceInfo>*>& a,
+						  const std::tuple<zCTexture*, ParticleRenderInfo*, std::vector<ParticleInstanceInfo>*>& b)
+		{
+			// Sort additive before blend
+			return std::get<1>(a)->BlendMode > std::get<1>(b)->BlendMode;
+		}
+	};
+
+	// Sort additive before blend
+	std::sort(pvec.begin(), pvec.end(), cmp::cmppt);
+
+	for(auto it = pvec.begin();it!=pvec.end();it++)
+	{
+		zCTexture* tx = std::get<0>((*it));
+		ParticleRenderInfo& info = *std::get<1>((*it));
+		std::vector<ParticleInstanceInfo>& instances = *std::get<2>((*it));
+
+		if(instances.empty())
+			continue;
+
+		if(tx)
 		{
 			// Bind it
-			if((*it).first->CacheIn(0.6f) == zRES_CACHED_IN)
-				(*it).first->Bind(0);
+			if(tx->CacheIn(0.6f) == zRES_CACHED_IN)
+				tx->Bind(0);
 			else
 				continue;
 		}
 
-		GothicBlendStateInfo& blendState = info[(*it).first].BlendState;
+		GothicBlendStateInfo& blendState = info.BlendState;
 
 		// Setup blend state
 		state.BlendState = blendState;
 		state.BlendState.SetDirty();
 
-		DrawInstanced(vxb, ib, 6, &(*it).second[0], sizeof(ParticleInstanceInfo), (*it).second.size());
+		DrawInstanced(vxb, ib, 6, &instances[0], sizeof(ParticleInstanceInfo), instances.size());
 	}
 
 	state.BlendState = bsi;

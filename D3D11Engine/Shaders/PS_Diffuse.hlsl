@@ -50,55 +50,13 @@ struct PS_INPUT
 	float4 vPosition		: SV_POSITION;
 };
 
-
-
-float4 retF(float f)
-{
-	return float4(f,f,f,1);
-}
-
-float3x3 cotangent_frame( float3 N, float3 p, float2 uv )
-{
-    // get edge vectors of the pixel triangle
-    float3 dp1 = ddx( p );
-    float3 dp2 = ddy( p );
-    float2 duv1 = ddx( uv );
-    float2 duv2 = ddy( uv );
- 
-    // solve the linear system
-    float3 dp2perp = cross( dp2, N );
-    float3 dp1perp = cross( N, dp1 );
-    float3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-    float3 B = dp2perp * duv1.y + dp1perp * duv2.y;
- 
-	// Negate because of left-handedness
-	//T *= -1;
-	//B *= -1;
- 
-    // construct a scale-invariant frame 
-    float invmax = rsqrt( max( dot(T,T), dot(B,B) ) );
-    return float3x3( T * invmax, B * invmax, N );
-}
-
-/** Magic TBN-Calculation function */
-float3 perturb_normal( float3 N, float3 V, float2 texcoord, SamplerState samplerState, float normalmapDepth = 1.0f)
-{
-    // assume N, the interpolated vertex normal and 
-    // V, the view vector (vertex to eye)
-    float3 nrmmap = TX_Texture1.Sample(samplerState, texcoord).xyz * 2 - 1;
-	nrmmap.xy *= -1.0f;
-	nrmmap.xy *= normalmapDepth;
-	nrmmap = normalize(nrmmap);
-	
-    float3x3 TBN = cotangent_frame( N, -V, texcoord );
-    return normalize( mul(transpose(TBN), nrmmap) );
-}
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
 DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
 {
 	float4 color = TX_Texture0.Sample(SS_Linear, Input.vTexcoord);
+	
 	
 	// Do alphatest if wanted
 #if ALPHATEST == 1
@@ -112,7 +70,7 @@ DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
 
 	// Apply normalmapping if wanted
 #if NORMALMAPPING == 1
-	float3 nrm = perturb_normal(Input.vNormalVS, Input.vViewPosition, Input.vTexcoord, SS_Linear, MI_NormalmapStrength);
+	float3 nrm = perturb_normal(Input.vNormalVS, Input.vViewPosition, TX_Texture1, Input.vTexcoord, SS_Linear, MI_NormalmapStrength);
 #else
 	float3 nrm = normalize(Input.vNormalVS);
 #endif

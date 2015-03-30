@@ -84,7 +84,7 @@ public:
 			return 16384;
 		}else if(_stricmp(var, "zTexCacheSizeMaxBytes") == 0)
 		{
-			return INT_MAX;
+			return INT_MAX / 4; // Gothic doubles or triples the cache size if you have enough RAM, don't overflow here!
 		}
 
 		return HookedFunctions::OriginalFunctions.original_zCOptionReadInt(thisptr, section, var, def);

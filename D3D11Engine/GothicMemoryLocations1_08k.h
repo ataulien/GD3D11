@@ -330,9 +330,9 @@ struct GothicMemoryLocations
 
 	struct zCVobLight
 	{
-		static const unsigned int Offset_LightColor = 0x140; // Right before Range
-		static const unsigned int Offset_Range = 0x144;
-		static const unsigned int Offset_LightInfo =  0x164;
+		static const unsigned int Offset_LightColor = 0x120; // Right before Range
+		static const unsigned int Offset_Range = 0x124;
+		static const unsigned int Offset_LightInfo =  0x144;
 		static const unsigned int Mask_LightEnabled = 0x20;
 		static const unsigned int DoAnimation = 0x005DB820;
 	};
@@ -341,6 +341,9 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int Offset_MorphMesh = 0x38;
 		static const unsigned int Offset_TexAniState = 0x40;
+		static const unsigned int AdvanceAnis = 0x00586E90;
+		static const unsigned int CalcVertexPositions = 0x00586AE0;
+		
 	};
 
 	struct zCParticleFX

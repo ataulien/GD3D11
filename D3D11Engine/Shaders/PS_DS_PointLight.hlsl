@@ -165,6 +165,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	//lighting *= saturate(PL_Outdoor + indoor * indoorPixel);
 	//lighting = indoorPixel;
 	
+	//return float4(1,0,0,1);
 	//return float4(ndl.rrr,1);
 	return float4(saturate(lighting),1);
 }

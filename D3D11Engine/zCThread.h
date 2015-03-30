@@ -52,7 +52,9 @@ public:
 			return 0;
 
 		(*suspCount) += 1;
-		Sleep(100);
+
+		while((*suspCount))
+			Sleep(100); // Sleep as long as we are suspended
 
 		return 1;
 	}

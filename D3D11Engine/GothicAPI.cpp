@@ -3768,6 +3768,9 @@ void GothicAPI::DrawMorphMesh(zCMorphMesh* msh, float fatness)
 
 	zCProgMeshProto* morphMesh = msh->GetMorphMesh();
 
+	if(!morphMesh)
+		return;
+
 	D3DXVECTOR3* posList = (D3DXVECTOR3 *)morphMesh->GetPositionList()->Array;
 
 	msh->AdvanceAnis();

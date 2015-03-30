@@ -24,4 +24,9 @@ public:
 	{
 		XCALL(GothicMemoryLocations::zCVobLight::DoAnimation);
 	}
+
+#ifndef PUBLIC_RELEASE
+	byte data1[0x140];
+	float flt[10];
+#endif
 };

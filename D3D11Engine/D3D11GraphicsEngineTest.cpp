@@ -15,6 +15,7 @@
 #include "D3D11ConstantBuffer.h"
 #include "BaseLineRenderer.h"
 #include "D3D11VShader.h"
+#include "D3D11ShaderManager.h"
 
 D3D11GraphicsEngineTest::D3D11GraphicsEngineTest(void)
 {
@@ -63,35 +64,23 @@ XRESULT D3D11GraphicsEngineTest::OnStartWorldRendering()
 
 	Context->RSSetViewports(1, &vp);
 
+	PS_LPP = ShaderManager->GetPShader("PS_LPPNormalmappedAlphaTest");
+
 	return XR_SUCCESS;
 }
 
-void D3D11GraphicsEngineTest::DrawWorldMeshTest()
+/** Collects the renderlist for the world-mesh */
+void D3D11GraphicsEngineTest::GetWorldMeshRenderList(std::list<std::pair<MeshKey, MeshInfo *>>& list)
 {
 	D3DXMATRIX view;
 	Engine::GAPI->GetViewMatrix(&view);
-	Engine::GAPI->SetViewTransform(view);
-	Engine::GAPI->ResetWorldTransform();
+	Engine::GAPI->SetViewTransform(view); // Make sure frustum-culling is working
 
-	SetActivePixelShader("PS_Simple");
-	SetActiveVertexShader("VS_Ex");
-
-	SetupVS_ExMeshDrawCall();
-	SetupVS_ExConstantBuffer();
-	SetupVS_ExPerInstanceConstantBuffer();
-
-
-
-	DistortionTexture->BindToPixelShader(0);
-
+	// Querry the visible sections from GAPI
 	std::list<WorldMeshSectionInfo*> renderList;
 	Engine::GAPI->CollectVisibleSections(renderList);
 
-	DrawVertexBufferIndexedUINT(Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer, 
-				Engine::GAPI->GetWrappedWorldMesh()->MeshIndexBuffer, 0, 0);
-
-	std::list<std::pair<MeshKey, MeshInfo *>> meshList;
-
+	// Collect meshes from sections
 	for(std::list<WorldMeshSectionInfo*>::iterator it = renderList.begin(); it != renderList.end(); it++)
 	{
 		for(std::map<MeshKey, WorldMeshInfo*>::iterator itm = (*it)->WorldMeshes.begin(); itm != (*it)->WorldMeshes.end();itm++)
@@ -105,7 +94,7 @@ void D3D11GraphicsEngineTest::DrawWorldMeshTest()
 				continue;
 			}
 
-			meshList.push_back((*itm));
+			list.push_back((*itm));
 		}
 	}
 
@@ -121,23 +110,20 @@ void D3D11GraphicsEngineTest::DrawWorldMeshTest()
 	};
 
 	// Sort by texture
-	meshList.sort(cmpstruct::cmp);
+	list.sort(cmpstruct::cmp);
+}
 
-	// Draw depth only
-	Context->PSSetShader(NULL, NULL, NULL);
-	for(std::list<std::pair<MeshKey, MeshInfo *>>::iterator it = meshList.begin(); it != meshList.end(); it++)
-	{
-		if((*it).first.Texture->HasAlphaChannel())
-			continue; // Don't pre-render stuff with alpha channel
+void D3D11GraphicsEngineTest::DrawWorldMeshTest()
+{
 
-		DrawVertexBufferIndexedUINT(NULL, NULL, 
-			(*it).second->Indices.size(),
-			(*it).second->BaseIndexLocation);
-	}
+}
 
-	// Now draw the actual pixels
+
+/** Draws a world mesh render list for the given stage */
+void D3D11GraphicsEngineTest::DrawWorldMeshRenderList(int stage, const std::list<std::pair<MeshKey, MeshInfo *>>& list)
+{
 	zCTexture* bound = NULL;
-	for(std::list<std::pair<MeshKey, MeshInfo *>>::iterator it = meshList.begin(); it != meshList.end(); it++)
+	for(std::list<std::pair<MeshKey, MeshInfo *>>::const_iterator it = list.begin(); it != list.end(); it++)
 	{
 		if((*it).first.Texture != bound)
 		{
@@ -150,15 +136,6 @@ void D3D11GraphicsEngineTest::DrawWorldMeshTest()
 			
 			// Bind both
 			Context->PSSetShaderResources(0,2, srv);
-
-			// Get the right shader for it
-			BindShaderForTexture((*it).first.Texture);
-
-			/*MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom((*it).first.Material->GetTextureSingle());
-			if(!info->Constantbuffer)
-				info->UpdateConstantbuffer();
-
-			info->Constantbuffer->BindToPixelShader(2);*/
 		}
 
 		// Draw the section-part
@@ -176,7 +153,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 
 	// Collect visible vobs and lights
 	static bool s_done = false;
-	if(!s_done)
+	//if(!s_done)
 	{
 		if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs || 
 			Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting)
@@ -189,11 +166,15 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 			FillInstancingBuffer(FrameVisibleVobs);
 
 			// Reset the collected vobs for next frame
-			//MarkVobNonVisibleInFrame(FrameVisibleVobs);
+			MarkVobNonVisibleInFrame(FrameVisibleVobs);
 
 			s_done = true;
 		}
 	}
+
+	// Collect mesh list for the world
+	std::list<std::pair<MeshKey, MeshInfo *>> worldMeshList;
+	GetWorldMeshRenderList(worldMeshList);
 
 	/** Init graphics */
 
@@ -213,7 +194,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	}
 
 	// Set shaders
-	SetActivePixelShader("PS_Simple");
+	SetActivePixelShader("PS_LPPNormalmappedAlphaTest");
 	SetActiveVertexShader("VS_ExInstancedObj");
 
 	// Init drawcalls
@@ -226,11 +207,10 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	/** z-pre-pass */
 
 	// Unbind Pixelshader
-	Context->PSSetShader(NULL, NULL, 0);
+	PS_LPP->Apply();
 
-	// Unbind rendertarget
-	ID3D11RenderTargetView* nrtv = NULL;
-	Context->OMSetRenderTargets(1, &nrtv, DepthStencilBuffer->GetDepthStencilView());
+	// Bind GBuffer 2
+	Context->OMSetRenderTargets(1, GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
 
 	// Set stage
 	SetRenderingStage(DES_Z_PRE_PASS);
@@ -242,6 +222,16 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 		if(!(*it).second->Instances.empty())
 			DrawVisualInstances((*it).second);
 	}
+
+	SetActiveVertexShader("VS_Ex");
+	Engine::GAPI->ResetWorldTransform(); // WorldMesh is always at 0,0,0
+
+	// Init drawcalls
+	SetupVS_ExMeshDrawCall();
+	SetupVS_ExConstantBuffer();
+
+	// Draw world mesh
+	DrawWorldMeshRenderList(0, worldMeshList);
 
 	/** Diffuse pass */
 
@@ -280,6 +270,16 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	Context->DSSetShader(NULL, NULL, NULL);
 	Context->HSSetShader(NULL, NULL, NULL);
+
+	SetActiveVertexShader("VS_Ex");
+	Engine::GAPI->ResetWorldTransform(); // WorldMesh is always at 0,0,0
+
+	// Init drawcalls
+	SetupVS_ExMeshDrawCall();
+	SetupVS_ExConstantBuffer();
+
+	// Draw world mesh
+	DrawWorldMeshRenderList(0, worldMeshList);
 
 	if(Engine::GAPI->GetRendererState()->RendererSettings.WireframeVobs)
 	{

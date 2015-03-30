@@ -612,7 +612,7 @@ void D2DView::AddMessageBox(const std::string& caption, const std::string& messa
 void D2DView::CheckDeadMessageBoxes()
 {
 	// FIXME
-	/*for(auto it = MessageBoxes.begin(); it != MessageBoxes.end(); it++)
+	for(auto it = MessageBoxes.begin(); it != MessageBoxes.end(); it++)
 	{
 		// Delete the messagebox if it is hidden
 		if((*it)->IsHidden())
@@ -620,6 +620,7 @@ void D2DView::CheckDeadMessageBoxes()
 			MainSubView->DeleteChild((*it));
 
 			it = MessageBoxes.erase(it);
+			break; // FIXME: Loop crashes when it reaches end here, not sure why.
 		}
-	}*/
+	}
 }
