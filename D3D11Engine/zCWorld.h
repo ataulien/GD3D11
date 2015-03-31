@@ -153,32 +153,32 @@ public:
 		//HookedFunctions::OriginalFunctions.original_zCWorldRender(thisptr, camera);
 		if(thisptr == oCGame::GetGame()->_zCSession_world)
 		{
+			Engine::GAPI->OnWorldUpdate();
+
 			// Main world
 			if(Engine::GAPI->GetRendererState()->RendererSettings.AtmosphericScattering)
 			{
-				zCWorld::fake_zCWorldRender(thisptr, camera);
+				HookedFunctions::OriginalFunctions.original_zCWorldRender(thisptr, camera);
+				//zCWorld::fake_zCWorldRender(thisptr, camera);
 			}else
 			{
 				camera.SetFarPlane(25000.0f);
 				HookedFunctions::OriginalFunctions.original_zCWorldRender(thisptr, camera);
 			}
 
-			//
-			Engine::GAPI->OnWorldUpdate();
-
 			/*zCWorld* w = (zCWorld *)thisptr;
 			zCSkyController* sky = w->GetActiveSkyController();
 			sky->RenderSkyPre();*/
 
-			// Start world rendering here
-			if(Engine::GAPI->GetLoadedWorldInfo()->MainWorld == (zCWorld *)thisptr)
-				Engine::GraphicsEngine->OnStartWorldRendering();
 		}else
 		{
 			// Bind matrices
 			//camera.UpdateViewport();
 			//camera.Activate();
 
+			// This needs to be called to init the camera and everything for the inventory vobs
+			// The PresentPending-Guard will stop the renderer from rendering the world into one of the cells here
+			// TODO: This can be implemented better.
 			HookedFunctions::OriginalFunctions.original_zCWorldRender(thisptr, camera);
 
 			// Inventory

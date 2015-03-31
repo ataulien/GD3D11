@@ -90,4 +90,6 @@ public:
 	{
 		return *(zCLightmap **)(((char *)this) + GothicMemoryLocations::zCPolygon::Offset_Lightmap);
 	}
+
+	char data[52];
 };

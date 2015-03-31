@@ -102,6 +102,7 @@
       <PreprocessorDefinitions>PUBLIC_RELEASE;BUILD_GOTHIC_2_6_fix;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;D3D11ENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -242,6 +243,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\version.h" />
     <ClInclude Include="BaseAntTweakBar.h" />
     <ClInclude Include="BaseConstantBuffer.h" />
+    <ClInclude Include="BasePipelineStates.h" />
     <ClInclude Include="BaseLineRenderer.h" />
     <ClInclude Include="BasePShader.h" />
     <ClInclude Include="BaseTexture.h" />
@@ -277,6 +279,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="D3D11PipelineStates.h" />
     <ClInclude Include="D3D11PShader.h" />
     <ClInclude Include="D3D11ShaderManager.h" />
     <ClInclude Include="D3D11Texture.h" />
@@ -383,6 +386,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="zCParser.h" />
     <ClInclude Include="zCParticleFX.h" />
     <ClInclude Include="zCPolygon.h" />
+    <ClInclude Include="zCPolyStrip.h" />
     <ClInclude Include="zCProgMeshProto.h" />
     <ClInclude Include="zCQuadMark.h" />
     <ClInclude Include="zCResourceManager.h" />

@@ -131,9 +131,6 @@ GothicAPI::GothicAPI(void)
 
 	PendingMovieFrame = NULL;
 
-	// Load settings, if possible
-	
-
 	//RenderThread = new GRenderThread;
 	//XLE(RenderThread->InitThreads());
 }
@@ -270,7 +267,7 @@ void GothicAPI::OnWorldUpdate()
 		RendererState.RendererInfo.FarPlane = zCCamera::GetCamera()->GetFarPlane();
 		RendererState.RendererInfo.NearPlane = zCCamera::GetCamera()->GetNearPlane();
 
-		zCCamera::GetCamera()->Activate();
+		//zCCamera::GetCamera()->Activate();
 		SetViewTransform(zCCamera::GetCamera()->GetTransform(zCCamera::ETransformType::TT_VIEW));
 	}
 
@@ -875,10 +872,16 @@ void GothicAPI::DrawParticlesSimple()
 	}
 }
 
+static bool DecalSortcmpFunc(const std::pair<zCVob *, float>& a, const std::pair<zCVob *, float>& b)
+{
+	return a.second > b.second; // Back to front
+}
+
 /** Gets a list of visible decals */
 void GothicAPI::GetVisibleDecalList(std::vector<zCVob *>& decals)
 {
 	D3DXVECTOR3 camPos = GetCameraPosition();
+	static std::vector<std::pair<zCVob *, float>> decalDistances; // Static to get around reallocations
 
 	for(std::list<zCVob *>::iterator it = DecalVobs.begin(); it != DecalVobs.end(); it++)
 	{
@@ -888,9 +891,20 @@ void GothicAPI::GetVisibleDecalList(std::vector<zCVob *>& decals)
 
 		if((*it)->GetVisual())
 		{
-			decals.push_back((*it));
+			decalDistances.push_back(std::make_pair((*it), dist));
 		}
 	}
+
+	// Sort back to front
+	std::sort(decalDistances.begin(), decalDistances.end(), DecalSortcmpFunc);
+
+	// Put into output list
+	for(auto it = decalDistances.begin(); it != decalDistances.end(); it++)
+	{
+		decals.push_back((*it).first);
+	}
+
+	decalDistances.clear();
 
 }
 
@@ -1413,9 +1427,6 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 			VobInfo* vi = new VobInfo;
 			vi->Vob = vob;
 			vi->VisualInfo = StaticMeshVisuals[pm];
-			Engine::GraphicsEngine->CreateConstantBuffer(&vi->VobConstantBuffer, NULL, sizeof(VS_ExConstantBuffer_PerInstance));
-
-			vi->UpdateVobConstantBuffer();
 
 			// Add to map
 			VobsByVisual[vob->GetVisual()].push_back(vi);
@@ -1427,7 +1438,11 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 				WorldSections[section.x][section.y].Vobs.push_back(vi);
 
 				vi->VobSection = &WorldSections[section.x][section.y];
-				
+	
+				// Create this constantbuffer only for non-inventory vobs because it would be recreated for each vob every frame
+				Engine::GraphicsEngine->CreateConstantBuffer(&vi->VobConstantBuffer, NULL, sizeof(VS_ExConstantBuffer_PerInstance));
+				vi->UpdateVobConstantBuffer();
+
 				if(!BspLeafVobLists.empty()) // Check if this is the initial loading
 				{
 					// It's not, chose this as a dynamically added vob
@@ -1810,10 +1825,8 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 			texture = fx->GetEmitter()->GetVisTexture();
 			if(texture)
 			{
-				// Bind it
-				if(texture->CacheIn(0.6f) == zRES_CACHED_IN)
-					texture->Bind(0);
-				else
+				// Check if it's loaded
+				if(texture->CacheIn(0.6f) != zRES_CACHED_IN)
 					return;
 			}else
 			{
@@ -1915,15 +1928,21 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 					D3DXMATRIX sw; source->GetWorldMatrix(&sw);
 					D3DXMatrixTranspose(&sw, &sw);
 
-					D3DXVECTOR3 velPosY; D3DXVec3TransformNormal(&velPosY, &p->Vel, &sw);
-					D3DXVec3Normalize(&velPosY, &velPosY);
-
+					D3DXVECTOR3 velNrm; D3DXVec3Normalize(&velNrm, &p->Vel);
+					D3DXVec3Normalize(&velNrm, &velNrm);
+					D3DXVECTOR3 velPosY; D3DXVec3TransformNormal(&velPosY, &velNrm, &sw);
+					
 					D3DXVECTOR3 velPosX = D3DXVECTOR3(-velPosY.y, velPosY.x, velPosY.z);
 					D3DXVECTOR3 xdim = velPosX * ii.scale.x;
 					D3DXVECTOR3 ydim = velPosY * ii.scale.y;
 
-					ii.scale.x = xdim.x + ydim.x;
-					ii.scale.y = xdim.y + ydim.y;
+					ii.scale.x = -xdim.x + ydim.x;
+					ii.scale.y = -xdim.y + ydim.y;
+
+					if(abs(ii.scale.x) < abs(ii.scale.y))
+						ii.scale.x = abs(ii.scale.y / 1.5f) * (ii.scale.x < 0 ? -1 : 1);
+					else
+						ii.scale.y = abs(ii.scale.x / 1.5f) * (ii.scale.y < 0 ? -1 : 1);
 				}
 				
 				//D3DXMatrixIdentity(&world);
@@ -1932,6 +1951,28 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 
 			
 			D3DXMatrixTranspose(&world, &world);
+
+#ifndef PUBLIC_RELEASE
+			if(p->PolyStrip)
+			{
+				// Collect vertices from strip
+				std::vector<ExVertexStruct> stripVx;
+				p->PolyStrip->GenerateVertexBuffer(stripVx);
+
+				// bind blend-state and texture
+				RendererState.BlendState = inf.BlendState;
+				RendererState.BlendState.SetDirty();
+				texture->Bind(0);
+				
+				Engine::GraphicsEngine->SetupPerInstanceConstantBuffer();
+
+				// Draw
+				Engine::GraphicsEngine->SetActiveVertexShader("VS_Ex");
+				Engine::GraphicsEngine->SetActivePixelShader("PS_Simple");
+				Engine::GraphicsEngine->DrawVertexArray(&stripVx[0], stripVx.size());
+				continue;
+			}
+#endif
 
 			//Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(p->PositionWS, 20.0f, D3DXVECTOR4(1,0,0,1));
 
@@ -3199,6 +3240,7 @@ void GothicAPI::DisableErrorMessageBroadcast()
 void GothicAPI::SetFarPlane(float value)
 {
 	zCCamera::GetCamera()->SetFarPlane(value);
+	zCCamera::GetCamera()->Activate();
 }
 
 float GothicAPI::GetFarPlane()

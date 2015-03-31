@@ -252,6 +252,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	//litPixel = lerp(diffuse * vertLighting, litPixel, vertLighting < 0.9f ? 0 : 1);
 	//diffuse.rgb = lerp(diffuse.rgb, 1.0f, clamp(shaft, 0.0f, 0.4f));
 	
+	
 	//return float4(sun.rgb, 1);
 	//return float4(vertLighting.rrr, 1);
 	return float4(litPixel.rgb, 1);

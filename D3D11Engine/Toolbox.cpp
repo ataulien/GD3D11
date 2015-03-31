@@ -4,6 +4,29 @@
 
 namespace Toolbox
 {
+	static std::size_t hash_value(float value)
+	{
+		stdext::hash<float> hasher;
+		return hasher(value);
+	}
+
+	static std::size_t hash_value(DWORD value)
+	{
+		stdext::hash<DWORD> hasher;
+		return hasher(value);
+	}
+
+	static void hash_combine(std::size_t& seed, float value)
+	{	
+		seed ^= hash_value(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
+	/** Hashes the given DWORD value */
+	void hash_combine(std::size_t& seed, DWORD value)
+	{
+		seed ^= hash_value(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
 	/** Returns true if the given position is inside the box */
 	bool PositionInsideBox(const D3DXVECTOR3& p, const D3DXVECTOR3& min, const D3DXVECTOR3& max)
 	{
@@ -205,9 +228,11 @@ namespace Toolbox
 		memset(c, 0, numChars+1);
 		fread(c, numChars, 1, f);
 
+		std::string str = c;
+
 		delete[] c;
 
-		return std::string(c);
+		return str;
 	}
 
 	/** sse2 memcpy implementation by William Chan and Google */

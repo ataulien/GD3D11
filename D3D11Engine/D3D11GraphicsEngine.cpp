@@ -33,6 +33,7 @@
 #include "zCQuadMark.h"
 #include "D2DEditorView.h"
 #include <algorithm>
+#include "D3D11PipelineStates.h"
 
 //#include "MemoryTracker.h"
 
@@ -45,7 +46,7 @@ const INT2 DEFAULT_RESOLUTION = INT2(1920 * RES_UPSCALE, 1080*  RES_UPSCALE);
 const int NUM_UNLOADEDTEXCOUNT_FORCE_LOAD_TEXTURES = 100;
 
 const float DEFAULT_FAR_PLANE = 50000.0f;
-const D3DXVECTOR4 UNDERWATER_COLOR_MOD = D3DXVECTOR4(0.8f, 0.8f, 1.0f, 1.0f);
+const D3DXVECTOR4 UNDERWATER_COLOR_MOD = D3DXVECTOR4(0.5f, 0.7f, 1.0f, 1.0f);
 
 //#define DEBUG_D3D11
 
@@ -116,6 +117,10 @@ D3D11GraphicsEngine::D3D11GraphicsEngine(void)
 
 D3D11GraphicsEngine::~D3D11GraphicsEngine(void)
 {
+	GothicDepthBufferStateInfo::DeleteCachedObjects();
+	GothicBlendStateInfo::DeleteCachedObjects();
+	GothicRasterizerStateInfo::DeleteCachedObjects();
+
 	delete InfiniteRangeConstantBuffer;
 	delete OutdoorSmallVobsConstantBuffer;
 	delete OutdoorVobsConstantBuffer;
@@ -1333,29 +1338,17 @@ XRESULT D3D11GraphicsEngine::UpdateRenderStates()
 {
 	if (Engine::GAPI->GetRendererState()->BlendState.StateDirty)
 	{
-		if (FFBlendState)FFBlendState->Release();
+		D3D11BlendStateInfo* state = (D3D11BlendStateInfo *)GothicStateCache::s_BlendStateMap[Engine::GAPI->GetRendererState()->BlendState];
 
-		GothicBlendStateInfo& bs = Engine::GAPI->GetRendererState()->BlendState;
+		if(!state)
+		{
+			// Create new state
+			state = new D3D11BlendStateInfo(Engine::GAPI->GetRendererState()->BlendState);
 
-		D3D11_BLEND_DESC blendDesc;
-		// Set to default
-		blendDesc.AlphaToCoverageEnable = bs.AlphaToCoverage;
-		blendDesc.IndependentBlendEnable = FALSE;
-		blendDesc.RenderTarget[0].RenderTargetWriteMask = bs.ColorWritesEnabled ? (D3D11_COLOR_WRITE_ENABLE_RED | 
-			D3D11_COLOR_WRITE_ENABLE_BLUE | 
-			D3D11_COLOR_WRITE_ENABLE_GREEN |
-			D3D11_COLOR_WRITE_ENABLE_ALPHA) : 0;
+			GothicStateCache::s_BlendStateMap[Engine::GAPI->GetRendererState()->BlendState] = state;
+		}
 
-		blendDesc.RenderTarget[0].SrcBlend = (D3D11_BLEND)bs.SrcBlend;
-		blendDesc.RenderTarget[0].DestBlend = (D3D11_BLEND)bs.DestBlend;
-		blendDesc.RenderTarget[0].BlendOp = (D3D11_BLEND_OP)bs.BlendOp;
-		blendDesc.RenderTarget[0].SrcBlendAlpha = (D3D11_BLEND)bs.SrcBlendAlpha;
-		blendDesc.RenderTarget[0].DestBlendAlpha = (D3D11_BLEND)bs.DestBlendAlpha;
-		blendDesc.RenderTarget[0].BlendOpAlpha = (D3D11_BLEND_OP)bs.BlendOpAlpha;
-		blendDesc.RenderTarget[0].BlendEnable = bs.BlendEnabled;
-
-		Device->CreateBlendState(&blendDesc, &FFBlendState);
-		
+		FFBlendState = state->State;
 
 		Engine::GAPI->GetRendererState()->BlendState.StateDirty = false;
 		Context->OMSetBlendState(FFBlendState, (float *)&D3DXVECTOR4(0, 0, 0, 0), 0xFFFFFFFF);
@@ -1365,29 +1358,17 @@ XRESULT D3D11GraphicsEngine::UpdateRenderStates()
 
 	if (Engine::GAPI->GetRendererState()->RasterizerState.StateDirty)
 	{
-		if (FFRasterizerState)FFRasterizerState->Release();
+		D3D11RasterizerStateInfo* state = (D3D11RasterizerStateInfo *)GothicStateCache::s_RasterizerStateMap[Engine::GAPI->GetRendererState()->RasterizerState];
 
-		GothicRasterizerStateInfo& rs = Engine::GAPI->GetRendererState()->RasterizerState;
+		if(!state)
+		{
+			// Create new state
+			state = new D3D11RasterizerStateInfo(Engine::GAPI->GetRendererState()->RasterizerState);
 
-		D3D11_RASTERIZER_DESC rasterizerDesc;
-		rasterizerDesc.CullMode = (D3D11_CULL_MODE)rs.CullMode;
+			GothicStateCache::s_RasterizerStateMap[Engine::GAPI->GetRendererState()->RasterizerState] = state;
+		}
 
-		if(rs.Wireframe)
-			rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
-		else
-			rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-
-		rasterizerDesc.FrontCounterClockwise = rs.FrontCounterClockwise;
-		rasterizerDesc.DepthBias = rs.ZBias;
-		rasterizerDesc.DepthBiasClamp = 0;
-		rasterizerDesc.SlopeScaledDepthBias = 0;
-		rasterizerDesc.DepthClipEnable = false;
-		rasterizerDesc.ScissorEnable = false;
-		rasterizerDesc.MultisampleEnable = false;
-		rasterizerDesc.AntialiasedLineEnable = true;
-
-		Device->CreateRasterizerState(&rasterizerDesc, &FFRasterizerState);
-		
+		FFRasterizerState = state->State;
 
 		Engine::GAPI->GetRendererState()->RasterizerState.StateDirty = false;
 		Context->RSSetState(FFRasterizerState);
@@ -1397,42 +1378,17 @@ XRESULT D3D11GraphicsEngine::UpdateRenderStates()
 
 	if (Engine::GAPI->GetRendererState()->DepthState.StateDirty)
 	{
-		if (FFDepthStencilState)FFDepthStencilState->Release();
+		D3D11DepthBufferState* state = (D3D11DepthBufferState *)GothicStateCache::s_DepthBufferMap[Engine::GAPI->GetRendererState()->DepthState];
 
-		GothicDepthBufferStateInfo& ds = Engine::GAPI->GetRendererState()->DepthState;
-
-		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-
-		// Depth test parameters
-		depthStencilDesc.DepthEnable = ds.DepthBufferEnabled;
-
-		if(ds.DepthWriteEnabled)
+		if(!state)
 		{
-			depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		}else
-		{
-			depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+			// Create new state
+			state = new D3D11DepthBufferState(Engine::GAPI->GetRendererState()->DepthState);
+
+			GothicStateCache::s_DepthBufferMap[Engine::GAPI->GetRendererState()->DepthState] = state;
 		}
-		depthStencilDesc.DepthFunc = (D3D11_COMPARISON_FUNC)ds.DepthBufferCompareFunc;
 
-		// Stencil test parameters
-		depthStencilDesc.StencilEnable = false;
-		depthStencilDesc.StencilReadMask = 0xFF;
-		depthStencilDesc.StencilWriteMask = 0xFF;
-
-		// Stencil operations if pixel is front-facing
-		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		// Stencil operations if pixel is back-facing
-		depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		Device->CreateDepthStencilState(&depthStencilDesc, &FFDepthStencilState);
+		FFDepthStencilState = state->State;
 
 		Engine::GAPI->GetRendererState()->DepthState.StateDirty = false;
 		Context->OMSetDepthStencilState(FFDepthStencilState, 0);
@@ -1455,8 +1411,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		return XR_SUCCESS;
 
 	//return XR_SUCCESS;
-	if(PresentPending)
-		return XR_SUCCESS;
+	//if(PresentPending)
+	//	return XR_SUCCESS;
 
 	D3D11_VIEWPORT vp;
 	vp.TopLeftX = 0.0f;
@@ -1471,7 +1427,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	ID3D11RenderTargetView* rtvs[] = {GBuffer0_Diffuse->GetRenderTargetView(), GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetView()};
 	Context->OMSetRenderTargets(2, rtvs, DepthStencilBuffer->GetDepthStencilView());
 
-	Engine::GAPI->SetFarPlane(DEFAULT_FAR_PLANE);
+	Engine::GAPI->SetFarPlane(Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE);
 
 	Clear(float4(Engine::GAPI->GetRendererState()->GraphicsState.FF_FogColor, 0.0f));
 
@@ -1543,6 +1499,9 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	{
 		std::vector<zCVob *> decals;
 		Engine::GAPI->GetVisibleDecalList(decals);
+
+
+
 		DrawDecalList(decals, false);
 	}
 
@@ -1580,6 +1539,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	if(Engine::GAPI->IsUnderWater())
 		DrawUnderwaterEffects();
 
+	// Clear here to get a working depthbuffer but no interferences with world geometry for gothic UI-Rendering
+	Context->ClearDepthStencilView(DepthStencilBuffer->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0.0f);
 	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
 
 	return XR_SUCCESS;
@@ -1622,6 +1583,18 @@ void D3D11GraphicsEngine::SetupVS_ExPerInstanceConstantBuffer()
 
 	ActiveVS->GetConstantBuffer()[1]->UpdateBuffer(&cb);
 	ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(1);
+}
+
+/** Puts the current world matrix into a CB and binds it to the given slot */
+void D3D11GraphicsEngine::SetupPerInstanceConstantBuffer(int slot)
+{
+	D3DXMATRIX& world = Engine::GAPI->GetRendererState()->TransformState.TransformWorld;
+
+	VS_ExConstantBuffer_PerInstance cb;
+	cb.World = world;
+
+	ActiveVS->GetConstantBuffer()[1]->UpdateBuffer(&cb);
+	ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(slot);
 }
 
 bool SectionRenderlistSortCmp(std::pair<float, WorldMeshSectionInfo*>& a, std::pair<float, WorldMeshSectionInfo*>& b)
@@ -1719,6 +1692,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	D3DXMatrixIdentity(&id);
 	ActiveVS->GetConstantBuffer()[1]->UpdateBuffer(&id);
 	ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(1);
+
+	InfiniteRangeConstantBuffer->BindToPixelShader(3);
 
 	std::list<WorldMeshSectionInfo*> renderList;
 	Engine::GAPI->CollectVisibleSections(renderList);
@@ -2441,10 +2416,10 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 
 	DistortionTexture->BindToPixelShader(0);
 
-	InfiniteRangeConstantBuffer->BindToPixelShader(3);
-
 	// Unbind PS
 	//Context->PSSetShader(NULL, NULL, NULL);
+
+	InfiniteRangeConstantBuffer->BindToPixelShader(3);
 
 	Engine::GAPI->GetRendererState()->BlendState.ColorWritesEnabled = false;
 	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
@@ -2455,6 +2430,11 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 		// Bind wrapped mesh vertex buffers
 		DrawVertexBufferIndexedUINT(Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer, Engine::GAPI->GetWrappedWorldMesh()->MeshIndexBuffer, 0, 0);
 
+		D3DXMATRIX id;
+		D3DXMatrixIdentity(&id);
+		ActiveVS->GetConstantBuffer()[1]->UpdateBuffer(&id);
+		ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(1);
+
 		for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
 		{
 			for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
@@ -2463,11 +2443,6 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 				if(D3DXVec2Length(&a) < sectionRange)
 				{
 					WorldMeshSectionInfo& section = (*ity).second;
-
-					D3DXMATRIX id;
-					D3DXMatrixIdentity(&id);
-					ActiveVS->GetConstantBuffer()[1]->UpdateBuffer(&id);
-					ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(1);
 
 					if(Engine::GAPI->GetRendererState()->RendererSettings.FastShadows)
 					{
@@ -3791,7 +3766,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 	D3DXMatrixTranspose(&cr.ViewReplacement, &cr.ViewReplacement);
 
 	D3DXMatrixOrthoLH(&cr.ProjectionReplacement, WorldShadowmap1->GetSizeX() * Engine::GAPI->GetRendererState()->RendererSettings.WorldShadowRangeScale, 
-												 WorldShadowmap1->GetSizeX() * Engine::GAPI->GetRendererState()->RendererSettings.WorldShadowRangeScale, 1, 40000.0f);
+												 WorldShadowmap1->GetSizeX() * Engine::GAPI->GetRendererState()->RendererSettings.WorldShadowRangeScale, 1, 20000.0f);
 	D3DXMatrixTranspose(&cr.ProjectionReplacement, &cr.ProjectionReplacement);
 
 	cr.PositionReplacement = p;
@@ -3820,7 +3795,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 	SetActiveVertexShader("VS_ExPointLight");
 	SetActivePixelShader("PS_DS_PointLight");
 
-	Engine::GAPI->SetFarPlane(DEFAULT_FAR_PLANE);
+	Engine::GAPI->SetFarPlane(Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE);
 
 	Engine::GAPI->GetRendererState()->BlendState.SetAdditiveBlending();
 	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
@@ -3866,6 +3841,8 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		if(!vob->IsEnabled())
 			continue;
 
+		
+
 		// Animate the light
 		vob->DoAnimation();
 
@@ -3873,6 +3850,21 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		plcb.PL_Range = vob->GetLightRange();
 		plcb.Pl_PositionWorld = vob->GetPositionWorld();
 		plcb.PL_Outdoor = (*itv)->IsIndoorVob ? 0.0f : 1.0f;
+
+		float dist = D3DXVec3Length(&(*plcb.Pl_PositionWorld.toD3DXVECTOR3() - Engine::GAPI->GetCameraPosition()));
+
+		// Gradually fade in the lights
+		if( dist + plcb.PL_Range < Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius)
+		{
+			//float fadeStart = Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius - plcb.PL_Range;
+			float fadeEnd = Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius;
+
+			float fadeFactor = std::min(1.0f, std::max(0.0f, ((fadeEnd - (dist + plcb.PL_Range)) / plcb.PL_Range)));
+			plcb.PL_Color.x *= fadeFactor;
+			plcb.PL_Color.y *= fadeFactor;
+			plcb.PL_Color.z *= fadeFactor;
+			//plcb.PL_Color.w *= fadeFactor;
+		}
 
 		//if(plcb.PL_Range > 10000.0f)
 		//	continue;
@@ -3885,7 +3877,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		D3DXVec3TransformCoord(plcb.Pl_PositionView.toD3DXVECTOR3(), plcb.Pl_PositionWorld.toD3DXVECTOR3(), &view);
 		D3DXVec3TransformCoord(plcb.PL_LightScreenPos.toD3DXVECTOR3(), plcb.Pl_PositionWorld.toD3DXVECTOR3(), &Engine::GAPI->GetProjectionMatrix());
 
-		if(D3DXVec3Length(&(*plcb.Pl_PositionWorld.toD3DXVECTOR3() - Engine::GAPI->GetCameraPosition())) < plcb.PL_Range)
+		if(dist < plcb.PL_Range)
 		{
 			if(Engine::GAPI->GetRendererState()->DepthState.DepthBufferEnabled)
 			{
@@ -3967,6 +3959,8 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 
 	WorldShadowmap1->BindToPixelShader(Context, 3);
 
+	Context->PSSetSamplers(2,1, &ShadowmapSamplerState);
+
 	PfxRenderer->DrawFullScreenQuad();
 
 
@@ -4023,7 +4017,7 @@ void D3D11GraphicsEngine::RenderShadowmaps(const D3DXVECTOR3& cameraPosition)
 	Context->OMSetRenderTargets(0, NULL, WorldShadowmap1->GetDepthStencilView());
 	//Context->OMSetRenderTargets(1, GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetViewPtr(), WorldShadowmap1->GetDepthStencilView());
 
-	Engine::GAPI->SetFarPlane(20000.0f);
+	//Engine::GAPI->SetFarPlane(20000.0f);
 
 	// Dont render shadows from the sun when it isn't on the sky
 	if (Engine::GAPI->GetSky()->GetAtmoshpereSettings().LightDirection.y > 0 && 
@@ -4049,7 +4043,7 @@ void D3D11GraphicsEngine::RenderShadowmaps(const D3DXVECTOR3& cameraPosition)
 	SetRenderingStage(oldStage);
 	Context->RSSetViewports(1, &oldVP);
 
-	Engine::GAPI->SetFarPlane(DEFAULT_FAR_PLANE);
+	Engine::GAPI->SetFarPlane(Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE);
 }
 
 /** Draws a fullscreenquad, copying the given texture to the viewport */
@@ -4088,8 +4082,8 @@ D3D11ENGINE_RENDER_STAGE D3D11GraphicsEngine::GetRenderingStage()
 /** Draws a single VOB */
 void D3D11GraphicsEngine::DrawVobSingle(VobInfo* vob)
 {
-	vob->UpdateVobConstantBuffer();
-	vob->VobConstantBuffer->BindToVertexShader(1);
+	//vob->UpdateVobConstantBuffer();
+	//vob->VobConstantBuffer->BindToVertexShader(1);
 
 	SetActivePixelShader("PS_Preview_Textured");
 	SetActiveVertexShader("VS_Ex");
@@ -4101,7 +4095,12 @@ void D3D11GraphicsEngine::DrawVobSingle(VobInfo* vob)
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
 	//SetupVS_ExPerInstanceConstantBuffer();
-	vob->VobConstantBuffer->BindToVertexShader(1);
+	//vob->VobConstantBuffer->BindToVertexShader(1);
+
+	//D3DXMATRIX id;
+	//D3DXMatrixIdentity(&id);
+	ActiveVS->GetConstantBuffer()[1]->UpdateBuffer(vob->Vob->GetWorldMatrixPtr());
+	ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(1);
 
 	InfiniteRangeConstantBuffer->BindToPixelShader(3);
 
@@ -4342,6 +4341,11 @@ void D3D11GraphicsEngine::GetBackbufferData(byte** data, int& pixelsize)
 {
 	byte* d = new byte[GetBackbufferResolution().x * GetBackbufferResolution().y * 4];
 
+	// Copy HDR scene to backbuffer
+	SetDefaultStates();
+	SetActivePixelShader("PS_PFX_GammaCorrectInv");
+	ActivePS->Apply();
+	PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), BackbufferRTV, INT2(0,0), true);
 	
 	HRESULT hr;
 	ID3D11Resource *backbufferRes;
@@ -4459,8 +4463,6 @@ void D3D11GraphicsEngine::DrawDecalList(const std::vector<zCVob *>& decals, bool
 	SetupVS_ExConstantBuffer();
 
 	int lastAlphaFunc = -1;
-
-	std::vector<ParticleInstanceInfo> instances;
 	for(unsigned int i=0;i<decals.size();i++)
 	{
 		zCDecal* d = (zCDecal *)decals[i]->GetVisual();
@@ -4641,6 +4643,7 @@ void D3D11GraphicsEngine::DrawUnderwaterEffects()
 	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(3);
 
 	DistortionTexture->BindToPixelShader(2);
+	DepthStencilBufferCopy->BindToPixelShader(Context, 3);
 
 	PfxRenderer->BlurTexture(HDRBackBuffer, false, 1.0f, UNDERWATER_COLOR_MOD, "PS_PFX_UnderwaterFinal");
 }
@@ -4722,47 +4725,6 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 
 	distPS->GetConstantBuffer()[0]->UpdateBuffer(&ricb);
 	distPS->GetConstantBuffer()[0]->BindToPixelShader(0);
-
-	BaseVertexBuffer* vxb;
-	Engine::GraphicsEngine->CreateVertexBuffer(&vxb);
-	vxb->Init(NULL, 6 * sizeof(ExVertexStruct), BaseVertexBuffer::EBindFlags::B_VERTEXBUFFER, BaseVertexBuffer::EUsageFlags::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
-
-	BaseVertexBuffer* ib;
-	Engine::GraphicsEngine->CreateVertexBuffer(&ib);
-	ib->Init(NULL, 6 * sizeof(VERTEX_INDEX), BaseVertexBuffer::EBindFlags::B_INDEXBUFFER, BaseVertexBuffer::EUsageFlags::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
-	
-	ExVertexStruct vx[6];
-	ZeroMemory(vx, sizeof(vx));
-
-	float scale = 1.0f;
-	vx[0].Position = float3(-scale * 0.5f, -scale * 0.5f, 0.0f);
-	vx[1].Position = float3(scale * 0.5f, -scale * 0.5f, 0.0f);
-	vx[2].Position = float3(-scale * 0.5f, scale * 0.5f, 0.0f);
-
-	vx[0].TexCoord = float2(0,0);
-	vx[1].TexCoord = float2(1,0);
-	vx[2].TexCoord = float2(0,1);
-
-	vx[0].Color = 0xFFFFFFFF;
-	vx[1].Color = 0xFFFFFFFF;
-	vx[2].Color = 0xFFFFFFFF;
-
-	vx[3].Position = float3(scale * 0.5f, -scale * 0.5f, 0.0f);
-	vx[4].Position = float3(scale * 0.5f, scale * 0.5f, 0.0f);
-	vx[5].Position = float3(-scale * 0.5f, scale * 0.5f, 0.0f);
-
-	vx[3].TexCoord = float2(1,0);
-	vx[4].TexCoord = float2(1,1);
-	vx[5].TexCoord = float2(0,1);
-
-	vx[3].Color = 0xFFFFFFFF;
-	vx[4].Color = 0xFFFFFFFF;
-	vx[5].Color = 0xFFFFFFFF;
-
-	vxb->UpdateBuffer(vx);
-
-	VERTEX_INDEX indices[] = {0,1,2,3,4,5};
-	ib->UpdateBuffer(indices, sizeof(indices));
 
 	GothicBlendStateInfo bsi = Engine::GAPI->GetRendererState()->BlendState;
 	GothicRendererState& state = *Engine::GAPI->GetRendererState();
@@ -4854,7 +4816,7 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 		state.BlendState = blendState;
 		state.BlendState.SetDirty();
 
-		DrawInstanced(vxb, ib, 6, &instances[0], sizeof(ParticleInstanceInfo), instances.size());
+		DrawInstanced(QuadVertexBuffer, QuadIndexBuffer, 6, &instances[0], sizeof(ParticleInstanceInfo), instances.size());
 	}
 
 	state.BlendState = bsi;
@@ -4862,9 +4824,6 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 	
 	state.DepthState.DepthWriteEnabled = true;
 	state.DepthState.SetDirty();
-
-	delete vxb;
-	delete ib;
 }
 
 /** Called when a vob was removed from the world */

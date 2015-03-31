@@ -8,6 +8,12 @@
 
 namespace Toolbox
 {
+	/** Hashes the given float value */
+	void hash_combine(std::size_t& seed, float value);
+
+	/** Hashes the given DWORD value */
+	void hash_combine(std::size_t& seed, DWORD value);
+
 	/** Returns true if the given position is inside the box */
 	bool PositionInsideBox(const D3DXVECTOR3& p, const D3DXVECTOR3& min, const D3DXVECTOR3& max);
 
