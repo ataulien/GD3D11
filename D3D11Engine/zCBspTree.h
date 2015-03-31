@@ -10,6 +10,7 @@
 #include "zCMesh.h"
 #include "zTypes.h"
 #include "Logger.h"
+#include "BaseGraphicsEngine.h"
 
 class zCFileBIN;
 class zCVob;
@@ -56,6 +57,9 @@ public:
 	/** Hooks the functions of this Class */
 	static void Hook()
 	{
+		
+		DetourFunction((BYTE *)GothicMemoryLocations::zCBspTree::Render, (BYTE *)zCBspNode::hooked_zCBspNodeRender);
+
 		//(zCBspNodeRenderIndoor)DetourFunction((BYTE *)GothicMemoryLocations::zCBspNode::RenderIndoor, (BYTE *)zCBspNode::hooked_zCBspNodeRenderIndoor);
 		//(zCBspNodeRenderOutdoor)DetourFunction((BYTE *)GothicMemoryLocations::zCBspNode::RenderOutdoor, (BYTE *)zCBspNode::hooked_zCBspNodeRenderOutdoor);
 	
@@ -77,6 +81,12 @@ public:
 		REPLACE_CALL(GothicMemoryLocations::zCBspTree::CALL_RenderTrivIndoor, INST_NOP);*/
 	}
 	
+	static void __fastcall hooked_zCBspNodeRender(void* thisptr, void* unkwn)
+	{
+		// Start world rendering here
+		Engine::GraphicsEngine->OnStartWorldRendering();
+	}
+
 	static void __fastcall hooked_zCBspNodeRenderIndoor(void* thisptr, int clipFlags)
 	{
 		LogInfo() << "Render indoor!";

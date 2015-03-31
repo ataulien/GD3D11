@@ -19,8 +19,8 @@ cbuffer RefractionInfo : register( b3 )
 SamplerState SS_Linear : register( s0 );
 SamplerState SS_samMirror : register( s1 );
 Texture2D	TX_Texture0 : register( t0 );
-Texture2D	TX_Depth : register( t1 );
 Texture2D	TX_Distortion : register( t2 );
+Texture2D	TX_Depth : register( t3 );
 
 //--------------------------------------------------------------------------------------
 // Input / Output structures
@@ -38,12 +38,15 @@ struct PS_INPUT
 float4 PSMain( PS_INPUT Input ) : SV_TARGET
 {
 	float2 uv = Input.vTexcoord;
+	float depth = TX_Distortion.Sample(SS_Linear, uv).r;
 	
 	// Sample two distortion vectors, modified by time and scaled by a sine-curve
-	uv += (TX_Distortion.Sample(SS_Linear, 0.4f * Input.vTexcoord + RI_Time * 0.005f) * 2 - 1 ) * 0.004f;
-	uv += (TX_Distortion.Sample(SS_Linear, 0.3f * Input.vTexcoord * float2(-0.7, 0.8) + RI_Time * 0.01f) * 2 - 1) * 0.006f;
+	uv += (TX_Distortion.Sample(SS_Linear, 0.2f * Input.vTexcoord + RI_Time * 0.005f) * 2 - 1 ) * 0.004f;
+	uv += (TX_Distortion.Sample(SS_Linear, 0.1f * Input.vTexcoord * float2(-0.7, 0.8) + RI_Time * 0.01f) * 2 - 1) * 0.006f;
 	
 	uv = saturate(uv);
+	
+	uv = lerp(uv, Input.vTexcoord, depth / 500.0f);
 	
 	float4 color = TX_Texture0.Sample(SS_Linear, uv);
 	//color *= float4(1,0,0,1);

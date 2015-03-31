@@ -339,6 +339,7 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
 		// Assume 32-bit
 		byte* data;
 		int pixelSize;
+		Engine::GraphicsEngine->OnStartWorldRendering(); // Render a frame without menus on the screen first
 		Engine::GraphicsEngine->GetBackbufferData(&data, pixelSize);
 
 		lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount = 32;

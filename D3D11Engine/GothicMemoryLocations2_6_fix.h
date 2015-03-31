@@ -23,6 +23,12 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_DontRepositionConnectedVob = 0x48;
 	};
 
+	struct zCPolyStrip
+	{
+		static const unsigned int Offset_PolyList = 0x3C;
+		static const unsigned int Offset_NumPolys = 0x40;
+	};
+
 	struct zCThread
 	{
 		static const unsigned int SuspendThread = 0x005F9370;

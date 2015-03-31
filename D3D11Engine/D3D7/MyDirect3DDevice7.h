@@ -677,7 +677,8 @@ public:
 		}
 
 		// Convert them into ExVertices
-		ExVertexStruct* exv = new ExVertexStruct[dwVertexCount];
+		static std::vector<ExVertexStruct> exv;
+		exv.resize(dwVertexCount);
 
 		switch(dwVertexTypeDesc)
 			{
@@ -726,18 +727,16 @@ public:
 		if(dptPrimitiveType == D3DPT_TRIANGLEFAN)
 		{
 			std::vector<ExVertexStruct> vertexList;
-			WorldConverter::TriangleFanToList(exv, dwVertexCount, &vertexList);
+			WorldConverter::TriangleFanToList(&exv[0], dwVertexCount, &vertexList);
 
 			Engine::GraphicsEngine->DrawVertexArray(&vertexList[0], vertexList.size());
 		}else
 		{
 			if(dptPrimitiveType ==  D3DPT_TRIANGLELIST)
-				Engine::GraphicsEngine->DrawVertexArray(exv, dwVertexCount);
+				Engine::GraphicsEngine->DrawVertexArray(&exv[0], dwVertexCount);
 		}
 
-		delete[] exv;
-
-
+		exv.clear(); // static, keep the memory allocated
 		 
 
        return S_OK;

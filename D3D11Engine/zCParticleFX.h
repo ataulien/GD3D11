@@ -5,6 +5,7 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "zCTimer.h"
+#include "zCPolyStrip.h"
 
 enum EZParticleAlignment
 {

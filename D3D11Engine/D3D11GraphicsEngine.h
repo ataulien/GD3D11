@@ -91,6 +91,9 @@ public:
 	void SetupVS_ExConstantBuffer();
 	void SetupVS_ExPerInstanceConstantBuffer();
 
+	/** Puts the current world matrix into a CB and binds it to the given slot */
+	void SetupPerInstanceConstantBuffer(int slot=1);
+
 	enum EPNAENRenderMode
 	{
 		PNAEN_Default,

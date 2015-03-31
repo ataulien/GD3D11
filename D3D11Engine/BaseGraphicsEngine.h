@@ -75,6 +75,9 @@ public:
 	/** Presents the current frame to the screen */
 	virtual XRESULT Present() = 0;
 
+	/** Puts the current world matrix into a CB and binds it to the given slot */
+	virtual void SetupPerInstanceConstantBuffer(int slot=1) = 0;
+
 	/** Draws a vertexbuffer, non-indexed */
 	virtual XRESULT DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int stride = sizeof(ExVertexStruct)) = 0;
 

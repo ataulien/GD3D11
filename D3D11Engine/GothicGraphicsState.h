@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "BasicTimer.h"
+#include "BasePipelineStates.h"
 
 /** Struct handling all the graphical states set by the game. Can be used as Constantbuffer */
 const int GSWITCH_FOG = 1;
@@ -106,20 +107,83 @@ struct GothicGraphicsState
 	FixedFunctionStage FF_Stages[2];
 };
 
-struct GothicPipelineState
+__declspec(align(4)) struct GothicPipelineState
 {
 	/** Sets this state dirty, which means that it will be updated before next rendering */
 	void SetDirty()
 	{
 		StateDirty = true;
+		HashThis((char *)this, StructSize); 
+	}
+
+	/** Hashes the whole struct */
+	void HashThis(char* data, int size)
+	{
+		Hash = 0;
+
+		// Start hashing at the data of the other structs, skip the data of this one
+		for(int i=sizeof(GothicPipelineState);i<size;i+=4)
+		{
+			DWORD d;
+			((char *)&d)[0] = data[i];
+			((char *)&d)[1] = data[i+1];
+			((char *)&d)[2] = data[i+2];
+			((char *)&d)[3] = data[i+3];
+
+			Toolbox::hash_combine(Hash, d);
+		}
+	}
+
+	bool operator == (const GothicPipelineState& o) const
+	{
+		return Hash == o.Hash;
 	}
 
 	bool StateDirty;
+	size_t Hash;
+	int StructSize;
+};
+
+struct GothicPipelineKeyHasher
+{
+	static const size_t bucket_size = 10; // mean bucket size that the container should try not to exceed
+	static const size_t min_buckets = (1 << 10); // minimum number of buckets, power of 2, >0
+
+	static std::size_t hash_value(float value)
+	{
+		stdext::hash<float> hasher;
+		return hasher(value);
+	}
+
+	static void hash_combine(std::size_t& seed, float value)
+	{	
+		seed ^= hash_value(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
+	std::size_t operator()(const GothicPipelineState& k) const
+	{
+		return k.Hash;
+	}
+
+};
+
+namespace GothicStateCache
+{
+	/** Hashmap for caching the state-objects */
+	__declspec(selectany) std::unordered_map<GothicDepthBufferStateInfo, BaseDepthBufferState*, GothicPipelineKeyHasher> s_DepthBufferMap;
+	__declspec(selectany) std::unordered_map<GothicBlendStateInfo, BaseBlendStateInfo*, GothicPipelineKeyHasher> s_BlendStateMap;
+	__declspec(selectany) std::unordered_map<GothicRasterizerStateInfo, BaseRasterizerStateInfo*, GothicPipelineKeyHasher> s_RasterizerStateMap;
 };
 
 /** Depth buffer state information */
+class BaseDepthBufferState;
 struct GothicDepthBufferStateInfo : public GothicPipelineState
 {
+	GothicDepthBufferStateInfo()
+	{
+		StructSize = sizeof(GothicDepthBufferStateInfo);
+	}
+
 	/** Layed out for D3D11 */
 	enum ECompareFunc
 	{
@@ -145,11 +209,29 @@ struct GothicDepthBufferStateInfo : public GothicPipelineState
 	bool DepthBufferEnabled;
 	bool DepthWriteEnabled;
 	ECompareFunc DepthBufferCompareFunc;
+
+	/** Deletes all cached states */
+	static void DeleteCachedObjects()
+	{
+		for(auto it = GothicStateCache::s_DepthBufferMap.begin();it != GothicStateCache::s_DepthBufferMap.end();it++)
+		{
+			delete (*it).second;
+		}
+
+		GothicStateCache::s_DepthBufferMap.clear();
+	}
+
 };
 
 /** Blend state information */
+class BaseBlendStateInfo;
 struct GothicBlendStateInfo : public GothicPipelineState
 {
+	GothicBlendStateInfo()
+	{
+		StructSize = sizeof(GothicBlendStateInfo);
+	}
+
 	/** Layed out for D3D11 */
 	enum EBlendFunc
 	{
@@ -245,11 +327,30 @@ struct GothicBlendStateInfo : public GothicPipelineState
 	bool BlendEnabled;
 	bool AlphaToCoverage;
 	bool ColorWritesEnabled;
+
+
+	/** Deletes all cached states */
+	static void DeleteCachedObjects()
+	{
+		for(auto it = GothicStateCache::s_BlendStateMap.begin();it != GothicStateCache::s_BlendStateMap.end();it++)
+		{
+			delete (*it).second;
+		}
+
+		GothicStateCache::s_BlendStateMap.clear();
+	}
+
 };
 
 /** Blend state information */
+class BaseRasterizerStateInfo;
 struct GothicRasterizerStateInfo : public GothicPipelineState
 {
+	GothicRasterizerStateInfo()
+	{
+		StructSize = sizeof(GothicRasterizerStateInfo);
+	}
+
 	/** Layed out for D3D11 */
 	enum ECullMode
 	{
@@ -275,11 +376,26 @@ struct GothicRasterizerStateInfo : public GothicPipelineState
 	int ZBias;
 	bool Wireframe;
 	
+	/** Deletes all cached states */
+	static void DeleteCachedObjects()
+	{
+		for(auto it = GothicStateCache::s_RasterizerStateMap.begin();it != GothicStateCache::s_RasterizerStateMap.end();it++)
+		{
+			delete (*it).second;
+		}
+
+		GothicStateCache::s_RasterizerStateMap.clear();
+	}
 };
 
 /** Sampler state information */
 struct GothicSamplerStateInfo : public GothicPipelineState
 {
+	GothicSamplerStateInfo()
+	{
+		StructSize = sizeof(GothicSamplerStateInfo);
+	}
+
 	/** Layed out for D3D11 */
 	enum ETextureAddress
 	{
@@ -349,7 +465,7 @@ struct GothicRendererSettings
 	/** Sets the default values for this struct */
 	void SetDefault()
 	{
-		SectionDrawRadius = 3;
+		SectionDrawRadius = 4;
 
 		DrawVOBs = true;
 		DrawWorldMesh = true;
