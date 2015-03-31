@@ -44,6 +44,7 @@ GSky::~GSky(void)
 	delete SkyDome;
 	delete SkyPlane;
 	delete CloudTexture;
+	delete NightTexture;
 
 	for(unsigned int i=0;i<SkyTextures.size();i++)
 		delete SkyTextures[i];
@@ -157,6 +158,9 @@ XRESULT GSky::LoadSkyResources()
 #else
 	XLE(CloudTexture->Init("system\\GD3D11\\Textures\\SkyDay.dds"));
 #endif
+
+	XLE(Engine::GraphicsEngine->CreateTexture(&NightTexture));
+	XLE(NightTexture->Init("system\\GD3D11\\Textures\\SkyNight.dds"));
 
 	VERTEX_INDEX indices[] = {0,1,2,3,4,5};
 	SkyPlane = new MeshInfo;
@@ -458,6 +462,12 @@ float4 GSky::GetSkylightColor()
 BaseTexture* GSky::GetCloudTexture()
 {
 	return CloudTexture;
+}
+
+/** Returns the cloud texture */
+BaseTexture* GSky::GetNightTexture()
+{
+	return NightTexture;
 }
 
 // The scale equation calculated by Vernier's Graphical Analysis

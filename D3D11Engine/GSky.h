@@ -60,6 +60,9 @@ public:
 	/** Returns the cloud texture */
 	BaseTexture* GetCloudTexture();
 
+	/** Returns the night texture */
+	BaseTexture* GetNightTexture();
+
 	/** Returns the current sun color */
 	float3 GetSunColor();
 protected:
@@ -94,6 +97,7 @@ protected:
 	std::vector<BaseTexture*> SkyTextures;
 
 	BaseTexture* CloudTexture;
+	BaseTexture* NightTexture;
 
 	BaseVertexBuffer* SkyPlaneVertexBuffer;
 	ExVertexStruct SkyPlaneVertices[6];

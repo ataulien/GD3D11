@@ -1411,8 +1411,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		return XR_SUCCESS;
 
 	//return XR_SUCCESS;
-	//if(PresentPending)
-	//	return XR_SUCCESS;
+	if(PresentPending)
+		return XR_SUCCESS;
 
 	D3D11_VIEWPORT vp;
 	vp.TopLeftX = 0.0f;
@@ -1540,8 +1540,10 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		DrawUnderwaterEffects();
 
 	// Clear here to get a working depthbuffer but no interferences with world geometry for gothic UI-Rendering
-	Context->ClearDepthStencilView(DepthStencilBuffer->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0.0f);
-	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
+	//Context->ClearDepthStencilView(DepthStencilBuffer->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0.0f);
+	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), NULL);
+
+	SetDefaultStates();
 
 	return XR_SUCCESS;
 }
@@ -3558,6 +3560,14 @@ XRESULT D3D11GraphicsEngine::DrawSky()
 		cloudsTex->BindToPixelShader(0);
 	}
 
+	BaseTexture* nightTex = Engine::GAPI->GetSky()->GetNightTexture();
+	if(nightTex)
+	{
+		nightTex->BindToPixelShader(1);
+	}
+
+	
+
 	if(sky->GetSkyDome())
 		sky->GetSkyDome()->DrawMesh();
 
@@ -4085,6 +4095,12 @@ void D3D11GraphicsEngine::DrawVobSingle(VobInfo* vob)
 	//vob->UpdateVobConstantBuffer();
 	//vob->VobConstantBuffer->BindToVertexShader(1);
 
+	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
+
+	D3DXMATRIX view;
+	Engine::GAPI->GetViewMatrix(&view);
+	Engine::GAPI->SetViewTransform(view);
+
 	SetActivePixelShader("PS_Preview_Textured");
 	SetActiveVertexShader("VS_Ex");
 
@@ -4132,6 +4148,8 @@ void D3D11GraphicsEngine::DrawVobSingle(VobInfo* vob)
 			Engine::GraphicsEngine->DrawVertexBufferIndexed((*itm).second[i]->MeshVertexBuffer, (*itm).second[i]->MeshIndexBuffer, (*itm).second[i]->Indices.size());
 		}
 	}
+
+	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), NULL);
 }
 
 /** Message-Callback for the main window */
