@@ -7,7 +7,6 @@
 #include "zCTree.h"
 #include "zCCamera.h"
 #include "zCVob.h"
-#include "oCGame.h"
 #include "zCCamera.h"
 #include "zCSkyController_Outdoor.h"
  
@@ -151,7 +150,7 @@ public:
 		Engine::GAPI->SetTextureTestBindMode(false, "");
 
 		//HookedFunctions::OriginalFunctions.original_zCWorldRender(thisptr, camera);
-		if(thisptr == oCGame::GetGame()->_zCSession_world)
+		if(thisptr == Engine::GAPI->GetLoadedWorldInfo()->MainWorld)
 		{
 			Engine::GAPI->OnWorldUpdate();
 
@@ -242,5 +241,10 @@ public:
 	zCSkyController_Outdoor* GetSkyControllerOutdoor()
 	{
 		return *(zCSkyController_Outdoor**)(((char *)this) + GothicMemoryLocations::zCWorld::Offset_SkyControllerOutdoor);
+	}
+
+	zCBspTree* GetBspTree()
+	{
+		return (zCBspTree *)THISPTR_OFFSET(GothicMemoryLocations::zCWorld::Offset_BspTree);
 	}
 };

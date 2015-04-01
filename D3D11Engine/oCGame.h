@@ -5,8 +5,9 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "zCVob.h"
+#include "zCWorld.h"
+#include "zCBspTree.h"
 
-class zCWorld;
 class zView;
 
 #define GOTHIC_KEY_F1 0x3B

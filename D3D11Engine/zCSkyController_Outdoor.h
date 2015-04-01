@@ -4,7 +4,6 @@
 #include "zCPolygon.h"
 #include "Engine.h"
 #include "GothicAPI.h"
-#include "oCGame.h"
 //#include "zCWorld.h"
 #include "zCObject.h"
 
