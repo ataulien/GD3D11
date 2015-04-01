@@ -341,6 +341,17 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 {
 	// If the editor is not open, dont draw it. Slide it in otherwise.
 
+	std::wstring str;
+	if(!Engine::GAPI->GetRendererState()->RendererSettings.DisableWatermark)
+	{
+		// Draw GD3D11-Text
+		str = (L"Development preview\n" + Toolbox::ToWideChar(VERSION_STRING));
+
+		MainView->GetBrush()->SetColor(D2D1::ColorF(1,1,1,0.5f));
+		MainView->GetRenderTarget()->DrawText(str.c_str(), str.length(), MainView->GetTextFormatBig(), D2D1::RectF(0,0, 300, 50), MainView->GetBrush());
+	}
+
+
 	D2D1_POINT_2F p;
 	p.y = 0;
 	if(!IsEnabled)
@@ -355,6 +366,8 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 			SetHidden(GetRect().right < 0);
 			Parent->SetHidden(IsHidden());
 		}
+
+		return;
 	}else
 	{
 		p.x = Toolbox::lerp(MainPanel->GetPosition().x, 0, std::min(deltaTime * 8.0f, 1.0f));
@@ -364,15 +377,6 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 	}
 	MainPanel->SetPosition(p);
 
-	std::wstring str;
-	if(!Engine::GAPI->GetRendererState()->RendererSettings.DisableWatermark)
-	{
-		// Draw GD3D11-Text
-		str = (L"Development preview\n" + Toolbox::ToWideChar(VERSION_STRING));
-
-		MainView->GetBrush()->SetColor(D2D1::ColorF(1,1,1,0.5f));
-		MainView->GetRenderTarget()->DrawText(str.c_str(), str.length(), MainView->GetTextFormatBig(), D2D1::RectF(0,0, 300, 50), MainView->GetBrush());
-	}
 
 	// Draw subviews
 	if(IsEnabled || MainPanel->GetPosition().x + 40.0f > -MainPanel->GetSize().width)
@@ -1031,6 +1035,7 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 	if(msg == WM_KEYDOWN && wParam == VK_F1 && !zCOption::GetOptions()->IsParameter("XNoDevMenu"))
 	{
 		IsEnabled = !IsEnabled;
+		Engine::GAPI->GetRendererState()->RendererSettings.DisableWatermark = false;
 
 		if(IsEnabled)
 		{

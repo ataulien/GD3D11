@@ -121,7 +121,7 @@ XRESULT D2DSettingsDialog::InitControls()
 	vsyncCheckbox->SetSize(D2D1::SizeF(160, 20));
 	vsyncCheckbox->SetCaption("Enable VSync");
 	vsyncCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync);
-	vsyncCheckbox->AlignUnder(hdrCheckbox, 10);
+	vsyncCheckbox->AlignUnder(hdrCheckbox, 8);
 	vsyncCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync);
 
 	SV_Label* outdoorVobsDDLabel = new SV_Label(MainView, MainPanel);
@@ -140,7 +140,7 @@ XRESULT D2DSettingsDialog::InitControls()
 
 	SV_Label* outdoorVobsSmallDDLabel = new SV_Label(MainView, MainPanel);
 	outdoorVobsSmallDDLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
-	outdoorVobsSmallDDLabel->AlignUnder(outdoorVobsDDSlider, 10);
+	outdoorVobsSmallDDLabel->AlignUnder(outdoorVobsDDSlider, 8);
 	outdoorVobsSmallDDLabel->SetCaption("Small object draw distance:");
 
 	SV_Slider* outdoorVobsSmallDDSlider = new SV_Slider(MainView, MainPanel);
@@ -154,7 +154,7 @@ XRESULT D2DSettingsDialog::InitControls()
 
 	SV_Label* visualFXDDLabel = new SV_Label(MainView, MainPanel);
 	visualFXDDLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
-	visualFXDDLabel->AlignUnder(outdoorVobsSmallDDSlider, 10);
+	visualFXDDLabel->AlignUnder(outdoorVobsSmallDDSlider, 8);
 	visualFXDDLabel->SetCaption("VisualFX draw distance:");
 
 	SV_Slider* visualFXDDSlider = new SV_Slider(MainView, MainPanel);
@@ -168,7 +168,7 @@ XRESULT D2DSettingsDialog::InitControls()
 
 	SV_Label* worldDDLabel = new SV_Label(MainView, MainPanel);
 	worldDDLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
-	worldDDLabel->AlignUnder(visualFXDDSlider, 10);
+	worldDDLabel->AlignUnder(visualFXDDSlider, 8);
 	worldDDLabel->SetCaption("World draw distance:");
 
 	SV_Slider* worldDDSlider = new SV_Slider(MainView, MainPanel);
@@ -216,6 +216,11 @@ XRESULT D2DSettingsDialog::InitControls()
 	updateCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableAutoupdates);
 	updateCheckbox->AlignUnder(vertFOVSlider, 10);
 	updateCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableAutoupdates);
+
+	// Advanced settings label
+	SV_Label* advancedSettingsLabel = new SV_Label(MainView, MainPanel);
+	advancedSettingsLabel->SetPositionAndSize(D2D1::Point2F(5, GetSize().height - 5 - 12), D2D1::SizeF(200, 12));
+	advancedSettingsLabel->SetCaption("CTRL+F11 -> Advanced");
 
 	return XR_SUCCESS;
 }

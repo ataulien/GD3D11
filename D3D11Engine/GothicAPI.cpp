@@ -36,6 +36,8 @@
 #include "zCQuadMark.h"
 #include "zCOption.h"
 
+#include "win32ClipboardWrapper.h"
+
 /** Writes this info to a file */
 void MaterialInfo::WriteToFile(const std::string& name)
 {
@@ -156,6 +158,8 @@ void GothicAPI::OnGameStart()
 	if(RendererState.RendererSettings.EnableAutoupdates && !zCOption::GetOptions()->IsParameter("XNOUPDATE"))
 		UpdateCheck::RunUpdater();
 
+	// See if the user correctly onstalled the normalmaps
+	CheckNormalmapFiles();
 	
 	LoadedWorldInfo = new WorldInfo;
 	LoadedWorldInfo->HighestVertex = 2;
@@ -559,8 +563,10 @@ void GothicAPI::OnLoadWorld(const std::string& levelName, int loadMode)
 	BspLeafVobLists.clear();
 	ResetVobs();
 
+#ifndef PUBLIC_RELEASE
 	// Disable input here, so you can tab out
 	SetEnableGothicInput(false);
+#endif
 }
 
 
@@ -597,8 +603,10 @@ void GothicAPI::OnWorldLoaded()
 
 	LogInfo() << "Done!";
 
+#ifndef PUBLIC_RELEASE
 	// Enable input again, disabled it when loading started
 	SetEnableGothicInput(true);
+#endif
 }
 
 
@@ -1983,7 +1991,7 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 			D3DXMatrixTranspose(&world, &world);
 
 #ifndef PUBLIC_RELEASE
-			if(p->PolyStrip)
+			/*if(p->PolyStrip)
 			{
 				// Collect vertices from strip
 				std::vector<ExVertexStruct> stripVx;
@@ -2001,7 +2009,7 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 				Engine::GraphicsEngine->SetActivePixelShader("PS_Simple");
 				Engine::GraphicsEngine->DrawVertexArray(&stripVx[0], stripVx.size());
 				continue;
-			}
+			}*/
 #endif
 
 			//Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(p->PositionWS, 20.0f, D3DXVECTOR4(1,0,0,1));
@@ -2580,13 +2588,19 @@ LRESULT GothicAPI::OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 		switch(wParam)
 		{
 		case VK_F11:
-			if(!zCOption::GetOptions()->IsParameter("XNoDevMenu"))
+#ifdef PUBLIC_RELEASE
+			if (GetAsyncKeyState(VK_CONTROL))
 			{
 				Engine::AntTweakBar->SetActive(!Engine::AntTweakBar->GetActive());
 				SetEnableGothicInput(!Engine::AntTweakBar->GetActive());
-			}
-			else
+			}else
+			{
 				Engine::GraphicsEngine->OnUIEvent(BaseGraphicsEngine::EUIEvent::UI_OpenSettings);
+			}
+#else
+			Engine::AntTweakBar->SetActive(!Engine::AntTweakBar->GetActive());
+			SetEnableGothicInput(!Engine::AntTweakBar->GetActive());
+#endif
 			break;
 
 		case VK_NUMPAD1:
@@ -4005,4 +4019,29 @@ void GothicAPI::SetIntParamFromConfig(const std::string& param, int value)
 std::map<zCTexture*, ParticleRenderInfo>& GothicAPI::GetFrameParticleInfo()
 {
 	return FrameParticleInfo;
+}
+
+/** Checks if the normalmaps are right */
+bool GothicAPI::CheckNormalmapFiles()
+{
+	WIN32_FIND_DATAA data;
+	HANDLE f = FindFirstFile("system\\GD3D11\\Textures\\Replacements\\*.dds", &data);
+
+	if(f == INVALID_HANDLE_VALUE)
+	{
+		// Inform the user that he is missing normalmaps
+		MessageBoxA(NULL, "You don't seem to have any normalmaps installed. Please make sure you have put all DDS-Files from the package into the right folder:\n"
+						  "system\\GD3D11\\Textures\\Replacements\n\n"
+						  "If you don't know where to get the package, you can download them from:\n"
+						  "http://www.gothic-dx11.de/download/replacements_dds.7z\n\n"
+						  "The link has been copied to your clipboard.", "Normalmaps missing", MB_OK | MB_ICONINFORMATION);
+
+		// Put the link into the clipboard
+		clipput("http://www.gothic-dx11.de/download/replacements_dds.7z\n\n");
+		return false;
+	}
+
+	FindClose(f);
+
+	return true;
 }

@@ -35,6 +35,7 @@
 #include <algorithm>
 #include "D3D11PipelineStates.h"
 #include "zCParticleFX.h"
+#include "win32ClipboardWrapper.h"
 
 //#include "MemoryTracker.h"
 
@@ -553,7 +554,6 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 	delete WorldShadowmap1;
 	int s = Engine::GAPI->GetRendererState()->RendererSettings.ShadowMapSize;
 	WorldShadowmap1 = new RenderToDepthStencilBuffer(Device, s, s, DXGI_FORMAT_R32_TYPELESS, NULL, DXGI_FORMAT_D32_FLOAT, DXGI_FORMAT_R32_FLOAT);
-
 
 	Engine::AntTweakBar->OnResize(newSize);
 	
@@ -4348,7 +4348,7 @@ void D3D11GraphicsEngine::OnUIEvent(EUIEvent uiEvent)
 		}
 	
 		// Show settings
-		UIView->GetSettingsDialog()->SetHidden(false);
+		UIView->GetSettingsDialog()->SetHidden(!UIView->GetSettingsDialog()->IsHidden());
 
 		// Free mouse
 		Engine::GAPI->SetEnableGothicInput(false);
@@ -4988,3 +4988,4 @@ void D3D11GraphicsEngine::DrawParticleEffects()
 		}
 	}
 }
+

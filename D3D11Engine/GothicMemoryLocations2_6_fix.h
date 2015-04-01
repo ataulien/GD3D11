@@ -80,6 +80,7 @@ struct GothicMemoryLocations
 		static const unsigned int InitModel = 0x00738480;
 		static const unsigned int Enable = 0x00745D40;
 		static const unsigned int Disable = 0x00745A20;
+		static const unsigned int IsAPlayer = 0x007425A0;
 	};
 
 	struct zCView

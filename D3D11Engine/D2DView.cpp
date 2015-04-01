@@ -605,6 +605,9 @@ void D2DView::AddMessageBox(const std::string& caption, const std::string& messa
 	box->SetHeaderText(caption);
 	box->SetMessage(message);
 
+	// Free the mouse
+	Engine::GAPI->SetEnableGothicInput(false);
+
 	MessageBoxes.push_back(box);
 }
 
@@ -620,6 +623,9 @@ void D2DView::CheckDeadMessageBoxes()
 			MainSubView->DeleteChild((*it));
 
 			it = MessageBoxes.erase(it);
+
+			// Capture mouse again
+			Engine::GAPI->SetEnableGothicInput(true);
 			break; // FIXME: Loop crashes when it reaches end here, not sure why.
 		}
 	}

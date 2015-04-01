@@ -24,7 +24,7 @@ public:
 		hook_infunc
 		HookedFunctions::OriginalFunctions.original_oCSpawnManagerSpawnNpc(thisptr, npc, position, f);
 
-		if(npc->GetSleepingMode() != 0)
+		if(npc->GetSleepingMode() != 0 || npc->IsAPlayer())
 		{
 			Engine::GAPI->OnRemovedVob((zCVob *)npc, ((zCVob *)npc)->GetHomeWorld());	
 			Engine::GAPI->OnAddVob((zCVob *)npc, ((zCVob *)npc)->GetHomeWorld());

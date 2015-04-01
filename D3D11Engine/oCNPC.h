@@ -31,7 +31,7 @@ public:
 		hook_infunc	
 		HookedFunctions::OriginalFunctions.original_oCNPCInitModel(thisptr);
 
-		if(Engine::GAPI->GetSkeletalVobByVob((zCVob *)thisptr) && ((zCVob *)thisptr)->GetSleepingMode() != 0)
+		if(/*Engine::GAPI->GetSkeletalVobByVob((zCVob *)thisptr) && */((zCVob *)thisptr)->GetSleepingMode() != 0 || ((oCNPC *)thisptr)->IsAPlayer())
 		{
 			// This may causes the vob to be added and removed multiple times, but makes sure we get all changes of armor
 			Engine::GAPI->OnRemovedVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());	
@@ -57,7 +57,8 @@ public:
 		hook_infunc
 
 		// Remove vob from world
-		Engine::GAPI->OnRemovedVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());	
+		if(!((oCNPC *)thisptr)->IsAPlayer()) // Never disable the player vob
+			Engine::GAPI->OnRemovedVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());	
 
 		HookedFunctions::OriginalFunctions.original_oCNPCDisable(thisptr);
 	
@@ -67,6 +68,11 @@ public:
 	void ResetPos(const D3DXVECTOR3& pos)
 	{
 		XCALL(GothicMemoryLocations::oCNPC::ResetPos);
+	}
+
+	int IsAPlayer()
+	{
+		XCALL(GothicMemoryLocations::oCNPC::IsAPlayer);
 	}
 };
 
