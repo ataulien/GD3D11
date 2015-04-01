@@ -145,7 +145,15 @@ public:
 		LogInfo() << "Loading world!";
 		int r = HookedFunctions::OriginalFunctions.original_zCBspTreeLoadBIN(thisptr, file, skip);
 
-		zCBspTree* tree = (zCBspTree *)thisptr;
+		LoadLevelGeometry((zCBspTree *)thisptr);
+
+		return r;
+	}
+
+	/** Loads the world geometry of this BSP-Tree */
+	static void LoadLevelGeometry(zCBspTree* thisptr)
+	{
+		zCBspTree* tree = thisptr;
 		LogInfo() << "World loaded, getting Levelmesh now!";
 		LogInfo() << " - Found " << tree->GetNumPolys() << " polygons";
 
@@ -160,8 +168,6 @@ public:
 
 		// Save pointer to this
 		Engine::GAPI->GetLoadedWorldInfo()->BspTree = tree;
-
-		return r;
 	}
 
 	/** Returns only the polygons used in LOD0 of the world */
