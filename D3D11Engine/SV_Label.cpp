@@ -67,6 +67,9 @@ void SV_Label::SetCaption(const std::string& caption)
 		&CaptionLayout  // The IDWriteTextLayout interface pointer.
 		);
 
+	if(!CaptionLayout)
+		return;
+
 	DWRITE_TEXT_RANGE range;
 	range.startPosition = 0;
 	range.length = caption.size();

@@ -36,7 +36,7 @@ public:
 	{
 		HookedFunctions::OriginalFunctions.original_oCGameEnterWorld(thisptr, playerVob, changePlayerPos, startpoint);
 
-		if(!Engine::GAPI->GetLoadedWorldInfo()->BspTree) // Happens in Gothic II - Johannes Edition, zCBspTree::LoadBIN isn't called for some reason
+		/*if(!Engine::GAPI->GetLoadedWorldInfo()->BspTree) // Happens in Gothic II - Johannes Edition, zCBspTree::LoadBIN isn't called for some reason
 		{
 			zCWorld* w = (zCWorld *)thisptr;
 
@@ -44,9 +44,14 @@ public:
 
 			// Load the world-geometry now
 			zCBspTree::LoadLevelGeometry(w->GetBspTree());
-		}
+		}*/
 
 		Engine::GAPI->OnWorldLoaded();
+
+		// Re-Add the player npc to the world because it sometimes would be invisible after a world-change
+		Engine::GAPI->OnRemovedVob((zCVob *)oCGame::GetPlayer(), ((zCVob *)oCGame::GetPlayer())->GetHomeWorld());	
+		Engine::GAPI->OnAddVob((zCVob *)oCGame::GetPlayer(), ((zCVob *)oCGame::GetPlayer())->GetHomeWorld());
+		
 	}
 
 	void TestKey(int key)

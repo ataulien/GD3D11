@@ -512,6 +512,9 @@ public:
 
 	/** Returns the frame particle info collected from all DrawParticleFX-Calls */
 	std::map<zCTexture*, ParticleRenderInfo>& GetFrameParticleInfo();
+
+	/** Checks if the normalmaps are there */
+	bool CheckNormalmapFiles();
 private:
 	/** Cleans empty BSPNodes */
 	void CleanBSPNodes();

@@ -482,11 +482,11 @@ struct GothicRendererSettings
 		EnableAutoupdates = true;
 		FastShadows = false;
 		MaxNumFaces = 0;
-		IndoorVobDrawRadius = 3000.0f;
-		OutdoorVobDrawRadius = 25000.0f;
+		IndoorVobDrawRadius = 5000.0f;
+		OutdoorVobDrawRadius = 30000.0f;
 		SkeletalMeshDrawRadius = 6000.0f;
 		VisualFXDrawRadius = 8000.0f;
-		OutdoorSmallVobDrawRadius = 8000.0f;
+		OutdoorSmallVobDrawRadius = 10000.0f;
 		SmallVobSize = 1500.0f;
 
 		
@@ -520,7 +520,7 @@ struct GothicRendererSettings
 		WireframeWorld = false;
 		DrawShadowGeometry = true;
 		FixViewFrustum = false;
-		DisableWatermark = false;
+		DisableWatermark = true;
 		DisableRendering = false;
 		EnableEditorPanel = false;
 		EnableSMAA = true;
@@ -531,9 +531,9 @@ struct GothicRendererSettings
 		ShadowMapSize = 2048;
 		WorldShadowRangeScale = 8.0f;
 
-		ShadowStrength = 0.60f;
-		ShadowAOStrength = 0.70f;
-		WorldAOStrength = 0.70f;
+		ShadowStrength = 0.40f;
+		ShadowAOStrength = 0.50f;
+		WorldAOStrength = 0.50f;
 
 		BloomStrength = 1.0f;
 		GlobalWindStrength = 1.0f;
