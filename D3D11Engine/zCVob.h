@@ -87,7 +87,12 @@ public:
 		return *(zCWorld **)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_HomeWorld);
 	}
 
-	
+	int GetSleepingMode()
+	{
+		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_SleepingMode);
+
+		return (flags & GothicMemoryLocations::zCVob::MASK_SkeepingMode);
+	}
 
 	bool GetShowVisual()
 	{

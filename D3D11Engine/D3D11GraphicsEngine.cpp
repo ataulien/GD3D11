@@ -34,6 +34,7 @@
 #include "D2DEditorView.h"
 #include <algorithm>
 #include "D3D11PipelineStates.h"
+#include "zCParticleFX.h"
 
 //#include "MemoryTracker.h"
 
@@ -1505,7 +1506,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		DrawDecalList(decals, false);
 	}
 
-	Engine::GAPI->DrawParticlesSimple();
+	DrawParticleEffects();
+	//Engine::GAPI->DrawParticlesSimple();
 
 	// Draw debug lines
 	LineRenderer->Flush();
@@ -1785,25 +1787,24 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	{
 		INT2 camSection = WorldConverter::GetSectionOfPos(Engine::GAPI->GetCameraPosition());
 		Context->PSSetShader(NULL, NULL, NULL);
-		WorldMeshSectionInfo& section = Engine::GAPI->GetWorldSections()[camSection.x][camSection.y];
 
-		for(std::map<MeshKey, WorldMeshInfo*>::iterator itm = section.WorldMeshes.begin(); itm != section.WorldMeshes.end();itm++)
+		for(std::list<std::pair<MeshKey, WorldMeshInfo *>>::iterator it = meshList.begin(); it != meshList.end(); it++)
 		{
-			if(!(*itm).first.Texture)
+			if(!(*it).first.Texture)
 				continue;
 
-			if((*itm).first.Texture->HasAlphaChannel())
+			if((*it).first.Texture->HasAlphaChannel())
 				continue; // Don't pre-render stuff with alpha channel
 
-			if((*itm).first.Info->MaterialType == MaterialInfo::MT_Water)
+			if((*it).first.Info->MaterialType == MaterialInfo::MT_Water)
 				continue; // Don't pre-render water
 
-			if((*itm).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
+			if((*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
 				continue; // Don't pre-render tesselated surfaces
 
 			DrawVertexBufferIndexedUINT(NULL, NULL, 
-				(*itm).second->Indices.size(),
-				(*itm).second->BaseIndexLocation);
+				(*it).second->Indices.size(),
+				(*it).second->BaseIndexLocation);
 		}
 	}
 
@@ -4851,4 +4852,139 @@ XRESULT D3D11GraphicsEngine::OnVobRemovedFromWorld(zCVob* vob)
 		UIView->GetEditorPanel()->OnVobRemovedFromWorld(vob);
 
 	return XR_SUCCESS;
+}
+
+/** Draws the particle-effects */
+void D3D11GraphicsEngine::DrawParticleEffects()
+{
+	SetDefaultStates();
+
+	// Copy scene behind the particle systems
+	//PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), PfxRenderer->GetTempBuffer()->GetRenderTargetView());
+
+	// Bind it to the second slot
+	//PfxRenderer->GetTempBuffer()->BindToPixelShader(Context, 2);
+
+	D3D11PShader* distPS = ShaderManager->GetPShader("PS_ParticleDistortion");
+
+	RefractionInfoConstantBuffer ricb;
+	ricb.RI_Projection = Engine::GAPI->GetProjectionMatrix();
+	ricb.RI_ViewportSize = float2(Resolution.x, Resolution.y);
+	ricb.RI_Time = Engine::GAPI->GetTimeSeconds();
+	ricb.RI_CameraPosition = Engine::GAPI->GetCameraPosition();
+
+	distPS->GetConstantBuffer()[0]->UpdateBuffer(&ricb);
+	distPS->GetConstantBuffer()[0]->BindToPixelShader(0);
+
+	GothicBlendStateInfo bsi = Engine::GAPI->GetRendererState()->BlendState;
+	GothicRendererState& state = *Engine::GAPI->GetRendererState();
+
+	state.BlendState.SetAdditiveBlending();
+	state.BlendState.SetDirty();
+	
+	state.DepthState.DepthWriteEnabled = false;
+	state.DepthState.SetDirty();
+	state.DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS_EQUAL;
+	
+	state.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
+	state.RasterizerState.SetDirty();
+
+	SetActivePixelShader("PS_Simple");
+	PS_Simple->Apply();
+
+	D3D11VShader* vShader = ShaderManager->GetVShader("VS_ExInstanced");
+
+	D3DXMATRIX& world = Engine::GAPI->GetRendererState()->TransformState.TransformWorld;
+	D3DXMATRIX& view = Engine::GAPI->GetRendererState()->TransformState.TransformView;
+	D3DXMATRIX& proj = Engine::GAPI->GetProjectionMatrix();
+
+	
+	VS_ExConstantBuffer_PerFrame cb;
+	cb.View = view;
+	cb.Projection = proj;
+
+	VS_ExConstantBuffer_PerInstance cb2;
+	cb2.World = world;
+
+	vShader->GetConstantBuffer()[0]->UpdateBuffer(&cb);
+	vShader->GetConstantBuffer()[0]->BindToVertexShader(0);
+
+	//vShader->GetConstantBuffer()[1]->UpdateBuffer(&cb2);
+	//vShader->GetConstantBuffer()[1]->BindToVertexShader(1);
+
+	vShader->Apply();
+
+
+	// Get visible particles
+	std::vector<zCVob*> pfxList;
+	std::map<zCTexture*, std::vector<zCVob*>> pfxByTexture;
+
+	Engine::GAPI->GetVisibleParticleEffectsList(pfxList);
+
+	// Sort them by texture (slow?)
+	for(int i=0;i<pfxList.size();i++)
+	{
+		zCParticleFX* fx = (zCParticleFX*)pfxList[i]->GetVisual();
+
+		pfxByTexture[fx->GetEmitter()->GetVisTexture()].push_back(pfxList[i]);
+	}
+
+	// Draw them
+	for(auto it = pfxByTexture.begin(); it != pfxByTexture.end(); it++)
+	{
+		ParticleFrameData data;
+		data.NeededSize = 0;
+		data.BufferPosition = 0;
+
+		DynamicInstancingBuffer->Map(BaseVertexBuffer::EMapFlags::M_WRITE_DISCARD, (void **)&data.Buffer, &data.BufferSize);
+		
+		// Fill the buffer with instances
+		for(int i=0;i<(*it).second.size();i++)
+		{
+			zCParticleFX* fx = (zCParticleFX*)(*it).second[i]->GetVisual();
+			
+			Engine::GAPI->DrawParticleFX((*it).second[i], fx, data);
+		}
+
+		DynamicInstancingBuffer->Unmap();
+
+		// Draw particles
+
+		zCTexture* tx = (*it).first;
+		ParticleRenderInfo& inf = Engine::GAPI->GetFrameParticleInfo()[tx]; // FIXME: This only contains one element!
+
+		if(tx)
+		{
+			// Bind it
+			if(tx->CacheIn(0.6f) == zRES_CACHED_IN)
+				tx->Bind(0);
+			else
+				continue;
+		}
+
+		GothicBlendStateInfo& blendState = inf.BlendState;
+
+		// Setup blend state
+		state.BlendState = blendState;
+		state.BlendState.SetDirty();
+		UpdateRenderStates();
+
+		// Draw particles
+		DrawInstanced(QuadVertexBuffer, QuadIndexBuffer, 6, DynamicInstancingBuffer, sizeof(ParticleInstanceInfo), std::min(data.NeededSize, data.BufferSize) / sizeof(ParticleInstanceInfo));
+
+		Engine::GAPI->GetFrameParticleInfo().clear(); // FIXME: This only contains one element!
+
+
+		// Recreate for next frame if needed
+		if(data.NeededSize > data.BufferSize)
+		{
+			LogInfo() << "Particle Instancing-Buffer too small (" << data.BufferSize << "), need " << data.NeededSize << " bytes. Recreating buffer.";
+
+			// Buffer too small, recreate it
+			delete DynamicInstancingBuffer;
+			DynamicInstancingBuffer = new D3D11VertexBuffer();
+
+			DynamicInstancingBuffer->Init(NULL, data.NeededSize, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		}
+	}
 }

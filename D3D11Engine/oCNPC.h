@@ -20,15 +20,18 @@ public:
 		//HookedFunctions::OriginalFunctions.original_oCNPCEnable = (oCNPCEnable)DetourFunction((BYTE *)GothicMemoryLocations::oCNPC::Enable, (BYTE *)oCNPC::hooked_oCNPCEnable);
 #endif
 
+		HookedFunctions::OriginalFunctions.original_oCNPCEnable = (oCNPCEnable)DetourFunction((BYTE *)GothicMemoryLocations::oCNPC::Enable, (BYTE *)oCNPC::hooked_oCNPCEnable);
+		HookedFunctions::OriginalFunctions.original_oCNPCDisable = (GenericThiscall)DetourFunction((BYTE *)GothicMemoryLocations::oCNPC::Disable, (BYTE *)oCNPC::hooked_oCNPCDisable);
+
 		HookedFunctions::OriginalFunctions.original_oCNPCInitModel = (GenericThiscall)DetourFunction((BYTE *)GothicMemoryLocations::oCNPC::InitModel, (BYTE *)oCNPC::hooked_oCNPCInitModel);
 	}
-
+	 
 	static void __fastcall hooked_oCNPCInitModel(void* thisptr, void* unknwn)
 	{
 		hook_infunc	
 		HookedFunctions::OriginalFunctions.original_oCNPCInitModel(thisptr);
 
-		if(Engine::GAPI->GetSkeletalVobByVob((zCVob *)thisptr))
+		if(Engine::GAPI->GetSkeletalVobByVob((zCVob *)thisptr) && ((zCVob *)thisptr)->GetSleepingMode() != 0)
 		{
 			// This may causes the vob to be added and removed multiple times, but makes sure we get all changes of armor
 			Engine::GAPI->OnRemovedVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());	
@@ -43,8 +46,21 @@ public:
 		hook_infunc
 		HookedFunctions::OriginalFunctions.original_oCNPCEnable(thisptr, position);
 
+		// Re-Add if needed
 		Engine::GAPI->OnRemovedVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());	
 		Engine::GAPI->OnAddVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());
+		hook_outfunc
+	}
+
+	static void __fastcall hooked_oCNPCDisable(void* thisptr, void* unknwn)
+	{
+		hook_infunc
+
+		// Remove vob from world
+		Engine::GAPI->OnRemovedVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());	
+
+		HookedFunctions::OriginalFunctions.original_oCNPCDisable(thisptr);
+	
 		hook_outfunc
 	}
 

@@ -736,7 +736,8 @@ void GothicAPI::DrawWorldMeshNaive()
 
 		for(std::list<SkeletalVobInfo *>::iterator it = SkeletalMeshVobs.begin(); it != SkeletalMeshVobs.end(); it++)
 		{
-			if(!(*it)->VisualInfo)
+			// Don't render if sleeping and has skeletal meshes available
+			if(!(*it)->VisualInfo)// || ((*it)->Vob->GetSleepingMode() == 0 && !((SkeletalMeshVisualInfo *)(*it)->VisualInfo)->SkeletalMeshes.empty()))
 				continue;
 
 			INT2 s = WorldConverter::GetSectionOfPos((*it)->Vob->GetPositionWorld());
@@ -804,7 +805,7 @@ void GothicAPI::DrawWorldMeshNaive()
 /** Draws particles, in a simple way */
 void GothicAPI::DrawParticlesSimple()
 {
-	if(RendererState.RendererSettings.DrawParticleEffects)
+	/*if(RendererState.RendererSettings.DrawParticleEffects)
 	{
 		D3DXVECTOR3 camPos = GetCameraPosition();
 
@@ -848,12 +849,23 @@ void GothicAPI::DrawParticlesSimple()
 			if((*it)->GetVisual())
 			{
 				int mod = dist > RendererState.RendererSettings.IndoorVobDrawRadius ? 2 : 1;
-				DrawParticleFX((*it), (zCParticleFX *)(*it)->GetVisual(), mod);
+				DrawParticleFX((*it), (zCParticleFX *)(*it)->GetVisual());
 			}
-		}
+		}		
+		
+		DrawTestInstances();
+	}*/
+}
 
-		// Draw decals
-		/*for(std::list<zCVob *>::iterator it = DecalVobs.begin(); it != DecalVobs.end(); it++)
+/** Returns a list of visible particle-effects */
+void GothicAPI::GetVisibleParticleEffectsList(std::vector<zCVob*>& pfxList)
+{
+	if(RendererState.RendererSettings.DrawParticleEffects)
+	{
+		D3DXVECTOR3 camPos = GetCameraPosition();
+
+		// now it is save to render
+		for(std::list<zCVob *>::iterator it = ParticleEffectVobs.begin(); it != ParticleEffectVobs.end(); it++)
 		{
 			INT2 s = WorldConverter::GetSectionOfPos((*it)->GetPositionWorld());
 
@@ -861,14 +873,14 @@ void GothicAPI::DrawParticlesSimple()
 			//	continue;
 
 			float dist = D3DXVec3Length(&((*it)->GetPositionWorld() - camPos));
-			if(dist > RendererState.RendererSettings.OutdoorSmallVobDrawRadius)
+			if(dist > RendererState.RendererSettings.VisualFXDrawRadius)
 				continue;
 
-			Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator((*it)->GetPositionWorld(), 20.0f, D3DXVECTOR4(1,0,0,1));
-		}*/
-		
-		
-		DrawTestInstances();
+			if((*it)->GetVisual())
+			{
+				pfxList.push_back((*it));
+			}
+		}	
 	}
 }
 
@@ -1467,6 +1479,17 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 			if(str.empty()) // Happens when the model has no skeletal-mesh
 				str = mds;
 
+			if(str == "HAMMEL_BODY")
+			{
+				str == "SHEEP_BODY"; // FIXME: HAMMEL_BODY seems to have fucked up bones, but only this model! Replace with usual sheep before I fix this
+				if(!SkeletalMeshVisuals[str])
+				{
+					RegisteredVobs.erase(vob);
+					SkeletalMeshVisuals.erase(str);
+					return; // Just don't load it here!
+				}
+			}
+
 			SkeletalMeshVisualInfo* mi = SkeletalMeshVisuals[str];
 
 			if(!mi || mi->Meshes.empty())
@@ -1693,8 +1716,8 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 				g->SetupVS_ExConstantBuffer();
 				
 
-				bool isMMS = false;
-				if(distance < 2000 && std::string(node->NodeVisual->GetFileExtension(0)) == ".MMS")
+				bool isMMS = std::string(node->NodeVisual->GetFileExtension(0)) == ".MMS";
+				if(distance < 2000 && isMMS)
 				{
 					zCMorphMesh* mm = (zCMorphMesh *)node->NodeVisual;
 					mm->GetTexAniState()->UpdateTexList();
@@ -1721,6 +1744,13 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 						DrawMorphMesh(mm, fatness * 0.35f);
 						continue;
 					}
+				}
+
+				// Update the head textures in case this is a morph-mesh
+				if(isMMS)
+				{
+					zCMorphMesh* mm = (zCMorphMesh *)node->NodeVisual;
+					mm->GetTexAniState()->UpdateTexList();
 				}
 
 				g->SetupVS_ExPerInstanceConstantBuffer();
@@ -1776,7 +1806,7 @@ void GothicAPI::OnParticleFXDeleted(zCParticleFX* pfx)
 }
 
 /** Draws a zCParticleFX */
-void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod)
+void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameData& data)
 {
 	// Set the current vob
 	//fx->SetVisualUsedBy(source);
@@ -1852,7 +1882,7 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 			break;
 		}
 
-		FrameParticleInfo[texture] = inf;
+		
 		std::vector<ParticleInstanceInfo>& part = FrameParticles[texture];
 
 		// Check for kill
@@ -2028,6 +2058,14 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 			ii.color = color.ToDWORD();
 			part.push_back(ii);
 
+			if(data.BufferPosition + sizeof(ii) <= data.BufferSize)
+			{
+				memcpy(data.Buffer + data.BufferPosition, &ii, sizeof(ii)); // Copy instance info into buffer
+			}
+
+			data.BufferPosition += sizeof(ii); // Increase buffer position to next element
+			data.NeededSize += sizeof(ii); // Update the buffersize next frame, skip the particle effect for now
+
 			//if(FrameParticles[texture].size() > 1024)
 			//	break;
 
@@ -2036,7 +2074,10 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod
 			i++;
 		}
 
+		FrameParticleInfo[texture] = inf;
 	}
+
+
 
 	// Create new particles?
 	fx->CreateParticlesUpdateDependencies();
@@ -3958,4 +3999,10 @@ int GothicAPI::GetIntParamFromConfig(const std::string& param)
 void GothicAPI::SetIntParamFromConfig(const std::string& param, int value)
 {
 	ConfigIntValues[param] = value;
+}
+
+/** Returns the frame particle info collected from all DrawParticleFX-Calls */
+std::map<zCTexture*, ParticleRenderInfo>& GothicAPI::GetFrameParticleInfo()
+{
+	return FrameParticleInfo;
 }
