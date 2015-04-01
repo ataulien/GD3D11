@@ -12,7 +12,7 @@ class zCCamera;
 class zCVob;
 class zSTRING;
 class zCBspBase;
-class oCNpc;
+class oCNPC;
 class zCPolygon;
 
 template <class T> 
@@ -26,7 +26,7 @@ typedef void (__thiscall* oCNPCEnable)(void*, D3DXVECTOR3&);
 typedef void (__thiscall* oCWorldInsertVobInWorld)(void*, zCVob*);
 typedef void (__thiscall* zCBspTreeAddVob)(void*, zCVob*);
 typedef void (__thiscall* zCWorldLoadWorld)(void*, const zSTRING& fileName, const int loadMode);
-typedef void (__thiscall* oCGameEnterWorld)(void*, oCNpc* playerVob, int changePlayerPos, const zSTRING& startpoint);
+typedef void (__thiscall* oCGameEnterWorld)(void*, oCNPC* playerVob, int changePlayerPos, const zSTRING& startpoint);
 typedef void (__thiscall* zCWorldVobRemovedFromWorld)(void*, zCVob*);
 typedef D3DXMATRIX (__cdecl* Alg_Rotation3DNRad)(const D3DXVECTOR3& axis, const float angle);
 typedef int (__cdecl* vidGetFPSRate)(void);
@@ -46,8 +46,8 @@ typedef int (__thiscall* CGameManagerExitGame)(void*);
 typedef const zSTRING* (__thiscall* zCVisualGetFileExtension)(void*, int);
 typedef long (__stdcall* zCExceptionHandlerUnhandledExceptionFilter)(void*);
 typedef void (__thiscall* zCWorldDisposeVobs)(void *, zCTree<zCVob> *);
-typedef void (__thiscall* oCSpawnManagerSpawnNpc)(void*, class oCNpc *, const D3DXVECTOR3&, float);
-typedef void (__thiscall* oCSpawnManagerInsertNpc)(void*, class oCNpc *, const D3DXVECTOR3&);
+typedef void (__thiscall* oCSpawnManagerSpawnNpc)(void*, oCNPC *, const D3DXVECTOR3&, float);
+typedef void (__thiscall* oCSpawnManagerInsertNpc)(void*, oCNPC *, const D3DXVECTOR3&);
 typedef void (__thiscall* zCVobSetVisual)(void*, zCVisual*);
 typedef int (__thiscall* zCTex_D3DXTEX_BuildSurfaces)(void*, int);
 typedef int (__thiscall* zCTextureLoadResourceData)(void*);
@@ -102,6 +102,7 @@ struct HookedFunctionInfo
 	GenericThiscall original_zCQuadMarkConstructor;
 	oCSpawnManagerInsertNpc original_oCSpawnManagerInsertNpc;
 	oCNPCEnable original_oCNPCEnable;
+	GenericThiscall original_oCNPCDisable;
 	GenericThiscall original_oCNPCInitModel;
 	oCWorldDisableVob original_oCWorldDisableVob;
 	oCWorldEnableVob original_oCWorldEnableVob;

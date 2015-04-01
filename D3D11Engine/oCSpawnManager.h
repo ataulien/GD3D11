@@ -6,6 +6,7 @@
 #include "BaseGraphicsEngine.h"
 #include "oCGame.h"
 #include "zCVob.h"
+#include "oCNPC.h"
 
 class oCSpawnManager
 {
@@ -18,13 +19,16 @@ public:
 	}
 
 	/** Reads config stuff */
-	static void __fastcall hooked_oCSpawnManagerSpawnNpc(void* thisptr, void* unknwn, class oCNpc* npc, const D3DXVECTOR3& position, float f)
+	static void __fastcall hooked_oCSpawnManagerSpawnNpc(void* thisptr, void* unknwn, oCNPC* npc, const D3DXVECTOR3& position, float f)
 	{
 		hook_infunc
 		HookedFunctions::OriginalFunctions.original_oCSpawnManagerSpawnNpc(thisptr, npc, position, f);
 
-		Engine::GAPI->OnRemovedVob((zCVob *)npc, ((zCVob *)npc)->GetHomeWorld());	
-		Engine::GAPI->OnAddVob((zCVob *)npc, ((zCVob *)npc)->GetHomeWorld());
+		if(npc->GetSleepingMode() != 0)
+		{
+			Engine::GAPI->OnRemovedVob((zCVob *)npc, ((zCVob *)npc)->GetHomeWorld());	
+			Engine::GAPI->OnAddVob((zCVob *)npc, ((zCVob *)npc)->GetHomeWorld());
+		}
 		hook_outfunc
 	}
 };

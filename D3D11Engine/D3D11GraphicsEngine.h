@@ -16,7 +16,7 @@ enum D3D11ENGINE_RENDER_STAGE
 
 const int DRAWVERTEXARRAY_BUFFER_SIZE = 2048 * sizeof(ExVertexStruct);
 const int NUM_MAX_BONES = 96;
-const int INSTANCING_BUFFER_SIZE = sizeof(D3DXMATRIX) * 1024;
+const int INSTANCING_BUFFER_SIZE = sizeof(D3DXMATRIX) * 2048;
 
 class D3D11VShader;
 class D3D11PShader;
@@ -246,6 +246,9 @@ public:
 
 	/** Draws the given list of decals */
 	void DrawDecalList(const std::vector<zCVob *>& decals, bool lighting);
+
+	/** Draws the particle-effects */
+	void DrawParticleEffects();
 
 	/** Draws underwater effects */
 	void DrawUnderwaterEffects();

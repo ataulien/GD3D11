@@ -78,6 +78,8 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int ResetPos = 0x006824D0;
 		static const unsigned int InitModel = 0x00738480;
+		static const unsigned int Enable = 0x00745D40;
+		static const unsigned int Disable = 0x00745A20;
 	};
 
 	struct zCView
@@ -310,6 +312,9 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_WorldPosY = 0x58;
 		static const unsigned int Offset_WorldPosZ = 0x68;
 
+		static const unsigned int Offset_SleepingMode = 0x10C;
+		static const unsigned int MASK_SkeepingMode = 3;
+
 		
 	};
 
@@ -438,5 +443,6 @@ struct GothicMemoryLocations
 		static const unsigned int GetActiveSkyController = 0x006203A0;
 		static const unsigned int DisposeWorld = 0x00623D30;
 		static const unsigned int DisposeVobs = 0x00623960;
+		static const unsigned int Offset_BspTree = 0x1AC;
 	};
 };

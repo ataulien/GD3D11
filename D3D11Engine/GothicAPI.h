@@ -105,7 +105,13 @@ struct MaterialInfo
 	Buffer buffer;
 };
 
-
+struct ParticleFrameData
+{
+	unsigned char* Buffer;
+	unsigned int BufferPosition;
+	unsigned int BufferSize;
+	unsigned int NeededSize;
+};
 
 /** Class used to communicate between Gothic and the Engine */
 class zCPolygon;
@@ -209,10 +215,13 @@ public:
 	void DrawSkeletalMeshInfo(zCMaterial* mat, SkeletalMeshInfo* msh, SkeletalMeshVisualInfo* vis, std::vector<D3DXMATRIX>& transforms, float fatness = 1.0f);
 
 	/** Draws a zCParticleFX */
-	void DrawParticleFX(zCVob* source, zCParticleFX* fx, int renderNumMod = 1);
+	void DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameData& data);
 
 	/** Gets a list of visible decals */
 	void GetVisibleDecalList(std::vector<zCVob *>& decals);
+
+	/** Returns a list of visible particle-effects */
+	void GetVisibleParticleEffectsList(std::vector<zCVob*>& pfxList);
 
 	/** Sets the world matrix */
 	void SetWorldTransform(const D3DXMATRIX& world);
@@ -501,6 +510,8 @@ public:
 	/** Returns if the given vob is registered in the world */
 	SkeletalVobInfo* GetSkeletalVobByVob(zCVob* vob);
 
+	/** Returns the frame particle info collected from all DrawParticleFX-Calls */
+	std::map<zCTexture*, ParticleRenderInfo>& GetFrameParticleInfo();
 private:
 	/** Cleans empty BSPNodes */
 	void CleanBSPNodes();

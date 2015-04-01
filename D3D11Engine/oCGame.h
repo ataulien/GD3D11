@@ -31,9 +31,20 @@ public:
 		HookedFunctions::OriginalFunctions.original_oCGameEnterWorld = (oCGameEnterWorld)DetourFunction((BYTE *)GothicMemoryLocations::oCGame::EnterWorld, (BYTE *)oCGame::hooked_EnterWorld);
 	}
 
-	static void __fastcall hooked_EnterWorld(void* thisptr, void* unknwn, oCNpc* playerVob, int changePlayerPos, const zSTRING& startpoint)
+	static void __fastcall hooked_EnterWorld(void* thisptr, void* unknwn, oCNPC* playerVob, int changePlayerPos, const zSTRING& startpoint)
 	{
 		HookedFunctions::OriginalFunctions.original_oCGameEnterWorld(thisptr, playerVob, changePlayerPos, startpoint);
+
+		if(!Engine::GAPI->GetLoadedWorldInfo()->BspTree) // Happens in Gothic II - Johannes Edition, zCBspTree::LoadBIN isn't called for some reason
+		{
+			zCWorld* w = (zCWorld *)thisptr;
+
+			LogWarn() << "Weird ZEN-File: zCBspTree::LoadBIN wasn't called, trying to load geometry now...";
+
+			// Load the world-geometry now
+			zCBspTree::LoadLevelGeometry(w->GetBspTree());
+		}
+
 		Engine::GAPI->OnWorldLoaded();
 	}
 
