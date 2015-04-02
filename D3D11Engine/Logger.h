@@ -131,7 +131,7 @@ public:
 			Info << Type << ": ["<< File << "("<<Line<<"), "<<Function<<"]: "; 
 		}else
 		{
-			Info << Type << ":";
+			Info << Type << ": ";
 		}
 
 		MessageBoxStyle=MessageBox;

@@ -1783,6 +1783,12 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			if(b.first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND)
 				return true; // Render alpha last
 
+			if(a.first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD)
+				return false;
+
+			if(b.first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD)
+				return true; // Render alpha last
+
 			return a.first.Texture < b.first.Texture;
 		}
 	};
@@ -1846,9 +1852,14 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			BindShaderForTexture((*it).first.Texture, false, (*it).first.Material->GetAlphaFunc());
 			
 			// Check for alphablending on world mesh
-			if((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND && !Engine::GAPI->GetRendererState()->BlendState.BlendEnabled)
+			if(((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND || (*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD) && !Engine::GAPI->GetRendererState()->BlendState.BlendEnabled)
 			{
-				Engine::GAPI->GetRendererState()->BlendState.SetAlphaBlending();
+				if((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND)
+					Engine::GAPI->GetRendererState()->BlendState.SetAlphaBlending();
+
+				if((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD)
+					Engine::GAPI->GetRendererState()->BlendState.SetAdditiveBlending();
+
 				Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 
 				Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = false;

@@ -64,6 +64,17 @@ extern "C" HRESULT WINAPI HookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *l
 		return hr;
 }
 
+extern "C" void WINAPI HookedAcquireDDThreadLock()
+{
+	// Do nothing
+	LogInfo() << "AcquireDDThreadLock called!";
+}
+
+extern "C" void WINAPI HookedReleaseDDThreadLock()
+{
+	// Do nothing
+	LogInfo() << "ReleaseDDThreadLock called!";
+}
 
 struct ddraw_dll
 {
