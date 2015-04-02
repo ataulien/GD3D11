@@ -99,7 +99,7 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 	if( !(projectedTexCoords.x > 1 || projectedTexCoords.y > 1 ||
 		projectedTexCoords.x < 0 || projectedTexCoords.y < 0))
 	{
-		float bias = lerp(0.00005f, 0.0001f, distance / 80000);
+		float bias = lerp(0.00005f, 0.0001f, distance / 1000);
 		
 #if SHD_FILTER_16TAP_PCF
 		//return shadowmap.SampleCmpLevelZero( samplerState, projectedTexCoords.xy, vShadowSamplingPos.z - 0.00001f);

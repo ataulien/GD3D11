@@ -32,5 +32,10 @@ public:
 		// TODO: Implement!
 	}
 
+	float GetGammaValue()
+	{
+		XCALL(GothicMemoryLocations::zCRndD3D::Vid_GetGammaCorrection);
+	}
 
+	static zCRndD3D* GetRenderer(){return *(zCRndD3D**)GothicMemoryLocations::GlobalObjects::zRenderer;}
 };

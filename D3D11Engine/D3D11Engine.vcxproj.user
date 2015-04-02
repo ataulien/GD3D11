@@ -8,7 +8,7 @@
     <LocalDebuggerCommand>$(G2_SYSTEM_PATH)\Gothic2.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(G2_SYSTEM_PATH)</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerCommandArguments>-XNoUpdate -devmode</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-XNoUpdate -devmode -zwindow</LocalDebuggerCommandArguments>
     <LocalDebuggerEnvironment>
     </LocalDebuggerEnvironment>
   </PropertyGroup>

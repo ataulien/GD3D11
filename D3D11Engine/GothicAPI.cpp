@@ -35,7 +35,7 @@
 #include "UpdateCheck.h"
 #include "zCQuadMark.h"
 #include "zCOption.h"
-
+#include "zCRndD3D.h"
 #include "win32ClipboardWrapper.h"
 
 /** Writes this info to a file */
@@ -813,7 +813,9 @@ void GothicAPI::DrawWorldMeshNaive()
 /** Draws particles, in a simple way */
 void GothicAPI::DrawParticlesSimple()
 {
-	/*if(RendererState.RendererSettings.DrawParticleEffects)
+	ParticleFrameData data;
+
+	if(RendererState.RendererSettings.DrawParticleEffects)
 	{
 		D3DXVECTOR3 camPos = GetCameraPosition();
 
@@ -836,11 +838,11 @@ void GothicAPI::DrawParticlesSimple()
 		}
 
 		// Update particles
-		for(unsigned int i=0;i<renderedParticleFXs.size();i++)
+		/*for(unsigned int i=0;i<renderedParticleFXs.size();i++)
 		{
 			// Update here, since UpdateParticleFX can actually delete the particle FX and all its vobs
 			// ((zCParticleFX *)renderedParticleFXs[i]->GetVisual())->UpdateParticleFX();
-		}
+		}*/
 
 		// now it is save to render
 		for(std::list<zCVob *>::iterator it = ParticleEffectVobs.begin(); it != ParticleEffectVobs.end(); it++)
@@ -857,12 +859,14 @@ void GothicAPI::DrawParticlesSimple()
 			if((*it)->GetVisual())
 			{
 				int mod = dist > RendererState.RendererSettings.IndoorVobDrawRadius ? 2 : 1;
-				DrawParticleFX((*it), (zCParticleFX *)(*it)->GetVisual());
+
+				
+				DrawParticleFX((*it), (zCParticleFX *)(*it)->GetVisual(), data);
 			}
 		}		
 		
 		DrawTestInstances();
-	}*/
+	}
 }
 
 /** Returns a list of visible particle-effects */
@@ -2066,14 +2070,14 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 			ii.color = color.ToDWORD();
 			part.push_back(ii);
 
-			if(data.BufferPosition + sizeof(ii) <= data.BufferSize)
+			/*if(data.BufferPosition + sizeof(ii) <= data.BufferSize)
 			{
 				memcpy(data.Buffer + data.BufferPosition, &ii, sizeof(ii)); // Copy instance info into buffer
 			}
 
 			data.BufferPosition += sizeof(ii); // Increase buffer position to next element
 			data.NeededSize += sizeof(ii); // Update the buffersize next frame, skip the particle effect for now
-
+			*/
 			//if(FrameParticles[texture].size() > 1024)
 			//	break;
 
@@ -3727,6 +3731,9 @@ XRESULT GothicAPI::SaveMenuSettings(const std::string& file)
 
 	fwrite(&s.EnableAutoupdates, sizeof(s.EnableAutoupdates), 1, f);
 
+	fwrite(&s.GammaValue, sizeof(s.GammaValue), 1, f);
+	fwrite(&s.BrightnessValue, sizeof(s.BrightnessValue), 1, f);
+
 	fclose(f);
 
 	return XR_SUCCESS;
@@ -3792,6 +3799,9 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 	fread(&s.HbaoSettings.Enabled, sizeof(s.HbaoSettings.Enabled), 1, f);
 
 	fread(&s.EnableAutoupdates, sizeof(s.EnableAutoupdates), 1, f);
+
+	fread(&s.GammaValue, sizeof(s.GammaValue), 1, f);
+	fread(&s.BrightnessValue, sizeof(s.BrightnessValue), 1, f);
 
 	fclose(f);
 
@@ -4024,10 +4034,12 @@ std::map<zCTexture*, ParticleRenderInfo>& GothicAPI::GetFrameParticleInfo()
 /** Checks if the normalmaps are right */
 bool GothicAPI::CheckNormalmapFiles()
 {
+	/** If the directory is empty, FindFirstFile() will only find the entry for 
+		the directory itself (".") and FindNextFile() will fail with ERROR_FILE_NOT_FOUND. **/
+
 	WIN32_FIND_DATAA data;
 	HANDLE f = FindFirstFile("system\\GD3D11\\Textures\\Replacements\\*.dds", &data);
-
-	if(f == INVALID_HANDLE_VALUE)
+	if(!FindNextFile(f, &data))
 	{
 		// Inform the user that he is missing normalmaps
 		MessageBoxA(NULL, "You don't seem to have any normalmaps installed. Please make sure you have put all DDS-Files from the package into the right folder:\n"
@@ -4044,4 +4056,17 @@ bool GothicAPI::CheckNormalmapFiles()
 	FindClose(f);
 
 	return true;
+}
+
+/** Returns the gamma value from the ingame menu */
+float GothicAPI::GetGammaValue()
+{
+	return RendererState.RendererSettings.GammaValue;
+	//return zCRndD3D::GetRenderer()->GetGammaValue();
+}
+
+/** Returns the brightness value from the ingame menu */
+float GothicAPI::GetBrightnessValue()
+{
+	return RendererState.RendererSettings.BrightnessValue;
 }

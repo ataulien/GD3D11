@@ -58,6 +58,7 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int VidSetScreenMode = 0x00658BA0;
 		static const unsigned int DrawLineZ = 0x0064DB00;
+		static const unsigned int Vid_GetGammaCorrection = 0x00659610;
 	};
 
 	struct zERROR
@@ -187,6 +188,7 @@ struct GothicMemoryLocations
 		static const unsigned int zCInput = 0x008D1650;
 		static const unsigned int zCOption = 0x008CD988;
 		static const unsigned int zCParser = 0xAB40C0;
+		static const unsigned int zRenderer = 0x00982F08;
 	};
 
 	struct zCParser

@@ -105,23 +105,42 @@ XRESULT D2DSettingsDialog::InitControls()
 	shadowmapSizeSlider->SetIsIntegralSlider(true);
 	shadowmapSizeSlider->SetMinMax(1.0f, 4.0f);
 
-	int v = (int)(log(Engine::GAPI->GetRendererState()->RendererSettings.ShadowMapSize) / logf(2.0f)) - 8;
-	shadowmapSizeSlider->SetValue((float)v);
+	// Fix the shadow range
+	switch(Engine::GAPI->GetRendererState()->RendererSettings.ShadowMapSize)
+	{
+	case 512:
+		shadowmapSizeSlider->SetValue(1);
+		break;
+
+	case 1024:
+		shadowmapSizeSlider->SetValue(2);
+		break;
+
+	case 2048:
+		shadowmapSizeSlider->SetValue(3);
+		break;
+
+	case 4096:
+		shadowmapSizeSlider->SetValue(4);
+		break;
+	}
+
 
 	// Next column
-	SV_Checkbox* hdrCheckbox = new SV_Checkbox(MainView, MainPanel);
+	/*SV_Checkbox* hdrCheckbox = new SV_Checkbox(MainView, MainPanel);
 	hdrCheckbox->SetSize(D2D1::SizeF(160, 20));
 	hdrCheckbox->SetCaption("Enable HDR");
 	hdrCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR);
 	hdrCheckbox->AlignUnder(Header, 5);
 	hdrCheckbox->SetPosition(D2D1::Point2F(170, hdrCheckbox->GetPosition().y));
-	hdrCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR);
+	hdrCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR);*/
 
 	SV_Checkbox* vsyncCheckbox = new SV_Checkbox(MainView, MainPanel);
 	vsyncCheckbox->SetSize(D2D1::SizeF(160, 20));
 	vsyncCheckbox->SetCaption("Enable VSync");
 	vsyncCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync);
-	vsyncCheckbox->AlignUnder(hdrCheckbox, 8);
+	vsyncCheckbox->AlignUnder(Header, 5);
+	vsyncCheckbox->SetPosition(D2D1::Point2F(170, vsyncCheckbox->GetPosition().y));
 	vsyncCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync);
 
 	SV_Label* outdoorVobsDDLabel = new SV_Label(MainView, MainPanel);
@@ -210,12 +229,39 @@ XRESULT D2DSettingsDialog::InitControls()
 	vertFOVSlider->SetMinMax(40.0f, 150.0f);
 	vertFOVSlider->SetValue(Engine::GAPI->GetRendererState()->RendererSettings.FOVVert);
 
+	SV_Label* brightnessLabel = new SV_Label(MainView, MainPanel);
+	brightnessLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
+	brightnessLabel->AlignUnder(vertFOVSlider, 10);
+	brightnessLabel->SetCaption("Brightness:");
+
+	SV_Slider* brightnessSlider = new SV_Slider(MainView, MainPanel);
+	brightnessSlider->SetPositionAndSize(D2D1::Point2F(10, 22), D2D1::SizeF(150, 15));
+	brightnessSlider->AlignUnder(brightnessLabel, 5);
+	brightnessSlider->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.BrightnessValue);
+	brightnessSlider->SetMinMax(0.0f, 2.0f);
+	brightnessSlider->SetValue(Engine::GAPI->GetRendererState()->RendererSettings.BrightnessValue);
+
+	SV_Label* contrastLabel = new SV_Label(MainView, MainPanel);
+	contrastLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
+	contrastLabel->AlignUnder(brightnessSlider, 10);
+	contrastLabel->SetCaption("Contrast:");
+
+	SV_Slider* contrastSlider = new SV_Slider(MainView, MainPanel);
+	contrastSlider->SetPositionAndSize(D2D1::Point2F(10, 22), D2D1::SizeF(150, 15));
+	contrastSlider->AlignUnder(contrastLabel, 5);
+	contrastSlider->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.GammaValue);
+	contrastSlider->SetMinMax(0.1f, 2.0f);
+	contrastSlider->SetValue(Engine::GAPI->GetRendererState()->RendererSettings.GammaValue);
+
+
 	SV_Checkbox* updateCheckbox = new SV_Checkbox(MainView, MainPanel);
 	updateCheckbox->SetSize(D2D1::SizeF(160, 20));
 	updateCheckbox->SetCaption("Enable Autoupdates");
 	updateCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableAutoupdates);
-	updateCheckbox->AlignUnder(vertFOVSlider, 10);
+	updateCheckbox->AlignUnder(contrastSlider, 10);
 	updateCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableAutoupdates);
+
+
 
 	// Advanced settings label
 	SV_Label* advancedSettingsLabel = new SV_Label(MainView, MainPanel);
@@ -228,10 +274,24 @@ XRESULT D2DSettingsDialog::InitControls()
 /** Tab in main tab-control was switched */
 void D2DSettingsDialog::ShadowQualitySliderChanged(SV_Slider* sender, void* userdata)
 {
-	int val = (int)(sender->GetValue() + 0.5f);
-	int ss = (int)pow(2, val + 8); // Start at 512 (Val is min. 1)
+	switch((int)(sender->GetValue() + 0.5f))
+	{
+	case 1:
+		Engine::GAPI->GetRendererState()->RendererSettings.ShadowMapSize = 512;
+		break;
 
-	Engine::GAPI->GetRendererState()->RendererSettings.ShadowMapSize = ss;
+	case 2:
+		Engine::GAPI->GetRendererState()->RendererSettings.ShadowMapSize = 1024;
+		break;
+
+	case 3:
+		Engine::GAPI->GetRendererState()->RendererSettings.ShadowMapSize = 2048;
+		break;
+
+	case 4:
+		Engine::GAPI->GetRendererState()->RendererSettings.ShadowMapSize = 4096;
+		break;
+	}
 }
 
 void D2DSettingsDialog::ResolutionSliderChanged(SV_Slider* sender, void* userdata)
