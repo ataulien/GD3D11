@@ -820,6 +820,14 @@ XRESULT D3D11GraphicsEngine::Present()
 	SetDefaultStates();
 	SetActivePixelShader("PS_PFX_GammaCorrectInv");
 	ActivePS->Apply();
+
+	GammaCorrectConstantBuffer gcb;
+	gcb.G_Gamma = Engine::GAPI->GetGammaValue();
+	gcb.G_Brightness = Engine::GAPI->GetBrightnessValue();
+
+	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&gcb);
+	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
+
 	PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), BackbufferRTV, INT2(0,0), true);
 
 	//Context->ClearState();
@@ -1506,8 +1514,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		DrawDecalList(decals, false);
 	}
 
-	DrawParticleEffects();
-	//Engine::GAPI->DrawParticlesSimple();
+	//DrawParticleEffects();
+	Engine::GAPI->DrawParticlesSimple();
 
 	// Draw debug lines
 	LineRenderer->Flush();
@@ -2576,6 +2584,11 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 				}
 				}
 				}*/
+
+		// Vobs have this differently
+		Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = !Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise;
+		Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+		UpdateRenderStates();
 
 		// Reset instances
 		const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
@@ -3877,6 +3890,11 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 			//plcb.PL_Color.w *= fadeFactor;
 		}
 
+		// Make the lights a little bit brighter
+		plcb.PL_Color.x *= 1.5f;
+		plcb.PL_Color.y *= 1.5f;
+		plcb.PL_Color.z *= 1.5f;
+
 		//if(plcb.PL_Range > 10000.0f)
 		//	continue;
 
@@ -4351,7 +4369,7 @@ void D3D11GraphicsEngine::OnUIEvent(EUIEvent uiEvent)
 		UIView->GetSettingsDialog()->SetHidden(!UIView->GetSettingsDialog()->IsHidden());
 
 		// Free mouse
-		Engine::GAPI->SetEnableGothicInput(false);
+		Engine::GAPI->SetEnableGothicInput(UIView->GetSettingsDialog()->IsHidden());
 	}
 }
 
@@ -4459,7 +4477,8 @@ void D3D11GraphicsEngine::DrawDecalList(const std::vector<zCVob *>& decals, bool
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
-	
+	Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = false;
+	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
 
 	D3DXVECTOR3 camBack = -Engine::GAPI->GetCameraForward();
 
@@ -4589,6 +4608,9 @@ void D3D11GraphicsEngine::DrawDecalList(const std::vector<zCVob *>& decals, bool
 
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+
+	Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = true;
+	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
 
 	Engine::GAPI->GetRendererState()->BlendState.SetDefault();
 	Engine::GAPI->GetRendererState()->BlendState.BlendEnabled = true;	

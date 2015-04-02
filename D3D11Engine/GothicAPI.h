@@ -515,6 +515,12 @@ public:
 
 	/** Checks if the normalmaps are there */
 	bool CheckNormalmapFiles();
+
+	/** Returns the gamma value from the ingame menu */
+	float GetGammaValue();
+
+	/** Returns the brightness value from the ingame menu */
+	float GetBrightnessValue();
 private:
 	/** Cleans empty BSPNodes */
 	void CleanBSPNodes();

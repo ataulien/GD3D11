@@ -19,6 +19,13 @@ struct SkyConstantBuffer
 	float3 SC_pad1;
 };
 
+struct GammaCorrectConstantBuffer
+{
+	float G_Gamma;
+	float G_Brightness;
+	float2 G_Pad;
+};
+
 struct OceanSettingsConstantBuffer
 {
 	float3 OS_CameraPosition;

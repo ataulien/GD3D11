@@ -142,6 +142,8 @@ XRESULT D3D11ShaderManager::Init()
 
 	Shaders.push_back(ShaderInfo("PS_PFX_Simple", "PS_PFX_Simple.hlsl", "p"));
 	Shaders.push_back(ShaderInfo("PS_PFX_GammaCorrectInv", "PS_PFX_GammaCorrectInv.hlsl", "p"));
+	Shaders.back().cBufferSizes.push_back(sizeof(GammaCorrectConstantBuffer));
+	
 
 	Shaders.push_back(ShaderInfo("PS_PFX_GaussBlur", "PS_PFX_GaussBlur.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(BlurConstantBuffer));

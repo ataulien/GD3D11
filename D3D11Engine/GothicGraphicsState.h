@@ -539,6 +539,9 @@ struct GothicRendererSettings
 		GlobalWindStrength = 1.0f;
 		VegetationAlphaToCoverage = true;
 
+		BrightnessValue = 1.0f;
+		GammaValue = 1.0f;
+
 		EnableSoftShadows = true;
 		EnableShadows = true;
 		EnableVSync = false;
@@ -600,6 +603,8 @@ struct GothicRendererSettings
 	float VisualFXDrawRadius;
 	float SmallVobSize;
 	float WorldShadowRangeScale;
+	float GammaValue;
+	float BrightnessValue;
 	int ShadowMapSize;
 
 	float GlobalWindStrength;
