@@ -1,7 +1,7 @@
 LIBRARY   "ddraw"
 EXPORTS
 	DirectDrawCreateEx			= HookedDirectDrawCreateEx
-	AcquireDDThreadLock			= FakeAcquireDDThreadLock			@1
+	AcquireDDThreadLock			= HookedAcquireDDThreadLock			@1
 	CheckFullscreen				= FakeCheckFullscreen				@2
 	CompleteCreateSysmemSurface	= FakeCompleteCreateSysmemSurface	@3
 	D3DParseUnknownCommand		= FakeD3DParseUnknownCommand		@4
@@ -21,4 +21,4 @@ EXPORTS
 	GetOLEThunkData				= FakeGetOLEThunkData				@19
 	GetSurfaceFromDC			= FakeGetSurfaceFromDC				@20
 	RegisterSpecialCase			= FakeRegisterSpecialCase			@21
-	ReleaseDDThreadLock			= FakeReleaseDDThreadLock			@22
+	ReleaseDDThreadLock			= HookedReleaseDDThreadLock			@22
