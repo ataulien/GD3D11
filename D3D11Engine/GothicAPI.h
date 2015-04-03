@@ -172,6 +172,9 @@ public:
 
 	/** Called when a visual got removed */
 	void OnVisualDeleted(zCVisual* visual);
+
+	/** Called when a vob moved */
+	void OnVobMoved(zCVob* vob);
 	
 
 	/** Called when a material got removed */

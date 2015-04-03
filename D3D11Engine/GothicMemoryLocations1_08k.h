@@ -31,6 +31,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_QuadMesh = 0x34;
 		static const unsigned int Offset_Material = 0x3C;
 		static const unsigned int Offset_ConnectedVob = 0x38;
+		static const unsigned int Offset_DontRepositionConnectedVob = 0x48;
 	};
 
 	struct zCRndD3D
@@ -137,6 +138,9 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_WorldPosX = 0x48;
 		static const unsigned int Offset_WorldPosY = 0x58;
 		static const unsigned int Offset_WorldPosZ = 0x68;
+
+		static const unsigned int Offset_SleepingMode = 0xEC;
+		static const unsigned int MASK_SkeepingMode = 3;	
 	};
 
 	struct zCInput
@@ -163,6 +167,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_NumLeafes = 0x20;
 		static const unsigned int Offset_ArrPolygon = 0x4C;
 		static const unsigned int Offset_BspTreeMode = 0x58;
+		static const unsigned int Render = 0x0051D840;
 	};
 
 	struct zCPolygon
@@ -285,6 +290,7 @@ struct GothicMemoryLocations
 		//static const unsigned int GetActiveSkyController = 0x006060A0;
 		static const unsigned int Offset_SkyControllerOutdoor = 0x0D0;
 		static const unsigned int DisposeVobs = 0x005F55F0;
+		static const unsigned int Offset_BspTree = 0x198;
 	};
 
 	struct oCWorld
@@ -311,7 +317,9 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int ResetPos = 0x0074CED0;
 		static const unsigned int Enable = 0x006A2000;
+		static const unsigned int Disable = 0x006A1D20;		
 		static const unsigned int InitModel = 0x00695020;
+		static const unsigned int IsAPlayer = 0x0069E9D0;
 	};
 
 	struct oCGame

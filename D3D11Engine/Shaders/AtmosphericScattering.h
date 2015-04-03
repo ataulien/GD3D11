@@ -130,7 +130,7 @@ float3 ApplyAtmosphericScatteringGround(float3 worldPosition, float3 in_color, b
 	float3 c1 = v3Attenuate;
 	
 	float3 dayColor = c0 + in_color * c1;
-	float3 nightColor = float3(0.05,0.05,0.1) * 4.8f;
+	float3 nightColor = float3(0.05,0.05,0.1) * 4.0f;
 	float3 outColor;
 
 	if(applyNightshade)

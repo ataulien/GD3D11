@@ -8,6 +8,7 @@
 class zCPolyStrip
 {
 public:
+#ifndef BUILD_GOTHIC_1_08k
 	zCPolygon* GetPolyList()
 	{
 		return *(zCPolygon**)THISPTR_OFFSET(GothicMemoryLocations::zCPolyStrip::Offset_PolyList);
@@ -17,6 +18,7 @@ public:
 	{
 		return *(int*)THISPTR_OFFSET(GothicMemoryLocations::zCPolyStrip::Offset_NumPolys);
 	}
+
 
 	/** Generates a vertex-buffer from the poly-list */
 	void GenerateVertexBuffer(std::vector<ExVertexStruct>& vx)
@@ -43,4 +45,5 @@ public:
 				WorldConverter::TriangleFanToList(&polyFan[0], polyFan.size(), &vx);
 		}
 	}
+#endif
 };
