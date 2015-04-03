@@ -3953,8 +3953,8 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnLights++;
 	}
 
-	//if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_INDOOR)
-	//	return XR_SUCCESS; // No sunlight for indoor worlds
+	if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_INDOOR)
+		return XR_SUCCESS; // No sunlight for indoor worlds
 
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();

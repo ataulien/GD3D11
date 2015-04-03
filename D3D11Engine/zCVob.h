@@ -26,6 +26,20 @@ public:
 	{
 		HookedFunctions::OriginalFunctions.original_zCVobSetVisual = (zCVobSetVisual)DetourFunction((BYTE *)GothicMemoryLocations::zCVob::SetVisual, (BYTE *)zCVob::Hooked_SetVisual);
 		HookedFunctions::OriginalFunctions.original_zCVobDestructor = (GenericDestructor)DetourFunction((BYTE *)GothicMemoryLocations::zCVob::Destructor, (BYTE *)zCVob::Hooked_Destructor);
+
+		HookedFunctions::OriginalFunctions.original_zCVobEndMovement = (zCVobEndMovement)DetourFunction((BYTE *)GothicMemoryLocations::zCVob::EndMovement, (BYTE *)zCVob::Hooked_EndMovement);
+	}
+
+	static void __fastcall Hooked_EndMovement(void* thisptr, void* unknwn, int transformChanged)
+	{
+		hook_infunc
+
+		HookedFunctions::OriginalFunctions.original_zCVobEndMovement(thisptr, transformChanged);
+
+		if(Engine::GAPI && transformChanged)
+			Engine::GAPI->OnVobMoved((zCVob *)thisptr);
+
+		hook_outfunc
 	}
 
 	static void __fastcall Hooked_Destructor(void* thisptr, void* unknwn)

@@ -49,6 +49,8 @@ typedef void (__thiscall* zCWorldDisposeVobs)(void *, zCTree<zCVob> *);
 typedef void (__thiscall* oCSpawnManagerSpawnNpc)(void*, oCNPC *, const D3DXVECTOR3&, float);
 typedef void (__thiscall* oCSpawnManagerInsertNpc)(void*, oCNPC *, const D3DXVECTOR3&);
 typedef void (__thiscall* zCVobSetVisual)(void*, zCVisual*);
+typedef void (__thiscall* zCVobEndMovement)(void*, int);
+
 typedef int (__thiscall* zCTex_D3DXTEX_BuildSurfaces)(void*, int);
 typedef int (__thiscall* zCTextureLoadResourceData)(void*);
 typedef int (__thiscall* zCThreadSuspendThread)(void*);
@@ -108,6 +110,7 @@ struct HookedFunctionInfo
 	oCWorldEnableVob original_oCWorldEnableVob;
 	oCWorldRemoveFromLists original_oCWorldRemoveFromLists;
 	zCBinkPlayerOpenVideo original_zCBinkPlayerOpenVideo;
+	zCVobEndMovement original_zCVobEndMovement;
 
 	/** Function hooks */
 	static int __stdcall hooked_HandledWinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR szCmdLine, int sw);

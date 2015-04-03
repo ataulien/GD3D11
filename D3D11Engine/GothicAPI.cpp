@@ -987,6 +987,18 @@ bool GothicAPI::IsMaterialActive(zCMaterial* mat)
 	return false;
 }
 
+/** Called when a vob moved */
+void GothicAPI::OnVobMoved(zCVob* vob)
+{
+	auto it = VobMap.find(vob);
+
+	if(it != VobMap.end() && !(*it).second->ParentBSPNodes.empty())
+	{
+		// Move vob into the dynamic list, if not already done
+		MoveVobFromBspToDynamic((*it).second);
+	}
+}
+
 /** Called when a visual got removed */
 void GothicAPI::OnVisualDeleted(zCVisual* visual)
 {
@@ -2768,7 +2780,7 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 				(dist < vobOutdoorSmallDist && (*it)->VisualInfo->MeshSize < vobSmallSize) || 
 				(dist < vobOutdoorDist)))
 			{
-				if(memcmp(&(*it)->LastRenderPosition, (*it)->Vob->GetPositionWorld(), sizeof(D3DXVECTOR3)) != 0)
+				//if(memcmp(&(*it)->LastRenderPosition, (*it)->Vob->GetPositionWorld(), sizeof(D3DXVECTOR3)) != 0)
 				{
 					(*it)->LastRenderPosition = (*it)->Vob->GetPositionWorld();
 					(*it)->UpdateVobConstantBuffer();
@@ -2860,6 +2872,8 @@ void GothicAPI::MoveVobFromBspToDynamic(VobInfo* vob)
 		}
 	}
 
+	vob->ParentBSPNodes.clear();
+
 	// Add to dynamic vob list
 	DynamicallyAddedVobs.push_back(vob);
 }
@@ -2932,7 +2946,7 @@ static void CVVH_AddNotDrawnVobToList(std::vector<VobInfo *>& target, std::vecto
 			if(vd < dist && (*it)->Vob->GetShowVisual())
 			{
 				// Update if near and moved
-				if(vd < dist / 4 && memcmp(&(*it)->LastRenderPosition, (*it)->Vob->GetPositionWorld(), sizeof(D3DXVECTOR3)) != 0)
+				/*if(vd < dist / 4 && memcmp(&(*it)->LastRenderPosition, (*it)->Vob->GetPositionWorld(), sizeof(D3DXVECTOR3)) != 0)
 				{
 					(*it)->LastRenderPosition = (*it)->Vob->GetPositionWorld();
 					(*it)->UpdateVobConstantBuffer();				
@@ -2942,7 +2956,7 @@ static void CVVH_AddNotDrawnVobToList(std::vector<VobInfo *>& target, std::vecto
 					remVobs.push_back((*it));
 			
 					continue; // Render with the other dynamic vobs
-				}
+				}*/
 
 				VobInstanceInfo vii;
 				vii.world = (*it)->WorldMatrix;
@@ -2959,11 +2973,11 @@ static void CVVH_AddNotDrawnVobToList(std::vector<VobInfo *>& target, std::vecto
 		}
 	}
 
-	for(std::vector<VobInfo *>::iterator it = remVobs.begin(); it != remVobs.end(); it++)
+	/*for(std::vector<VobInfo *>::iterator it = remVobs.begin(); it != remVobs.end(); it++)
 	{
 		// Move to dynamic vob-list since these vobs have moved this frame
 		Engine::GAPI->MoveVobFromBspToDynamic((*it));
-	}
+	}*/
 }
 
 static void CVVH_AddNotDrawnVobToList(std::vector<VobLightInfo *>& target, std::vector<VobLightInfo *>& source, float dist)

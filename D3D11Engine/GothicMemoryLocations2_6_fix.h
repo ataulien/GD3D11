@@ -318,6 +318,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_SleepingMode = 0x10C;
 		static const unsigned int MASK_SkeepingMode = 3;
 
+		static const unsigned int EndMovement = 0x0061E0D0;
 		
 	};
 
