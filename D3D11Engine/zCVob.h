@@ -30,7 +30,20 @@ public:
 		HookedFunctions::OriginalFunctions.original_zCVobEndMovement = (zCVobEndMovement)DetourFunction((BYTE *)GothicMemoryLocations::zCVob::EndMovement, (BYTE *)zCVob::Hooked_EndMovement);
 	}
 
-	static void __fastcall Hooked_EndMovement(void* thisptr, void* unknwn, int transformChanged)
+#ifdef BUILD_GOTHIC_1_08k
+	static void __fastcall Hooked_EndMovement(void* thisptr, void* unknwn)
+	{
+		hook_infunc
+
+		HookedFunctions::OriginalFunctions.original_zCVobEndMovement(thisptr);
+
+		if(Engine::GAPI)
+			Engine::GAPI->OnVobMoved((zCVob *)thisptr);
+
+		hook_outfunc
+	}
+#else
+	static void __fastcall Hooked_EndMovement(void* thisptr, void* unknwn, int transformChanged) // G2 has one parameter more
 	{
 		hook_infunc
 
@@ -41,6 +54,7 @@ public:
 
 		hook_outfunc
 	}
+#endif
 
 	static void __fastcall Hooked_Destructor(void* thisptr, void* unknwn)
 	{

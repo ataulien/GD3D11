@@ -60,6 +60,13 @@ class zCPolygon
 {
 public:
 	
+	void AllocVerts(int num)
+	{
+		#ifndef BUILD_GOTHIC_2_6_fix
+		XCALL(GothicMemoryLocations::zCPolygon::AllocVerts);
+		#endif
+	}
+
 
 	zCVertex** getVertices() const
 	{
@@ -84,6 +91,11 @@ public:
 	zCMaterial* GetMaterial() const
 	{
 		return *(zCMaterial **)(((char *)this) + GothicMemoryLocations::zCPolygon::Offset_Material);
+	}
+
+	void SetMaterial(zCMaterial* material)
+	{
+		*(zCMaterial **)(((char *)this) + GothicMemoryLocations::zCPolygon::Offset_Material) = material;
 	}
 
 	zCLightmap* GetLightmap() const

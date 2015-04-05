@@ -604,5 +604,8 @@ public:
 	static void CreatePNAENInfoFor(MeshInfo* mesh, bool softNormals = false);
 	static void CreatePNAENInfoFor(SkeletalMeshInfo* mesh, MeshInfo* bindPoseMesh, bool softNormals = false);
 	static void CreatePNAENInfoFor(WorldMeshInfo* mesh, bool softNormals = false);
+
+	/** Converts ExVertexStruct into a zCPolygon*-Attay */
+	static void ConvertExVerticesTozCPolygons(const std::vector<ExVertexStruct>& vertices, const std::vector<VERTEX_INDEX>& indices, zCMaterial* material, std::vector<zCPolygon *>& polyArray);
 };
 

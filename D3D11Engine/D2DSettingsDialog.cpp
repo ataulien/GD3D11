@@ -31,7 +31,7 @@ D2DSettingsDialog::D2DSettingsDialog(D2DView* view, D2DSubView* parent) : D2DDia
 
 	InitControls();
 
-	InitialSettings = Engine::GAPI->GetRendererState()->RendererSettings;
+	
 }
 
 
@@ -80,7 +80,7 @@ XRESULT D2DSettingsDialog::InitControls()
 
 	SV_Checkbox* shadowsCheckbox = new SV_Checkbox(MainView, MainPanel);
 	shadowsCheckbox->SetSize(D2D1::SizeF(160, 20));
-	shadowsCheckbox->SetCaption("Enable Shadows");
+	shadowsCheckbox->SetCaption("Enable Shadows[*]");
 	shadowsCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableShadows);
 	shadowsCheckbox->AlignUnder(hbaoCheckbox, 5);
 	shadowsCheckbox->SetPosition(D2D1::Point2F(5, shadowsCheckbox->GetPosition().y));
@@ -238,7 +238,7 @@ XRESULT D2DSettingsDialog::InitControls()
 	brightnessSlider->SetPositionAndSize(D2D1::Point2F(10, 22), D2D1::SizeF(150, 15));
 	brightnessSlider->AlignUnder(brightnessLabel, 5);
 	brightnessSlider->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.BrightnessValue);
-	brightnessSlider->SetMinMax(0.0f, 2.0f);
+	brightnessSlider->SetMinMax(0.1f, 3.0f);
 	brightnessSlider->SetValue(Engine::GAPI->GetRendererState()->RendererSettings.BrightnessValue);
 
 	SV_Label* contrastLabel = new SV_Label(MainView, MainPanel);
@@ -362,4 +362,19 @@ bool D2DSettingsDialog::NeedsApply()
 	}
 
 	return false;
+}
+
+/** Called when the settings got re-opened */
+void D2DSettingsDialog::OnOpenedSettings()
+{
+	InitialSettings = Engine::GAPI->GetRendererState()->RendererSettings;
+}
+
+/** Sets if this control is hidden */
+void D2DSettingsDialog::SetHidden(bool hidden)
+{
+	if(IsHidden() && !hidden)
+		OnOpenedSettings(); // Changed visibility from hidden to non-hidden
+
+	D2DDialog::SetHidden(hidden);
 }

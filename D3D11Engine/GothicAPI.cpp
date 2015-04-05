@@ -158,9 +158,14 @@ void GothicAPI::OnGameStart()
 	if(RendererState.RendererSettings.EnableAutoupdates && !zCOption::GetOptions()->IsParameter("XNOUPDATE"))
 		UpdateCheck::RunUpdater();
 
+#ifdef PUBLIC_RELEASE
+
+#ifndef BUILD_GOTHIC_1_08k
 	// See if the user correctly onstalled the normalmaps
 	CheckNormalmapFiles();
-	
+#endif
+#endif
+
 	LoadedWorldInfo = new WorldInfo;
 	LoadedWorldInfo->HighestVertex = 2;
 	LoadedWorldInfo->LowestVertex = 3;
@@ -2611,6 +2616,8 @@ LRESULT GothicAPI::OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				SetEnableGothicInput(!Engine::AntTweakBar->GetActive());
 			}else
 			{
+				Engine::AntTweakBar->SetActive(false);
+				SetEnableGothicInput(true);
 				Engine::GraphicsEngine->OnUIEvent(BaseGraphicsEngine::EUIEvent::UI_OpenSettings);
 			}
 #else
@@ -2743,7 +2750,8 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 {
 	zCBspTree* tree = LoadedWorldInfo->BspTree;
 
-	zCBspBase* root = tree->GetRootNode();
+	zCBspBase* rootBsp = tree->GetRootNode();
+	BspVobInfo* root = &BspLeafVobLists[rootBsp];
 	if(zCCamera::GetCamera())
 		zCCamera::GetCamera()->Activate();
 
@@ -2759,7 +2767,7 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 	return;*/
 
 	// Recursively go through the tree and draw all nodes
-	CollectVisibleVobsHelper(root, root->BBox3D, 63, vobs, lights);
+	CollectVisibleVobsHelper(root, root->OriginalNode->BBox3D, 63, vobs, lights);
 
 	D3DXVECTOR3 camPos = GetCameraPosition();
 	float vobIndoorDist = Engine::GAPI->GetRendererState()->RendererSettings.IndoorVobDrawRadius;
@@ -2997,7 +3005,7 @@ static void CVVH_AddNotDrawnVobToList(std::vector<VobLightInfo *>& target, std::
 }
 
 /** Recursive helper function to draw collect the vobs */
-void GothicAPI::CollectVisibleVobsHelper(zCBspBase* base, zTBBox3D boxCell, int clipFlags, std::vector<VobInfo *>& vobs, std::vector<VobLightInfo *>& lights)
+void GothicAPI::CollectVisibleVobsHelper(BspVobInfo* base, zTBBox3D boxCell, int clipFlags, std::vector<VobInfo *>& vobs, std::vector<VobLightInfo *>& lights)
 {
 	float vobIndoorDist = Engine::GAPI->GetRendererState()->RendererSettings.IndoorVobDrawRadius;
 	float vobOutdoorDist = Engine::GAPI->GetRendererState()->RendererSettings.OutdoorVobDrawRadius;
@@ -3006,18 +3014,18 @@ void GothicAPI::CollectVisibleVobsHelper(zCBspBase* base, zTBBox3D boxCell, int 
 	float visualFXDrawRadius = Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius;
 	D3DXVECTOR3 camPos = Engine::GAPI->GetCameraPosition();
 
-	while(base)
+	while(base->OriginalNode)
 	{
 		if (clipFlags>0) 
 		{
 			float yMaxWorld = Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()->BBox3D.Max.y;
 
-			zTBBox3D nodeBox = base->BBox3D;
+			zTBBox3D nodeBox = base->OriginalNode->BBox3D;
 			float nodeYMax = std::min(yMaxWorld, Engine::GAPI->GetCameraPosition().y);
-			nodeYMax = std::max(nodeYMax, base->BBox3D.Max.y);
+			nodeYMax = std::max(nodeYMax, base->OriginalNode->BBox3D.Max.y);
 			nodeBox.Max.y = nodeYMax;
 
-			float dist = Toolbox::ComputePointAABBDistance(camPos, base->BBox3D.Min, base->BBox3D.Max);
+			float dist = Toolbox::ComputePointAABBDistance(camPos, base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max);
 			if(dist < vobOutdoorDist)
 			{
 				zTCam_ClipType nodeClip = zCCamera::GetCamera()->BBox3DInFrustum(nodeBox, clipFlags); 
@@ -3035,25 +3043,25 @@ void GothicAPI::CollectVisibleVobsHelper(zCBspBase* base, zTBBox3D boxCell, int 
 
 
 
-		if(base->IsLeaf())
+		if(base->OriginalNode->IsLeaf())
 		{
 			// Check if this leaf is inside the frustum
 			bool insideFrustum = true;
 			if(clipFlags > 0) 
 			{
-				if(zCCamera::GetCamera()->BBox3DInFrustum(base->BBox3D, clipFlags) == ZTCAM_CLIPTYPE_OUT) 
+				if(zCCamera::GetCamera()->BBox3DInFrustum(base->OriginalNode->BBox3D, clipFlags) == ZTCAM_CLIPTYPE_OUT) 
 					insideFrustum = false;
 			}
-			zCBspLeaf* leaf = (zCBspLeaf *)base;
-			BspVobInfo& bvi = BspLeafVobLists[leaf];
-			std::vector<VobInfo *>& listA = bvi.IndoorVobs;
-			std::vector<VobInfo *>& listB = bvi.SmallVobs;
-			std::vector<VobInfo *>& listC = bvi.Vobs;
-			std::vector<VobLightInfo *>& listL = bvi.Lights;
-			std::vector<VobLightInfo *>& listL_Indoor = bvi.IndoorLights;
+			zCBspLeaf* leaf = (zCBspLeaf *)base->OriginalNode;
+			//BspVobInfo& bvi = BspLeafVobLists[leaf];
+			std::vector<VobInfo *>& listA = base->IndoorVobs;
+			std::vector<VobInfo *>& listB = base->SmallVobs;
+			std::vector<VobInfo *>& listC = base->Vobs;
+			std::vector<VobLightInfo *>& listL = base->Lights;
+			std::vector<VobLightInfo *>& listL_Indoor = base->IndoorLights;
 
 			// Concat the lists
-			float dist = Toolbox::ComputePointAABBDistance(camPos, base->BBox3D.Min, base->BBox3D.Max);
+			float dist = Toolbox::ComputePointAABBDistance(camPos, base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max);
 			// float dist = D3DXVec3Length(&(base->BBox3D.Min - camPos));
 
 			if(insideFrustum)
@@ -3127,7 +3135,7 @@ void GothicAPI::CollectVisibleVobsHelper(zCBspBase* base, zTBBox3D boxCell, int 
 			return;
 		}else
 		{
-			zCBspNode* node = (zCBspNode *)base;
+			zCBspNode* node = (zCBspNode *)base->OriginalNode;
 
 			int	planeAxis = node->PlaneSignbits;
 
@@ -3140,22 +3148,22 @@ void GothicAPI::CollectVisibleVobsHelper(zCBspBase* base, zTBBox3D boxCell, int 
 				if(node->Front) 
 				{
 					((float *)&tmpbox.Min)[planeAxis] = node->Plane.Distance;
-					CollectVisibleVobsHelper(node->Front, tmpbox, clipFlags, vobs, lights);
+					CollectVisibleVobsHelper(base->Front, tmpbox, clipFlags, vobs, lights);
 				}
 
 				((float *)&boxCell.Max)[planeAxis] = node->Plane.Distance;
-				base = node->Back;
+				base = base->Back;
 
 			} else 
 			{
 				if (node->Back ) 
 				{
 					((float *)&tmpbox.Max)[planeAxis] = node->Plane.Distance;
-					CollectVisibleVobsHelper(node->Back, tmpbox, clipFlags, vobs, lights);
+					CollectVisibleVobsHelper(base->Back, tmpbox, clipFlags, vobs, lights);
 				}
 
 				((float *)&boxCell.Min)[planeAxis] = node->Plane.Distance;
-				base = node->Front;
+				base = base->Front;
 			}
 		}
 	}
@@ -3167,13 +3175,18 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 	if(!base)
 		return;
 
+	// Put it into the cache
+	BspVobInfo& bvi = BspLeafVobLists[base];
+	bvi.OriginalNode = base;
 
 	if(base->IsLeaf())
 	{
 		zCBspLeaf* leaf = (zCBspLeaf *)base;
 
-		// Put it into the cache
-		BspVobInfo& bvi = BspLeafVobLists[base];
+		
+		bvi.Front = NULL;
+		bvi.Back = NULL;
+		
 
 		for(int i=0;i<leaf->LeafVobList.NumInArray;i++)
 		{
@@ -3271,8 +3284,15 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 	}else
 	{
 		zCBspNode* node = (zCBspNode *)base;
+
+		bvi.OriginalNode = base;
+
 		BuildBspVobMapCacheHelper(node->Front);
 		BuildBspVobMapCacheHelper(node->Back);
+
+		// Save front and back to this
+		bvi.Front = &BspLeafVobLists[node->Front];
+		bvi.Back = &BspLeafVobLists[node->Back];
 	}
 }
 

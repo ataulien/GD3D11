@@ -6,6 +6,23 @@ struct zTBBox3D
 {
 	D3DXVECTOR3	Min;	
 	D3DXVECTOR3	Max;
+
+	enum zTPlaneClass 
+	{ 
+		zPLANE_INFRONT, 
+		zPLANE_BEHIND, 
+		zPLANE_ONPLANE, 
+		zPLANE_SPANNING 
+	};
+
+	int ClassifyToPlane (float planeDist, int axis) const 
+	{
+		if (planeDist>=((float*)&Max)[axis])	
+			return zPLANE_BEHIND;	
+		else if (planeDist<=((float*)&Max)[axis])	
+			return zPLANE_INFRONT;	
+		else return zPLANE_SPANNING;
+	}
 };
 
 struct zTPlane

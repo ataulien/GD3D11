@@ -64,14 +64,10 @@ namespace VersionCheck
 				"You can continue and try anyways but the game will most likely crash.\n";
 		}
 
+#ifdef PUBLIC_RELEASE
 		LogInfoBox() << "You are using the Gothic 1 Version of GD3D11. This is not an official release, so please keep that in mind!\n"
 						"Not everything is working yet and it may crash frequently. You don't need to report every bug you see, because I likely have seen it myself by now.\n";
-
-		if(Toolbox::FileExists("Systempack.ini"))
-		{
-			LogInfoBox() << "Systempack detected. With this installed, menus won't show up. GD3D11 will still work, but you will have to navigate the menus blindly.\n"
-							"This will be fixed in a future release\n";
-		}
+#endif
 #endif
 
 		// Check for game data
