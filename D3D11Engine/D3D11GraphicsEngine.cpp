@@ -1441,8 +1441,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	Clear(float4(Engine::GAPI->GetRendererState()->GraphicsState.FF_FogColor, 0.0f));
 
 	// Clear textures from the last frame
-	FrameTextures.clear();
-	RenderedVobs.clear();
+	FrameTextures.clear(); 
+	RenderedVobs.resize(0); // Keep memory allocated on this
 	FrameWaterSurfaces.clear();
 
 	// Update view distances
@@ -4653,6 +4653,7 @@ void D3D11GraphicsEngine::DrawQuadMarks()
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
 
+	int alphaFunc = 0;
 	for(stdext::hash_map<zCQuadMark*, QuadMarkInfo>::const_iterator it = quadMarks.begin(); it != quadMarks.end(); it++)
 	{
 		if(!(*it).first->GetConnectedVob())
@@ -4664,6 +4665,33 @@ void D3D11GraphicsEngine::DrawQuadMarks()
 		zCMaterial* mat = (*it).first->GetMaterial();
 		if(mat)
 			mat->BindTexture(0);
+
+		if(alphaFunc != mat->GetAlphaFunc())
+		{
+			// Change alpha-func		
+			switch(mat->GetAlphaFunc())
+			{
+			case zMAT_ALPHA_FUNC_ADD:
+				Engine::GAPI->GetRendererState()->BlendState.SetAdditiveBlending();
+				break;
+
+			case zMAT_ALPHA_FUNC_BLEND:
+				Engine::GAPI->GetRendererState()->BlendState.SetAlphaBlending();
+				break;
+
+			case zMAT_ALPHA_FUNC_TEST:
+				Engine::GAPI->GetRendererState()->BlendState.SetDefault();
+				break;
+
+			default:
+				continue; // FIXME: Support modulate!
+			}
+
+			alphaFunc = mat->GetAlphaFunc();
+
+			Engine::GAPI->GetRendererState()->BlendState.SetDirty();
+			UpdateRenderStates();
+		}
 
 		Engine::GAPI->SetWorldTransform(*(*it).first->GetConnectedVob()->GetWorldMatrixPtr());
 		SetupVS_ExPerInstanceConstantBuffer();

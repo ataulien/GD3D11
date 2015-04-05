@@ -40,6 +40,7 @@ typedef int (__thiscall* zFILEOpen)(void*,zSTRING&, bool);
 typedef void (__thiscall* zCRnd_D3DVid_SetScreenMode)(void*, int);
 typedef int (__thiscall* zCOptionReadInt)(void*,zSTRING const&, char const*, int);
 typedef int (__thiscall* zCOptionReadBool)(void*,zSTRING const&, char const*, int);
+typedef unsigned long (__thiscall* zCOptionReadDWORD)(void*,zSTRING const&, char const*, unsigned long);
 typedef void (__cdecl* zCViewSetMode)(int, int, int, HWND*);
 typedef int (__stdcall* HandledWinMain)(HINSTANCE, HINSTANCE, LPSTR, int);
 typedef int (__thiscall* CGameManagerExitGame)(void*);
@@ -49,7 +50,7 @@ typedef void (__thiscall* zCWorldDisposeVobs)(void *, zCTree<zCVob> *);
 typedef void (__thiscall* oCSpawnManagerSpawnNpc)(void*, oCNPC *, const D3DXVECTOR3&, float);
 typedef void (__thiscall* oCSpawnManagerInsertNpc)(void*, oCNPC *, const D3DXVECTOR3&);
 typedef void (__thiscall* zCVobSetVisual)(void*, zCVisual*);
-typedef void (__thiscall* zCVobEndMovement)(void*, int);
+
 
 typedef int (__thiscall* zCTex_D3DXTEX_BuildSurfaces)(void*, int);
 typedef int (__thiscall* zCTextureLoadResourceData)(void*);
@@ -61,6 +62,11 @@ typedef void (__thiscall* oCWorldDisableVob)(void*, zCVob*);
 typedef void (__fastcall* oCWorldRemoveFromLists)(void*, zCVob*);
 typedef int (__thiscall* zCBinkPlayerOpenVideo)(void*, class zSTRING);
 
+#ifdef BUILD_GOTHIC_1_08k
+typedef void (__thiscall* zCVobEndMovement)(void*);
+#else
+typedef void (__thiscall* zCVobEndMovement)(void*, int);
+#endif
 struct zTRndSurfaceDesc;
 struct HookedFunctionInfo
 {
@@ -86,6 +92,7 @@ struct HookedFunctionInfo
 	zCRnd_D3DVid_SetScreenMode original_zCRnd_D3DVid_SetScreenMode;
 	zCOptionReadInt original_zCOptionReadInt;
 	zCOptionReadBool original_zCOptionReadBool;
+	zCOptionReadDWORD original_zCOptionReadDWORD;
 	zCViewSetMode original_zCViewSetMode;
 	HandledWinMain original_HandledWinMain;
 	CGameManagerExitGame original_CGameManagerExitGame;

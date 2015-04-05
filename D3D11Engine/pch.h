@@ -23,7 +23,7 @@
 #include <set>
 #include <signal.h>
 
-#define VERSION_NUMBER "14"
+#define VERSION_NUMBER "14.1"
 __declspec(selectany) const char* VERSION_NUMBER_STR = VERSION_NUMBER;
 
 /** D3D7-Call logging */

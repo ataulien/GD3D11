@@ -68,7 +68,7 @@ public:
 	void SetLevel(int level);
 
 	/** Sets if this control is hidden */
-	void SetHidden(bool hidden);
+	virtual void SetHidden(bool hidden);
 
 	/** Returns if this control is hidden */
 	bool IsHidden();

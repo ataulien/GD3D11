@@ -4,6 +4,7 @@
 #include "WorldConverter.h"
 #include "zCTree.h"
 #include "zTypes.h"
+#include "zCArray.h"
 #include "zCMorphMesh.h"
 
 #define START_TIMING Engine::GAPI->GetRendererState()->RendererInfo.Timing.Start
@@ -17,6 +18,9 @@ struct BspVobInfo
 	BspVobInfo()
 	{
 		NumStaticLights = 0;
+		OriginalNode = NULL;
+		Front = NULL;
+		Back = NULL;
 	}
 
 	bool IsEmpty()
@@ -29,7 +33,16 @@ struct BspVobInfo
 	std::vector<VobInfo *> SmallVobs;
 	std::vector<VobLightInfo *> Lights;
 	std::vector<VobLightInfo *> IndoorLights;
+
+	// This is filled in case we have loaded a custom worldmesh
+	zCArray<zCPolygon *> NodePolygons;
+
 	int NumStaticLights;
+
+	// Original bsp-node
+	zCBspBase* OriginalNode;
+	BspVobInfo* Front;
+	BspVobInfo* Back;
 };
 
 struct CameraReplacement
@@ -532,7 +545,7 @@ private:
 	void BuildBspVobMapCacheHelper(zCBspBase* base);
 
 	/** Recursive helper function to draw collect the vobs */
-	void CollectVisibleVobsHelper(zCBspBase* base, zTBBox3D boxCell, int clipFlags, std::vector<VobInfo *>& vobs, std::vector<VobLightInfo  *>& lights);
+	void CollectVisibleVobsHelper(BspVobInfo* base, zTBBox3D boxCell, int clipFlags, std::vector<VobInfo *>& vobs, std::vector<VobLightInfo  *>& lights);
 
 	/** Applys the suppressed textures */
 	void ApplySuppressedSectionTextures();

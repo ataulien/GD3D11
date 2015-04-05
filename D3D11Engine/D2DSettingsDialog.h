@@ -17,6 +17,12 @@ public:
 	/** Checks if a change needs to reload the shaders */
 	bool NeedsApply();
 
+	/** Sets if this control is hidden */
+	virtual void SetHidden(bool hidden);
+
+	/** Called when the settings got re-opened */
+	void OnOpenedSettings();
+
 protected:
 	/** Tab in main tab-control was switched */
 	static void ShadowQualitySliderChanged(SV_Slider* sender, void* userdata);

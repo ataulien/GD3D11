@@ -44,6 +44,7 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int ReadInt = 0x0045CDB0;
 		static const unsigned int ReadBool = 0x0045CB80;
+		static const unsigned int ReadDWORD = 0x0045CEA0;
 		static const unsigned int Offset_CommandLine = 0x284;
 	};
 
@@ -141,6 +142,8 @@ struct GothicMemoryLocations
 
 		static const unsigned int Offset_SleepingMode = 0xEC;
 		static const unsigned int MASK_SkeepingMode = 3;	
+
+		static const unsigned int EndMovement = 0x005F0B60;
 	};
 
 	struct zCInput
@@ -178,7 +181,9 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_PolyFlags = 0x31;
 		static const unsigned int Offset_Material = 0x18;
 		static const unsigned int Offset_Lightmap = 0x1C;
-		
+
+		static const unsigned int AllocVerts = 0x00599840;
+
 		static const unsigned int Size = 0x38;
 	};
 

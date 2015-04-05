@@ -2399,3 +2399,30 @@ void WorldConverter::CreatePNAENInfoFor(SkeletalMeshInfo* mesh, MeshInfo* bindPo
 	mesh->MeshVertexBuffer->Init(&mesh->Vertices[0], mesh->Vertices.size() * sizeof(ExSkelVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
 	bindPoseMesh->MeshVertexBuffer->Init(&bindPoseMesh->VerticesPNAEN[0], bindPoseMesh->VerticesPNAEN.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
 }
+
+/** Converts ExVertexStruct into a zCPolygon*-Attay */
+void WorldConverter::ConvertExVerticesTozCPolygons(const std::vector<ExVertexStruct>& vertices, const std::vector<VERTEX_INDEX>& indices, zCMaterial* material, std::vector<zCPolygon *>& polyArray)
+{
+	for(int i=0;i<indices.size();i+=3)
+	{
+		// Create and init polyong
+		zCPolygon* poly = new zCPolygon();
+		poly->AllocVerts(3);
+		poly->SetMaterial(material);
+
+		// Fill data
+		for(int v=0;v<3;v++)
+		{
+			poly->getVertices()[v]->MyIndex = 0;
+			poly->getVertices()[v]->TransformedIndex = 0;
+			poly->getVertices()[v]->Position = vertices[indices[i + v]].Position;
+
+			poly->getFeatures()[v]->lightStatic = 0xFFFFFFFF;
+			poly->getFeatures()[v]->normal = vertices[indices[i + v]].Normal;
+			poly->getFeatures()[v]->texCoord = vertices[indices[i + v]].TexCoord;
+		}
+
+		// Add to array
+		polyArray.push_back(poly);
+	}
+}

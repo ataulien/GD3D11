@@ -15,7 +15,7 @@ public:
 	{
 		HookedFunctions::OriginalFunctions.original_zCOptionReadInt = (zCOptionReadInt)DetourFunction((BYTE *)GothicMemoryLocations::zCOption::ReadInt, (BYTE *)zCOption::hooked_zOptionReadInt);
 		HookedFunctions::OriginalFunctions.original_zCOptionReadBool = (zCOptionReadInt)DetourFunction((BYTE *)GothicMemoryLocations::zCOption::ReadBool, (BYTE *)zCOption::hooked_zOptionReadBool);
-
+		HookedFunctions::OriginalFunctions.original_zCOptionReadDWORD = (zCOptionReadDWORD)DetourFunction((BYTE *)GothicMemoryLocations::zCOption::ReadDWORD, (BYTE *)zCOption::hooked_zOptionReadDWORD);
 	}
 
 	/** Returns true if the given string is in the commandline of the game */
@@ -82,13 +82,47 @@ public:
 		}else if(_stricmp(var, "zTexMaxSize") == 0)
 		{
 			return 16384;
+		}else if(_stricmp(var, "zTexCacheOutTimeMSec") == 0) // Following values are from Marcellos L'Hiver config
+		{
+			return 9120000; 
 		}else if(_stricmp(var, "zTexCacheSizeMaxBytes") == 0)
 		{
-			return INT_MAX / 4; // Gothic doubles or triples the cache size if you have enough RAM, don't overflow here!
+			return 1000000000; 
+		}else if(_stricmp(var, "zSndCacheOutTimeMSec") == 0) 
+		{
+			return 10000; 
+		}else if(_stricmp(var, "zSndCacheSizeMaxBytes") == 0)
+		{
+			return 40000000; 
 		}
 
 		return HookedFunctions::OriginalFunctions.original_zCOptionReadInt(thisptr, section, var, def);
 	}
+
+	/** Reads config stuff */
+	static unsigned long __fastcall hooked_zOptionReadDWORD(void* thisptr, void* unknwn, zSTRING const& section, char const* var, unsigned long def)
+	{
+		BaseGraphicsEngine* engine = Engine::GraphicsEngine;
+		LogInfo() << "Reading Gothic-Config: " << var;
+
+		if(_stricmp(var, "zTexCacheOutTimeMSec") == 0) // Following values are from Marcellos L'Hiver config
+		{
+			return 9120000; 
+		}else if(_stricmp(var, "zTexCacheSizeMaxBytes") == 0)
+		{
+			return 1000000000; 
+		}else if(_stricmp(var, "zSndCacheOutTimeMSec") == 0) 
+		{
+			return 10000; 
+		}else if(_stricmp(var, "zSndCacheSizeMaxBytes") == 0)
+		{
+			return 40000000; 
+		}
+
+		return HookedFunctions::OriginalFunctions.original_zCOptionReadDWORD(thisptr, section, var, def);
+	}
+
+	
 
 	static long __fastcall hooked_zOptionReadInt(void* thisptr, void* unknwn,zSTRING const& section, char const* var, int def)
 	{		
