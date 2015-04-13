@@ -123,6 +123,18 @@ namespace Toolbox
 		return true;
 	}
 
+	/** Returns whether two AABBs are intersecting or not */
+	bool AABBsOverlapping(const D3DXVECTOR3& minA, const D3DXVECTOR3& maxA, const D3DXVECTOR3& minB, const D3DXVECTOR3& maxB)
+	{
+		//Check if Box1's max is greater than Box2's min and Box1's min is less than Box2's max
+		return( maxA.x > minB.x &&
+				minA.x < maxB.x &&
+				maxA.y > minB.y &&
+				minA.y < maxB.y &&
+				maxA.z > minB.z &&
+				minA.z < maxB.z);
+		}
+
 	/** Converts a multi-byte-string to wide-char */
 	std::wstring ToWideChar(const std::string& str)
 	{

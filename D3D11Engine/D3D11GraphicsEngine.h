@@ -153,6 +153,9 @@ public:
 	/** Returns the first GBuffer */
 	RenderToTextureBuffer* GetGBuffer0(){return GBuffer0_Diffuse;}
 
+	/** Returns the second GBuffer */
+	RenderToTextureBuffer* GetGBuffer1(){return GBuffer1_Normals_SpecIntens_SpecPower;}
+
 	/** Returns the HDRBackbuffer */
 	RenderToTextureBuffer* GetHDRBackBuffer(){return HDRBackBuffer;}
 
@@ -178,6 +181,9 @@ public:
 
 	/** Draws the world mesh */
 	virtual XRESULT DrawWorldMesh(bool noTextures=false);
+
+	/** Draws a list of mesh infos */
+	XRESULT DrawMeshInfoListAlphablended(const std::vector<std::pair<MeshKey, MeshInfo*>>& list);
 
 	XRESULT DrawWorldMeshW(bool noTextures=false);
 
@@ -364,6 +370,9 @@ protected:
 
 	/** List of water surfaces for this frame */
 	std::hash_map<zCTexture*, std::vector<WorldMeshInfo*>> FrameWaterSurfaces;
+
+	/** List of worldmeshes we have to render using alphablending */
+	std::vector<std::pair<MeshKey, MeshInfo*>> FrameTransparencyMeshes;
 
 	/** Reflection */
 	ID3D11ShaderResourceView* ReflectionCube;

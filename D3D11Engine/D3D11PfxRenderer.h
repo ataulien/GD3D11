@@ -8,6 +8,7 @@ class D3D11PFX_HeightFog;
 class D3D11PFX_DistanceBlur;
 class D3D11PFX_HDR;
 class D3D11PFX_SMAA;
+class D3D11PFX_GodRays;
 class D3D11NVHBAO;
 class D3D11PfxRenderer
 {
@@ -32,6 +33,9 @@ public:
 
 	/** Renders the SMAA-Effect */
 	XRESULT RenderSMAA();
+
+	/** Renders the godrays-Effect */
+	XRESULT RenderGodRays();
 
 	/** Copies the given texture to the given RTV */
 	XRESULT CopyTextureToRTV(ID3D11ShaderResourceView* texture, ID3D11RenderTargetView* rtv, INT2 targetResolution = INT2(0,0), bool useCustomPS = false, INT2 offset = INT2(0,0));
@@ -64,6 +68,7 @@ private:
 	D3D11PFX_DistanceBlur* FX_DistanceBlur;
 	D3D11PFX_HDR* FX_HDR;
 	D3D11PFX_SMAA* FX_SMAA;
+	D3D11PFX_GodRays* FX_GodRays;
 
 	/** Fullscreen quad */
 	D3D11FullscreenQuad* ScreenQuad;

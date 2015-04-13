@@ -38,44 +38,6 @@ void SignalHandler(int signal)
 	throw "!Access Violation!";
 }
 
-HRESULT DoHookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  iid,IUnknown FAR *pUnkOuter)
-{
-	*lplpDD = new MyDirectDraw(NULL);
-
-	if(!Engine::GraphicsEngine)
-	{		
-		Engine::GAPI->OnGameStart();
-		Engine::CreateGraphicsEngine();
-	}
-
-	return S_OK;
-}
-
-extern "C" HRESULT WINAPI HookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  iid,IUnknown FAR *pUnkOuter) {
-	//LogInfo() << "HookedDirectDrawCreateEx!";
-	HRESULT hr = S_OK; 
-
-	hook_infunc
-
-		return DoHookedDirectDrawCreateEx(lpGuid, lplpDD, iid, pUnkOuter);
-
-	hook_outfunc
-
-		return hr;
-}
-
-extern "C" void WINAPI HookedAcquireDDThreadLock()
-{
-	// Do nothing
-	LogInfo() << "AcquireDDThreadLock called!";
-}
-
-extern "C" void WINAPI HookedReleaseDDThreadLock()
-{
-	// Do nothing
-	LogInfo() << "ReleaseDDThreadLock called!";
-}
-
 struct ddraw_dll
 {
 	HMODULE dll;
@@ -102,6 +64,46 @@ struct ddraw_dll
 	FARPROC	RegisterSpecialCase;
 	FARPROC	ReleaseDDThreadLock;
 } ddraw;
+
+HRESULT DoHookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  iid,IUnknown FAR *pUnkOuter)
+{
+	*lplpDD = new MyDirectDraw(NULL);
+
+	if(!Engine::GraphicsEngine)
+	{		
+		Engine::GAPI->OnGameStart();
+		Engine::CreateGraphicsEngine();
+	}
+
+	return S_OK;
+}
+
+extern "C" HRESULT WINAPI HookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  iid,IUnknown FAR *pUnkOuter) {
+	//LogInfo() << "HookedDirectDrawCreateEx!";
+	HRESULT hr = S_OK;
+
+	hook_infunc
+
+		return DoHookedDirectDrawCreateEx(lpGuid, lplpDD, iid, pUnkOuter);
+
+	hook_outfunc
+
+		return hr;
+}
+
+extern "C" void WINAPI HookedAcquireDDThreadLock()
+{
+	// Do nothing
+	LogInfo() << "AcquireDDThreadLock called!";
+}
+
+extern "C" void WINAPI HookedReleaseDDThreadLock()
+{
+	// Do nothing
+	LogInfo() << "ReleaseDDThreadLock called!";
+}
+
+
 
 __declspec(naked) void FakeAcquireDDThreadLock()			{ _asm { jmp [ddraw.AcquireDDThreadLock] } }
 __declspec(naked) void FakeCheckFullscreen()				{ _asm { jmp [ddraw.CheckFullscreen] } }

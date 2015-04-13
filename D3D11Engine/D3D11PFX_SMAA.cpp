@@ -128,6 +128,14 @@ void D3D11PFX_SMAA::RenderPostFX(ID3D11ShaderResourceView* renderTargetSRV)
 	engine->SetDefaultStates();
 	engine->UpdateRenderStates();
 
+	D3D11_VIEWPORT vp;
+	vp.TopLeftX = 0.0f;
+	vp.TopLeftY = 0.0f;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 0.0f;
+	vp.Width = (float)FxRenderer->GetTempBuffer()->GetSizeX();
+	vp.Height = (float)FxRenderer->GetTempBuffer()->GetSizeY();
+
 	engine->GetShaderManager()->GetVShader("VS_PFX")->Apply(); // Apply vertexlayout for PP-Effects
 
 	RenderToTextureBuffer* TempRTV = FxRenderer->GetTempBuffer();

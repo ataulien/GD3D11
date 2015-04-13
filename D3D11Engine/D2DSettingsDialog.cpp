@@ -182,7 +182,7 @@ XRESULT D2DSettingsDialog::InitControls()
 	visualFXDDSlider->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius);
 	visualFXDDSlider->SetIsIntegralSlider(true);
 	visualFXDDSlider->SetDisplayMultiplier(0.001f);
-	visualFXDDSlider->SetMinMax(0.0f, 8000.0f);
+	visualFXDDSlider->SetMinMax(0.0f, 10000.0f);
 	visualFXDDSlider->SetValue(Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius);
 
 	SV_Label* worldDDLabel = new SV_Label(MainView, MainPanel);

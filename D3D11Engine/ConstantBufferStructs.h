@@ -116,6 +116,16 @@ struct LumAdaptConstantBuffer
 	float3 LC_Pad;
 };
 
+struct GodRayZoomConstantBuffer
+{
+	float GR_Decay;
+	float GR_Weight;
+	float2 GR_Center;
+	
+	float GR_Density;
+	float3 GR_pad;
+};
+
 struct HDRSettingsConstantBuffer
 {
 	float HDR_MiddleGray;

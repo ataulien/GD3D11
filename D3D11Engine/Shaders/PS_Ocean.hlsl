@@ -4,7 +4,18 @@
 #include <FFFog.h>
 #include <DS_Defines.h>
 
-cbuffer OceanSettings : register( b2 )
+cbuffer RefractionInfo : register( b2 )
+{
+	float4x4 RI_Projection;
+	float2 RI_ViewportSize;
+	float RI_Time;
+	float RI_Pad1;
+	
+	float3 RI_CameraPosition;
+	float RI_Pad2;
+};
+
+cbuffer OceanSettings : register( b4 )
 {
 	float3 OS_CameraPosition;
 	float OS_SpecularPower;
@@ -57,8 +68,11 @@ SamplerState SS_Cube : register( s2 );
 
 Texture2D	TX_Normal : register( t0 );
 Texture1D	TX_Fresnel : register( t1 );
-TextureCube	TX_ReflectionCube : register( t2 );
 
+Texture2D	TX_Depth : register( t2 );
+TextureCube	TX_ReflectionCube : register( t3 );
+Texture2D	TX_Distortion : register( t4 );
+Texture2D	TX_Scene : register( t5 );
 
 //--------------------------------------------------------------------------------------
 // Input / Output structures
@@ -78,7 +92,7 @@ struct PS_INPUT
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
-DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
+float4 PSMain( PS_INPUT Input ) : SV_TARGET
 {
 	float texel_length_x2 = OS_TexelLength_x2;
 	float3 skyColor = OS_SkyColor;
@@ -86,6 +100,7 @@ DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
 	float3 bendParam = OS_BendParam;
 
 	float3 localPos = (Input.vWorldPosition - OPP_PatchPosition) / 2048;
+	
 	
 	float3 viewDir = normalize(OPP_LocalEye - localPos);
 	viewDir = viewDir.xzy * float3(1,1,1); // Nvidias sim has z-up
@@ -130,10 +145,31 @@ DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
 	float sun_spot = pow(cos_spec, OS_Shineness);
 	water_color *= waterLighting;
 	water_color += sunColor * sun_spot;
+	water_color = saturate(water_color);
+	
+	// ---- Depth
+	float2 screenUV = Input.vPosition.xy / RI_ViewportSize;
+	
+	// Linear depth
+	float depth = TX_Depth.Sample(SS_Linear, screenUV).r;
+	depth = RI_Projection._43 / (depth - RI_Projection._33);
+	
+	float pixelZ = RI_Projection._43 / (Input.vPosition.z - RI_Projection._33);
+	float shallowWater = saturate((depth - pixelZ) * 0.001f);
 	
 	
+	float3 refract_vec = refract(-viewDir, normal, 1.33);
 	
-	float4 color = 1.0f;
+	float2 distUV = screenUV + lerp(0.0f, normal.xy * 0.08f, saturate(shallowWater * 2));
+	
+	float3 sceneRefracted = TX_Scene.Sample(SS_Linear, distUV).rgb;
+	
+	float3 finalColor = lerp(sceneRefracted, water_color, saturate(shallowWater * 0.8f + ramp.x));
+	
+	return float4(finalColor, 1);
+	
+	
+	/*float4 color = 1.0f;
 	color.rgb = water_color;
 	//color.rgb = 0.5f;
 	
@@ -143,5 +179,5 @@ DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
 	output.vNrm_SI_SP.xy = 0.0f;//EncodeNormal(normalize(Input.vNormalVS));
 	output.vNrm_SI_SP.z = 1.0f;
 	output.vNrm_SI_SP.w = OS_SpecularPower;
-	return output;
+	return output;*/
 }

@@ -35,7 +35,7 @@ struct BspVobInfo
 	std::vector<VobLightInfo *> IndoorLights;
 
 	// This is filled in case we have loaded a custom worldmesh
-	zCArray<zCPolygon *> NodePolygons;
+	std::vector<zCPolygon *> NodePolygons;
 
 	int NumStaticLights;
 
@@ -387,6 +387,9 @@ public:
 	/** Builds our BspTreeVobMap */
 	void BuildBspVobMapCache();
 
+	/** Returns the new node from tha base node */
+	BspVobInfo* GetNewBspNode(zCBspBase* base);
+
 	/** Disables a problematic method which causes the game to conflict with other applications on startup */
 	static void DisableErrorMessageBroadcast();
 
@@ -537,7 +540,22 @@ public:
 
 	/** Returns the brightness value from the ingame menu */
 	float GetBrightnessValue();
+
+	/** Returns the sections intersecting the given boundingboxes */
+	void GetIntersectingSections(const D3DXVECTOR3& min, const D3DXVECTOR3& max, std::vector<WorldMeshSectionInfo*>& sections);
+
+	/** Generates zCPolygons for the loaded sections */
+	void CreatezCPolygonsForSections();
+
+	/** Collects polygons in the given AABB */
+	void CollectPolygonsInAABB(const zTBBox3D& bbox, zCPolygon **& polyList, int& numFound);
+
+	/** Returns the current ocean-object */
+	GOcean* GetOcean();
 private:
+	/** Collects polygons in the given AABB */
+	void CollectPolygonsInAABBRec(BspVobInfo* base, const zTBBox3D& bbox, std::vector<zCPolygon *>& list);
+
 	/** Cleans empty BSPNodes */
 	void CleanBSPNodes();
 
@@ -549,7 +567,11 @@ private:
 
 	/** Applys the suppressed textures */
 	void ApplySuppressedSectionTextures();
+	 
 
+	/** Puts the custom-polygons into the bsp-tree */
+	void PutCustomPolygonsIntoBspTree();
+	void PutCustomPolygonsIntoBspTreeRec(BspVobInfo* base);
 
 	/** Hooked Window-Proc from the game */
 	static LRESULT CALLBACK GothicWndProc(

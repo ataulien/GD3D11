@@ -594,6 +594,9 @@ void GothicAPI::OnWorldLoaded()
 	// Build vob info cache for the bsp-leafs
 	BuildBspVobMapCache();
 
+	//CreatezCPolygonsForSections();
+	//PutCustomPolygonsIntoBspTree();
+
 	// Cache world
 	//CacheWorldMesh("WorldMesh.aom");
 
@@ -801,8 +804,8 @@ void GothicAPI::DrawWorldMeshNaive()
 
 
 	// Draw ocean
-	if(Ocean)
-		Ocean->Draw();
+	//if(Ocean)
+	//	Ocean->Draw();
 
 	//DebugDrawBSPTree();
 
@@ -3312,6 +3315,12 @@ void GothicAPI::CleanBSPNodes()
 	}
 }
 
+/** Returns the new node from tha base node */
+BspVobInfo* GothicAPI::GetNewBspNode(zCBspBase* base)
+{
+	return &BspLeafVobLists[base];
+}
+
 /** Disables a problematic method which causes the game to conflict with other applications on startup */
 void GothicAPI::DisableErrorMessageBroadcast()
 {
@@ -4103,4 +4112,169 @@ float GothicAPI::GetGammaValue()
 float GothicAPI::GetBrightnessValue()
 {
 	return RendererState.RendererSettings.BrightnessValue;
+}
+
+/** Puts the custom-polygons into the bsp-tree */
+void GothicAPI::PutCustomPolygonsIntoBspTree()
+{
+	PutCustomPolygonsIntoBspTreeRec(&BspLeafVobLists[LoadedWorldInfo->BspTree->GetRootNode()]);
+}
+
+void GothicAPI::PutCustomPolygonsIntoBspTreeRec(BspVobInfo* base)
+{
+	if(!base || !base->OriginalNode)
+		return;
+
+	if(base->OriginalNode->IsLeaf())
+	{
+		// Get all sections this nodes intersects with
+		std::vector<WorldMeshSectionInfo*> sections;
+		GetIntersectingSections(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, sections);
+
+		for(int i=0;i<sections.size();i++)
+		{
+			for(int p=0;p<sections[i]->SectionPolygons.size();p++)
+			{
+				zCPolygon* poly = sections[i]->SectionPolygons[p];
+
+				if(!poly->GetMaterial() || // Skip stuff with alpha-channel or not set material
+					poly->GetMaterial()->HasAlphaTest())
+					continue;
+
+
+				// Check all triangles
+				for(int v=0;v<poly->GetNumPolyVertices();v++)
+				{
+					// Check if one vertex is inside the node // FIXME: This will fail for very large triangles!
+					zCVertex** vx = poly->getVertices();
+
+					if(Toolbox::PositionInsideBox(	*vx[0]->Position.toD3DXVECTOR3(), 
+						base->OriginalNode->BBox3D.Min, 
+						base->OriginalNode->BBox3D.Max))
+					{
+						base->NodePolygons.push_back(poly);
+						break;
+					}
+				}
+
+				//base->OriginalNode->PolyList = &base->NodePolygons[0];
+				//base->OriginalNode->NumPolys = base->NodePolygons.size();
+			}
+		}
+
+	}else
+	{
+		PutCustomPolygonsIntoBspTreeRec(base->Front);
+		PutCustomPolygonsIntoBspTreeRec(base->Back);
+	}
+}
+
+/** Returns the sections intersecting the given boundingboxes */
+void GothicAPI::GetIntersectingSections(const D3DXVECTOR3& min, const D3DXVECTOR3& max, std::vector<WorldMeshSectionInfo*>& sections)
+{
+	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
+	{
+		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
+		{
+			WorldMeshSectionInfo& section = (*ity).second;
+
+			if(Toolbox::AABBsOverlapping(section.BoundingBox.Min, section.BoundingBox.Max, min, max))
+			{
+				sections.push_back(&section);
+			}
+		}
+	}
+}
+
+/** Generates zCPolygons for the loaded sections */
+void GothicAPI::CreatezCPolygonsForSections()
+{
+	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
+	{
+		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
+		{
+			WorldMeshSectionInfo& section = (*ity).second;
+
+			for(auto it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			{
+				if(!(*it).first.Material ||
+					(*it).first.Material->HasAlphaTest())
+					continue;
+
+				(*it).first.Material->SetAlphaFunc(zMAT_ALPHA_FUNC_FUNC_NONE);
+
+				WorldConverter::ConvertExVerticesTozCPolygons((*it).second->Vertices, (*it).second->Indices, (*it).first.Material, section.SectionPolygons);
+			}
+		}
+	}
+}
+
+/** Collects polygons in the given AABB */
+void GothicAPI::CollectPolygonsInAABB(const zTBBox3D& bbox, zCPolygon **& polyList, int& numFound)
+{
+	static std::vector<zCPolygon*> list; // This function is defined to only temporary hold the found polygons in the game. 
+										 // This is ugly, but that's how they do it.
+	list.clear();
+
+	CollectPolygonsInAABBRec(&BspLeafVobLists[LoadedWorldInfo->BspTree->GetRootNode()], bbox, list);
+
+	// Give out data to calling function
+	polyList = &list[0];
+	numFound = list.size();
+}
+
+/** Collects polygons in the given AABB */
+void GothicAPI::CollectPolygonsInAABBRec(BspVobInfo* base, const zTBBox3D& bbox, std::vector<zCPolygon *>& list)
+{
+	zCBspNode* node = (zCBspNode*)base->OriginalNode;
+
+	while(node) 
+	{
+		if(node->IsLeaf()) 
+		{
+			zCBspLeaf *leaf = (zCBspLeaf*)node;
+			if (leaf->NumPolys>0) 
+			{
+				// Cancel search in this subtree if this doesn't overlap with our AABB
+				if(!Toolbox::AABBsOverlapping(bbox.Min, bbox.Max, leaf->BBox3D.Min, leaf->BBox3D.Max))
+					return;
+
+				// Insert all polygons we got here
+				list.insert(list.end(), base->NodePolygons.begin(), base->NodePolygons.end());
+			}
+
+			// Got all the polygons and this is a leaf, don't need to do tests for more searches
+			return;
+		}
+
+		// Get next tree to look at
+		int sides = bbox.ClassifyToPlane(node->Plane.Distance, node->PlaneSignbits);
+
+		switch (sides) 
+		{
+		case zTBBox3D::zPLANE_INFRONT:
+			node = (zCBspNode*)node->Front;
+			base = base->Front;
+			break;
+
+		case zTBBox3D::zPLANE_BEHIND:
+			node = (zCBspNode*)node->Back; 
+			base = base->Back;
+			break;
+
+		case zTBBox3D::zPLANE_SPANNING:
+			if(base->Front) 
+				CollectPolygonsInAABBRec(base->Front, bbox, list);
+
+			node = (zCBspNode*)node->Back;
+			base = base->Back;
+			break;
+		}
+	}
+}
+
+/** Returns the current ocean-object */
+GOcean* GothicAPI::GetOcean()
+{
+	return Ocean;
 }

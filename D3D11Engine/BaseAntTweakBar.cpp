@@ -32,6 +32,18 @@ XRESULT BaseAntTweakBar::Init()
 	// Sky
 	Bar_Sky = TwNewBar("Sky");
 	TwDefine(" Sky position='400 0'");
+
+	TwAddVarRW(Bar_Sky, "GodRayDecay", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayDecay, NULL);
+	TwDefine(" Sky/GodRayDecay  step=0.01 ");
+	
+	TwAddVarRW(Bar_Sky, "GodRayWeight", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayWeight, NULL);
+	TwDefine(" Sky/GodRayWeight  step=0.01 ");
+	
+	TwAddVarRW(Bar_Sky, "GodRayDensity", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayDensity, NULL);
+	TwDefine(" Sky/GodRayDensity  step=0.01 ");
+
+	TwAddSeparator(Bar_Sky, "SkySettings", NULL);
+
 	TwAddVarRW(Bar_Sky, "G", TW_TYPE_FLOAT, &Engine::GAPI->GetSky()->GetAtmoshpereSettings().G, NULL);
 	TwDefine(" Sky/G  step=0.01 ");
 	TwDefine(" Sky/G  help='Size of the Sun' ");

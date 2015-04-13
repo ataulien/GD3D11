@@ -206,7 +206,7 @@ float3 ApplyAtmosphericScatteringSky(float3 worldPosition)
 	
 	float fCos2 = fCos*fCos;
 
-	float3 color = AC_getRayleighPhase(fCos2) * c0 + AC_getMiePhase(fCos, fCos2, AC_g, AC_g * AC_g) * c1;
+	float3 color = AC_getRayleighPhase(fCos2) * c0 + AC_getMiePhase(fCos, fCos2, AC_g, AC_g * AC_g) * c1 * 2.0f;
 	
 	return color;
 }

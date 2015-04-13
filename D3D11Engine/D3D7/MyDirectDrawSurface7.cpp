@@ -339,6 +339,7 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
 		// Assume 32-bit
 		byte* data;
 		int pixelSize;
+		Engine::GraphicsEngine->Present(); // Get the old frame out, since the draw-function still waits for "PresentPending"
 		Engine::GraphicsEngine->OnStartWorldRendering(); // Render a frame without menus on the screen first
 		Engine::GraphicsEngine->GetBackbufferData(&data, pixelSize);
 
