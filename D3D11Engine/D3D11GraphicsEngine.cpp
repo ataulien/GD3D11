@@ -1444,6 +1444,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	FrameTextures.clear(); 
 	RenderedVobs.resize(0); // Keep memory allocated on this
 	FrameWaterSurfaces.clear();
+	FrameTransparencyMeshes.clear();
 
 	// Update view distances
 	InfiniteRangeConstantBuffer->UpdateBuffer(&D3DXVECTOR4(FLT_MAX, 0, 0, 0));
@@ -1491,6 +1492,9 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	// Draw water surfaces of current frame
 	DrawWaterSurfaces();
 
+	// Draw light-shafts
+	DrawMeshInfoListAlphablended(FrameTransparencyMeshes);
+
 	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawFog && 
 		Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR)
 		PfxRenderer->RenderHeightfog();
@@ -1509,8 +1513,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		std::vector<zCVob *> decals;
 		Engine::GAPI->GetVisibleDecalList(decals);
 
-
-
+		// Draw stuff like candle-flames
 		DrawDecalList(decals, false);
 	}
 
@@ -1520,6 +1523,8 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	// Draw debug lines
 	LineRenderer->Flush();
 	
+	PfxRenderer->RenderGodRays();
+
 	if(Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR)
 		PfxRenderer->RenderHDR();
 
@@ -1550,7 +1555,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		DrawUnderwaterEffects();
 
 	// Clear here to get a working depthbuffer but no interferences with world geometry for gothic UI-Rendering
-	//Context->ClearDepthStencilView(DepthStencilBuffer->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0.0f);
+	Context->ClearDepthStencilView(DepthStencilBuffer->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0.0f);
 	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), NULL);
 
 	SetDefaultStates();
@@ -1669,6 +1674,107 @@ void D3D11GraphicsEngine::TestDrawWorldMesh()
 
 }
 
+/** Draws a list of mesh infos */
+XRESULT D3D11GraphicsEngine::DrawMeshInfoListAlphablended(const std::vector<std::pair<MeshKey, MeshInfo*>>& list)
+{
+	SetDefaultStates();
+
+	// Setup renderstates
+	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+
+
+	D3DXMATRIX view;
+	Engine::GAPI->GetViewMatrix(&view);
+	Engine::GAPI->SetViewTransform(view);
+	Engine::GAPI->ResetWorldTransform();
+
+	SetActivePixelShader("PS_Diffuse");
+	SetActiveVertexShader("VS_Ex");
+
+	SetupVS_ExMeshDrawCall();
+	SetupVS_ExConstantBuffer();
+
+	// Set constant buffer
+	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&Engine::GAPI->GetRendererState()->GraphicsState);
+	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
+
+	GSky* sky = Engine::GAPI->GetSky();
+	ActivePS->GetConstantBuffer()[1]->UpdateBuffer(&sky->GetAtmosphereCB());
+	ActivePS->GetConstantBuffer()[1]->BindToPixelShader(1);
+
+	D3DXMATRIX id;
+	D3DXMatrixIdentity(&id);
+	ActiveVS->GetConstantBuffer()[1]->UpdateBuffer(&id);
+	ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(1);
+
+	InfiniteRangeConstantBuffer->BindToPixelShader(3);
+
+	// Bind wrapped mesh vertex buffers
+	DrawVertexBufferIndexedUINT(Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer, Engine::GAPI->GetWrappedWorldMesh()->MeshIndexBuffer, 0, 0);
+
+	int lastAlphaFunc = 0;
+
+	// Draw the list
+	for(auto it = list.begin(); it != list.end(); it++)
+	{
+		int indicesNumMod = 1;
+		if((*it).first.Texture != NULL)
+		{
+			MyDirectDrawSurface7* surface = (*it).first.Texture->GetSurface();
+			ID3D11ShaderResourceView* srv[3];
+			
+			// Get diffuse and normalmap
+			srv[0] = ((D3D11Texture *)surface->GetEngineTexture())->GetShaderResourceView();
+			srv[1] = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
+			srv[2] = surface->GetFxMap() ? ((D3D11Texture *)surface->GetFxMap())->GetShaderResourceView() : NULL;
+
+
+			// Bind both
+			Context->PSSetShaderResources(0,3, srv);
+
+			// Get the right shader for it
+
+			BindShaderForTexture((*it).first.Texture, false, (*it).first.Material->GetAlphaFunc());
+			
+			// Check for alphablending on world mesh
+			if(lastAlphaFunc != (*it).first.Material->GetAlphaFunc())
+			{
+				if((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND)
+					Engine::GAPI->GetRendererState()->BlendState.SetAlphaBlending();
+
+				if((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD)
+					Engine::GAPI->GetRendererState()->BlendState.SetAdditiveBlending();
+
+				Engine::GAPI->GetRendererState()->BlendState.SetDirty();
+
+				Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = false;
+				Engine::GAPI->GetRendererState()->DepthState.SetDirty();
+
+				UpdateRenderStates();
+				lastAlphaFunc = (*it).first.Material->GetAlphaFunc();
+			}
+
+
+			MaterialInfo* info = (*it).first.Info;
+			if(!info->Constantbuffer)
+				info->UpdateConstantbuffer();
+			
+			info->Constantbuffer->BindToPixelShader(2);
+
+			// Don't let the game unload the texture after some time
+			(*it).first.Texture->CacheIn(0.6f);
+
+			// Draw the section-part
+			DrawVertexBufferIndexedUINT(NULL, NULL, 
+				(*it).second->Indices.size(),
+				(*it).second->BaseIndexLocation);
+		}
+	}
+
+	return XR_SUCCESS;
+}
+
 XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 {
 	if(!Engine::GAPI->GetRendererState()->RendererSettings.DrawWorldMesh)
@@ -1742,18 +1848,40 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 						}
 					}
 
+					// Check surface type
+					if((*itm).first.Info->MaterialType == MaterialInfo::MT_Water)
+					{
+						FrameWaterSurfaces[(*itm).first.Texture].push_back((*itm).second);
+						continue;
+					}
+
 					// Check if the animated texture and the registered textures are the same
 					if((*itm).first.Texture != aniTex)
 					{
 						MeshKey key = (*itm).first;
 						key.Texture = aniTex;
 
-						// Create a new pair using the animated texture
-						meshList.push_back(std::make_pair(key, (*itm).second));
+						// Check for alphablending
+						if((*itm).first.Material->GetAlphaFunc() > zMAT_ALPHA_FUNC_FUNC_NONE)
+						{
+							FrameTransparencyMeshes.push_back((*itm));
+						}else
+						{
+							// Create a new pair using the animated texture
+							meshList.push_back(std::make_pair(key, (*itm).second));
+						}
+						
 					}else
 					{
-						// Push this texture/mesh combination
-						meshList.push_back((*itm));
+						// Check for alphablending
+						if((*itm).first.Material->GetAlphaFunc() > zMAT_ALPHA_FUNC_FUNC_NONE)
+						{
+							FrameTransparencyMeshes.push_back((*itm));
+						}else
+						{
+							// Push this texture/mesh combination
+							meshList.push_back((*itm));
+						}				
 					}			
 				}
 			}
@@ -1775,18 +1903,6 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 				return false; // Render alpha last
 
 			if(b.first.Texture->HasAlphaChannel())
-				return true; // Render alpha last
-
-			if(a.first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND)
-				return false;
-
-			if(b.first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND)
-				return true; // Render alpha last
-
-			if(a.first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD)
-				return false;
-
-			if(b.first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD)
 				return true; // Render alpha last
 
 			return a.first.Texture < b.first.Texture;
@@ -1914,14 +2030,6 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 				SetActiveVertexShader("VS_Ex");
 				ActiveVS->Apply();
 			}*/
-		}
-
-
-		// Check surface type
-		if(boundInfo->MaterialType == MaterialInfo::MT_Water)
-		{
-			FrameWaterSurfaces[(*it).first.Texture].push_back((*it).second);
-			continue;
 		}
 
 		// Check for tesselated mesh
@@ -2376,6 +2484,9 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 		}
 	}
 
+	// Draw Ocean
+	Engine::GAPI->GetOcean()->Draw();
+
 	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
 
 	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS_EQUAL;
@@ -2475,6 +2586,12 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 					{
 						for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 						{
+							// Check surface type
+							if((*it).first.Info->MaterialType == MaterialInfo::MT_Water)
+							{
+								continue;
+							}
+
 							// Bind texture			
 							if((*it).first.Material && (*it).first.Material->GetTexture())
 							{
@@ -4267,16 +4384,39 @@ XRESULT D3D11GraphicsEngine::DrawOcean(GOcean* ocean)
 	}
 
 	Context->PSSetShaderResources(1,1, &tex_fresnel);
-	Context->PSSetShaderResources(2,1, &cube_reflect);
+	Context->PSSetShaderResources(3,1, &cube_reflect);
+
+	// Scene information is still bound from rendering water surfaces
 
 	Context->PSSetSamplers(1, 1, &ClampSamplerState);
 	Context->PSSetSamplers(2, 1, &CubeSamplerState);
 
 	// Update constantbuffer
 	ActivePS->GetConstantBuffer()[2]->UpdateBuffer(&ocb);
-	ActivePS->GetConstantBuffer()[2]->BindToPixelShader(2);
+	ActivePS->GetConstantBuffer()[2]->BindToPixelShader(4);
 
 	//DistortionTexture->BindToPixelShader(0);
+
+	RefractionInfoConstantBuffer ricb;
+	ricb.RI_Projection = Engine::GAPI->GetProjectionMatrix();
+	ricb.RI_ViewportSize = float2(Resolution.x, Resolution.y);
+	ricb.RI_Time = Engine::GAPI->GetTimeSeconds();
+	ricb.RI_CameraPosition = Engine::GAPI->GetCameraPosition();
+
+	ActivePS->GetConstantBuffer()[4]->UpdateBuffer(&ricb);
+	ActivePS->GetConstantBuffer()[4]->BindToPixelShader(2);
+
+	// Bind distortion texture
+	DistortionTexture->BindToPixelShader(4);
+
+	// Bind copied backbuffer
+	Context->PSSetShaderResources(5, 1, PfxRenderer->GetTempBuffer()->GetShaderResViewPtr());
+
+	// Unbind depth buffer
+	//Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), NULL);
+
+	// Bind depth to the shader
+	DepthStencilBufferCopy->BindToPixelShader(Context, 2);
 
 	std::vector<D3DXVECTOR3> patches;
 	ocean->GetPatchLocations(patches);
@@ -4393,6 +4533,14 @@ void D3D11GraphicsEngine::GetBackbufferData(byte** data, int& pixelsize)
 	SetDefaultStates();
 	SetActivePixelShader("PS_PFX_GammaCorrectInv");
 	ActivePS->Apply();
+
+	GammaCorrectConstantBuffer gcb;
+	gcb.G_Gamma = Engine::GAPI->GetGammaValue();
+	gcb.G_Brightness = Engine::GAPI->GetBrightnessValue();
+
+	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&gcb);
+	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
+
 	PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), BackbufferRTV, INT2(0,0), true);
 	
 	HRESULT hr;
@@ -4529,9 +4677,11 @@ void D3D11GraphicsEngine::DrawDecalList(const std::vector<zCVob *>& decals, bool
 				break;
 
 			case zMAT_ALPHA_FUNC_ADD:
-			default:
 				Engine::GAPI->GetRendererState()->BlendState.SetAdditiveBlending();
 				break;
+
+			default:
+				continue; // FIXME: Draw Modulate!
 			}
 
 			if(lastAlphaFunc != d->GetDecalSettings()->DecalMaterial->GetAlphaFunc())

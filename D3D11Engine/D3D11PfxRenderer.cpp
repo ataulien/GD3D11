@@ -13,6 +13,7 @@
 #include "D3D11PFX_HDR.h"
 #include "D3D11NVHBAO.h"
 #include "D3D11PFX_SMAA.h"
+#include "D3D11PFX_GodRays.h"
 
 D3D11PfxRenderer::D3D11PfxRenderer(void)
 {
@@ -32,6 +33,8 @@ D3D11PfxRenderer::D3D11PfxRenderer(void)
 	FX_HDR = new D3D11PFX_HDR(this);
 	FX_SMAA = new D3D11PFX_SMAA(this);
 
+	FX_GodRays = new D3D11PFX_GodRays(this);
+
 	NvHBAO = new D3D11NVHBAO;
 	NvHBAO->Init();
 }
@@ -46,6 +49,7 @@ D3D11PfxRenderer::~D3D11PfxRenderer(void)
 	delete ScreenQuad;
 	delete FX_Blur;
 	delete FX_HeightFog;
+	delete FX_GodRays;
 	//delete FX_DistanceBlur;
 	delete FX_HDR;
 } 
@@ -69,6 +73,12 @@ XRESULT D3D11PfxRenderer::RenderHeightfog()
 {
 	return FX_HeightFog->Render(NULL);
 } 
+
+/** Renders the godrays-Effect */
+XRESULT D3D11PfxRenderer::RenderGodRays()
+{
+	return FX_GodRays->Render(NULL);
+}
 
 /** Renders the HDR-Effect */
 XRESULT D3D11PfxRenderer::RenderHDR()

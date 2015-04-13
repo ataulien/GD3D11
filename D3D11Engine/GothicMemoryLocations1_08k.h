@@ -173,6 +173,15 @@ struct GothicMemoryLocations
 		static const unsigned int Render = 0x0051D840;
 	};
 
+	struct zCBspBase
+	{
+		static const unsigned int CollectPolysInBBox3D = 0x005200C0;
+		static const unsigned int CheckRayAgainstPolys = 0x0051F180;
+		static const unsigned int CheckRayAgainstPolysCache = 0x0051F440;
+		static const unsigned int CheckRayAgainstPolysNearestHit = 0x0051F2A0;
+		
+	};
+
 	struct zCPolygon
 	{
 		static const unsigned int Offset_VerticesArray = 0x00;
@@ -183,6 +192,10 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_Lightmap = 0x1C;
 
 		static const unsigned int AllocVerts = 0x00599840;
+		static const unsigned int CalcNormal = 0x00596540;
+
+		static const unsigned int Constructor = 0x00595B00;
+		static const unsigned int Destructor = 0x00595B30;
 
 		static const unsigned int Size = 0x38;
 	};
@@ -216,7 +229,7 @@ struct GothicMemoryLocations
 	struct zCMaterial
 	{
 		static const unsigned int Offset_Texture = 0x34;
-		static const unsigned int Offset_AlphaFunc = 0x74;
+		static const unsigned int Offset_AlphaFunc = 0x70;
 		static const unsigned int Offset_MatGroup = 0x40;
 		static const unsigned int Offset_TexAniCtrl = 0x4C;
 

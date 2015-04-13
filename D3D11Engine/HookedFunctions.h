@@ -36,6 +36,11 @@ typedef void (__thiscall* zCMaterialConstruktor)(void *);
 typedef void (__thiscall* zCMaterialInitValues)(void *);
 typedef void (__fastcall* zCBspNodeRenderIndoor)(void *, int);
 typedef void (__fastcall* zCBspNodeRenderOutdoor)(void *, zCBspBase*, zTBBox3D, int, int);
+
+typedef void (__fastcall* zCBspBaseCollectPolysInBBox3D)(void*, const zTBBox3D&, zCPolygon **&, int&);
+
+typedef int (__fastcall* zCBspBaseCheckRayAgainstPolys)(void*, const D3DXVECTOR3&, const D3DXVECTOR3&, D3DXVECTOR3&);
+
 typedef int (__thiscall* zFILEOpen)(void*,zSTRING&, bool);
 typedef void (__thiscall* zCRnd_D3DVid_SetScreenMode)(void*, int);
 typedef int (__thiscall* zCOptionReadInt)(void*,zSTRING const&, char const*, int);
@@ -118,6 +123,10 @@ struct HookedFunctionInfo
 	oCWorldRemoveFromLists original_oCWorldRemoveFromLists;
 	zCBinkPlayerOpenVideo original_zCBinkPlayerOpenVideo;
 	zCVobEndMovement original_zCVobEndMovement;
+	zCBspBaseCollectPolysInBBox3D original_zCBspBaseCollectPolysInBBox3D;
+	zCBspBaseCheckRayAgainstPolys original_zCBspBaseCheckRayAgainstPolys;
+	zCBspBaseCheckRayAgainstPolys original_zCBspBaseCheckRayAgainstPolysCache;
+	zCBspBaseCheckRayAgainstPolys original_zCBspBaseCheckRayAgainstPolysNearestHit;
 
 	/** Function hooks */
 	static int __stdcall hooked_HandledWinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR szCmdLine, int sw);

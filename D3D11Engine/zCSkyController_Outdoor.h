@@ -140,7 +140,7 @@ public:
 			return D3DXVECTOR3(0,0,0);
 		}*/
 
-		float angle = ((GetMasterTime() * timeScale - 0.3f) * 1.25f + 0.5f) * 2.0f * (180.0f * ((float)D3DX_PI / 180.0f));
+		float angle = ((GetMasterTime() * timeScale - 0.3f) * 1.25f + 0.5f) * 2.0f * (180.0f * (float)D3DX_PI / 180.0f);
 
 		D3DXVECTOR3 sunPos = D3DXVECTOR3(-60, 0, 100);
 		D3DXVec3Normalize(&sunPos, &sunPos);

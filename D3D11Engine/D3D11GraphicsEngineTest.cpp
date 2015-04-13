@@ -35,6 +35,8 @@ XRESULT D3D11GraphicsEngineTest::OnStartWorldRendering()
 
 	SetDefaultStates();
 
+	PS_LPP = ShaderManager->GetPShader("PS_LPPNormalmappedAlphaTest");
+
 	Engine::GAPI->SetFarPlane(80000.0f);
 	Clear(float4(Engine::GAPI->GetRendererState()->GraphicsState.FF_FogColor, 0.0f));
 
@@ -42,8 +44,8 @@ XRESULT D3D11GraphicsEngineTest::OnStartWorldRendering()
 	Context->OMSetRenderTargets(2, rtvs, DepthStencilBuffer->GetDepthStencilView());
 
 	
-	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawWorldMesh)
-		DrawWorldMeshTest();
+	//if(Engine::GAPI->GetRendererState()->RendererSettings.DrawWorldMesh)
+	//	DrawWorldMeshTest();
 	
 	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs)
 		DrawSceneLightPrePass();
@@ -64,7 +66,7 @@ XRESULT D3D11GraphicsEngineTest::OnStartWorldRendering()
 
 	Context->RSSetViewports(1, &vp);
 
-	PS_LPP = ShaderManager->GetPShader("PS_LPPNormalmappedAlphaTest");
+	
 
 	return XR_SUCCESS;
 }
@@ -94,7 +96,7 @@ void D3D11GraphicsEngineTest::GetWorldMeshRenderList(std::list<std::pair<MeshKey
 				continue;
 			}
 
-			list.push_back((*itm));
+			list.push_back(std::make_pair((*itm).first, (*itm).second));
 		}
 	}
 
@@ -153,7 +155,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 
 	// Collect visible vobs and lights
 	static bool s_done = false;
-	//if(!s_done)
+	if(!s_done)
 	{
 		if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs || 
 			Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting)
@@ -202,7 +204,9 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	SetupVS_ExConstantBuffer();
 
 	// Get reference to visual-map
-	std::hash_map<zCProgMeshProto*, MeshVisualInfo*> vis = Engine::GAPI->GetStaticMeshVisuals();
+	const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
+
+	
 
 	/** z-pre-pass */
 
@@ -223,6 +227,9 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 			DrawVisualInstances((*it).second);
 	}
 
+
+	
+
 	SetActiveVertexShader("VS_Ex");
 	Engine::GAPI->ResetWorldTransform(); // WorldMesh is always at 0,0,0
 
@@ -231,7 +238,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	SetupVS_ExConstantBuffer();
 
 	// Draw world mesh
-	DrawWorldMeshRenderList(0, worldMeshList);
+	//DrawWorldMeshRenderList(0, worldMeshList);
 
 	/** Diffuse pass */
 
@@ -254,6 +261,8 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 
 	UpdateRenderStates();
 
+	
+
 	// Draw the instances of every visual, if available
 	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 	{
@@ -267,6 +276,8 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 		}
 	}
 
+	
+
 	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	Context->DSSetShader(NULL, NULL, NULL);
 	Context->HSSetShader(NULL, NULL, NULL);
@@ -279,7 +290,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	SetupVS_ExConstantBuffer();
 
 	// Draw world mesh
-	DrawWorldMeshRenderList(0, worldMeshList);
+	//DrawWorldMeshRenderList(0, worldMeshList);
 
 	if(Engine::GAPI->GetRendererState()->RendererSettings.WireframeVobs)
 	{

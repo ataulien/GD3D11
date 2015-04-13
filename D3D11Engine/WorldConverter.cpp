@@ -478,22 +478,6 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 
 			for(std::map<MeshKey, WorldMeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
 			{
-				if(vertexBuffers.size() == 653 || vertexBuffers.size() == 31)
-				{
-					/*ExVertexStruct vx;
-					vx.Position = D3DXVECTOR3(0,0,0);
-					(*it).second->Vertices.clear();
-					(*it).second->Vertices.push_back(vx);
-					(*it).second->Vertices.push_back(vx);
-					(*it).second->Vertices.push_back(vx);
-
-					(*it).second->Indices.clear();
-					(*it).second->Indices.push_back(0);
-					(*it).second->Indices.push_back(1);
-					(*it).second->Indices.push_back(2);*/
-					//continue;
-				}
-
 				std::vector<ExVertexStruct> indexedVertices;
 				std::vector<VERTEX_INDEX> indices;
 				IndexVertices(&(*it).second->Vertices[0], (*it).second->Vertices.size(), indexedVertices, indices);
@@ -2407,20 +2391,35 @@ void WorldConverter::ConvertExVerticesTozCPolygons(const std::vector<ExVertexStr
 	{
 		// Create and init polyong
 		zCPolygon* poly = new zCPolygon();
-		poly->AllocVerts(3);
+		poly->Constructor();
+		poly->AllocVertPointers(3);
+		poly->AllocVertData();
 		poly->SetMaterial(material);
 
 		// Fill data
+		zCVertex** vx = poly->getVertices();
 		for(int v=0;v<3;v++)
 		{
-			poly->getVertices()[v]->MyIndex = 0;
-			poly->getVertices()[v]->TransformedIndex = 0;
-			poly->getVertices()[v]->Position = vertices[indices[i + v]].Position;
+			
+			vx[v]->MyIndex = v;
+			vx[v]->TransformedIndex = 0;
+			vx[v]->Position = vertices[indices[i + v]].Position;
 
 			poly->getFeatures()[v]->lightStatic = 0xFFFFFFFF;
 			poly->getFeatures()[v]->normal = vertices[indices[i + v]].Normal;
 			poly->getFeatures()[v]->texCoord = vertices[indices[i + v]].TexCoord;
 		}
+
+		zCVertex* vtmp = vx[1];
+		zCVertFeature* ftmp = poly->getFeatures()[1];
+
+		vx[1] = vx[2];
+		poly->getFeatures()[1] = poly->getFeatures()[2];
+
+		vx[2] = vtmp;
+		poly->getFeatures()[2] = ftmp;
+
+		poly->CalcNormal();
 
 		// Add to array
 		polyArray.push_back(poly);

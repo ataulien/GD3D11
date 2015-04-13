@@ -116,6 +116,8 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
 	Shaders.back().cBufferSizes.push_back(sizeof(OceanSettingsConstantBuffer));
 	Shaders.back().cBufferSizes.push_back(sizeof(OceanPerPatchConstantBuffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(RefractionInfoConstantBuffer));
+	
 
 	Shaders.push_back(ShaderInfo("PS_Water", "PS_Water.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(GothicGraphicsState));
@@ -167,6 +169,10 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.push_back(ShaderInfo("PS_PFX_HDR", "PS_PFX_HDR.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(HDRSettingsConstantBuffer));
 
+	Shaders.push_back(ShaderInfo("PS_PFX_GodRayMask", "PS_PFX_GodRayMask.hlsl", "p"));
+	Shaders.push_back(ShaderInfo("PS_PFX_GodRayZoom", "PS_PFX_GodRayZoom.hlsl", "p"));
+	Shaders.back().cBufferSizes.push_back(sizeof(GodRayZoomConstantBuffer));
+	
 	Shaders.push_back(ShaderInfo("PS_PFX_Tonemap", "PS_PFX_Tonemap.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(HDRSettingsConstantBuffer));
 
@@ -344,11 +350,11 @@ XRESULT D3D11ShaderManager::Init()
 	m.Definition = "1";
 	makros.push_back(m);
 								  
-	/*Shaders.push_back(ShaderInfo("PS_LPPNormalmappedAlphaTest", "PS_LPP.hlsl", "p", makros));
+	Shaders.push_back(ShaderInfo("PS_LPPNormalmappedAlphaTest", "PS_LPP.hlsl", "p", makros));
 	Shaders.back().cBufferSizes.push_back(sizeof(GothicGraphicsState));
 	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
 	Shaders.back().cBufferSizes.push_back(sizeof(MaterialInfo::Buffer));
-	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));*/
+	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));
 
 
 

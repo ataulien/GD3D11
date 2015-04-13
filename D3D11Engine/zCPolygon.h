@@ -59,14 +59,53 @@ class zCLightmap;
 class zCPolygon
 {
 public:
-	
-	void AllocVerts(int num)
+	~zCPolygon()
+	{
+		// Clean our vertices
+		for(int i=0;i<GetNumPolyVertices();i++)
+		{
+			delete getVertices()[i];
+			getVertices()[i] = NULL;
+		}
+
+		Destructor();
+	}
+
+	void Destructor()
+	{
+		#ifndef BUILD_GOTHIC_2_6_fix
+		XCALL(GothicMemoryLocations::zCPolygon::Destructor);
+		#endif
+	}
+
+	void Constructor()
+	{
+		#ifndef BUILD_GOTHIC_2_6_fix
+		XCALL(GothicMemoryLocations::zCPolygon::Constructor);
+		#endif
+	}
+
+	void AllocVertPointers(int num)
 	{
 		#ifndef BUILD_GOTHIC_2_6_fix
 		XCALL(GothicMemoryLocations::zCPolygon::AllocVerts);
 		#endif
 	}
 
+	void CalcNormal()
+	{
+		#ifndef BUILD_GOTHIC_2_6_fix
+		XCALL(GothicMemoryLocations::zCPolygon::CalcNormal);
+		#endif
+	}
+
+	void AllocVertData()
+	{
+		for(int i=0;i<GetNumPolyVertices();i++)
+		{
+			getVertices()[i] = new zCVertex;
+		}
+	}
 
 	zCVertex** getVertices() const
 	{
@@ -102,6 +141,6 @@ public:
 	{
 		return *(zCLightmap **)(((char *)this) + GothicMemoryLocations::zCPolygon::Offset_Lightmap);
 	}
-
-	char data[52];
+	
+	char data[56];	
 };

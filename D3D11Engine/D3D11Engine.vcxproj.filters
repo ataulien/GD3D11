@@ -633,6 +633,9 @@
     </ClInclude>
     <ClInclude Include="BasePipelineStates.h" />
     <ClInclude Include="D3D11PipelineStates.h" />
+    <ClInclude Include="D3D11PFX_GodRays.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -896,6 +899,9 @@
     </ClCompile>
     <ClCompile Include="ZipArchive.cpp">
       <Filter>Engine\GAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_GodRays.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

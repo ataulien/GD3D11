@@ -6,6 +6,7 @@
 #include "zTypes.h"
 #include "BaseTexture.h"
 #include "GothicGraphicsState.h"
+#include "zCPolygon.h"
 
 
 /** Square size of a single world-section */
@@ -477,6 +478,14 @@ struct WorldMeshSectionInfo
 		}
 		Vobs.clear();
 
+		for(auto it = SectionPolygons.begin(); it != SectionPolygons.end(); it++)
+		{
+			delete (*it);
+		}
+		SectionPolygons.clear();
+
+		
+
 		delete FullStaticMesh;
 	}
 
@@ -497,6 +506,9 @@ struct WorldMeshSectionInfo
 
 	/** Loaded ocean-polys of this section */
 	std::vector<D3DXVECTOR3> OceanPoints;
+
+	// This is filled in case we have loaded a custom worldmesh
+	std::vector<zCPolygon *> SectionPolygons;
 
 	/** The whole section as one single mesh, without alpha-test materials */
 	MeshInfo* FullStaticMesh;

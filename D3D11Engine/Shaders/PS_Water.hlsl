@@ -116,8 +116,10 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	
 
 	// Darken the scene, to make a wet surface
-	float f = 1-saturate(pow(1-shallowDepth, 20.0f) + clamp(pow(distortionSmall.y, 2), 0.5f, 1.0f));
-	float3 sceneWet = lerp(sceneClean, sceneClean * 0.2f, f);
+	float f = 1-saturate(pow(1-shallowDepth, 8.0f) + clamp(pow(distortionSmall.y, 2), 0.5f, 1.0f));
+
+	float3 sceneWet = lerp(sceneClean, sceneClean * 0.01f, f); // Darken border-scene
+	scene = lerp(scene, scene * float3(4, 0.2f, 0.1f) * 0.05f, f); // Darken distorted scene
 	
 	float pxDistance = Input.vTexcoord2.y;
 	scene = lerp(scene, diffuse, 0.73f * max(pow(fresnel,8.0f), 0.5f));

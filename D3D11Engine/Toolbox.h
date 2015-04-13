@@ -41,6 +41,9 @@ namespace Toolbox
 	/** Converts a wide-char-string to  multi-byte*/
 	std::string ToMultiByte(const std::wstring& str);
 
+	/** Returns whether two AABBs are intersecting or not */
+	bool AABBsOverlapping(const D3DXVECTOR3& minA, const D3DXVECTOR3& maxA, const D3DXVECTOR3& minB, const D3DXVECTOR3& maxB); 
+
 	/** Does a ray vs aabb test */
 	bool IntersectBox(const D3DXVECTOR3& min, const D3DXVECTOR3& max, const D3DXVECTOR3& origin, const D3DXVECTOR3& direction, float& t);
 

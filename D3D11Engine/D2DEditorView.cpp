@@ -1177,7 +1177,11 @@ void D2DEditorView::OnDelete()
 	if(Selection.SelectedMesh && Selection.SelectedMaterial && Selection.SelectedMaterial->GetTexture())
 	{
 		// Find the section of this mesh
-		INT2 s = WorldConverter::GetSectionOfPos(*Selection.SelectedMesh->Vertices[0].Position.toD3DXVECTOR3());
+		D3DXVECTOR3 avgPos = (*Selection.SelectedMesh->Vertices[0].Position.toD3DXVECTOR3() + 
+			*Selection.SelectedMesh->Vertices[0].Position.toD3DXVECTOR3() + 
+			*Selection.SelectedMesh->Vertices[0].Position.toD3DXVECTOR3()) / 3.0f;
+
+		INT2 s = WorldConverter::GetSectionOfPos(avgPos);
 		WorldMeshSectionInfo* section = &Engine::GAPI->GetWorldSections()[s.x][s.y];
 
 		// Remove the texture from rendering
