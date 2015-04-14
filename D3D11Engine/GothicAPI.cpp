@@ -37,6 +37,7 @@
 #include "zCOption.h"
 #include "zCRndD3D.h"
 #include "win32ClipboardWrapper.h"
+#include "zCSoundSystem.h"
 
 /** Writes this info to a file */
 void MaterialInfo::WriteToFile(const std::string& name)
@@ -286,6 +287,24 @@ void GothicAPI::OnWorldUpdate()
 		FrameInfo* pendingInfo = new FrameInfo;
 		RenderThread->SetPendingFrameInfo(pendingInfo);
 	}
+
+	// Apply the hints for the sound system to fix voices in indoor locations being quiet
+	// This was originally done in zCBspTree::Render 
+	if(IsCameraIndoor())
+	{ 
+		// Set mode to 2, which means we are indoors, but can see the outside
+		zCSoundSystem::GetSoundSystem()->SetGlobalReverbPreset(2, 0.6f);
+
+		if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
+			oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->SetCameraLocationHint(2);
+	}else
+	{
+		// Set mode to 0, which is the default
+		zCSoundSystem::GetSoundSystem()->SetGlobalReverbPreset(0, 0.0f); 
+
+		if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
+			oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->SetCameraLocationHint(0);
+	}
 }
 
 /** Returns gothics fps-counter */
@@ -297,10 +316,10 @@ int GothicAPI::GetFramesPerSecond()
 /** Returns wether the camera is indoor or not */
 bool GothicAPI::IsCameraIndoor()
 {
-	if(!!oCGame::GetGame() || !oCGame::GetGame()->_zCSession_camVob || !oCGame::GetGame()->_zCSession_camVob->GetGroundPoly())
+	if(!oCGame::GetGame() || !oCGame::GetGame()->_zCSession_camVob || !oCGame::GetGame()->_zCSession_camVob->GetGroundPoly())
 		return false;
 
-	return oCGame::GetGame()->_zCSession_camVob->GetGroundPoly()->GetPolyFlags() != NULL;
+	return oCGame::GetGame()->_zCSession_camVob->GetGroundPoly()->GetLightmap() != NULL;
 }
 
 /** Returns global time */
@@ -2801,6 +2820,7 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 
 				VobInstanceInfo vii;
 				vii.world = (*it)->WorldMatrix;
+				vii.color = (*it)->GroundColor;
 
 				/*if((*it)->IsIndoorVob)
 					vii.color = float4(DEFAULT_INDOOR_VOB_AMBIENT).ToDWORD();
@@ -2971,6 +2991,7 @@ static void CVVH_AddNotDrawnVobToList(std::vector<VobInfo *>& target, std::vecto
 
 				VobInstanceInfo vii;
 				vii.world = (*it)->WorldMatrix;
+				vii.color = (*it)->GroundColor;
 
 				//if((*it)->IsIndoorVob)
 				//	vii.color = float4(DEFAULT_INDOOR_VOB_AMBIENT).ToDWORD();

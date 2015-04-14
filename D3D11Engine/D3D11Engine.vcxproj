@@ -649,6 +649,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="zCSoundSystem.h" />
     <ClCompile Include="ZipArchive.cpp" />
   </ItemGroup>
   <ItemGroup>

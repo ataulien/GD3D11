@@ -494,12 +494,7 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 	{
 		if(Engine::GAPI->GetRendererState()->RendererSettings.EnableEditorPanel)
 		{
-			UIView = new D2DView;
-			if(XR_SUCCESS != UIView->Init(bbres, backbuffer))
-			{
-				delete UIView;
-				UIView = NULL;
-			}
+			CreateMainUIView();
 		}
 	}
 	else
@@ -595,18 +590,7 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame()
 	{
 		if(Engine::GAPI->GetRendererState()->RendererSettings.EnableEditorPanel)
 		{
-			UIView = new D2DView;
-
-			ID3D11Texture2D* tex;
-			BackbufferRTV->GetResource((ID3D11Resource **)&tex);
-			if(XR_SUCCESS != UIView->Init(Resolution, tex))
-			{
-				delete UIView;
-				UIView = NULL;
-			}
-
-			if(tex)
-				tex->Release();
+			CreateMainUIView();
 		}
 	}
 
@@ -3876,7 +3860,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		D3DXVECTOR3 target = dir;
 
 		// Smoothly transition to the next state and wait there
-		if(fabs(D3DXVec3Dot(&smoothDir, &dir)) < 0.9999f) // but cut it off somewhere or the pixels will flicker
+		if(fabs(D3DXVec3Dot(&smoothDir, &dir)) < 0.99995f) // but cut it off somewhere or the pixels will flicker
 			D3DXVec3Lerp(&dir, &smoothDir, &target, Engine::GAPI->GetFrameTimeSec() * 2.0f);
 		else
 			oldDir = dir;	
@@ -4502,18 +4486,7 @@ void D3D11GraphicsEngine::OnUIEvent(EUIEvent uiEvent)
 	{
 		if(!UIView)
 		{
-			UIView = new D2DView;
-
-			ID3D11Texture2D* tex;
-			BackbufferRTV->GetResource((ID3D11Resource **)&tex);
-			if(XR_SUCCESS != UIView->Init(Resolution, tex))
-			{
-				delete UIView;
-				UIView = NULL;
-			}
-
-			if(tex)
-				tex->Release();
+			CreateMainUIView();
 		}
 	
 		// Show settings
@@ -4680,8 +4653,12 @@ void D3D11GraphicsEngine::DrawDecalList(const std::vector<zCVob *>& decals, bool
 				Engine::GAPI->GetRendererState()->BlendState.SetAdditiveBlending();
 				break;
 
+			/*case zRND_ALPHA_FUNC_MUL:
+				Engine::GAPI->GetRendererState()->BlendState.SetModulateBlending();
+				break;*/ // FIXME: Implement modulate
+
 			default:
-				continue; // FIXME: Draw Modulate!
+				continue; 
 			}
 
 			if(lastAlphaFunc != d->GetDecalSettings()->DecalMaterial->GetAlphaFunc())
@@ -4833,8 +4810,12 @@ void D3D11GraphicsEngine::DrawQuadMarks()
 				Engine::GAPI->GetRendererState()->BlendState.SetDefault();
 				break;
 
+			/*case zRND_ALPHA_FUNC_MUL:
+				Engine::GAPI->GetRendererState()->BlendState.SetModulateBlending();
+				break;*/ // FIXME: Implement modulate
+
 			default:
-				continue; // FIXME: Support modulate!
+				continue;
 			}
 
 			alphaFunc = mat->GetAlphaFunc();
@@ -4891,6 +4872,11 @@ void D3D11GraphicsEngine::CreateMainUIView()
 		{
 			delete UIView;
 			UIView = NULL;
+
+			if(tex)
+				tex->Release();
+
+			return;
 		}
 
 		if(tex)

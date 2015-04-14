@@ -7,6 +7,7 @@
 __declspec( align( 16 ) )struct VobInstanceInfo
 {
 	D3DXMATRIX world;
+	DWORD color;
 };
 
 
