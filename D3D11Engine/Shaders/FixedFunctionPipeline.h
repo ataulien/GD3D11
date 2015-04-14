@@ -141,6 +141,9 @@ float4 GetColorFromStates(float4 diffuse, float2 uv, float2 uv2, SamplerState sa
 	
 	float4 alpha = color;//__runStage(FF_Stages[0].alphaop, FF_Stages[0].alphaarg1, FF_Stages[0].alphaarg2, diffuse, diffuse, texture0, uv, samplerState);
 
+	if(FF_AlphaTestEnabled())
+		DoAlphaTest(alpha.a);
+	
 	//return textureFactor;
 	return float4(color.rgb, alpha.a);
 }

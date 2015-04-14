@@ -369,6 +369,9 @@ struct VobInfo : public BaseVobInfo
 
 	/** BSP-Node this is stored in */
 	std::vector<BspVobInfo*> ParentBSPNodes;
+
+	/** Color the underlaying polygon has */
+	DWORD GroundColor;
 };
 
 class zCVobLight;

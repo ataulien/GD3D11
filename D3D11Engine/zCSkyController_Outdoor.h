@@ -156,6 +156,12 @@ public:
 		return pos;
 	}
 
+	void SetCameraLocationHint(int hint)
+	{
+		XCALL(GothicMemoryLocations::zCSkyController_Outdoor::SetCameraLocationHint);
+	}
+
+
 	/*zCSkyLayer* GetSkyLayers(int i)
 	{
 		if(i==0)

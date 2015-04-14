@@ -308,8 +308,8 @@ struct GothicBlendStateInfo : public GothicPipelineState
 	/** Sets up modualte blending */
 	void SetModulateBlending()
 	{
-		SrcBlend = BF_SRC_COLOR;
-		DestBlend = BF_DEST_COLOR;
+		SrcBlend = BF_DEST_COLOR;
+		DestBlend = BF_ZERO;
 		BlendOp = BO_BLEND_OP_ADD;
 		SrcBlendAlpha = BF_ONE;
 		DestBlendAlpha = BF_ZERO;

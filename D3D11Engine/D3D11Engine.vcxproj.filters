@@ -903,6 +903,9 @@
     <ClCompile Include="D3D11PFX_GodRays.cpp">
       <Filter>Engine\D3D11\PFX\Effects</Filter>
     </ClCompile>
+    <ClCompile Include="zCSoundSystem.h">
+      <Filter>ZenGin\Classes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

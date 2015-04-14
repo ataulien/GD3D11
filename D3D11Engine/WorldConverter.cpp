@@ -97,6 +97,18 @@ void VobInfo::UpdateVobConstantBuffer()
 
 	LastRenderPosition = Vob->GetPositionWorld();
 	WorldMatrix = cb.World;
+
+	// Colorize the vob according to the underlaying polygon
+	if(IsIndoorVob)
+	{
+		// All lightmapped polys have this color, so just use it
+		GroundColor = DEFAULT_LIGHTMAP_POLY_COLOR;
+	}else
+	{
+		// Get the color of the first found feature of the ground poly
+		GroundColor = Vob->GetGroundPoly() ? Vob->GetGroundPoly()->getFeatures()[0]->lightStatic : 0xFFFFFFFF;
+	}
+
 	//D3DXMatrixTranspose(&WorldMatrix, &cb.World);
 }
 

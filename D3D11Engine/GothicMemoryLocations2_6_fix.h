@@ -116,6 +116,8 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_InitDone = 0x7C;
 		static const unsigned int Init = 0x005E6A00;
 		static const unsigned int GetUnderwaterFX = 0x005E0050;
+
+		static const unsigned int SetCameraLocationHint = 0x005E6790;
 	};
 
 	struct zCSkyController
@@ -190,6 +192,12 @@ struct GothicMemoryLocations
 		static const unsigned int zCOption = 0x008CD988;
 		static const unsigned int zCParser = 0xAB40C0;
 		static const unsigned int zRenderer = 0x00982F08;
+		static const unsigned int zSound = 0x0099B03C;
+	};
+
+	struct zCSoundSystem
+	{
+		static const unsigned int VTBL_SetGlobalReverbPreset = 0x58 / 4;
 	};
 
 	struct zCParser
@@ -384,6 +392,8 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int ToChar = 0x004639D0;
 	};
+
+
 
 	struct zCMaterial
 	{
