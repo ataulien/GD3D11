@@ -551,8 +551,9 @@ struct GothicRendererSettings
 		FOVVert = 90.0f;
 
 		GodRayDecay = 0.97f;
-		GodRayWeight = 0.90f;
-		GodRayDensity = 0.50f;
+		GodRayWeight = 0.85f;
+		GodRayDensity = 0.70f;
+		GodRayColorMod = float3(1.0f, 0.7f, 0.8f);
 
 		RECT desktopRect;
 		GetClientRect(GetDesktopWindow(), &desktopRect);
@@ -637,6 +638,7 @@ struct GothicRendererSettings
 	float GodRayDecay;
 	float GodRayWeight;
 	float GodRayDensity;
+	float3 GodRayColorMod;
 
 	HBAOSettings HbaoSettings;
 

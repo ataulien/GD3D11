@@ -39,8 +39,9 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_Sky, "GodRayWeight", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayWeight, NULL);
 	TwDefine(" Sky/GodRayWeight  step=0.01 ");
 	
+	TwAddVarRW(Bar_Sky, "GodRayColorMod", TW_TYPE_COLOR3F, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayColorMod, NULL);
+
 	TwAddVarRW(Bar_Sky, "GodRayDensity", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayDensity, NULL);
-	TwDefine(" Sky/GodRayDensity  step=0.01 ");
 
 	TwAddSeparator(Bar_Sky, "SkySettings", NULL);
 

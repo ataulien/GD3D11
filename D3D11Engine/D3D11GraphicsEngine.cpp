@@ -1835,7 +1835,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 					// Check surface type
 					if((*itm).first.Info->MaterialType == MaterialInfo::MT_Water)
 					{
-						FrameWaterSurfaces[(*itm).first.Texture].push_back((*itm).second);
+						FrameWaterSurfaces[aniTex].push_back((*itm).second);
 						continue;
 					}
 
@@ -3851,7 +3851,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 	D3DXVECTOR3 WorldShadowCP;
 
 	// Update dir
-	if(fabs(D3DXVec3Dot(&oldDir, &dir)) > 0.999f)
+	if(fabs(D3DXVec3Dot(&oldDir, &dir)) > 0.9995f)
 	{
 		dir = oldDir;	
 	}
