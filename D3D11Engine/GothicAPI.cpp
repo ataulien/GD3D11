@@ -296,7 +296,7 @@ void GothicAPI::OnWorldUpdate()
 		zCSoundSystem::GetSoundSystem()->SetGlobalReverbPreset(2, 0.6f);
 
 		if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
-			oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->SetCameraLocationHint(2);
+			oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->SetCameraLocationHint(1);
 	}else
 	{
 		// Set mode to 0, which is the default

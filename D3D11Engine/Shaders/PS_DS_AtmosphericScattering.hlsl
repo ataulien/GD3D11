@@ -225,6 +225,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float specMod = pow(dot(float3(0.333f,0.333f,0.333f), diffuse.rgb), 2);
 	
 	
+	
 	//return float4(diffuse.rgb, 1);
 	
 	// Apply sunlight
@@ -242,6 +243,9 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float3 litPixel = lerp( diffuse * SQ_ShadowStrength * sunStrength * shadowAO, 
 							diffuse * SQ_LightColor * SQ_LightColor.a * worldAO, sun) 
 				  + specColored;
+	
+	float fresnel = pow(1.0f - max(0.0f, dot(normal, V)), 10.0f);
+	litPixel += lerp(fresnel * litPixel * 0.5f, 0.0f, sun);
 	
 	// Run scattering
 	litPixel = ApplyAtmosphericScatteringGround(wsPosition, litPixel.rgb);

@@ -124,7 +124,7 @@ struct GodRayZoomConstantBuffer
 	float2 GR_Center;
 	
 	float GR_Density;
-	float3 GR_pad;
+	float3 GR_ColorMod;
 };
 
 struct HDRSettingsConstantBuffer

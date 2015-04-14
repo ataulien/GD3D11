@@ -25,7 +25,7 @@ GSky::GSky(void)
 	Atmosphere.OuterRadius = 900000;
 	Atmosphere.Samples = 3;
 	Atmosphere.RayleightScaleDepth = 0.25f;
-	Atmosphere.G = -0.98f;
+	Atmosphere.G = -0.995f;
 	//Atmosphere.WaveLengths = float3(0.65f, 0.57f, 0.475f);
 	Atmosphere.WaveLengths = float3(0.63f, 0.57f, 0.50f);
 	Atmosphere.SpherePosition = D3DXVECTOR3(0,0,0);
