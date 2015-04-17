@@ -18,13 +18,13 @@ GSky::GSky(void)
 	SkyPlane = NULL;
 	CloudTexture = NULL;
 
-	Atmosphere.Kr = 0.0045f;
+	Atmosphere.Kr = 0.0075f;
 	Atmosphere.Km = 0.0010f;
 	Atmosphere.ESun = 20.0f;
 	Atmosphere.InnerRadius = 800000;
 	Atmosphere.OuterRadius = 900000;
 	Atmosphere.Samples = 3;
-	Atmosphere.RayleightScaleDepth = 0.25f;
+	Atmosphere.RayleightScaleDepth = 0.18f;
 	Atmosphere.G = -0.995f;
 	//Atmosphere.WaveLengths = float3(0.65f, 0.57f, 0.475f);
 	Atmosphere.WaveLengths = float3(0.63f, 0.57f, 0.50f);

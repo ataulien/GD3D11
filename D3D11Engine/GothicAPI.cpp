@@ -1159,7 +1159,7 @@ void GothicAPI::DrawSkeletalMeshInfo(zCMaterial* mat, SkeletalMeshInfo* msh, Ske
 		}
 	}
 
-	if(!msh->IndicesPNAEN.empty())
+	if(RendererState.RendererSettings.EnableTesselation && !msh->IndicesPNAEN.empty())
 	{
 		Engine::GraphicsEngine->DrawSkeletalMesh(msh->MeshVertexBuffer, msh->MeshIndexBufferPNAEN, msh->IndicesPNAEN.size(), transforms, fatness, vis);
 	}else
@@ -1541,20 +1541,8 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 				}
 			}
 
-			SkeletalMeshVisualInfo* mi = SkeletalMeshVisuals[str];
-
-			if(!mi || mi->Meshes.empty())
-			{
-				// Load the new visual
-				if(!mi)
-					mi = new SkeletalMeshVisualInfo;
-
-				WorldConverter::ExtractSkeletalMeshFromVob((zCModel *)vob->GetVisual(), mi);
-
-				mi->Visual = (zCModel *)vob->GetVisual();
-
-				SkeletalMeshVisuals[str] = mi;
-			}
+			// Load the model or get it from cache if already done
+			SkeletalMeshVisualInfo* mi = LoadzCModelData(((zCModel *)vob->GetVisual()));
 		
 			// Add vob to the skeletal list
 			SkeletalVobInfo* vi = new SkeletalVobInfo;
@@ -1598,6 +1586,33 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 			break;
 		}
 	}
+}
+
+/** Loads the data out of a zCModel */
+SkeletalMeshVisualInfo* GothicAPI::LoadzCModelData(zCModel* model)
+{
+	std::string mds = model->GetModelName().ToChar();
+	std::string str = model->GetVisualName();
+
+	if(str.empty()) // Happens when the model has no skeletal-mesh
+		str = mds;
+
+	SkeletalMeshVisualInfo* mi = SkeletalMeshVisuals[str];
+
+	if(!mi || mi->Meshes.empty())
+	{
+		// Load the new visual
+		if(!mi)
+			mi = new SkeletalMeshVisualInfo;
+
+		WorldConverter::ExtractSkeletalMeshFromVob(model, mi);
+
+		mi->Visual = model;
+
+		SkeletalMeshVisuals[str] = mi;
+	}
+
+	return mi;
 }
 
 // FIXME: REMOVE!!
@@ -3798,6 +3813,9 @@ XRESULT GothicAPI::SaveMenuSettings(const std::string& file)
 	fwrite(&s.GammaValue, sizeof(s.GammaValue), 1, f);
 	fwrite(&s.BrightnessValue, sizeof(s.BrightnessValue), 1, f);
 
+	fwrite(&s.EnableGodRays, sizeof(s.EnableGodRays), 1, f);
+	fwrite(&s.EnableTesselation, sizeof(s.EnableTesselation), 1, f);
+
 	fclose(f);
 
 	return XR_SUCCESS;
@@ -3866,6 +3884,9 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 
 	fread(&s.GammaValue, sizeof(s.GammaValue), 1, f);
 	fread(&s.BrightnessValue, sizeof(s.BrightnessValue), 1, f);
+
+	fread(&s.EnableGodRays, sizeof(s.EnableGodRays), 1, f);
+	fread(&s.EnableTesselation, sizeof(s.EnableTesselation), 1, f);
 
 	fclose(f);
 

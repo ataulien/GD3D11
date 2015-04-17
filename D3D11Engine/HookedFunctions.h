@@ -67,6 +67,8 @@ typedef void (__thiscall* oCWorldDisableVob)(void*, zCVob*);
 typedef void (__fastcall* oCWorldRemoveFromLists)(void*, zCVob*);
 typedef int (__thiscall* zCBinkPlayerOpenVideo)(void*, class zSTRING);
 
+typedef void (__thiscall* zCActiveSndAutoCalcObstruction)(void*, int);
+
 #ifdef BUILD_GOTHIC_1_08k
 typedef void (__thiscall* zCVobEndMovement)(void*);
 #else
@@ -127,6 +129,7 @@ struct HookedFunctionInfo
 	zCBspBaseCheckRayAgainstPolys original_zCBspBaseCheckRayAgainstPolys;
 	zCBspBaseCheckRayAgainstPolys original_zCBspBaseCheckRayAgainstPolysCache;
 	zCBspBaseCheckRayAgainstPolys original_zCBspBaseCheckRayAgainstPolysNearestHit;
+	//zCActiveSndAutoCalcObstruction original_zCActiveSndAutoCalcObstruction;
 
 	/** Function hooks */
 	static int __stdcall hooked_HandledWinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR szCmdLine, int sw);
@@ -139,6 +142,7 @@ struct HookedFunctionInfo
 	/** Returns the pixelformat of a bink-surface */
 	static long __fastcall hooked_zBinkPlayerGetPixelFormat(void* thisptr, void* unknwn, zTRndSurfaceDesc& desc);
 	static int __fastcall hooked_zBinkPlayerOpenVideo(void* thisptr, void* unknwn, zSTRING str);
+	static void __fastcall hooked_zCActiveSndAutoCalcObstruction(void* thisptr, void* unknwn, int i);
 };
 
 namespace HookedFunctions

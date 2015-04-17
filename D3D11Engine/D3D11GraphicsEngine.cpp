@@ -1090,6 +1090,8 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBu
 	// Get currently bound texture name
 	zCTexture* tex = Engine::GAPI->GetBoundTexture(0);
 
+	bool tesselationEnabled = Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation;
+
 	if(tex)
 	{
 		MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom(tex);
@@ -1102,7 +1104,7 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBu
 	
 		if(RenderingStage == DES_MAIN)
 		{
-			if(msh && msh->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
+			if(tesselationEnabled && msh && msh->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
 			{
 				MyDirectDrawSurface7* surface = tex->GetSurface();
 				ID3D11ShaderResourceView* srv = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
@@ -1507,6 +1509,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	// Draw debug lines
 	LineRenderer->Flush();
 	
+	if(Engine::GAPI->GetRendererState()->RendererSettings.EnableGodRays)
 	PfxRenderer->RenderGodRays();
 
 	if(Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR)
@@ -1925,6 +1928,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	SetActivePixelShader("PS_Diffuse");
 	ActivePS->Apply();
 
+	bool tesselationEnabled = Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation;
+
 	// Now draw the actual pixels
 	zCTexture* bound = NULL;
 	MaterialInfo* boundInfo = NULL;
@@ -2017,7 +2022,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		}
 
 		// Check for tesselated mesh
-		if(!ActiveHDS && (*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
+		if(tesselationEnabled && !ActiveHDS && (*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
 		{
 			// Set normal/displacement map
 			Context->DSSetShaderResources(0,1, &boundNormalmap);
@@ -2901,6 +2906,8 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
 
+	bool tesselationEnabled = Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation;
+
 	static std::vector<VobInfo *> vobs;
 	static std::vector<VobLightInfo *> lights;
 	
@@ -3081,7 +3088,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 
 						
 
-						if(!mi->IndicesPNAEN.empty() && RenderingStage == DES_MAIN && (*it).second->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
+						if(tesselationEnabled && !mi->IndicesPNAEN.empty() && RenderingStage == DES_MAIN && (*it).second->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
 						{
 							
 							Setup_PNAEN(PNAEN_Instanced);

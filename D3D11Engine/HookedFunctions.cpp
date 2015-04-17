@@ -71,6 +71,10 @@ void HookedFunctionInfo::InitHooks()
 	original_zCBinkPlayerOpenVideo = (zCBinkPlayerOpenVideo)DetourFunction((BYTE *)GothicMemoryLocations::zCBinkPlayer::OpenVideo, (BYTE *)HookedFunctionInfo::hooked_zBinkPlayerOpenVideo);
 #endif
 	original_Alg_Rotation3DNRad = (Alg_Rotation3DNRad)GothicMemoryLocations::Functions::Alg_Rotation3DNRad;
+
+	// Remove automatic volume change of sounds regarding whether the camera is indoor or outdoor
+	// TODO: Implement!
+	DetourFunction((BYTE *)GothicMemoryLocations::zCActiveSnd::AutoCalcObstruction, (BYTE *)HookedFunctionInfo::hooked_zCActiveSndAutoCalcObstruction);
 }
 
 /** Function hooks */
@@ -80,6 +84,13 @@ int __stdcall HookedFunctionInfo::hooked_HandledWinMain(HINSTANCE hInstance, HIN
 	int r = HookedFunctions::OriginalFunctions.original_HandledWinMain(hInstance, hPrev, szCmdLine, sw);
 
 	return r;
+}
+
+void __fastcall HookedFunctionInfo::hooked_zCActiveSndAutoCalcObstruction(void* thisptr, void* unknwn, int i)
+{
+	// Just do nothing here. Something was inside zCBspTree::Render that managed this and thus voices get really quiet in indoor locations
+	// This function is for calculating the automatic volume-changes when the camera goes in/out buildings
+	// We keep everything on the same level by removing it
 }
 
 void __cdecl HookedFunctionInfo::hooked_ExitGameFunc()
