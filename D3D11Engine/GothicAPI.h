@@ -552,6 +552,9 @@ public:
 
 	/** Returns the current ocean-object */
 	GOcean* GetOcean();
+
+	/** Loads the data out of a zCModel */
+	SkeletalMeshVisualInfo* LoadzCModelData(zCModel* model);
 private:
 	/** Collects polygons in the given AABB */
 	void CollectPolygonsInAABBRec(BspVobInfo* base, const zTBBox3D& bbox, std::vector<zCPolygon *>& list);

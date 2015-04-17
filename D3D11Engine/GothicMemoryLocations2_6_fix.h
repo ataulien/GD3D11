@@ -35,6 +35,11 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_SuspendCount = 0x0C;
 	};
 
+	struct zCActiveSnd
+	{
+		static const unsigned int AutoCalcObstruction = 0x004F9830;
+	};
+
 	struct zCBinkPlayer
 	{
 		static const unsigned int GetPixelFormat = 0x00440790;

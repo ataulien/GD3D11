@@ -26,6 +26,43 @@ XRESULT D3D11PFX_GodRays::Render(RenderToTextureBuffer* fxbuffer)
 {
 	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
 
+	D3DXVECTOR3 sunPosition = *Engine::GAPI->GetSky()->GetAtmosphereCB().AC_LightPos.toD3DXVECTOR3();
+	sunPosition *= Engine::GAPI->GetSky()->GetAtmosphereCB().AC_OuterRadius;
+	sunPosition += Engine::GAPI->GetCameraPosition(); // Maybe use cameraposition from sky?
+
+	D3DXMATRIX& view = Engine::GAPI->GetRendererState()->TransformState.TransformView;
+	D3DXMATRIX& proj = Engine::GAPI->GetProjectionMatrix();
+
+	D3DXMATRIX viewProj = proj * view;
+	D3DXMatrixTranspose(&viewProj, &viewProj);
+	D3DXMatrixTranspose(&view, &view);
+
+	D3DXVECTOR3 sunViewPosition;
+	D3DXVec3TransformCoord(&sunViewPosition, &sunPosition, &view); // This is for checking if the light is behind the camera
+	D3DXVec3TransformCoord(&sunPosition, &sunPosition, &viewProj);
+
+	if(sunViewPosition.z < 0.0f)
+		return XR_SUCCESS; // Don't render the godrays when the sun is behind the camera
+
+	GodRayZoomConstantBuffer gcb;
+	gcb.GR_Weight = 1.0f;
+	gcb.GR_Decay = Engine::GAPI->GetRendererState()->RendererSettings.GodRayDecay;
+	gcb.GR_Weight = Engine::GAPI->GetRendererState()->RendererSettings.GodRayWeight;
+	gcb.GR_Density = Engine::GAPI->GetRendererState()->RendererSettings.GodRayDensity;
+	
+	gcb.GR_Center.x = sunPosition.x/2.0f +0.5f;
+	gcb.GR_Center.y = sunPosition.y/-2.0f +0.5f;
+
+	gcb.GR_ColorMod = Engine::GAPI->GetRendererState()->RendererSettings.GodRayColorMod;
+
+	if(abs(gcb.GR_Center.x - 0.5f) > 0.5f)
+		gcb.GR_Weight *= std::max(0.0f, 1.0f - (abs(gcb.GR_Center.x - 0.5f) - 0.5f) / 0.5f);
+
+	if(abs(gcb.GR_Center.y - 0.5f) > 0.5f)
+		gcb.GR_Weight *= std::max(0.0f, 1.0f - (abs(gcb.GR_Center.y - 0.5f) - 0.5f) / 0.5f);
+
+
+
 	ID3D11RenderTargetView* oldRTV=NULL;
 	ID3D11DepthStencilView* oldDSV=NULL;
 
@@ -58,41 +95,6 @@ XRESULT D3D11PFX_GodRays::Render(RenderToTextureBuffer* fxbuffer)
 
 	// Zoom
 	zoomPS->Apply();
-
-	D3DXVECTOR3 sunPosition = *Engine::GAPI->GetSky()->GetAtmosphereCB().AC_LightPos.toD3DXVECTOR3();
-	sunPosition *= Engine::GAPI->GetSky()->GetAtmosphereCB().AC_OuterRadius;
-	sunPosition += Engine::GAPI->GetCameraPosition(); // Maybe use cameraposition from sky?
-
-	D3DXMATRIX& view = Engine::GAPI->GetRendererState()->TransformState.TransformView;
-	D3DXMATRIX& proj = Engine::GAPI->GetProjectionMatrix();
-
-	D3DXMATRIX viewProj = proj * view;
-	D3DXMatrixTranspose(&viewProj, &viewProj);
-	D3DXMatrixTranspose(&view, &view);
-
-	D3DXVECTOR3 sunViewPosition;
-	D3DXVec3TransformCoord(&sunViewPosition, &sunPosition, &view); // This is for checking if the light is behind the camera
-	D3DXVec3TransformCoord(&sunPosition, &sunPosition, &viewProj);
-
-	GodRayZoomConstantBuffer gcb;
-	gcb.GR_Weight = 1.0f;
-	gcb.GR_Decay = Engine::GAPI->GetRendererState()->RendererSettings.GodRayDecay;
-	gcb.GR_Weight = Engine::GAPI->GetRendererState()->RendererSettings.GodRayWeight;
-	gcb.GR_Density = Engine::GAPI->GetRendererState()->RendererSettings.GodRayDensity;
-	
-	gcb.GR_Center.x = sunPosition.x/2.0f +0.5f;
-	gcb.GR_Center.y = sunPosition.y/-2.0f +0.5f;
-
-	gcb.GR_ColorMod = Engine::GAPI->GetRendererState()->RendererSettings.GodRayColorMod;
-
-	if(abs(gcb.GR_Center.x - 0.5f) > 0.5f)
-		gcb.GR_Weight *= std::max(0.0f, 1.0f - (abs(gcb.GR_Center.x - 0.5f) - 0.5f) / 0.5f);
-
-	if(abs(gcb.GR_Center.y - 0.5f) > 0.5f)
-		gcb.GR_Weight *= std::max(0.0f, 1.0f - (abs(gcb.GR_Center.y - 0.5f) - 0.5f) / 0.5f);
-
-	if(sunViewPosition.z < 0.0f)
-		gcb.GR_Weight = 0.0f;
 
 	zoomPS->GetConstantBuffer()[0]->UpdateBuffer(&gcb);
 	zoomPS->GetConstantBuffer()[0]->BindToPixelShader(0);

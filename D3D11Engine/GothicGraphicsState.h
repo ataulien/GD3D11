@@ -547,6 +547,9 @@ struct GothicRendererSettings
 		EnableVSync = false;
 		DoZPrepass = true;
 
+		EnableTesselation = true;
+		EnableGodRays = true;
+
 		FOVHoriz = 90.0f;
 		FOVVert = 90.0f;
 
@@ -581,6 +584,7 @@ struct GothicRendererSettings
 	bool EnableHDR;
 	bool EnableVSync;
 	bool EnableSMAA;
+	bool EnableTesselation;
 	bool FastShadows;
 	bool ReplaceSunDirection;
 	bool AtmosphericScattering;
@@ -639,6 +643,7 @@ struct GothicRendererSettings
 	float GodRayWeight;
 	float GodRayDensity;
 	float3 GodRayColorMod;
+	bool EnableGodRays;
 
 	HBAOSettings HbaoSettings;
 

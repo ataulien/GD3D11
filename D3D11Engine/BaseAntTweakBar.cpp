@@ -33,6 +33,8 @@ XRESULT BaseAntTweakBar::Init()
 	Bar_Sky = TwNewBar("Sky");
 	TwDefine(" Sky position='400 0'");
 
+	TwAddVarRW(Bar_Sky, "GodRays", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableGodRays, NULL);
+
 	TwAddVarRW(Bar_Sky, "GodRayDecay", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayDecay, NULL);
 	TwDefine(" Sky/GodRayDecay  step=0.01 ");
 	
@@ -42,6 +44,7 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_Sky, "GodRayColorMod", TW_TYPE_COLOR3F, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayColorMod, NULL);
 
 	TwAddVarRW(Bar_Sky, "GodRayDensity", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.GodRayDensity, NULL);
+	TwDefine(" Sky/GodRayWeight  step=0.01 ");
 
 	TwAddSeparator(Bar_Sky, "SkySettings", NULL);
 
@@ -103,12 +106,18 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "Draw ParticleEffects", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawParticleEffects, NULL);
 	//TwAddVarRW(Bar_General, "Draw Sky", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawSky, NULL);
 	TwAddVarRW(Bar_General, "Draw Fog", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawFog, NULL);	
-	TwAddVarRW(Bar_General, "HDR", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR, NULL);	
+	
+#ifndef PUBLIC_RELEASE
+	TwAddVarRW(Bar_General, "HDR (Broken!)", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR, NULL);	
+#endif
+
 	TwAddVarRW(Bar_General, "SMAA", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableSMAA, NULL);
 	TwAddVarRW(Bar_General, "DynamicLighting", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting, NULL);	
 	//TwAddVarRW(Bar_General, "FastShadows", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.FastShadows, NULL);	
 	TwAddVarRW(Bar_General, "DrawShadowGeometry", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawShadowGeometry, NULL);
 	TwAddVarRW(Bar_General, "DoZPrepass", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DoZPrepass, NULL);
+
+	TwAddVarRW(Bar_General, "Tesselation", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation, NULL);	
 
 	TwAddVarRW(Bar_General, "VSync", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync, NULL);
 	
@@ -135,6 +144,7 @@ XRESULT BaseAntTweakBar::Init()
 		TwAddVarRW(Bar_General, "WireframeWorld", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.WireframeWorld, NULL);	
 	TwAddVarRW(Bar_General, "WireframeVobs", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.WireframeVobs, NULL);	
 	
+
 	TwAddVarRW(Bar_General, "TesselationFactor", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationFactor, NULL);
 	TwDefine(" General/TesselationFactor  step=0.1 min=1");
 
@@ -204,7 +214,8 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "FOVVert", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.FOVVert, NULL);
 	//TwAddVarRW(Bar_General, "Max Num Indices", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererSettings.MaxNumFaces, NULL);
 
-	
+
+
 	Bar_Info = TwNewBar("FrameStats");
 	TwDefine(" FrameStats refresh=0.3");
 	TwDefine(" FrameStats position='800 0'");
