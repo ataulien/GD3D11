@@ -7,7 +7,7 @@ cbuffer RefractionInfo : register( b0 )
 	float4x4 RI_Projection;
 	float2 RI_ViewportSize;
 	float RI_Time;
-	float RI_Pad1;
+	float RI_Far;
 	
 	float3 RI_CameraPosition;
 	float RI_Pad2;
@@ -18,8 +18,6 @@ cbuffer RefractionInfo : register( b0 )
 //--------------------------------------------------------------------------------------
 SamplerState SS_Linear : register( s0 );
 Texture2D	TX_Texture0 : register( t0 );
-Texture2D	TX_Scene : register( t2 );
-
 
 //--------------------------------------------------------------------------------------
 // Input / Output structures
@@ -34,17 +32,32 @@ struct PS_INPUT
 	float4 vPosition		: SV_POSITION;
 };
 
+struct PS_OUTPUT
+{
+	float4 gb0 : SV_TARGET0;
+	float4 gb1 : SV_TARGET1;
+};
+
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
-float4 PSMain( PS_INPUT Input ) : SV_TARGET
+PS_OUTPUT PSMain( PS_INPUT Input )
 {
-	float4 c = TX_Texture0.Sample(SS_Linear, Input.vTexcoord);
-	float dist = dot(float3(0.333f,0.333f,0.333f), c.rgb) * c.a;
-	//dist = dist > 0.1f ? dist : 0;
-	dist = dist * 0.02f * Input.vDiffuse;
-	float3 color = TX_Scene.Sample(SS_Linear, (Input.vPosition.xy / RI_ViewportSize) + dist).rgb;
+	float4 color = TX_Texture0.Sample(SS_Linear, Input.vTexcoord);
+	color *= Input.vDiffuse;
 	
-	return float4(color, 1);
+	PS_OUTPUT o;
+	// Store particle color
+	o.gb0 = color;
+	
+	// Center the UV
+	float2 uvCenter = Input.vTexcoord - 0.5f;
+	float weight = dot(color.rgb, float3(0.333f, 0.333f, 0.333f)) * pow(color.a, 1/4.0f);
+	weight *= 2.5f; // Scale the distortion down a bit
+	weight *= min(1.0f, (1.0f - (Input.vPosition.z)) * 8.0f);
+		
+	// Store the direction to the center of the uv-plane as distortion
+	o.gb1 = float4(uvCenter * weight, 0, color.a);
+	return o;
 }
 

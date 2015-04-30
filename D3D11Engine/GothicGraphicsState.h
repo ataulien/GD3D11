@@ -494,16 +494,9 @@ struct GothicRendererSettings
 		
 
 #ifdef BUILD_GOTHIC_1_08k
-		FogGlobalDensity = 0.00002f;
-		FogHeightFalloff = 0.00018f;
-
-		FogColorMod = float3::FromColor(189,146,107);
-		FogHeight = 4000;
+		SetupOldWorldSpecificValues();
 #else
-		FogGlobalDensity = 0.00004f;
-		FogHeightFalloff = 0.0005f;
-		FogColorMod = float3::FromColor(180,180,255);
-		FogHeight = 800;
+		SetupNewWorldSpecificValues();
 #endif
 
 		
@@ -567,6 +560,30 @@ struct GothicRendererSettings
 
 		GothicUIScale = 1.0f;
 		//DisableEverything();
+	}
+
+	void SetupOldWorldSpecificValues()
+	{
+		FogGlobalDensity = 0.00002f;
+		FogHeightFalloff = 0.00018f;
+		FogColorMod = float3::FromColor(189,146,107);
+		FogHeight = 4000;
+	}
+
+	void SetupNewWorldSpecificValues()
+	{
+		FogGlobalDensity = 0.00004f;
+		FogHeightFalloff = 0.0005f;
+		FogColorMod = float3::FromColor(180,180,255);
+		FogHeight = 800;
+	}
+
+	void SetupAddonWorldSpecificValues()
+	{
+		FogGlobalDensity = 0.00004f;
+		FogHeightFalloff = 0.0005f;
+		FogColorMod = float3::FromColor(180,180,255);
+		FogHeight = 0;
 	}
 
 	void DisableEverything()

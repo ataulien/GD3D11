@@ -547,6 +547,7 @@ struct WorldInfo
 
 class zCProgMeshProto;
 class zCModel;
+class zCModelPrototype;
 class zCMesh;
 class WorldConverter
 {
@@ -584,8 +585,10 @@ public:
 
 	/** Extracts a skeletal mesh from a zCModel */
 	static void ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisualInfo* skeletalMeshInfo);
-	static void ExtractSkeletalMeshFromVobPNAEN(zCModel* model, SkeletalMeshVisualInfo* skeletalMeshInfo);
 	
+	/** Extracts a skeletal mesh from a zCMeshSoftSkin */
+	static void ExtractSkeletalMeshFromProto(zCModelPrototype* model, SkeletalMeshVisualInfo* skeletalMeshInfo);
+
 	/** Extracts a node-visual */
 	static void ExtractNodeVisual(int index, zCModelNodeInst* node, std::map<int, std::vector<MeshVisualInfo *>>& attachments);
 

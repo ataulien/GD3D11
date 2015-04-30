@@ -227,6 +227,8 @@ struct GothicMemoryLocations
 	struct zCModelPrototype
 	{
 		static const unsigned int Offset_NodeList = 0x64;
+		static const unsigned int Offset_MeshSoftSkinList = 0x64 + 16;
+		static const unsigned int LoadModelASC = 0x0059E760;
 	};
 
 	struct zCBspLeaf

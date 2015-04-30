@@ -293,17 +293,47 @@ void GothicAPI::OnWorldUpdate()
 	if(IsCameraIndoor())
 	{ 
 		// Set mode to 2, which means we are indoors, but can see the outside
-		zCSoundSystem::GetSoundSystem()->SetGlobalReverbPreset(2, 0.6f);
+		if(zCSoundSystem::GetSoundSystem())
+			zCSoundSystem::GetSoundSystem()->SetGlobalReverbPreset(2, 0.6f);
 
 		if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
 			oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->SetCameraLocationHint(1);
 	}else
 	{
 		// Set mode to 0, which is the default
-		zCSoundSystem::GetSoundSystem()->SetGlobalReverbPreset(0, 0.0f); 
+		if(zCSoundSystem::GetSoundSystem())
+			zCSoundSystem::GetSoundSystem()->SetGlobalReverbPreset(0, 0.0f); 
 
 		if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
 			oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->SetCameraLocationHint(0);
+	}
+
+	// Fix the ice-texture if it is loaded, this is for the original game and only a quick fix
+	// TODO: Fix properly!
+	if(LoadedWorldInfo->WorldName == "OLDWORLD")
+	{
+		static bool s_fixed = false;
+		if(!s_fixed)
+		{
+			// Get material, this is NULL when the texture isn't loaded which is why we need to check for it every frame until we got it
+			for(std::set<zCMaterial *>::iterator it = LoadedMaterials.begin(); it != LoadedMaterials.end(); it++)
+			{
+				if((*it)->GetTexture())
+				{
+					std::string tn = (*it)->GetTexture()->GetNameWithoutExt();
+					if(_strnicmp("OW_ICEDRAGON_LAKE_01", tn.c_str(), 255)==0)
+					{
+						// Fix broken ice-lakes in old world
+						(*it)->SetAlphaFunc(zMAT_ALPHA_FUNC_FUNC_NONE);
+
+						MaterialInfo* info = GetMaterialInfoFrom((*it)->GetTexture());
+						info->MaterialType = MaterialInfo::MT_None;
+
+						s_fixed = true;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -613,11 +643,14 @@ void GothicAPI::OnWorldLoaded()
 	// Build vob info cache for the bsp-leafs
 	BuildBspVobMapCache();
 
-	//CreatezCPolygonsForSections();
-	//PutCustomPolygonsIntoBspTree();
+#ifdef BUILD_GOTHIC_1_08k
+	CreatezCPolygonsForSections();
+	PutCustomPolygonsIntoBspTree();
+#endif
 
 	// Cache world
 	//CacheWorldMesh("WorldMesh.aom");
+
 
 	if(!Ocean)
 	{
@@ -629,6 +662,24 @@ void GothicAPI::OnWorldLoaded()
 	//LoadCustomZENResources();
 
 	LogInfo() << "Done!";
+
+	LogInfo() << "Settings sky texture for " << LoadedWorldInfo->WorldName;
+
+	// Hard code the original games sky textures here, since we can't modify the scripts to use the ikarus bindings without
+	// installing more content like a .mod file
+	if(LoadedWorldInfo->WorldName == "OLDWORLD" || LoadedWorldInfo->WorldName == "WORLD")
+	{
+		GetSky()->SetSkyTexture(ESkyTexture::ST_OldWorld); // Sky for gothic 2s oldworld
+		RendererState.RendererSettings.SetupOldWorldSpecificValues();
+	}else if(LoadedWorldInfo->WorldName == "ADDONWORLD")
+	{
+		GetSky()->SetSkyTexture(ESkyTexture::ST_NewWorld); // Sky for gothic 2s addonworld
+		RendererState.RendererSettings.SetupAddonWorldSpecificValues();
+	}else 
+	{
+		GetSky()->SetSkyTexture(ESkyTexture::ST_NewWorld); // Make newworld default
+		RendererState.RendererSettings.SetupNewWorldSpecificValues();
+	}
 
 #ifndef PUBLIC_RELEASE
 	// Enable input again, disabled it when loading started
@@ -1613,6 +1664,33 @@ SkeletalMeshVisualInfo* GothicAPI::LoadzCModelData(zCModel* model)
 	}
 
 	return mi;
+}
+
+SkeletalMeshVisualInfo* GothicAPI::LoadzCModelPrototypeData(zCModelPrototype* model)
+{
+	/*std::string str = model->GetVisualName();
+
+	if(str.empty()) // Happens when the model has no skeletal-mesh
+		return NULL; // Deal with that at a later time
+
+	SkeletalMeshVisualInfo* mi = SkeletalMeshVisuals[str];
+
+	if(!mi || mi->Meshes.empty())
+	{
+		// Load the new visual
+		if(!mi)
+			mi = new SkeletalMeshVisualInfo;
+
+		WorldConverter::ExtractSkeletalMeshFromProto(model, mi);
+
+		mi->Visual = model;
+
+		SkeletalMeshVisuals[str] = mi;
+	}
+
+	return mi;*/
+
+	return NULL;
 }
 
 // FIXME: REMOVE!!
@@ -3815,6 +3893,7 @@ XRESULT GothicAPI::SaveMenuSettings(const std::string& file)
 
 	fwrite(&s.EnableGodRays, sizeof(s.EnableGodRays), 1, f);
 	fwrite(&s.EnableTesselation, sizeof(s.EnableTesselation), 1, f);
+	fwrite(&s.EnableSMAA, sizeof(s.EnableSMAA), 1, f);
 
 	fclose(f);
 
@@ -3868,6 +3947,8 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 	s.LoadedResolution = res;
 
 	fread(&s.EnableHDR, sizeof(s.EnableHDR), 1, f);
+	s.EnableHDR = false; // FIXME: Force HDR to off for now
+
 	fread(&s.EnableVSync, sizeof(s.EnableVSync), 1, f);
 
 	fread(&s.OutdoorVobDrawRadius, sizeof(s.OutdoorVobDrawRadius), 1, f);
@@ -3887,6 +3968,8 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 
 	fread(&s.EnableGodRays, sizeof(s.EnableGodRays), 1, f);
 	fread(&s.EnableTesselation, sizeof(s.EnableTesselation), 1, f);
+
+	fread(&s.EnableSMAA, sizeof(s.EnableSMAA), 1, f);
 
 	fclose(f);
 
@@ -3931,22 +4014,35 @@ POINT GothicAPI::GetCursorPosition()
 /** Clears the array of this frame loaded textures */
 void GothicAPI::ClearFrameLoadedTextures()
 {
-	FrameLoadedTextures.clear();
+	Engine::GAPI->EnterResourceCriticalSection();
+		FrameLoadedTextures.clear();
+	Engine::GAPI->LeaveResourceCriticalSection();
 }
 
 /** Adds a texture to the list of the loaded textures for this frame */
 void GothicAPI::AddFrameLoadedTexture(MyDirectDrawSurface7* srf)
 {
-	FrameLoadedTextures.push_back(srf);
+	Engine::GAPI->EnterResourceCriticalSection();	
+		FrameLoadedTextures.push_back(srf);
+	Engine::GAPI->LeaveResourceCriticalSection();
 }
 
 /** Sets loaded textures of this frame ready */
-void GothicAPI::SetFrameLoadedTexturesReady()
+void GothicAPI::SetFrameProcessedTexturesReady()
 {
-	for(unsigned int i=0;i<FrameLoadedTextures.size();i++)
+	for(unsigned int i=0;i<FrameProcessedTextures.size();i++)
 	{
-		FrameLoadedTextures[i]->SetReady(true);
+		if(FrameProcessedTextures[i]->MipMapsInQueue()) // Only set ready when all mips are ready as well
+			FrameProcessedTextures[i]->SetReady(true);
 	}
+
+	FrameProcessedTextures.clear();
+}
+
+/** Copys the frame loaded textures to the processed list */
+void GothicAPI::MoveLoadedTexturesToProcessedList()
+{
+	FrameProcessedTextures = FrameLoadedTextures;
 }
 
 /** Draws a morphmesh */
@@ -4190,7 +4286,7 @@ void GothicAPI::PutCustomPolygonsIntoBspTreeRec(BspVobInfo* base)
 					// Check if one vertex is inside the node // FIXME: This will fail for very large triangles!
 					zCVertex** vx = poly->getVertices();
 
-					if(Toolbox::PositionInsideBox(	*vx[0]->Position.toD3DXVECTOR3(), 
+					if(Toolbox::PositionInsideBox(	*vx[v]->Position.toD3DXVECTOR3(), 
 						base->OriginalNode->BBox3D.Min, 
 						base->OriginalNode->BBox3D.Max))
 					{

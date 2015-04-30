@@ -248,7 +248,7 @@ struct RefractionInfoConstantBuffer
 	D3DXMATRIX RI_Projection;
 	float2 RI_ViewportSize;
 	float RI_Time;
-	float RI_Pad1;
+	float RI_Far;
 
 	float3 RI_CameraPosition;
 	float RI_Pad2;

@@ -10,6 +10,7 @@ public:
 
 	void SetGlobalReverbPreset(int preset, float weight)
 	{
+#ifndef BUILD_GOTHIC_1_08k
 		// Get vtable-entry
 		int* vtbl = (int*)((int*)this)[0];
 
@@ -17,7 +18,12 @@ public:
 
 		pFun fn = (pFun)vtbl[GothicMemoryLocations::zCSoundSystem::VTBL_SetGlobalReverbPreset];
 		fn(this, preset, weight);
+#endif
 	}
 
+#ifndef BUILD_GOTHIC_1_08k
 	static zCSoundSystem* GetSoundSystem(){return *(zCSoundSystem **)GothicMemoryLocations::GlobalObjects::zSound;}
+#else
+	static zCSoundSystem* GetSoundSystem(){return NULL;}
+#endif
 };

@@ -4,6 +4,8 @@
 #include <d3d11.h>
 #include "MyDirectDrawSurface7.h"
 #include "../BaseTexture.h"
+#include "../Engine.h"
+#include "../GothicAPI.h"
 
 
 FakeDirectDrawSurface7::FakeDirectDrawSurface7()
@@ -260,6 +262,8 @@ HRESULT FakeDirectDrawSurface7::Unlock( LPRECT lpRect )
 	}else
 	{
 		Resource->GetEngineTexture()->UpdateDataDeferred(Data, MipLevel);
+		Resource->IncreaseQueuedMipMapCount();
+		Engine::GAPI->AddFrameLoadedTexture(Resource);
 	}
 
 	delete[] Data;

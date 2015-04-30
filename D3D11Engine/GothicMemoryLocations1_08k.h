@@ -86,6 +86,8 @@ struct GothicMemoryLocations
 
 		static const unsigned int Offset_OverrideColor = 0x558;
 		static const unsigned int Offset_OverrideFlag = 0x564;
+
+		static const unsigned int SetCameraLocationHint = 0x005BC7D0;
 	};
 
 	struct zCParticleEmitter

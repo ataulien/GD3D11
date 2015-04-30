@@ -18,6 +18,9 @@ namespace Engine
 		HANDLE Assimp32;
 	};
 
+	/** If true, we will just pass everything to the usual ddraw.dll */
+	__declspec( selectany ) bool PassThrough;
+
 	/** Global engine object */
 	__declspec( selectany ) BaseGraphicsEngine* GraphicsEngine;
 

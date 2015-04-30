@@ -169,6 +169,29 @@ XRESULT GSky::LoadSkyResources()
 	return XR_SUCCESS;
 }
 
+/** Sets the current sky texture */
+void GSky::SetSkyTexture(ESkyTexture texture)
+{
+	// Delete old texture
+	delete CloudTexture; CloudTexture = NULL;
+
+	XLE(Engine::GraphicsEngine->CreateTexture(&CloudTexture));
+
+	// Load the specific new texture
+	switch(texture)
+	{
+	case ESkyTexture::ST_NewWorld:
+		XLE(CloudTexture->Init("system\\GD3D11\\Textures\\SkyDay.dds"));
+		Atmosphere.WaveLengths = float3(0.63f, 0.57f, 0.50f);
+		break;
+
+	case ESkyTexture::ST_OldWorld:
+		XLE(CloudTexture->Init("system\\GD3D11\\Textures\\SkyDay_G1.dds"));
+		Atmosphere.WaveLengths = float3(0.54f, 0.56f, 0.60f);
+		break;
+	}
+}
+
 /** Adds a cloud mesh */
 XRESULT GSky::AddCloudMesh(const std::string& file)
 {

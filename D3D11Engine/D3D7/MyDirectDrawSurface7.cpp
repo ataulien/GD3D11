@@ -20,6 +20,7 @@ MyDirectDrawSurface7::MyDirectDrawSurface7()
 	GothicTexture = NULL;
 	IsReady = false;
 
+	QueuedMipMaps = 0;
 	LockType = 0;
 
 	// Check for test-bind mode to figure out what zCTexture-Object we are associated with
@@ -73,7 +74,10 @@ BaseTexture* MyDirectDrawSurface7::GetFxMap()
 void MyDirectDrawSurface7::BindToSlot(int slot)
 {
 	if(!IsReady)
+	{
+		Engine::GraphicsEngine->UnbindTexture(0);
 		return; // Don't bind half-loaded textures!
+	}
 
 	if(EngineTexture) // Needed sometimes
 		EngineTexture->BindToPixelShader(slot);
@@ -452,7 +456,7 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 		else
 		{
 			EngineTexture->UpdateData(dst, 0);
-			SetReady(true);
+			Engine::GAPI->AddFrameLoadedTexture(this);
 		}
 
 		delete[] dst;
@@ -572,7 +576,7 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 			else
 			{
 				EngineTexture->UpdateData(LockedData, 0);
-				SetReady(true);
+				Engine::GAPI->AddFrameLoadedTexture(this);
 			}
 		}
 	}
@@ -802,4 +806,16 @@ HRESULT MyDirectDrawSurface7::GetLOD( LPDWORD dwLOD )
 const std::string& MyDirectDrawSurface7::GetTextureName()
 {
 	return TextureName;
+}
+
+/** Returns whether the mip-maps were put into the command queue or not */
+bool MyDirectDrawSurface7::MipMapsInQueue()
+{
+	return OriginalSurfaceDesc.dwMipMapCount == QueuedMipMaps + 1;
+}
+
+/** Adds one to the queued mipmap count */
+void MyDirectDrawSurface7::IncreaseQueuedMipMapCount()
+{
+	QueuedMipMaps++;
 }

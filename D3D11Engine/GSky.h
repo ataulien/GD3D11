@@ -20,6 +20,12 @@ struct AtmosphereSettings
 	float SkyTimeScale;
 };
 
+enum ESkyTexture
+{
+	ST_NewWorld,
+	ST_OldWorld
+};
+
 class zCSkyLayer;
 class zCSkyState;
 class GMesh;
@@ -41,6 +47,9 @@ public:
 
 	/** Returns the loaded sky-Dome */
 	GMesh* GetSkyDome();
+
+	/** Sets the current sky texture */
+	void SetSkyTexture(ESkyTexture texture);
 
 	/** Returns the skyplane */
 	MeshInfo* GetSkyPlane();

@@ -127,6 +127,8 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.push_back(ShaderInfo("PS_ParticleDistortion", "PS_ParticleDistortion.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(RefractionInfoConstantBuffer));
 
+	Shaders.push_back(ShaderInfo("PS_PFX_ApplyParticleDistortion", "PS_PFX_ApplyParticleDistortion.hlsl", "p"));
+
 	Shaders.push_back(ShaderInfo("PS_WorldTriplanar", "PS_WorldTriplanar.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(GothicGraphicsState));
 	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
@@ -355,6 +357,7 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
 	Shaders.back().cBufferSizes.push_back(sizeof(MaterialInfo::Buffer));
 	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));
+
 
 
 

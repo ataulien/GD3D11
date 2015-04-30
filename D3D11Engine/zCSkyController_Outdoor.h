@@ -98,6 +98,24 @@ public:
 		return *(zCSkyPlanet **)(((char *)this) + GothicMemoryLocations::zCSkyController_Outdoor::Offset_Sun);
 	}*/
 
+	/** Returns the continous master time, not wrapped between 0 and 1 */
+	/*float GetMasterTime()
+	{
+		static float s_contMasterTime = 0.0f;
+		static float s_masterTimeLast = 0.0f;
+
+		// Add the delta of this frame so the time won't be wrapped between 0 and 1
+		if(GetMasterTimeReal() < s_masterTimeLast)
+			s_contMasterTime += GetMasterTimeReal() - (s_masterTimeLast - 1.0f); // Make sure we still get the actual delta and dont wrap back
+		else
+			s_contMasterTime += GetMasterTimeReal() - s_masterTimeLast;
+
+		s_masterTimeLast = GetMasterTimeReal();
+
+		return s_contMasterTime;
+	}*/
+
+	/** Returns the master-time wrapped between 0 and 1 */
 	float GetMasterTime()
 	{
 		return *(float*)(((char *)this) + GothicMemoryLocations::zCSkyController_Outdoor::Offset_MasterTime);
@@ -139,6 +157,8 @@ public:
 		{
 			return D3DXVECTOR3(0,0,0);
 		}*/
+
+		//float angle = GetMasterTime() * (float)D3DX_PI;
 
 		float angle = ((GetMasterTime() * timeScale - 0.3f) * 1.25f + 0.5f) * 2.0f * (180.0f * (float)D3DX_PI / 180.0f);
 
