@@ -63,11 +63,11 @@ public:
 
 
 #ifdef BUILD_GOTHIC_1_08k
-		/*HookedFunctions::OriginalFunctions.original_zCBspBaseCollectPolysInBBox3D = (zCBspBaseCollectPolysInBBox3D)DetourFunction((BYTE *)GothicMemoryLocations::zCBspBase::CollectPolysInBBox3D, (BYTE *)zCBspNode::hooked_zCBspBaseCollectPolysInBBox3D);
+		HookedFunctions::OriginalFunctions.original_zCBspBaseCollectPolysInBBox3D = (zCBspBaseCollectPolysInBBox3D)DetourFunction((BYTE *)GothicMemoryLocations::zCBspBase::CollectPolysInBBox3D, (BYTE *)zCBspNode::hooked_zCBspBaseCollectPolysInBBox3D);
 		HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolys = (zCBspBaseCheckRayAgainstPolys)DetourFunction((BYTE *)GothicMemoryLocations::zCBspBase::CheckRayAgainstPolys, (BYTE *)zCBspNode::hooked_zCBspBaseCheckRayAgainstPolys);
 		HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysCache = (zCBspBaseCheckRayAgainstPolys)DetourFunction((BYTE *)GothicMemoryLocations::zCBspBase::CheckRayAgainstPolysCache, (BYTE *)zCBspNode::hooked_zCBspBaseCheckRayAgainstPolysCache);
 		HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysNearestHit = (zCBspBaseCheckRayAgainstPolys)DetourFunction((BYTE *)GothicMemoryLocations::zCBspBase::CheckRayAgainstPolysNearestHit, (BYTE *)zCBspNode::hooked_zCBspBaseCheckRayAgainstPolysNearestHit);
-		*/
+		
 #endif
 
 		//(zCBspNodeRenderIndoor)DetourFunction((BYTE *)GothicMemoryLocations::zCBspNode::RenderIndoor, (BYTE *)zCBspNode::hooked_zCBspNodeRenderIndoor);
@@ -96,7 +96,9 @@ public:
 		// Get our version of this node
 		//Engine::GAPI->Get
 
+#ifdef DEBUG_SHOW_COLLISION
 		Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(start, 0xFF0000FF), LineVertex(end, 0xFFFFFFFF));
+#endif
 
 		zCBspBase* base = (zCBspBase*)thisptr;
 		BspVobInfo* newNode = Engine::GAPI->GetNewBspNode(base);
@@ -113,7 +115,9 @@ public:
 		base->PolyList = polysOld;
 		base->NumPolys = numPolysOld;
 
+#ifdef DEBUG_SHOW_COLLISION
 		Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
+#endif
 
 		return r;
 	}
@@ -123,7 +127,9 @@ public:
 		// Get our version of this node
 		//Engine::GAPI->Get
 
+#ifdef DEBUG_SHOW_COLLISION
 		Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(start, 0xFF0000FF), LineVertex(end, 0xFFFFFFFF));
+#endif
 
 		zCBspBase* base = (zCBspBase*)thisptr;
 		BspVobInfo* newNode = Engine::GAPI->GetNewBspNode(base);
@@ -141,14 +147,18 @@ public:
 		base->PolyList = polysOld;
 		base->NumPolys = numPolysOld;
 
+#ifdef DEBUG_SHOW_COLLISION
 		Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
+#endif
 
 		return r;
 	}
 
 	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolys(void* thisptr, const D3DXVECTOR3& start, const D3DXVECTOR3& end, D3DXVECTOR3& intersection)
 	{
+#ifdef DEBUG_SHOW_COLLISION
 		Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(start, 0xFF0000FF), LineVertex(end, 0xFFFFFFFF));
+#endif
 
 		zCBspBase* base = (zCBspBase*)thisptr;
 		BspVobInfo* newNode = Engine::GAPI->GetNewBspNode(base);
@@ -165,8 +175,9 @@ public:
 		base->PolyList = polysOld;
 		base->NumPolys = numPolysOld;
 
+#ifdef DEBUG_SHOW_COLLISION
 		Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
-
+#endif
 		return r;
 	}
 	
@@ -175,6 +186,7 @@ public:
 		Engine::GAPI->CollectPolygonsInAABB(bbox, polyList, numFound);
 		//HookedFunctions::OriginalFunctions.original_zCBspBaseCollectPolysInBBox3D(thisptr, bbox, polyList, numFound);
 
+#ifdef DEBUG_SHOW_COLLISION
 		for(int i=0;i<numFound;i++)
 		{
 			Engine::GraphicsEngine->GetLineRenderer()->AddTriangle(*polyList[i]->getVertices()[0]->Position.toD3DXVECTOR3(),
@@ -182,7 +194,9 @@ public:
 				*polyList[i]->getVertices()[2]->Position.toD3DXVECTOR3());
 		}
 
+
 		Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(bbox.Min, bbox.Max, D3DXVECTOR4(1,0,0,1));
+#endif
 
 		return numFound != 0;
 	}

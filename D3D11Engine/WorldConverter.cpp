@@ -1302,125 +1302,6 @@ void WorldConverter::Extract3DSMeshFromVisual(zCProgMeshProto* visual, MeshVisua
 }
 
 /** Extracts a skeletal mesh from a zCMeshSoftSkin */
-void WorldConverter::ExtractSkeletalMeshFromVobPNAEN(zCModel* model, SkeletalMeshVisualInfo* skeletalMeshInfo)
-{
-	// This type has multiple skinned meshes inside
-	for(int i=0;i<model->GetMeshSoftSkinList()->NumInArray;i++)
-	{
-		zCMeshSoftSkin* s = model->GetMeshSoftSkinList()->Array[i];
-		std::vector<ExSkelVertexStruct> posList;
-
-		// This stream is built as the following:
-		// 4byte int - Num of nodes
-		// sizeof(zTWeightEntry) - The entry
-		char* stream = s->GetVertWeightStream();
-
-		// Get bone weights for each vertex
-		for(int i=0; i<s->GetPositionList()->NumInArray;i++)
-		{
-			// Get num of nodes
-			int numNodes = *(int *)stream;
-			stream += 4;
-
-			ExSkelVertexStruct vx;
-			//vx.Position = s->GetPositionList()->Array[i];
-			vx.Color = 0xFFFFFFFF;
-			vx.Normal = float3(0,0,0);
-			ZeroMemory(vx.weights, sizeof(vx.weights));
-			ZeroMemory(vx.Position, sizeof(vx.Position));
-			ZeroMemory(vx.boneIndices, sizeof(vx.boneIndices));
-
-			for(int n=0;n<numNodes;n++)
-			{
-				// Get entry
-				zTWeightEntry weightEntry = *(zTWeightEntry *)stream;
-				stream += sizeof(zTWeightEntry);
-
-				//if(s->GetNormalsList() && i < s->GetNormalsList()->NumInArray)
-				//	(*vx.Normal.toD3DXVECTOR3()) += weightEntry.Weight * (*s->GetNormalsList()->Array[i].toD3DXVECTOR3());
-
-				// Get index and weight
-				if(n < 4)
-				{
-					vx.weights[n] = weightEntry.Weight;
-					vx.boneIndices[n] = weightEntry.NodeIndex;
-					vx.Position[n] = weightEntry.VertexPosition;
-				}
-			}
-
-			posList.push_back(vx);
-		}
-
-		
-
-		// The rest is the same as a zCProgMeshProto, but with a different vertex type
-		for(int i=0;i<s->GetNumSubmeshes();i++)
-		{
-			std::vector<ExSkelVertexStruct> vertices;
-			std::vector<ExVertexStruct> PNAENVertices;
-			std::vector<VERTEX_INDEX> indices;
-			// Get the data out
-			zCSubMesh* m = s->GetSubmesh(i);
-
-			// Get indices
-			for(int t=0;t<m->TriList.NumInArray;t++)
-			{				
-				for(int v=0;v<3;v++)
-				{
-					indices.push_back(m->TriList.Array[t].wedge[v]);
-				}
-			}
-
-			// Get vertices
-			for(int v=0;v<m->WedgeList.NumInArray;v++)
-			{
-				ExSkelVertexStruct vx;
-				vx = posList[m->WedgeList.Array[v].position];
-				vx.TexCoord	= m->WedgeList.Array[v].texUV;
-				vx.Color = 0xFFFFFFFF;
-				vx.Normal = m->WedgeList.Array[v].normal;
-
-				vertices.push_back(vx);
-
-				// Save vertexpos in bind pose, to run PNAEN on it
-				ExVertexStruct pvx;
-				pvx.Position = s->GetPositionList()->Array[m->WedgeList.Array[v].position];
-
-				PNAENVertices.push_back(pvx);
-			}
-
-			std::vector<VERTEX_INDEX> indicesPNAEN;
-			MeshModifier::ComputePNAENIndices(PNAENVertices, indices, indicesPNAEN);
-		
-			zCMaterial* mat = s->GetSubmesh(i)->Material;
-
-			SkeletalMeshInfo* mi = new SkeletalMeshInfo;
-			mi->Vertices = vertices;
-			mi->Indices = indicesPNAEN;
-			mi->visual = s;
-
-			// Create the buffers
-			Engine::GraphicsEngine->CreateVertexBuffer(&mi->MeshVertexBuffer);
-			Engine::GraphicsEngine->CreateVertexBuffer(&mi->MeshIndexBuffer);
-
-			// Init and fill it
-			mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExSkelVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-			mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-
-			Engine::GAPI->GetRendererState()->RendererInfo.SkeletalVerticesDataSize += mi->Vertices.size() * sizeof(ExVertexStruct);
-			Engine::GAPI->GetRendererState()->RendererInfo.SkeletalVerticesDataSize += mi->Indices.size() * sizeof(VERTEX_INDEX);
-
-			if(mat)
-			{
-				MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom(mat->GetTexture());
-				info->TesselationShaderPair = "PNAEN_Tesselation";
-			}
-			skeletalMeshInfo->SkeletalMeshes[mat].push_back(mi);
-		}
-	}
-}
-
-/** Extracts a skeletal mesh from a zCMeshSoftSkin */
 void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisualInfo* skeletalMeshInfo)
 {
 	// This type has multiple skinned meshes inside
@@ -1569,6 +1450,159 @@ void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisu
 		skeletalMeshInfo->VisualName = "MESHLESS_SKEL_" + std::to_string(s_NoMeshesNum);
 		s_NoMeshesNum++;
 	}*/
+
+	// Try to load saved settings for this mesh
+	skeletalMeshInfo->LoadMeshVisualInfo(skeletalMeshInfo->VisualName);
+
+	// Create additional information
+	if(skeletalMeshInfo->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
+		skeletalMeshInfo->CreatePNAENInfo(skeletalMeshInfo->TesselationInfo.buffer.VT_DisplacementStrength > 0.0f);
+}
+
+/** Extracts a skeletal mesh from a zCMeshSoftSkin */
+void WorldConverter::ExtractSkeletalMeshFromProto(zCModelPrototype* model, SkeletalMeshVisualInfo* skeletalMeshInfo)
+{
+	// This type has multiple skinned meshes inside
+	for(int i=0;i<model->GetMeshSoftSkinList()->NumInArray;i++)
+	{
+		zCMeshSoftSkin* s = model->GetMeshSoftSkinList()->Array[i];
+		std::vector<ExSkelVertexStruct> posList;
+
+		// This stream is built as the following:
+		// 4byte int - Num of nodes
+		// sizeof(zTWeightEntry) - The entry
+		char* stream = s->GetVertWeightStream();
+
+		// Get bone weights for each vertex
+		for(int i=0; i<s->GetPositionList()->NumInArray;i++)
+		{
+			// Get num of nodes
+			int numNodes = *(int *)stream;
+			stream += 4;
+
+			ExSkelVertexStruct vx;
+			//vx.Position = s->GetPositionList()->Array[i];
+			vx.Color = 0xFFFFFFFF;
+			vx.Normal = float3(0,0,0);
+			ZeroMemory(vx.weights, sizeof(vx.weights));
+			ZeroMemory(vx.Position, sizeof(vx.Position));
+			ZeroMemory(vx.boneIndices, sizeof(vx.boneIndices));
+
+			for(int n=0;n<numNodes;n++)
+			{
+				// Get entry
+				zTWeightEntry weightEntry = *(zTWeightEntry *)stream;
+				stream += sizeof(zTWeightEntry);
+
+				//if(s->GetNormalsList() && i < s->GetNormalsList()->NumInArray)
+				//	(*vx.Normal.toD3DXVECTOR3()) += weightEntry.Weight * (*s->GetNormalsList()->Array[i].toD3DXVECTOR3());
+
+				// Get index and weight
+				if(n < 4)
+				{
+					vx.weights[n] = weightEntry.Weight;
+					vx.boneIndices[n] = weightEntry.NodeIndex;
+					vx.Position[n] = weightEntry.VertexPosition;
+				}
+			}
+
+			posList.push_back(vx);
+		}
+
+		
+
+		// The rest is the same as a zCProgMeshProto, but with a different vertex type
+		for(int i=0;i<s->GetNumSubmeshes();i++)
+		{
+			std::vector<ExSkelVertexStruct> vertices;
+			std::vector<ExVertexStruct> bindPoseVertices;
+			std::vector<VERTEX_INDEX> indices;
+			// Get the data out
+			zCSubMesh* m = s->GetSubmesh(i);
+
+			// Get indices
+			for(int t=0;t<m->TriList.NumInArray;t++)
+			{				
+				for(int v=0;v<3;v++)
+				{
+					indices.push_back(m->TriList.Array[t].wedge[v]);
+				}
+			}
+
+			// Get vertices
+			for(int v=0;v<m->WedgeList.NumInArray;v++)
+			{
+				ExSkelVertexStruct vx;
+				vx = posList[m->WedgeList.Array[v].position];
+				vx.TexCoord	= m->WedgeList.Array[v].texUV;
+				vx.Color = 0xFFFFFFFF;
+				vx.Normal = m->WedgeList.Array[v].normal;
+
+				vertices.push_back(vx);
+
+				// Save vertexpos in bind pose, to run PNAEN on it
+				ExVertexStruct pvx;
+				pvx.Position = s->GetPositionList()->Array[m->WedgeList.Array[v].position];
+				pvx.TexCoord = vx.TexCoord;
+				pvx.Normal = vx.Normal;
+				pvx.Color = vx.Color;
+
+				bindPoseVertices.push_back(pvx);
+			}
+		
+			zCMaterial* mat = s->GetSubmesh(i)->Material;
+
+			SkeletalMeshInfo* mi = new SkeletalMeshInfo;
+			mi->Vertices = vertices;
+			mi->Indices = indices;
+			mi->visual = s;
+
+			// Create the buffers
+			Engine::GraphicsEngine->CreateVertexBuffer(&mi->MeshVertexBuffer);
+			Engine::GraphicsEngine->CreateVertexBuffer(&mi->MeshIndexBuffer);
+	
+			// Optimize faces
+			/*mi->MeshVertexBuffer->OptimizeFaces(&mi->Indices[0],
+				(byte *)&mi->Vertices[0], 
+				mi->Indices.size(), 
+				mi->Vertices.size(), 
+				sizeof(ExSkelVertexStruct));
+
+			// Then optimize vertices
+			mi->MeshVertexBuffer->OptimizeVertices(&mi->Indices[0],
+				(byte *)&mi->Vertices[0], 
+				mi->Indices.size(), 
+				mi->Vertices.size(), 
+				sizeof(ExSkelVertexStruct));*/
+
+			// Init and fill it
+			mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExSkelVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+			mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+
+
+			MeshInfo* bmi = new MeshInfo;
+			bmi->Indices = indices;
+			bmi->Vertices = bindPoseVertices;
+			
+			Engine::GraphicsEngine->CreateVertexBuffer(&bmi->MeshVertexBuffer);
+			Engine::GraphicsEngine->CreateVertexBuffer(&bmi->MeshIndexBuffer);
+
+			bmi->MeshVertexBuffer->Init(&bmi->Vertices[0], bmi->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+			bmi->MeshIndexBuffer->Init(&bmi->Indices[0], bmi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+
+			
+
+			Engine::GAPI->GetRendererState()->RendererInfo.SkeletalVerticesDataSize += mi->Vertices.size() * sizeof(ExVertexStruct);
+			Engine::GAPI->GetRendererState()->RendererInfo.SkeletalVerticesDataSize += mi->Indices.size() * sizeof(VERTEX_INDEX);
+
+			skeletalMeshInfo->SkeletalMeshes[mat].push_back(mi);
+			skeletalMeshInfo->Meshes[mat].push_back(bmi);
+		}
+	}
+
+	static int s_NoMeshesNum = 0;
+
+	skeletalMeshInfo->VisualName = model->GetVisualName();
 
 	// Try to load saved settings for this mesh
 	skeletalMeshInfo->LoadMeshVisualInfo(skeletalMeshInfo->VisualName);
@@ -2014,8 +2048,8 @@ void WorldConverter::IndexVertices(ExVertexStruct* input, unsigned int numInputV
 		triangles.insert(std::make_tuple(outIndices[i+0], outIndices[i+1], outIndices[i+2]));
 	}
 
-	if(triangles.size() != outIndices.size() / 3)
-		LogWarn() << "Found mesh with " << (outIndices.size() / 3) - triangles.size() << " overlaying Triangles!";
+	//if(triangles.size() != outIndices.size() / 3)
+	//	LogWarn() << "Found mesh with " << (outIndices.size() / 3) - triangles.size() << " overlaying Triangles!";
 
 	// Extract the cleaned triangles to the indices vector
 	outIndices.clear();

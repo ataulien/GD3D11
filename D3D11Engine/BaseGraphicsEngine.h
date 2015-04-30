@@ -91,8 +91,11 @@ public:
 	/** Draws a skeletal mesh */
 	virtual XRESULT DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness = 1.0f, SkeletalMeshVisualInfo* msh = NULL) = 0;
 
-	/** Draws a vertexarray, non-indexed */
+	/** Draws a vertexarray, indexed */
 	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct)) = 0;
+
+	/** Draws a vertexarray, non-indexed */
+	virtual XRESULT DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int stride = sizeof(ExVertexStruct)) = 0;
 
 	/** Draws a batch of instanced geometry */
 	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct)) = 0;

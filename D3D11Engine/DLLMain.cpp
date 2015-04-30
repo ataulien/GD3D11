@@ -31,6 +31,8 @@ static HINSTANCE hLThis = 0;
 static HINSTANCE hDDRAW = 0;
 
 static HRESULT (WINAPI *DirectDrawCreateEx_t)(GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  iid,IUnknown FAR *pUnkOuter);
+typedef void (WINAPI *DirectDrawSimple)();
+typedef HRESULT (WINAPI *DirectDrawCreateEx_type)(GUID FAR*, LPVOID*, REFIID ,IUnknown FAR*);
 
 void SignalHandler(int signal)
 {
@@ -82,6 +84,12 @@ extern "C" HRESULT WINAPI HookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *l
 	//LogInfo() << "HookedDirectDrawCreateEx!";
 	HRESULT hr = S_OK;
 
+	if(Engine::PassThrough)
+	{
+		DirectDrawCreateEx_type fn = (DirectDrawCreateEx_type)ddraw.DirectDrawCreateEx;
+		return fn(lpGuid, lplpDD, iid, pUnkOuter);
+	}
+
 	hook_infunc
 
 		return DoHookedDirectDrawCreateEx(lpGuid, lplpDD, iid, pUnkOuter);
@@ -93,12 +101,25 @@ extern "C" HRESULT WINAPI HookedDirectDrawCreateEx(GUID FAR * lpGuid, LPVOID  *l
 
 extern "C" void WINAPI HookedAcquireDDThreadLock()
 {
+	if(Engine::PassThrough)
+	{
+		DirectDrawSimple fn = (DirectDrawSimple)ddraw.AcquireDDThreadLock;
+		fn();
+		return;
+	}
 	// Do nothing
 	LogInfo() << "AcquireDDThreadLock called!";
 }
 
 extern "C" void WINAPI HookedReleaseDDThreadLock()
 {
+	if(Engine::PassThrough)
+	{
+		DirectDrawSimple fn = (DirectDrawSimple)ddraw.ReleaseDDThreadLock;
+		fn();
+		return;
+	}
+
 	// Do nothing
 	LogInfo() << "ReleaseDDThreadLock called!";
 }
@@ -163,27 +184,32 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID) {
 		//DebugWrite_i("DDRAW Proxy DLL starting.\n", 0);
 		hLThis = hInst;
 
+		Engine::PassThrough = false;
+
 		//_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 
-		Log::Clear();
-		LogInfo() << "Starting DDRAW Proxy DLL.";
+		if(!Engine::PassThrough)
+		{
+			Log::Clear();
+			LogInfo() << "Starting DDRAW Proxy DLL.";
 
-		// Check for right version
-		VersionCheck::CheckExecutable();
+			// Check for right version
+			VersionCheck::CheckExecutable();
 
-		HookedFunctions::OriginalFunctions.InitHooks();
+			HookedFunctions::OriginalFunctions.InitHooks();
 
-		Engine::GAPI = NULL;
-		Engine::GraphicsEngine = NULL;
+			Engine::GAPI = NULL;
+			Engine::GraphicsEngine = NULL;
 
-		// Create GothicAPI here to make all hooks work
-		Engine::CreateGothicAPI();
+			// Create GothicAPI here to make all hooks work
+			Engine::CreateGothicAPI();
 
-		GothicAPI::DisableErrorMessageBroadcast();
-		Engine::LoadDLLFiles();
+			GothicAPI::DisableErrorMessageBroadcast();
+			Engine::LoadDLLFiles();
 
-		EnableCrashingOnCrashes();
-		//SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
+			EnableCrashingOnCrashes();
+			//SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
+		}
 
 		char infoBuf[MAX_PATH];
 		GetSystemDirectoryA(infoBuf, MAX_PATH);

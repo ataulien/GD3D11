@@ -392,7 +392,8 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 				L"Mousewheel - Scale\n"
 				L"F1 - Close editor\n"
 				L"Shift-Click - Place Hero\n"
-				L"Pos: " + Toolbox::ToWideChar(float3(Engine::GAPI->GetCameraPosition()).toString());
+				L"Pos: " + Toolbox::ToWideChar(float3(Engine::GAPI->GetCameraPosition()).toString()) +
+				L"Time: " + std::to_wstring(oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetMasterTime());
 			break;
 
 		case EM_SELECT_POLY:

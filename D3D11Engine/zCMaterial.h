@@ -7,7 +7,7 @@
 #include "zCTexture.h"
 
 const int zMAT_GROUP_WATER = 5;
-
+const int zMAT_GROUP_SNOW = 6;
 
 const int zMAT_ALPHA_FUNC_FUNC_MAT_DEFAULT = 0;
 const int zMAT_ALPHA_FUNC_FUNC_NONE = 1;

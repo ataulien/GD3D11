@@ -569,12 +569,13 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame()
 		OnResize(INT2(desktopRect.right * RES_UPSCALE, desktopRect.bottom * RES_UPSCALE));
 	}*/
 
-		// Enter the critical section for safety while executing the deferred command list
+	// Enter the critical section for safety while executing the deferred command list
 	Engine::GAPI->EnterResourceCriticalSection();
 	ID3D11CommandList* dc_cl = NULL;
 	DeferredContext->FinishCommandList(true, &dc_cl);
 
-	Engine::GAPI->SetFrameLoadedTexturesReady();
+	// Copy list of textures we are operating on
+	Engine::GAPI->MoveLoadedTexturesToProcessedList();
 	Engine::GAPI->ClearFrameLoadedTextures();
 
 	Engine::GAPI->LeaveResourceCriticalSection();
@@ -665,6 +666,9 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame()
 XRESULT D3D11GraphicsEngine::OnEndFrame()
 {
 	Present();
+
+	// At least Present should have flushed the pipeline, so these textures should be ready by now
+	Engine::GAPI->SetFrameProcessedTexturesReady();
 
 	Engine::GAPI->GetRendererState()->RendererInfo.Timing.StopTotal();
 
@@ -1041,6 +1045,49 @@ XRESULT D3D11GraphicsEngine::DrawVertexArray(ExVertexStruct* vertices, unsigned 
 
 	return XR_SUCCESS;
 }
+
+/** Draws a vertexarray, indexed */
+XRESULT D3D11GraphicsEngine::DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int stride)
+{
+	UpdateRenderStates();
+	D3D11VShader* vShader = ActiveVS;//ShaderManager->GetVShader("VS_TransformedEx");
+	
+	// Bind the FF-Info to the first PS slot
+
+	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&Engine::GAPI->GetRendererState()->GraphicsState);
+	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
+
+	SetupVS_ExMeshDrawCall();
+
+	D3D11_BUFFER_DESC desc;
+	((D3D11VertexBuffer *)TempVertexBuffer)->GetVertexBuffer()->GetDesc(&desc);
+
+	if(desc.ByteWidth < stride * numVertices)
+	{
+		LogInfo() << "TempVertexBuffer too small (" << desc.ByteWidth << "), need " << stride * numVertices << " bytes. Recreating buffer.";
+
+		// Buffer too small, recreate it
+		delete TempVertexBuffer;
+		TempVertexBuffer = new D3D11VertexBuffer();
+
+		TempVertexBuffer->Init(NULL, stride * numVertices, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	}
+
+	TempVertexBuffer->UpdateBuffer(vertices, stride * numVertices);
+
+	UINT offset = 0;
+	UINT uStride = stride;
+	ID3D11Buffer* buffers[] = {TempVertexBuffer->GetVertexBuffer(), ((D3D11VertexBuffer *)ib)->GetVertexBuffer()};
+	Context->IASetVertexBuffers(0, 2, buffers, &uStride, &offset);
+
+	//Draw the mesh
+	Context->DrawIndexed(numIndices, 0, 0);
+
+	Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnTriangles += numVertices;
+
+	return XR_SUCCESS;
+}
+
 
 /** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
 XRESULT D3D11GraphicsEngine::DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride)
@@ -1431,6 +1478,9 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	RenderedVobs.resize(0); // Keep memory allocated on this
 	FrameWaterSurfaces.clear();
 	FrameTransparencyMeshes.clear();
+
+	// FIXME: Hack for texture caching!
+	zCTextureCacheHack::NumNotCachedTexturesInFrame = 0;
 
 	// Update view distances
 	InfiniteRangeConstantBuffer->UpdateBuffer(&D3DXVECTOR4(FLT_MAX, 0, 0, 0));
@@ -1827,9 +1877,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 						aniTex->CacheIn(-1);
 					}else
 					{
-						if(!aniTex->GetSurface() || !aniTex->GetSurface()->GetEngineTexture())
+						if(aniTex->CacheIn(0.6f) != zRES_CACHED_IN)
 						{
-							aniTex->CacheIn(0.6f);
 							numUncachedTextures++;
 							continue;
 						}
@@ -1874,8 +1923,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			}
 		}
 
-		if(numUncachedTextures < NUM_UNLOADEDTEXCOUNT_FORCE_LOAD_TEXTURES)
-			break;
+		//if(numUncachedTextures < NUM_UNLOADEDTEXCOUNT_FORCE_LOAD_TEXTURES)
+		break;
 
 		// If we get here, there are many unloaded textures.
 		// Clear the list and try again, with forcing the textures to load
@@ -3516,6 +3565,10 @@ INT2 D3D11GraphicsEngine::GetResolution()
 /** Returns the actual resolution of the backbuffer (not supersampled) */
 INT2 D3D11GraphicsEngine::GetBackbufferResolution()
 {
+	return Resolution;
+
+	// FIXME: Oversampling
+	/*
 	// Get desktop rect
 	RECT desktop;
 	GetClientRect(GetDesktopWindow(), &desktop);
@@ -3523,7 +3576,7 @@ INT2 D3D11GraphicsEngine::GetBackbufferResolution()
 	if(Resolution.x > desktop.right || Resolution.y > desktop.bottom)
 		return INT2(desktop.right, desktop.bottom);
 
-	return Resolution;
+	return Resolution;*/
 }
 
 /** Sets up the default rendering state */
@@ -4910,7 +4963,7 @@ void D3D11GraphicsEngine::Setup_PNAEN(EPNAENRenderMode mode)
 
 	PNAENConstantBuffer cb;
 	cb.f4Eye = Engine::GAPI->GetCameraPosition();
-	cb.adaptive = INT4(0,0,0,0);
+	cb.adaptive = INT4(1,0,0,0);
 	cb.clipping = INT4(1,0,0,0);
 
 	float f = Engine::GAPI->GetRendererState()->RendererSettings.TesselationFactor;
@@ -4932,8 +4985,12 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 {
 	SetDefaultStates();
 
-	// Copy scene behind the particle systems
-	//PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), PfxRenderer->GetTempBuffer()->GetRenderTargetView());
+
+
+	// Clear GBuffer0 to hold the refraction vectors since it's not needed anymore
+	Context->ClearRenderTargetView(GBuffer0_Diffuse->GetRenderTargetView(), (float *)&float4(0.0f,0.0f,0.0f,0.0f));
+	Context->ClearRenderTargetView(GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetView(), (float *)&float4(0.0f,0.0f,0.0f,0.0f));
+
 
 	// Bind it to the second slot
 	//PfxRenderer->GetTempBuffer()->BindToPixelShader(Context, 2);
@@ -4945,6 +5002,7 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 	ricb.RI_ViewportSize = float2(Resolution.x, Resolution.y);
 	ricb.RI_Time = Engine::GAPI->GetTimeSeconds();
 	ricb.RI_CameraPosition = Engine::GAPI->GetCameraPosition();
+	ricb.RI_Far = Engine::GAPI->GetFarPlane();
 
 	distPS->GetConstantBuffer()[0]->UpdateBuffer(&ricb);
 	distPS->GetConstantBuffer()[0]->BindToPixelShader(0);
@@ -4962,11 +5020,11 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 	state.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
 	state.RasterizerState.SetDirty();
 
-	SetActivePixelShader("PS_Simple");
-	PS_Simple->Apply();
 
-	// Draw distortion for additive particles
-	/*for(std::map<zCTexture*, std::vector<ParticleInstanceInfo>>::iterator it = particles.begin(); it != particles.end();it++)
+	// Draw distortion for additive particles to GBuffer0
+	/*ID3D11RenderTargetView* rtv[] = {GBuffer0_Diffuse->GetRenderTargetView(), GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetView()};
+	Context->OMSetRenderTargets(2, rtv, NULL);
+	for(std::map<zCTexture*, std::vector<ParticleInstanceInfo>>::iterator it = particles.begin(); it != particles.end();it++)
 	{
 		ParticleRenderInfo& inf = info[(*it).first];
 		GothicBlendStateInfo& blendState = inf.BlendState;
@@ -4982,16 +5040,12 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 					continue;
 			}
 
-			state.BlendState.SetDefault();
-			state.BlendState.SetDirty();
-
-			distPS->Apply();
-
-			DrawInstanced(vxb, ib, 6, &(*it).second[0], sizeof(ParticleInstanceInfo), (*it).second.size());
-
-			PS_Simple->Apply();
+			DrawInstanced(QuadVertexBuffer, QuadIndexBuffer, 6, &(*it).second[0], sizeof(ParticleInstanceInfo), (*it).second.size());
 		}
 	}*/
+
+	// Now bind the real target again
+	//Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
 
 	std::vector<std::tuple<zCTexture*, ParticleRenderInfo*, std::vector<ParticleInstanceInfo>*>> pvec;
 	for(std::map<zCTexture*, std::vector<ParticleInstanceInfo>>::iterator it = particles.begin(); it != particles.end();it++)
@@ -5015,6 +5069,14 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 	// Sort additive before blend
 	std::sort(pvec.begin(), pvec.end(), cmp::cmppt);
 
+	SetActivePixelShader("PS_ParticleDistortion");
+	ActivePS->Apply();
+
+	ID3D11RenderTargetView* rtv[] = {GBuffer0_Diffuse->GetRenderTargetView(), GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetView()};
+	Context->OMSetRenderTargets(2, rtv, DepthStencilBuffer->GetDepthStencilView());
+
+	int lastBlendMode = -1;
+
 	for(auto it = pvec.begin();it!=pvec.end();it++)
 	{
 		zCTexture* tx = std::get<0>((*it));
@@ -5035,18 +5097,57 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 
 		GothicBlendStateInfo& blendState = info.BlendState;
 
-		// Setup blend state
-		state.BlendState = blendState;
-		state.BlendState.SetDirty();
+		// This only happens once or twice, since the input list is sorted
+		if(info.BlendMode != lastBlendMode)
+		{
+			// Setup blend state
+			state.BlendState = blendState;
+			state.BlendState.SetDirty();	
+
+			lastBlendMode = info.BlendMode;
+
+			if(info.BlendMode == zRND_ALPHA_FUNC_ADD)
+			{
+				// Set Distortion-Rendering for additive blending
+				SetActivePixelShader("PS_ParticleDistortion");
+				ActivePS->Apply();
+
+				ID3D11RenderTargetView* rtv[] = {GBuffer0_Diffuse->GetRenderTargetView(), GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetView()};
+				Context->OMSetRenderTargets(2, rtv, DepthStencilBuffer->GetDepthStencilView());
+			}else
+			{
+				// Set usual rendering for everything else. Alphablending mostly.
+				SetActivePixelShader("PS_Simple");
+				PS_Simple->Apply();
+
+				Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
+			}
+		}
 
 		DrawInstanced(QuadVertexBuffer, QuadIndexBuffer, 6, &instances[0], sizeof(ParticleInstanceInfo), instances.size());
 	}
 
-	state.BlendState = bsi;
+
+
+	// Set usual rendertarget again
+	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
+
+	state.BlendState.SetDefault();
 	state.BlendState.SetDirty();
-	
-	state.DepthState.DepthWriteEnabled = true;
-	state.DepthState.SetDirty();
+
+	GBuffer0_Diffuse->BindToPixelShader(Context, 1);
+	GBuffer1_Normals_SpecIntens_SpecPower->BindToPixelShader(Context, 2);
+
+	// Copy scene behind the particle systems
+	PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), PfxRenderer->GetTempBuffer()->GetRenderTargetView());
+
+	SetActivePixelShader("PS_PFX_ApplyParticleDistortion");
+	ActivePS->Apply();
+
+	// Copy it back, putting distortion behind it
+	PfxRenderer->CopyTextureToRTV(PfxRenderer->GetTempBuffer()->GetShaderResView(), HDRBackBuffer->GetRenderTargetView(), INT2(0,0), true);
+
+	SetDefaultStates();
 }
 
 /** Called when a vob was removed from the world */

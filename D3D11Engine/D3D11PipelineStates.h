@@ -67,6 +67,7 @@ public:
 		// Set to default
 		blendDesc.AlphaToCoverageEnable = bs.AlphaToCoverage;
 		blendDesc.IndependentBlendEnable = FALSE;
+
 		blendDesc.RenderTarget[0].RenderTargetWriteMask = bs.ColorWritesEnabled ? (D3D11_COLOR_WRITE_ENABLE_RED | 
 			D3D11_COLOR_WRITE_ENABLE_BLUE | 
 			D3D11_COLOR_WRITE_ENABLE_GREEN |

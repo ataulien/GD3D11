@@ -61,9 +61,49 @@ struct zTMeshLibEntry
 class zCModelPrototype
 {
 public:
+	/** Hooks the functions of this Class */
+	static void Hook()
+	{
+		//HookedFunctions::OriginalFunctions.original_zCModelPrototypeLoadModelASC = (zCModelPrototypeLoadModelASC)DetourFunction((BYTE *)GothicMemoryLocations::zCModelPrototype::LoadModelASC, (BYTE *)zCModelPrototype::Hooked_LoadModelASC);
+
+	}
+
+	/** This is called on load time for models */
+	static int __fastcall Hooked_LoadModelASC(void* thisptr, void* unknwn, const zSTRING& file)
+	{
+		LogInfo() << "Loading Model: " << file.ToChar();
+		int r = HookedFunctions::OriginalFunctions.original_zCModelPrototypeLoadModelASC(thisptr, file);
+
+		// Pre-Load this model for us, too
+		if(r)
+		{
+			
+		}
+	}
+
+	/** This returns the list of nodes which hold information about the bones and attachments later */
 	zCArray<zCModelNode *>* GetNodeList()
 	{
 		return (zCArray<zCModelNode *> *)THISPTR_OFFSET(GothicMemoryLocations::zCModelPrototype::Offset_NodeList);
+	}
+
+	/** Returns the list of meshes which store the vertex-positions and weights */
+	zCArray<zCMeshSoftSkin *>* GetMeshSoftSkinList()
+	{
+#ifndef BUILD_GOTHIC_1_08k
+		return (zCArray<zCMeshSoftSkin *> *)THISPTR_OFFSET(GothicMemoryLocations::zCModelPrototype::Offset_MeshSoftSkinList);
+#else
+		return NULL;
+#endif
+	}
+
+	/** Returns the name of the first Mesh inside this */
+	const char* GetVisualName()
+	{
+		if(GetMeshSoftSkinList()->NumInArray > 0)
+			return GetMeshSoftSkinList()->Array[0]->GetObjectName();
+
+		return "";
 	}
 };
 

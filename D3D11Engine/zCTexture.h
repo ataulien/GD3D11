@@ -7,6 +7,12 @@
 #include "zSTRING.h"
 #include "D3D7\MyDirectDrawSurface7.h"
 
+namespace zCTextureCacheHack
+{
+	__declspec(selectany) unsigned int NumNotCachedTexturesInFrame;
+	const int MAX_NOT_CACHED_TEXTURES_IN_FRAME = 40;
+};
+
 class zCTexture
 {
 public:
@@ -19,7 +25,7 @@ public:
 		//HookedFunctions::OriginalFunctions.original_zCTex_D3DXTEX_BuildSurfaces = (zCTex_D3DXTEX_BuildSurfaces)DetourFunction((BYTE *)GothicMemoryLocations::zCTexture::XTEX_BuildSurfaces, (BYTE *)zCTexture::hooked_XTEX_BuildSurfaces);
 		HookedFunctions::OriginalFunctions.ofiginal_zCTextureLoadResourceData = (zCTextureLoadResourceData)DetourFunction((BYTE *)GothicMemoryLocations::zCTexture::LoadResourceData, (BYTE *)zCTexture::hooked_LoadResourceData);
 	
-		
+		zCTextureCacheHack::NumNotCachedTexturesInFrame = 0;
 	}
 
 	static int __fastcall hooked_LoadResourceData(void* thisptr)
@@ -106,6 +112,16 @@ public:
 			TouchTimeStamp();
 		} else if(GetCacheState()==zRES_CACHED_OUT)
 		{
+
+			/*TouchTimeStampLocal();
+			zCTextureCacheHack::NumNotCachedTexturesInFrame++;
+		
+			if(zCTextureCacheHack::NumNotCachedTexturesInFrame >= zCTextureCacheHack::MAX_NOT_CACHED_TEXTURES_IN_FRAME)
+			{
+				// Don't let the renderer cache in all textures at once!
+				return zRES_CACHED_OUT;
+			}*/
+
 #ifndef PUBLIC_RELEASE
 			if(1 == 0) // Small debugger-only section to get the name of currently cachedin texture
 			{
@@ -114,7 +130,7 @@ public:
 			}
 #endif
 			Engine::GAPI->SetBoundTexture(7, this); // Index 7 is reserved for cacheIn
-			TouchTimeStampLocal();
+			//TouchTimeStampLocal();
 			zCResourceManager::GetResourceManager()->CacheIn(this, priority);
 		}
 

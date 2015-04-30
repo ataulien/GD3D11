@@ -54,6 +54,13 @@ XRESULT GMesh::LoadMesh(const std::string& file, float scale)
 
 	LogInfo() << "Loading " << std::to_string(s->mNumMeshes) << " submeshes";
 
+	// Little helper for the case that the .mtl went wrong
+	if(s->mNumMaterials <= 3)
+	{
+		LogWarn() << "Mesh contains only " << s->mNumMaterials << " materials! This may not be what the creator wanted, please check your"
+			".mtl-File and the mtllib-reference in the .obj-File. Remember to delete the cache-file after a change!";
+	}
+
 	int startIndex = 0;
 	for(unsigned int i=0; i < s->mNumMeshes; i++)
 	{

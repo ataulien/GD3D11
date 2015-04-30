@@ -524,7 +524,10 @@ public:
 	void AddFrameLoadedTexture(MyDirectDrawSurface7* srf);
 
 	/** Sets loaded textures of this frame ready */
-	void SetFrameLoadedTexturesReady();
+	void SetFrameProcessedTexturesReady();
+
+	/** Copys the frame loaded textures to the processed list */
+	void MoveLoadedTexturesToProcessedList();
 
 	/** Returns if the given vob is registered in the world */
 	SkeletalVobInfo* GetSkeletalVobByVob(zCVob* vob);
@@ -553,8 +556,12 @@ public:
 	/** Returns the current ocean-object */
 	GOcean* GetOcean();
 
-	/** Loads the data out of a zCModel */
+	/** Loads the data out of a zCModel and stores it in the cache */
 	SkeletalMeshVisualInfo* LoadzCModelData(zCModel* model);
+
+	/** Loads the data out of a zCModelPrototype and stores it in the cache*/
+	SkeletalMeshVisualInfo* LoadzCModelPrototypeData(zCModelPrototype* model);
+
 private:
 	/** Collects polygons in the given AABB */
 	void CollectPolygonsInAABBRec(BspVobInfo* base, const zTBBox3D& bbox, std::vector<zCPolygon *>& list);
@@ -699,6 +706,7 @@ private:
 
 	/** Textures loaded this frame */
 	std::vector<MyDirectDrawSurface7 *> FrameLoadedTextures;
+	std::vector<MyDirectDrawSurface7 *> FrameProcessedTextures;
 
 	/** Quad marks loaded in the world */
 	stdext::hash_map<zCQuadMark*, QuadMarkInfo> QuadMarks;

@@ -31,7 +31,7 @@ public:
 		hook_infunc	
 		HookedFunctions::OriginalFunctions.original_oCNPCInitModel(thisptr);
 
-		if(Engine::GAPI->GetSkeletalVobByVob((zCVob *)thisptr)/* && ((zCVob *)thisptr)->GetSleepingMode() != 0 || ((oCNPC *)thisptr)->IsAPlayer()*/)
+		if(/*((zCVob *)thisptr)->GetVisual() || */Engine::GAPI->GetSkeletalVobByVob((zCVob *)thisptr))
 		{
 			// This may causes the vob to be added and removed multiple times, but makes sure we get all changes of armor
 			Engine::GAPI->OnRemovedVob((zCVob *)thisptr, ((zCVob *)thisptr)->GetHomeWorld());	

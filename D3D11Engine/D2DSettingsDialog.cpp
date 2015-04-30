@@ -86,11 +86,19 @@ XRESULT D2DSettingsDialog::InitControls()
 	godraysCheckbox->SetPosition(D2D1::Point2F(5, godraysCheckbox->GetPosition().y));
 	godraysCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableGodRays);
 
+	SV_Checkbox* smaaCheckbox = new SV_Checkbox(MainView, MainPanel);
+	smaaCheckbox->SetSize(D2D1::SizeF(160, 20));
+	smaaCheckbox->SetCaption("Enable SMAA");
+	smaaCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableSMAA);
+	smaaCheckbox->AlignUnder(godraysCheckbox, 5);
+	smaaCheckbox->SetPosition(D2D1::Point2F(5, smaaCheckbox->GetPosition().y));
+	smaaCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableSMAA);
+
 	SV_Checkbox* tesselationCheckbox = new SV_Checkbox(MainView, MainPanel);
 	tesselationCheckbox->SetSize(D2D1::SizeF(160, 20));
 	tesselationCheckbox->SetCaption("Enable Tesselation");
 	tesselationCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation);
-	tesselationCheckbox->AlignUnder(godraysCheckbox, 5);
+	tesselationCheckbox->AlignUnder(smaaCheckbox, 5);
 	tesselationCheckbox->SetPosition(D2D1::Point2F(5, tesselationCheckbox->GetPosition().y));
 	tesselationCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation);
 

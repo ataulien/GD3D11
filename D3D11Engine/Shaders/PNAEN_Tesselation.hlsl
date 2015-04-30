@@ -1,5 +1,5 @@
 #ifndef PARTITION_METHOD 
-#define PARTITION_METHOD "fractional_odd" 
+#define PARTITION_METHOD "pow2" 
 #endif 
  
 #define IN_PN_PATCH_SIZE 3 
@@ -283,15 +283,27 @@ HS_ControlPointOutput HSMain(
                                             O.f3ViewPosition[1], 
                                             O.f3ViewPosition[2], 
                                            I[NextCPID].f3ViewPosition); 
+										  
     } else { 
-		float maxZ = max(O.f3ViewPosition[0].z, I[NextCPID].f3ViewPosition.z);
-        O.fOppositeEdgeLOD = maxZ < g_f4TessFactors.z ? g_f4TessFactors.x : 1; 
+		//float maxZ = max(O.f3ViewPosition[0].z, I[NextCPID].f3ViewPosition.z);
+        //O.fOppositeEdgeLOD = maxZ < g_f4TessFactors.z ? g_f4TessFactors.x : 1; 
+		
+		O.fOppositeEdgeLOD = g_f4TessFactors.x;
     }     
      
 	//O.fOppositeEdgeLOD *= O.f2TexCoord2.x; // Borders are stored here. Don't tesselate at borders!
 	 
     return O; 
 } 
+
+float SmoothEdgeLod(float lod)
+{
+	float scale = 0.2f;
+	float fl = floor(lod * scale) / scale;
+	float fr = 0.0f;//pow(frac(lod * scale), 10.0f) / scale;
+	
+	return max(1, fl + fr);
+}
  
 // The Hull Shader Constant function, which is run after all threads 
 // of the Hull Shader Control Point function (above) complete. 
@@ -325,12 +337,18 @@ HS_ConstantOutput HS_Constant(
     // TessFactor[1] => Edge(2, 0) 
     // TessFactor[2] => Edge(0, 1) 
 	
-	float factor = VT_TesselationFactor;
+	float factor = 1.0f;//VT_TesselationFactor;
 	
     O.fTessFactor[0] = I[1].fOppositeEdgeLOD * factor; 
     O.fTessFactor[1] = I[2].fOppositeEdgeLOD * factor; 
     O.fTessFactor[2] = I[0].fOppositeEdgeLOD * factor; 
      
+	for(int i=0;i<3;i++)
+	{
+		O.fTessFactor[i] = SmoothEdgeLod(O.fTessFactor[i]);
+	}
+	
+	 
     // There's no right or wrong answer here. We've chosen to say that  
     // the interior should be at least as tessellated as the most 
     // tessellated exterior edge. 
