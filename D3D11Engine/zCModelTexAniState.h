@@ -12,4 +12,8 @@ public:
 	{
 		XCALL(GothicMemoryLocations::zCModelTexAniState::UpdateTexList);
 	}
+
+	int	NumNodeTex;
+	zCTexture** NodeTexList;
+	int	ActAniFrames[8];
 };

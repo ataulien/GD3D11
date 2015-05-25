@@ -101,6 +101,7 @@ struct GothicMemoryLocations
 	{
 		//static const unsigned int Release = 0x0040C310;
 		static const unsigned int GetObjectName = 0x005A9CD0;
+		static const unsigned int VTBL_ScalarDestructor = 0x12 / 4;
 	};
 
 	struct zCSkyController_Outdoor
@@ -229,6 +230,12 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_NodeList = 0x64;
 		static const unsigned int Offset_MeshSoftSkinList = 0x64 + 16;
 		static const unsigned int LoadModelASC = 0x0059E760;
+	};
+
+	struct zCModelMeshLib
+	{
+		static const unsigned int Offset_NodeList = 0xB * 4;
+		static const unsigned int Offset_MeshSoftSkinList = 0xC * 4;
 	};
 
 	struct zCBspLeaf
@@ -442,6 +449,7 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int CacheIn = 0x005DD040;
 		static const unsigned int CacheOut = 0x005DD350;
+		static const unsigned int PurgeCaches = 0x005DCA30;
 	};
 
 	struct oCWorld

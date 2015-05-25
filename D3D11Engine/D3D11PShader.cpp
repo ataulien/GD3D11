@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "D3D11PShader.h"
-#include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineBase.h"
 #include <D3DX11.h>
 #include "Engine.h"
 #include "GothicAPI.h"
@@ -9,10 +9,18 @@
 D3D11PShader::D3D11PShader(void)
 {
 	PixelShader = NULL;
+
+	// Insert into state-map
+	ID = D3D11ObjectIDs::Counters.PShadersCounter++;
+
+	D3D11ObjectIDs::PShadersByID[ID] = this;
 }
 
 D3D11PShader::~D3D11PShader(void)
 {
+	// Remove from state map
+	Toolbox::EraseByElement(D3D11ObjectIDs::PShadersByID, this);
+
 	if (PixelShader)PixelShader->Release();
 
 	for (unsigned int i = 0; i < ConstantBuffers.size(); i++)
@@ -43,7 +51,7 @@ HRESULT D3D11PShader::CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEnt
 
 	// Construct makros
 	std::vector<D3D10_SHADER_MACRO> m;
-	D3D11GraphicsEngine::ConstructShaderMakroList(m);
+	D3D11GraphicsEngineBase::ConstructShaderMakroList(m);
 	
 	// Push these to the front
 	m.insert(m.begin(), makros.begin(), makros.end());
@@ -82,7 +90,7 @@ HRESULT D3D11PShader::CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEnt
 XRESULT D3D11PShader::LoadShader(const char* pixelShader, std::vector<D3D10_SHADER_MACRO>& makros)
 {
 	HRESULT hr;
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	ID3DBlob* psBlob;
 
@@ -108,7 +116,7 @@ XRESULT D3D11PShader::LoadShader(const char* pixelShader, std::vector<D3D10_SHAD
 /** Applys the shaders */
 XRESULT D3D11PShader::Apply()
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	engine->GetContext()->PSSetShader(PixelShader, NULL, 0);
 

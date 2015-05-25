@@ -1,5 +1,5 @@
 #pragma once
-#include "basegraphicsengine.h"
+#include "D3D11GraphicsEngineBase.h"
 
 struct RenderToDepthStencilBuffer;
 
@@ -16,7 +16,7 @@ enum D3D11ENGINE_RENDER_STAGE
 
 const int DRAWVERTEXARRAY_BUFFER_SIZE = 2048 * sizeof(ExVertexStruct);
 const int NUM_MAX_BONES = 96;
-const int INSTANCING_BUFFER_SIZE = sizeof(D3DXMATRIX) * 2048;
+const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceInfo) * 2048;
 
 class D3D11VShader;
 class D3D11PShader;
@@ -29,9 +29,10 @@ struct VobLightInfo;
 class GMesh;
 class GOcean;
 class D3D11HDShader;
+class D3D11OcclusionQuerry;
 struct MeshInfo;
 struct RenderToTextureBuffer;
-class D3D11GraphicsEngine : public BaseGraphicsEngine
+class D3D11GraphicsEngine : public D3D11GraphicsEngineBase
 {
 public:
 	D3D11GraphicsEngine(void);
@@ -138,15 +139,6 @@ public:
 	/** Draws the ocean */
 	XRESULT DrawOcean(GOcean* ocean);
 
-	/** Returns the device */
-	ID3D11Device* GetDevice(){ return Device; }
-
-	/** Returns the context */
-	ID3D11DeviceContext* GetContext(){ return Context; }
-
-	/** Returns the deferred context */
-	ID3D11DeviceContext* GetDeferredContext(){ return DeferredContext; }
-
 	/** Gets the depthbuffer */
 	RenderToDepthStencilBuffer* GetDepthBuffer(){return DepthStencilBuffer;}
 
@@ -220,6 +212,9 @@ public:
 	/** Renders the shadowmaps for the sun */
 	void RenderShadowmaps(const D3DXVECTOR3& cameraPosition);
 
+	/** Updates the occlusion for the bsp-tree */
+	void UpdateOcclusion();
+
 	/** Returns the shadermanager */
 	D3D11ShaderManager* GetShaderManager();
 
@@ -277,69 +272,31 @@ public:
 	/** Creates the main UI-View */
 	void CreateMainUIView();
 protected:
-
-	
-
 	/** Test draw world */
 	void TestDrawWorldMesh();
 
 	/** D3D11 Objects */
-	IDXGIFactory* DXGIFactory;
-	IDXGIAdapter* DXGIAdapter;
-	IDXGISwapChain* SwapChain;
-	ID3D11Device* Device;
-	ID3D11DeviceContext* Context;
-	ID3D11DeviceContext* DeferredContext;
-	ID3D11SamplerState* DefaultSamplerState;
 	ID3D11SamplerState* ClampSamplerState;
 	ID3D11SamplerState* CubeSamplerState;
 	ID3D11SamplerState* ShadowmapSamplerState;
 	ID3D11RasterizerState* WorldRasterizerState;
 	ID3D11RasterizerState* HUDRasterizerState;
 	ID3D11DepthStencilState* DefaultDepthStencilState;
-	INT2 Resolution;
-
-	/** FixedFunction-State render states */
-	ID3D11RasterizerState* FFRasterizerState;
-	ID3D11BlendState* FFBlendState;
-	ID3D11DepthStencilState* FFDepthStencilState;
 
 	/** Swapchain buffers */
 	ID3D11RenderTargetView* BackbufferRTV;
 	ID3D11ShaderResourceView* BackbufferSRV; // Diffuse
 	RenderToTextureBuffer* GBuffer0_Diffuse;
 	RenderToTextureBuffer* GBuffer1_Normals_SpecIntens_SpecPower; // Normals / SpecIntensity / SpecPower
-	RenderToTextureBuffer* HDRBackBuffer;
-	RenderToDepthStencilBuffer* DepthStencilBuffer;
 	RenderToTextureBuffer* DepthStencilBufferCopy;
-
-	/** Output window */
-	HWND OutputWindow;
-
-	/** ShaderManager */
-	D3D11ShaderManager* ShaderManager;
 
 	/** Temp-Arrays for storing data to be put in constant buffers */
 	D3DXMATRIX Temp2D3DXMatrix[2];
 	D3DXMATRIX TempBonesD3DXmatrix[NUM_MAX_BONES];
 	float2 Temp2Float2[2];
-	D3D11VertexBuffer* TempVertexBuffer;
 	D3D11VertexBuffer* DynamicInstancingBuffer;
 
-	/** Active shaders */
-	D3D11VShader* ActiveVS;
-	D3D11PShader* ActivePS;
-	D3D11HDShader* ActiveHDS;
 	std::set<zCTexture*> FrameTextures;
-
-	/** Useful shaders */
-	D3D11PShader* PS_DiffuseNormalmapped;
-	D3D11PShader* PS_DiffuseNormalmappedFxMap;
-	D3D11PShader* PS_Diffuse;
-	D3D11PShader* PS_DiffuseNormalmappedAlphatest;
-	D3D11PShader* PS_DiffuseNormalmappedAlphatestFxMap;
-	D3D11PShader* PS_DiffuseAlphatest;
-	D3D11PShader* PS_Simple;
 
 	/** Post processing */
 	D3D11PfxRenderer* PfxRenderer;
@@ -356,17 +313,11 @@ protected:
 	RenderToDepthStencilBuffer* WorldShadowmap1;
 	std::list<VobInfo*> RenderedVobs;
 
-	/** Debugging */
-	D3D11LineRenderer* LineRenderer;
-
 	/** The current rendering stage */
 	D3D11ENGINE_RENDER_STAGE RenderingStage;
 
 	/** The editorcontrols */
 	D2DView* UIView;
-
-	/** If true, a present is still pending, so dont render anything */
-	bool PresentPending;
 
 	/** Map of texture/index */
 	stdext::hash_map<zCTexture*, int> TexArrayIndexByTexture;
@@ -388,4 +339,7 @@ protected:
 	/** Quads for decals/particles */
 	BaseVertexBuffer* QuadVertexBuffer;
 	BaseVertexBuffer* QuadIndexBuffer;
+
+	/** Occlusion query manager */
+	D3D11OcclusionQuerry* Occlusion;
 };

@@ -5,6 +5,7 @@
 #include "GothicAPI.h"
 #include "BaseGraphicsEngine.h"
 #include <algorithm>
+#include "zSTRING.h"
 
 class zCOption
 {
@@ -36,6 +37,41 @@ public:
 		return cmdLine.find("-" + cmd) != std::string::npos;
 	}
 
+	/** Returns the value of the given parameter. If the parameter is not in the commandline, it returns "" */
+	std::string ParameterValue(const std::string& str)
+	{
+#ifdef BUILD_GOTHIC_1_08k
+		return ""; // TODO
+#endif
+
+		zSTRING* zCmdline = (zSTRING *)THISPTR_OFFSET(GothicMemoryLocations::zCOption::Offset_CommandLine);
+		std::string cmdLine = zCmdline->ToChar();
+		std::string cmd = str;
+
+		// Make them uppercase
+		std::transform(cmdLine.begin(), cmdLine.end(),cmdLine.begin(), ::toupper);
+		std::transform(cmd.begin(), cmd.end(),cmd.begin(), ::toupper);
+
+		int pos = cmdLine.find("-" + cmd);
+		if(pos == std::string::npos)
+			return ""; // Not in commandline
+
+		int paramPos = pos + 1 + cmd.length() + 1; // Skip everything until the -, then 
+								     			   // the -, then the param-name and finally the :
+		// Safety-check
+		if(paramPos >= cmdLine.length())
+			return "";
+
+		// *Snip*
+		std::string arg = cmdLine.substr(paramPos); 
+		
+		// Snip the rest of the commandline, if there is any
+		if(arg.find_first_of(' ') != std::string::npos)
+			arg = arg.substr(0, arg.find_first_of(' '));
+		
+		return arg;
+	}
+
 	/** Reads config stuff */
 	static int __fastcall hooked_zOptionReadBool(void* thisptr, void* unknwn,zSTRING const& section, char const* var, int def)
 	{
@@ -53,6 +89,12 @@ public:
 		{
 			Engine::GAPI->SetIntParamFromConfig("zStartupWindowed", r);
 			return 1;
+		}else if(stricmp(var, "gameAbnormalExit") == 0)
+		{
+#ifndef PUBLIC_RELEASE
+			// No VDFS bullshit when testing
+			return 0;
+#endif
 		}
 
 		

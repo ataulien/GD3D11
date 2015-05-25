@@ -15,8 +15,30 @@ struct DisplayModeInfo
 	DWORD Bpp;
 };
 
+enum RenderStage
+{
+	STAGE_DRAW_WORLD = 0,
+
+};
+
 struct ViewportInfo
 {
+	ViewportInfo(){}
+	ViewportInfo(	unsigned int topleftX, 
+					unsigned int topleftY, 
+					unsigned int width, 
+					unsigned int height, 
+					float minZ = 0.0f, 
+					float maxZ = 1.0f)
+	{
+		TopLeftX = topleftX;
+		TopLeftY = topleftY;
+		Width = width;
+		Height = height;
+		MinZ = minZ;
+		MaxZ = maxZ;
+	}
+
 	unsigned int TopLeftX;
 	unsigned int TopLeftY;
 	unsigned int Width;
@@ -24,6 +46,183 @@ struct ViewportInfo
 	float MinZ;
 	float MaxZ;
 };
+
+
+struct PipelineState
+{
+	PipelineState()
+	{
+		ZeroMemory(BaseState.ConstantBuffersPS, sizeof(BaseState.ConstantBuffersPS));
+		ZeroMemory(BaseState.ConstantBuffersVS, sizeof(BaseState.ConstantBuffersVS));
+		ZeroMemory(BaseState.ConstantBuffersHDS, sizeof(BaseState.ConstantBuffersHDS));
+		ZeroMemory(BaseState.ConstantBuffersGS, sizeof(BaseState.ConstantBuffersGS));
+		ZeroMemory(BaseState.VertexBuffers, sizeof(BaseState.VertexBuffers));
+
+		BaseState.GShaderID = 0xFF;
+		BaseState.HDShaderID = 0xFF;
+		BaseState.VShaderID = 0xFF;
+		BaseState.PShaderID = 0xFF;
+
+		BaseState.TranspacenyMode = 0;
+		BaseState.Depth = 0;
+		BaseState.BlendStateID = 0xFF;
+		BaseState.RasterizerStateID = 0xFF;
+		BaseState.DepthStencilID = 0xFF;
+
+		BaseState.NumIndices = 0;
+		BaseState.NumVertices = 0;
+		BaseState.NumTextures = 0;
+		BaseState.NumInstances = 0;
+		BaseState.BSPSkipState = false;
+
+		memset(BaseState.TextureIDs, 0xFF, sizeof(BaseState.TextureIDs));
+
+		ZeroMemory(BaseState.VertexStride, sizeof(BaseState.VertexStride));
+		BaseState.IndexOffset = 0;
+		BaseState.DrawCallType = DCT_DrawIndexed;
+
+		SortItem.AssociatedState = this;
+	}
+
+	PipelineState(const PipelineState& s)
+	{
+		BaseState = s.BaseState;
+		SortItem = s.SortItem;
+		SortItem.AssociatedState = this;
+	}
+
+	enum EDrawCallType
+	{
+		DCT_Draw,
+		DCT_DrawIndexed,
+		DCT_DrawInstanced,
+		DCT_DrawIndexedInstanced
+	};
+
+	struct BaseState_s
+	{
+		/** Sets a constantbuffer to all shaders */
+		void SetCB(int slot, BaseConstantBuffer* cb)
+		{
+			ConstantBuffersPS[slot] = cb;
+			ConstantBuffersVS[slot] = cb;
+			ConstantBuffersHDS[slot] = cb;
+			ConstantBuffersGS[slot] = cb;
+		}
+
+		/** Called after this state got drawn */
+		void StateWasDrawn()
+		{
+			BSPSkipState = false;
+		}
+
+		/** If true, this won't be rendered
+			This is a special flag for the BSP-Tree, so that vobs at the border
+			of a node won't be drawn multiple times */
+		bool BSPSkipState;
+
+		// Texture IDs of this state
+		UINT16 TextureIDs[8];
+		byte NumTextures;
+
+		/** Buffers */
+		BaseConstantBuffer* ConstantBuffersPS[8];
+		BaseConstantBuffer* ConstantBuffersVS[8];
+		BaseConstantBuffer* ConstantBuffersHDS[8];
+		BaseConstantBuffer* ConstantBuffersGS[8];
+
+		/** Vertex-buffers */
+		BaseVertexBuffer* VertexBuffers[2];
+		UINT VertexStride[2];
+		UINT IndexOffset;
+		EDrawCallType DrawCallType;
+		UINT IndexStride;
+
+		UINT NumIndices;
+		UINT NumVertices;
+		UINT NumInstances;
+
+		/** Index-buffer */
+		BaseVertexBuffer* IndexBuffer;
+
+		UINT8 PShaderID;
+		UINT8 VShaderID;
+		UINT8 HDShaderID;
+		UINT8 GShaderID;
+
+		UINT8 TranspacenyMode;
+
+		UINT16 Depth;
+
+		UINT16 BlendStateID;
+		UINT16 RasterizerStateID;
+		UINT16 DepthStencilID;
+	} BaseState;
+
+	struct State {
+		UINT64 Build(const BaseState_s& state)
+		{
+			/*Depth = state.Depth & 0xFFFF;
+			textureID = state.TextureIDs[0] & 0xFFFF;
+			psID = state.PShaderID & 0xFF;
+			vsID = state.VShaderID & 0xFF;
+			blendID = state.BlendStateID & 0xFF;
+			rastID = state.RasterizerStateID & 0xFF;
+			depthStencilID = state.DepthStencilID & 0xFF;
+			transparency = state.TranspacenyMode & 3;
+			vertexBufferID = 0;//state.VertexBuffers[0]->G // TODO
+			padding = 0;*/
+
+			/*UINT64 v =  (transparency & 3 << 62) |
+						(textureID & 0xFF << 46) |
+						(vertexBufferID & 0xF << 38) |
+						(Depth & 0xFFF << 14);
+						//(psID & 0xF << 46) |
+						//(vsID & 0xF << 46) |
+						//(blendID & 0xF << 46) |
+						//(rastID & 0xF << 46) |
+						//(depthStencilID & 0xF << 46);*/
+
+			UINT64 v = 0;//((state.TextureIDs[0] & 0xFFFF) << 32) | ((UINT32)state.VertexBuffers[0]);
+			return v;
+		}
+
+		UINT padding : 6;
+		UINT transparency : 2;
+		UINT textureID : 16;
+
+		UINT vertexBufferID : 8;
+
+		UINT Depth : 24;
+
+		UINT psID : 8;
+		UINT vsID : 8;
+
+		UINT blendID : 8;
+		UINT rastID : 8;
+		UINT depthStencilID : 8;	
+	};
+
+	struct PipelineSortItem
+	{
+		static bool cmp(const PipelineSortItem* x, const PipelineSortItem* y)
+		{
+			return y->stateValue < x->stateValue;
+		}
+
+		UINT64 Build(const BaseState_s& state);
+
+		/** Bitfield to describe the state */
+		UINT64 stateValue;
+
+		/** The state associated with this info */
+		PipelineState* AssociatedState;
+	};
+
+	/** Structure for sorting this using the state-key */
+	PipelineSortItem SortItem;
+};
+
 
 class zCTexture;
 
@@ -75,96 +274,125 @@ public:
 	/** Presents the current frame to the screen */
 	virtual XRESULT Present() = 0;
 
-	/** Puts the current world matrix into a CB and binds it to the given slot */
-	virtual void SetupPerInstanceConstantBuffer(int slot=1) = 0;
-
-	/** Draws a vertexbuffer, non-indexed */
-	virtual XRESULT DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int stride = sizeof(ExVertexStruct)) = 0;
-
-	/** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
-	virtual XRESULT DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct)) = 0;
-
-	/** Draws a vertexbuffer, non-indexed */
-	virtual XRESULT DrawVertexBufferIndexed(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset = 0) = 0;
-	virtual XRESULT DrawVertexBufferIndexedUINT(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset) = 0;
-
-	/** Draws a skeletal mesh */
-	virtual XRESULT DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness = 1.0f, SkeletalMeshVisualInfo* msh = NULL) = 0;
-
-	/** Draws a vertexarray, indexed */
-	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct)) = 0;
-
-	/** Draws a vertexarray, non-indexed */
-	virtual XRESULT DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int stride = sizeof(ExVertexStruct)) = 0;
-
-	/** Draws a batch of instanced geometry */
-	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct)) = 0;
-	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, BaseVertexBuffer* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct), unsigned int startInstanceNum = 0, unsigned int indexOffset = 0) = 0;
-
-	/** Sets the active pixel shader object */
-	virtual XRESULT SetActivePixelShader(const std::string& shader) = 0;
-	virtual XRESULT SetActiveVertexShader(const std::string& shader) = 0;
-
-	/** Binds the active PixelShader */
-	virtual XRESULT BindActivePixelShader() = 0;
-	virtual XRESULT BindActiveVertexShader() = 0;
-
-	/** Binds viewport information to the given constantbuffer slot */
-	virtual XRESULT BindViewportInformation(const std::string& shader, int slot) = 0;
-
-	/** Unbinds the texture at the given slot */
-	virtual XRESULT UnbindTexture(int slot) = 0;
-
 	/** Called when we started to render the world */
 	virtual XRESULT OnStartWorldRendering() = 0;
-
-	/** Draws the world mesh */
-	virtual XRESULT DrawWorldMesh(bool noTextures = false) = 0;
-
-	/** Draws the static VOBs */
-	virtual XRESULT DrawVOBs(bool noTextures=false) = 0;
-
-	/** Draws the sky using the GSky-Object */
-	virtual XRESULT DrawSky() = 0;
-
-	/** Called when a key got pressed */
-	virtual XRESULT OnKeyDown(unsigned int key) = 0;
-
-	/** Returns the current resolution */
-	virtual INT2 GetResolution() = 0;
-	virtual INT2 GetBackbufferResolution() = 0;
-	
-	/** Returns the data of the backbuffer */
-	virtual void GetBackbufferData(byte** data, int& pixelsize) = 0;
 
 	/** Returns the line renderer object */
 	virtual BaseLineRenderer* GetLineRenderer() = 0;
 
+	/** Draws a vertexarray, used for rendering gothics UI */
+	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct)) = 0;
+
+	/** Fills the associated state object using the given IDs */
+	virtual void FillPipelineStateObject(PipelineState* state){};
+
+	/** Draws a single pipeline-state */
+	virtual void DrawPipelineState(const PipelineState* state){}
+
+	/** Pushes a single pipeline-state into the renderqueue */
+	virtual void PushPipelineState(PipelineState* state){}
+
+	/** Flushes the renderqueue */
+	virtual void FlushRenderQueue(bool sortQueue = true){};
+
+	/** Clears the renderingqueue */
+	virtual void ClearRenderingQueue(){}
+
+	/** Returns the rendering-queue */
+	virtual std::vector<PipelineState::PipelineSortItem*>& GetRenderQueue(){static std::vector<PipelineState::PipelineSortItem*> s; return s;}
+
+	/** Creates a pipeline state */
+	virtual PipelineState* CreatePipelineState(const PipelineState* copy = NULL){return NULL;}
+
+	/** Binds a pipeline-state */
+	virtual void BindPipelineState(const PipelineState* state){}
+
+	/** Puts the current world matrix into a CB and binds it to the given slot */
+	virtual void SetupPerInstanceConstantBuffer(int slot=1){};
+
+	/** Draws a vertexbuffer, non-indexed */
+	virtual XRESULT DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
+
+	/** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
+	virtual XRESULT DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
+
+	/** Draws a vertexbuffer, non-indexed */
+	virtual XRESULT DrawVertexBufferIndexed(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset = 0){return XR_SUCCESS;};
+	virtual XRESULT DrawVertexBufferIndexedUINT(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset){return XR_SUCCESS;};
+
+	/** Draws a skeletal mesh */
+	virtual XRESULT DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness = 1.0f, SkeletalMeshVisualInfo* msh = NULL){return XR_SUCCESS;};
+
+	
+
+	/** Draws a vertexarray, non-indexed */
+	virtual XRESULT DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
+
+	/** Draws a batch of instanced geometry */
+	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
+	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, BaseVertexBuffer* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct), unsigned int startInstanceNum = 0, unsigned int indexOffset = 0){return XR_SUCCESS;};
+
+	/** Sets the active pixel shader object */
+	virtual XRESULT SetActivePixelShader(const std::string& shader){return XR_SUCCESS;};
+	virtual XRESULT SetActiveVertexShader(const std::string& shader){return XR_SUCCESS;};
+
+	/** Binds the active PixelShader */
+	virtual XRESULT BindActivePixelShader(){return XR_SUCCESS;};
+	virtual XRESULT BindActiveVertexShader(){return XR_SUCCESS;};
+
+	/** Binds viewport information to the given constantbuffer slot */
+	virtual XRESULT BindViewportInformation(const std::string& shader, int slot){return XR_SUCCESS;};
+
+	/** Unbinds the texture at the given slot */
+	virtual XRESULT UnbindTexture(int slot){return XR_SUCCESS;};
+
+	/** Draws the world mesh */
+	virtual XRESULT DrawWorldMesh(bool noTextures = false){return XR_SUCCESS;};
+
+	/** Draws the static VOBs */
+	virtual XRESULT DrawVOBs(bool noTextures=false){return XR_SUCCESS;};
+
+	/** Draws the sky using the GSky-Object */
+	virtual XRESULT DrawSky(){return XR_SUCCESS;};
+
+	/** Called when a key got pressed */
+	virtual XRESULT OnKeyDown(unsigned int key){return XR_SUCCESS;};
+
+	/** Returns the current resolution */
+	virtual INT2 GetResolution(){return INT2(0,0);};
+	virtual INT2 GetBackbufferResolution(){return GetResolution();};
+	
+	/** Returns the data of the backbuffer */
+	virtual void GetBackbufferData(byte** data, int& pixelsize){};
+
+	/** Fills a pipeline-state with the default value for the current stage */
+	virtual void SetupPipelineForStage(int stage, PipelineState* state){};
+
 	/** Returns the textures drawn this frame */
-	virtual const std::set<zCTexture*> GetFrameTextures() = 0;
+	virtual const std::set<zCTexture*> GetFrameTextures(){return std::set<zCTexture*>();};
 
 	/** Draws a fullscreenquad, copying the given texture to the viewport */
-	virtual void DrawQuad(INT2 position, INT2 size) = 0;
+	virtual void DrawQuad(INT2 position, INT2 size){};
 
 	/** Draws a single VOB */
-	virtual void DrawVobSingle(VobInfo* vob) = 0;
+	virtual void DrawVobSingle(VobInfo* vob){};
 
 	/** Message-Callback for the main window */
-	virtual LRESULT OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) = 0;
+	virtual LRESULT OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam){return 0;};
 
 	/** Called when a vob was removed from the world */
-	virtual XRESULT OnVobRemovedFromWorld(zCVob* vob) = 0;
+	virtual XRESULT OnVobRemovedFromWorld(zCVob* vob){return XR_SUCCESS;};
 
 	/** Reloads shaders */
-	virtual XRESULT ReloadShaders() = 0;
+	virtual XRESULT ReloadShaders(){return XR_SUCCESS;};
 
 	/** Draws the water surfaces */
-	virtual void DrawWaterSurfaces() = 0;
+	virtual void DrawWaterSurfaces(){};
 
 	/** Handles an UI-Event */
-	virtual void OnUIEvent(EUIEvent uiEvent) = 0;
+	virtual void OnUIEvent(EUIEvent uiEvent){};
 
 	/** Draws particle effects */
-	virtual void DrawFrameParticles(std::map<zCTexture*, std::vector<ParticleInstanceInfo>>& particles, std::map<zCTexture*, ParticleRenderInfo>& info) = 0;
+	virtual void DrawFrameParticles(std::map<zCTexture*, std::vector<ParticleInstanceInfo>>& particles, std::map<zCTexture*, ParticleRenderInfo>& info){};
 };
 

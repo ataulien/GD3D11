@@ -13,14 +13,27 @@
 const std::string MENU_SETTINGS_FILE = "system\\GD3D11\\UserSettings.bin";
 
 class zCModelPrototype;
-struct BspVobInfo
+struct BspInfo
 {
-	BspVobInfo()
+	BspInfo()
 	{
 		NumStaticLights = 0;
 		OriginalNode = NULL;
 		Front = NULL;
 		Back = NULL;
+
+		OcclusionInfo.VisibleLastFrame = false;
+		OcclusionInfo.LastVisitedFrameID = 0;
+		OcclusionInfo.QueryID = -1;
+		OcclusionInfo.QueryInProgress = false;
+		OcclusionInfo.LastCameraClipType = 0;
+
+		OcclusionInfo.NodeMesh = NULL;
+	}
+
+	~BspInfo()
+	{
+		delete OcclusionInfo.NodeMesh;
 	}
 
 	bool IsEmpty()
@@ -39,10 +52,21 @@ struct BspVobInfo
 
 	int NumStaticLights;
 
+	/** Occlusion info for this node */
+	struct OcclusionInfo_s
+	{
+		unsigned int LastVisitedFrameID;
+		bool VisibleLastFrame;
+		int QueryID;
+		bool QueryInProgress;
+		MeshInfo* NodeMesh;
+		int LastCameraClipType;
+	} OcclusionInfo;
+
 	// Original bsp-node
 	zCBspBase* OriginalNode;
-	BspVobInfo* Front;
-	BspVobInfo* Back;
+	BspInfo* Front;
+	BspInfo* Back;
 };
 
 struct CameraReplacement
@@ -140,6 +164,7 @@ class MyDirectDrawSurface7;
 class GVegetationBox;
 class GRenderThread;
 class GOcean;
+class zCMorphMesh;
 class zCDecal;
 class GothicAPI
 {
@@ -388,7 +413,10 @@ public:
 	void BuildBspVobMapCache();
 
 	/** Returns the new node from tha base node */
-	BspVobInfo* GetNewBspNode(zCBspBase* base);
+	BspInfo* GetNewBspNode(zCBspBase* base);
+
+	/** Returns our bsp-root-node */
+	BspInfo* GetNewRootNode();
 
 	/** Disables a problematic method which causes the game to conflict with other applications on startup */
 	static void DisableErrorMessageBroadcast();
@@ -400,6 +428,9 @@ public:
 	/** Sets/Gets the far-plane */
 	void SetNearPlane(float value);
 	float GetNearPlane();
+
+	/** Reloads all textures */
+	void ReloadTextures();
 
 	/** Returns true if the given string can be found in the commandline */
 	bool HasCommandlineParameter(const std::string& param);
@@ -536,7 +567,7 @@ public:
 	std::map<zCTexture*, ParticleRenderInfo>& GetFrameParticleInfo();
 
 	/** Checks if the normalmaps are there */
-	bool CheckNormalmapFiles();
+	bool CheckNormalmapFilesOld();
 
 	/** Returns the gamma value from the ingame menu */
 	float GetGammaValue();
@@ -564,7 +595,7 @@ public:
 
 private:
 	/** Collects polygons in the given AABB */
-	void CollectPolygonsInAABBRec(BspVobInfo* base, const zTBBox3D& bbox, std::vector<zCPolygon *>& list);
+	void CollectPolygonsInAABBRec(BspInfo* base, const zTBBox3D& bbox, std::vector<zCPolygon *>& list);
 
 	/** Cleans empty BSPNodes */
 	void CleanBSPNodes();
@@ -573,7 +604,7 @@ private:
 	void BuildBspVobMapCacheHelper(zCBspBase* base);
 
 	/** Recursive helper function to draw collect the vobs */
-	void CollectVisibleVobsHelper(BspVobInfo* base, zTBBox3D boxCell, int clipFlags, std::vector<VobInfo *>& vobs, std::vector<VobLightInfo  *>& lights);
+	void CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int clipFlags, std::vector<VobInfo *>& vobs, std::vector<VobLightInfo  *>& lights);
 
 	/** Applys the suppressed textures */
 	void ApplySuppressedSectionTextures();
@@ -581,7 +612,7 @@ private:
 
 	/** Puts the custom-polygons into the bsp-tree */
 	void PutCustomPolygonsIntoBspTree();
-	void PutCustomPolygonsIntoBspTreeRec(BspVobInfo* base);
+	void PutCustomPolygonsIntoBspTreeRec(BspInfo* base);
 
 	/** Hooked Window-Proc from the game */
 	static LRESULT CALLBACK GothicWndProc(
@@ -646,7 +677,7 @@ private:
 	std::hash_map<zCVob*, SkeletalVobInfo*> SkeletalVobMap;
 
 	/** Map of VobInfo-Lists for zCBspLeafs */
-	std::hash_map<zCBspBase *, BspVobInfo> BspLeafVobLists;
+	std::hash_map<zCBspBase *, BspInfo> BspLeafVobLists;
 
 	/** Map for the material infos */
 	std::hash_map<zCTexture*, MaterialInfo> MaterialInfos;

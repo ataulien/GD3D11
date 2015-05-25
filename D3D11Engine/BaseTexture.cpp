@@ -4,9 +4,11 @@
 
 BaseTexture::BaseTexture(void)
 {
+
 }
 
 
 BaseTexture::~BaseTexture(void)
 {
+
 }

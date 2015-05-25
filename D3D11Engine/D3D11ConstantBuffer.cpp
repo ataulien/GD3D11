@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "D3D11ConstantBuffer.h"
-#include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineBase.h"
 #include "Engine.h"
 #include "GothicAPI.h"
 
 D3D11ConstantBuffer::D3D11ConstantBuffer(int size, void* data) : BaseConstantBuffer(size, data)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	char* dd = (char *)data;
 	
@@ -27,6 +27,8 @@ D3D11ConstantBuffer::D3D11ConstantBuffer(int size, void* data) : BaseConstantBuf
 
 	if(!data)
 		delete[] dd;
+
+	BufferDirty = false;
 }
 
 
@@ -38,31 +40,47 @@ D3D11ConstantBuffer::~D3D11ConstantBuffer(void)
 /** Updates the buffer */
 void D3D11ConstantBuffer::UpdateBuffer(void* data)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	engine->GetContext()->UpdateSubresource(Buffer, 0, nullptr, data, 0, 0);
+
+	BufferDirty = true;
 }
 
 /** Binds the buffer */
 void D3D11ConstantBuffer::BindToVertexShader(int slot)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	engine->GetContext()->VSSetConstantBuffers(slot, 1, &Buffer);
+
+	BufferDirty = false;
 }
 
 void D3D11ConstantBuffer::BindToPixelShader(int slot)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	engine->GetContext()->PSSetConstantBuffers(slot, 1, &Buffer);
+
+	BufferDirty = false;
 }
 
 void D3D11ConstantBuffer::BindToDomainShader(int slot)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	engine->GetContext()->DSSetConstantBuffers(slot, 1, &Buffer);
+
+	BufferDirty = false;
 }
 
 void D3D11ConstantBuffer::BindToHullShader(int slot)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	engine->GetContext()->HSSetConstantBuffers(slot, 1, &Buffer);
+
+	BufferDirty = false;
+}
+
+/** Returns whether this buffer has been updated since the last bind */
+bool D3D11ConstantBuffer::IsDirty()
+{
+	return BufferDirty;
 }

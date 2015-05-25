@@ -5,7 +5,21 @@
 
 enum EDownloadType
 {
-	EDL_Normalmaps_Original,
+	EDL_Normalmaps_Find,
+};
+
+struct DownloadJob
+{
+	DownloadJob(){}
+
+	DownloadJob(const std::string& package, const std::string& targetPath)
+	{
+		DownloadPackage = package;
+		TargetPath = targetPath;
+	}
+
+	std::string DownloadPackage; // Package on the server
+	std::string TargetPath; // Path to extract to
 };
 
 class SV_Label;
@@ -16,7 +30,7 @@ class D2DContentDownloadDialog :
 	public D2DDialog
 {
 public:
-	D2DContentDownloadDialog(D2DView* view, D2DSubView* parent, EDownloadType type);
+	D2DContentDownloadDialog(D2DView* view, D2DSubView* parent, EDownloadType type, const std::list<DownloadJob>& jobs = std::list<DownloadJob>());
 	~D2DContentDownloadDialog(void);
 
 	/** Initializes the controls of this view */
@@ -25,6 +39,8 @@ public:
 	/** Draws this sub-view */
 	virtual void Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime);
 
+	/** Starts the next job in the list */
+	virtual void RunNextJob();
 protected:
 
 	/** Called whenever the download did something */
@@ -39,6 +55,7 @@ protected:
 	/** Type of download */
 	EDownloadType DownloadType;
 	std::string TargetFolder;
+	DownloadJob Job;
 
 	/** Downloader */
 	FileDownloader* Downloader;
@@ -50,5 +67,8 @@ protected:
 
 	/** Mutex for updating the text */
 	std::mutex DLMutex;
+
+	/** List of next jobs */
+	std::list<DownloadJob> NextJobs;
 };
 

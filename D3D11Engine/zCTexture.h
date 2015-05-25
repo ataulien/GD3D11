@@ -11,6 +11,10 @@ namespace zCTextureCacheHack
 {
 	__declspec(selectany) unsigned int NumNotCachedTexturesInFrame;
 	const int MAX_NOT_CACHED_TEXTURES_IN_FRAME = 40;
+
+	/** If true, this will force all calls to CacheIn to have -1 as parameter, which makes them an immediate cache in! 
+		Be very careful with this as the game will lag everytime a texture is being loaded!*/
+	__declspec(selectany) bool ForceCacheIn; 
 };
 
 class zCTexture
@@ -26,6 +30,7 @@ public:
 		HookedFunctions::OriginalFunctions.ofiginal_zCTextureLoadResourceData = (zCTextureLoadResourceData)DetourFunction((BYTE *)GothicMemoryLocations::zCTexture::LoadResourceData, (BYTE *)zCTexture::hooked_LoadResourceData);
 	
 		zCTextureCacheHack::NumNotCachedTexturesInFrame = 0;
+		zCTextureCacheHack::ForceCacheIn = false;
 	}
 
 	static int __fastcall hooked_LoadResourceData(void* thisptr)
@@ -110,7 +115,7 @@ public:
 		if (GetCacheState()==zRES_CACHED_IN)
 		{
 			TouchTimeStamp();
-		} else if(GetCacheState()==zRES_CACHED_OUT)
+		} else if(GetCacheState()==zRES_CACHED_OUT || zCTextureCacheHack::ForceCacheIn)
 		{
 
 			/*TouchTimeStampLocal();
@@ -131,11 +136,18 @@ public:
 #endif
 			Engine::GAPI->SetBoundTexture(7, this); // Index 7 is reserved for cacheIn
 			//TouchTimeStampLocal();
-			zCResourceManager::GetResourceManager()->CacheIn(this, priority);
+
+			// Cache the texture, overwrite priority if wanted.
+			zCResourceManager::GetResourceManager()->CacheIn(this, zCTextureCacheHack::ForceCacheIn ? -1 : priority);
 		}
 
 		if(!GetSurface() || !GetSurface()->IsSurfaceReady())
-			return zRES_CACHED_OUT;
+		{
+			if(zCTextureCacheHack::ForceCacheIn)
+				zCResourceManager::GetResourceManager()->CacheIn(this, -1);
+			else
+				return zRES_CACHED_OUT;
+		}
 
 		return GetCacheState();
 	}

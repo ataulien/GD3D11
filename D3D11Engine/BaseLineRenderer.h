@@ -56,5 +56,7 @@ public:
 	/** Plots a vector of floats */
 	void PlotNumbers(const std::vector<float>& values, const D3DXVECTOR3& location, const D3DXVECTOR3& direction, float distance, float heightScale, const D3DXVECTOR4& color = D3DXVECTOR4(1,1,1,1));
 
+	/** Draws a wireframe mesh */
+	void AddWireframeMesh(const std::vector<ExVertexStruct>& vertices, const std::vector<VERTEX_INDEX>& indices, const D3DXVECTOR4& color = D3DXVECTOR4(1,1,1,1), const D3DXMATRIX* world = NULL);
 };
 

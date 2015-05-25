@@ -28,7 +28,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 {
 	float2 uv = Input.vTexcoord;
 	
-	const float maxDistortion = 0.05f;
+	const float maxDistortion = 0.08f;
 	
 	float4 color = TX_ParticleColor.Sample(SS_Linear, uv);
 	float2 distortion = TX_ParticleDistortion.Sample(SS_Linear, uv).xy;

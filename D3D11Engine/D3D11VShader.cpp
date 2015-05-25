@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "D3D11VShader.h"
-#include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineBase.h"
 #include <D3DX11.h>
 #include "Engine.h"
 #include "GothicAPI.h"
@@ -10,10 +10,18 @@ D3D11VShader::D3D11VShader(void)
 {
 	VertexShader = NULL;
 	InputLayout = NULL;
+
+	// Insert into state-map
+	ID = D3D11ObjectIDs::Counters.VShadersCounter++;
+
+	D3D11ObjectIDs::VShadersByID[ID] = this;
 }
 
 D3D11VShader::~D3D11VShader(void)
 {
+	// Remove from state map
+	Toolbox::EraseByElement(D3D11ObjectIDs::VShadersByID, this);
+
 	if (VertexShader)VertexShader->Release();
 	if (InputLayout)InputLayout->Release();
 
@@ -45,7 +53,7 @@ HRESULT D3D11VShader::CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEnt
 
 	// Construct makros
 	std::vector<D3D10_SHADER_MACRO> m;
-	D3D11GraphicsEngine::ConstructShaderMakroList(m);
+	D3D11GraphicsEngineBase::ConstructShaderMakroList(m);
 	
 	// Push these to the front
 	m.insert(m.begin(), makros.begin(), makros.end());
@@ -85,7 +93,7 @@ HRESULT D3D11VShader::CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEnt
 XRESULT D3D11VShader::LoadShader(const char* vertexShader, int layout, std::vector<D3D10_SHADER_MACRO>& makros)
 {
 	HRESULT hr;
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	ID3DBlob* vsBlob;
 
@@ -263,7 +271,7 @@ XRESULT D3D11VShader::LoadShader(const char* vertexShader, int layout, std::vect
 /** Applys the shaders */
 XRESULT D3D11VShader::Apply()
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	engine->GetContext()->IASetInputLayout(InputLayout);
 	engine->GetContext()->VSSetShader(VertexShader, NULL, 0);

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "D3D11VertexBuffer.h"
-#include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineBase.h"
 #include "Engine.h"
 #include <d3dx9mesh.h>
 
@@ -21,7 +21,7 @@ D3D11VertexBuffer::~D3D11VertexBuffer(void)
 XRESULT D3D11VertexBuffer::Init(void* initData, unsigned int sizeInBytes, EBindFlags EBindFlags, EUsageFlags usage, ECPUAccessFlags cpuAccess, const std::string& fileName)
 {
 	HRESULT hr;
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	if (sizeInBytes == 0)
 	{
@@ -113,7 +113,7 @@ XRESULT D3D11VertexBuffer::UpdateBufferAligned16(void* data, UINT size)
 /** Maps the buffer */
 XRESULT D3D11VertexBuffer::Map(int flags, void** dataPtr, UINT* size)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	D3D11_MAPPED_SUBRESOURCE res;
 	if (FAILED(engine->GetContext()->Map(VertexBuffer, 0, (D3D11_MAP)flags, 0, &res)))
@@ -128,7 +128,7 @@ XRESULT D3D11VertexBuffer::Map(int flags, void** dataPtr, UINT* size)
 /** Unmaps the buffer */
 XRESULT D3D11VertexBuffer::Unmap()
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	engine->GetContext()->Unmap(VertexBuffer, 0);
 

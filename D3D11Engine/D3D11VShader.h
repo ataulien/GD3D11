@@ -19,6 +19,15 @@ public:
 
 	/** Returns a reference to the constantBuffer vector*/
 	std::vector<BaseConstantBuffer*>& GetConstantBuffer();
+
+	/** Returns the shader */
+	ID3D11VertexShader* GetShader(){return VertexShader;}
+
+	/** Returns the inputlayout */
+	ID3D11InputLayout* GetInputLayout(){return InputLayout;}
+	
+	/** Returns this textures ID */
+	UINT16 GetID(){return ID;};
 private:
 
 	/** Compiles a shader from file and outputs error messages if needed */
@@ -29,5 +38,8 @@ private:
 	std::vector<BaseConstantBuffer*> ConstantBuffers;
 
 	std::string File;
+
+	/** ID of this shader */
+	UINT16 ID;
 };
 

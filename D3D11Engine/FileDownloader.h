@@ -55,10 +55,12 @@ public:
 
 
 	bool isDone;
+	bool hasFailed;
 	ULONG lastProgress;
 	ULONG lastProgressMax;
 	std::string targetFile;
 	DownloadInfo LastInfo;
+
 	FileDownloader* OwningDownloader;
 };
 

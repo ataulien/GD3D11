@@ -6,6 +6,8 @@ class D3D11ConstantBuffer;
 class D3D11PShader : public BasePShader
 {
 public:
+	
+
 	D3D11PShader(void);
 	~D3D11PShader(void);
 
@@ -17,6 +19,13 @@ public:
 
 	/** Returns a reference to the constantBuffer vector*/
 	std::vector<BaseConstantBuffer*>& GetConstantBuffer();
+
+	/** Returns the shader */
+	ID3D11PixelShader* GetShader(){return PixelShader;}
+
+	/** Returns this textures ID */
+	UINT16 GetID(){return ID;};
+
 private:
 
 	/** Compiles the shader from file and outputs error messages if needed */
@@ -26,5 +35,8 @@ private:
 	std::vector<BaseConstantBuffer*> ConstantBuffers;
 
 	std::string File;
+
+	/** ID of this shader */
+	UINT16 ID;
 };
 

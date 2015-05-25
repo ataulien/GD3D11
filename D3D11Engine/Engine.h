@@ -5,6 +5,7 @@
 class BaseGraphicsEngine;
 class GothicAPI;
 class BaseAntTweakBar;
+class GGame;
 
 __declspec( selectany ) const char* ENGINE_BASE_DIR = "system\\GD3D11\\";
 
@@ -26,6 +27,9 @@ namespace Engine
 
 	/** Global GothicAPI object */
 	__declspec( selectany ) GothicAPI* GAPI;
+
+	/** Global Game object */
+	__declspec( selectany ) GGame* Game;
 
 	/** Global AntTweakBar object */
 	__declspec( selectany ) BaseAntTweakBar* AntTweakBar;

@@ -103,6 +103,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <ExceptionHandling>false</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,7 +157,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>BUILD_GOTHIC_2_6_fix;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;D3D11ENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BUILD_GOTHIC_2_6_fix;_USE_MATH_DEFINES;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;D3D11ENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -265,10 +266,18 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="ConstantBufferStructs.h" />
     <ClInclude Include="D3D11FullscreenQuad.h" />
     <ClInclude Include="D3D11GraphicsEngine.h" />
+    <ClInclude Include="D3D11GraphicsEngineBase.h" />
+    <ClInclude Include="D3D11GraphicsEngineQueued.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="D3D11GraphicsEngineTest.h" />
     <ClInclude Include="D3D11HDShader.h" />
     <ClInclude Include="D3D11LineRenderer.h" />
     <ClInclude Include="D3D11NVHBAO.h" />
+    <ClInclude Include="D3D11OcclusionQuerry.h" />
     <ClInclude Include="D3D11PfxRenderer.h" />
     <ClInclude Include="D3D11PFX_Blur.h" />
     <ClInclude Include="D3D11PFX_DistanceBlur.h" />
@@ -282,11 +291,13 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     </ClInclude>
     <ClInclude Include="D3D11PipelineStates.h" />
     <ClInclude Include="D3D11PShader.h" />
+    <ClInclude Include="D3D11RenderPipe.h" />
     <ClInclude Include="D3D11ShaderManager.h" />
     <ClInclude Include="D3D11Texture.h" />
     <ClInclude Include="D3D11TextureArray.h" />
     <ClInclude Include="D3D11VertexBuffer.h" />
     <ClInclude Include="D3D11VShader.h" />
+    <ClInclude Include="D3D11WorldMesh.h" />
     <ClInclude Include="D3D7\FakeDirectDrawSurface7.h" />
     <ClInclude Include="D3D7\MyClipper.h" />
     <ClInclude Include="D3D7\MyDirect3D7.h" />
@@ -307,10 +318,15 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="Engine.h" />
     <ClInclude Include="FileDownloader.h" />
     <ClInclude Include="GCamera.h" />
+    <ClInclude Include="GDecalVisual.h" />
     <ClInclude Include="GFSDK_SSAO.h" />
+    <ClInclude Include="GGame.h" />
     <ClInclude Include="GInventory.h" />
+    <ClInclude Include="GMaterial.h" />
     <ClInclude Include="GMesh.h" />
     <ClInclude Include="GMeshSimple.h" />
+    <ClInclude Include="GModelVisual.h" />
+    <ClInclude Include="GMorphMeshVisual.h" />
     <ClInclude Include="GOcean.h" />
     <ClInclude Include="GothicAPI.h" />
     <ClInclude Include="GothicGraphicsState.h" />
@@ -318,10 +334,17 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="BaseGraphicsEngine.h" />
     <ClInclude Include="GothicMemoryLocations1_08k.h" />
     <ClInclude Include="GothicMemoryLocations2_6_fix.h" />
+    <ClInclude Include="GParticleFXVisual.h" />
     <ClInclude Include="GRenderThread.h" />
+    <ClInclude Include="GSkeletalMeshVisual.h" />
     <ClInclude Include="GSky.h" />
     <ClInclude Include="GSpriteCloud.h" />
+    <ClInclude Include="GStaticMeshVisual.h" />
     <ClInclude Include="GVegetationBox.h" />
+    <ClInclude Include="GVisual.h" />
+    <ClInclude Include="GVobObject.h" />
+    <ClInclude Include="GWorld.h" />
+    <ClInclude Include="GWorldMesh.h" />
     <ClInclude Include="HookExceptionFilter.h" />
     <ClInclude Include="HookedFunctions.h" />
     <ClInclude Include="IkarusBindings.h" />
@@ -329,6 +352,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryTracker.h" />
     <ClInclude Include="MeshModifier.h" />
+    <ClInclude Include="ModSpecific.h" />
     <ClInclude Include="ocean_simulator.h" />
     <ClInclude Include="oCGame.h" />
     <ClInclude Include="oCNPC.h" />
@@ -443,10 +467,18 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11ConstantBuffer.cpp" />
     <ClCompile Include="D3D11FullscreenQuad.cpp" />
     <ClCompile Include="D3D11GraphicsEngine.cpp" />
+    <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
+    <ClCompile Include="D3D11GraphicsEngineQueued.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="D3D11GraphicsEngineTest.cpp" />
     <ClCompile Include="D3D11HDShader.cpp" />
     <ClCompile Include="D3D11LineRenderer.cpp" />
     <ClCompile Include="D3D11NVHBAO.cpp" />
+    <ClCompile Include="D3D11OcclusionQuerry.cpp" />
     <ClCompile Include="D3D11PfxRenderer.cpp" />
     <ClCompile Include="D3D11PFX_Blur.cpp" />
     <ClCompile Include="D3D11PFX_DistanceBlur.cpp" />
@@ -459,11 +491,13 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="D3D11PShader.cpp" />
+    <ClCompile Include="D3D11RenderPipe.cpp" />
     <ClCompile Include="D3D11ShaderManager.cpp" />
     <ClCompile Include="D3D11Texture.cpp" />
     <ClCompile Include="D3D11TextureArray.cpp" />
     <ClCompile Include="D3D11Vertexbuffer.cpp" />
     <ClCompile Include="D3D11VShader.cpp" />
+    <ClCompile Include="D3D11WorldMesh.cpp" />
     <ClCompile Include="D3D7\FakeDirectDrawSurface7.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">../pch.h</PrecompiledHeaderFile>
@@ -532,15 +566,27 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="FileDownloader.cpp" />
     <ClCompile Include="GCamera.cpp" />
+    <ClCompile Include="GDecalVisual.cpp" />
+    <ClCompile Include="GGame.cpp" />
     <ClCompile Include="GInventory.cpp" />
+    <ClCompile Include="GMaterial.cpp" />
     <ClCompile Include="GMesh.cpp" />
     <ClCompile Include="GMeshSimple.cpp" />
+    <ClCompile Include="GModelVisual.cpp" />
+    <ClCompile Include="GMorphMeshVisual.cpp" />
     <ClCompile Include="GOcean.cpp" />
     <ClCompile Include="GothicAPI.cpp" />
+    <ClCompile Include="GParticleFXVisual.cpp" />
     <ClCompile Include="GRenderThread.cpp" />
+    <ClCompile Include="GSkeletalMeshVisual.cpp" />
     <ClCompile Include="GSky.cpp" />
     <ClCompile Include="GSpriteCloud.cpp" />
+    <ClCompile Include="GStaticMeshVisual.cpp" />
     <ClCompile Include="GVegetationBox.cpp" />
+    <ClCompile Include="GVisual.cpp" />
+    <ClCompile Include="GVobObject.cpp" />
+    <ClCompile Include="GWorld.cpp" />
+    <ClCompile Include="GWorldMesh.cpp" />
     <ClCompile Include="HookedFunctions.cpp" />
     <ClCompile Include="IkarusBindings.cpp" />
     <ClCompile Include="lodepng.cpp">
@@ -550,6 +596,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MeshModifier.cpp" />
+    <ClCompile Include="ModSpecific.cpp" />
     <ClCompile Include="ocean_simulator.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">NotUsing</PrecompiledHeader>
