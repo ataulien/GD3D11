@@ -2,12 +2,80 @@
 #include <Windows.h>
 #include <D3DX10.h>
 #include <string>
+#include <map>
+#include <hash_map>
 #include "Types.h"
 
 /** Misc. tools */
 
 namespace Toolbox
 {
+		/** Erases an element by value from a vector */
+	template<typename T> void EraseByElement(std::vector<T>& vector, T value)
+	{
+		auto it = std::find(vector.begin(), vector.end(), value);
+
+		if(it != vector.end())
+			vector.erase(it);
+	}
+
+	/** Erases an element by value from a vector */
+	template<typename T, typename S> void EraseByElement(std::map<T, S>& map, S value)
+	{
+		for(auto it = map.begin();it!=map.end();it++)
+		{
+			if((*it).second == value)
+				it = map.erase(it);
+		}
+	}
+
+	/** Deletes all elements of the given std::vector */
+	template<typename T> void DeleteElements(std::vector<T>& vector)
+	{
+		for(auto it = vector.begin(); it != vector.end(); it++)
+		{
+			delete (*it);
+		}
+
+		vector.clear();
+	}
+
+	/** Deletes all elements of the given std::vector */
+	template<typename T> void DeleteElements(std::list<T>& list)
+	{
+		for(auto it = list.begin(); it != list.end(); it++)
+		{
+			delete (*it);
+		}
+
+		list.clear();
+	}
+
+	/** Deletes all (second) elements of the given std::map */
+	template<typename T, typename S> void DeleteElements(std::map<T, S>& map)
+	{
+		for(auto it = map.begin(); it != map.end(); it++)
+		{
+			delete (*it).second;
+		}
+
+		map.clear();
+	}
+
+	/** Deletes all (second) elements of the given std::hash_map */
+	template<typename T, typename S> void DeleteElements(std::hash_map<T, S>& map)
+	{
+		for(auto it = map.begin(); it != map.end(); it++)
+		{
+			delete (*it).second;
+		}
+
+		map.clear();
+	}
+
+	/** Checks if a folder exists */
+	bool FolderExists(const std::string& dirName_in);
+
 	/** Hashes the given float value */
 	void hash_combine(std::size_t& seed, float value);
 

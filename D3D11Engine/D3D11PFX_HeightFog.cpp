@@ -115,7 +115,7 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 		// Use other fog-values for fog-zones
 		float distNear = WORLD_SECTION_SIZE * ((ffar - fnear) / ffar);
 		cb.HF_WeightZNear = Toolbox::lerp(cb.HF_WeightZNear, WORLD_SECTION_SIZE * 0.09f, Engine::GAPI->GetFogOverride());
-		cb.HF_WeightZFar = Toolbox::lerp(cb.HF_WeightZFar, WORLD_SECTION_SIZE * 0.5, Engine::GAPI->GetFogOverride());
+		cb.HF_WeightZFar = Toolbox::lerp(cb.HF_WeightZFar, WORLD_SECTION_SIZE * 0.8, Engine::GAPI->GetFogOverride());
 	}
 
 

@@ -23,7 +23,7 @@ class zCVob;
 class zCTexture;
 class zCLightmap;
 struct zCModelNodeInst;
-struct BspVobInfo;
+struct BspInfo;
 class zCQuadMark;
 struct MaterialInfo;
 
@@ -368,7 +368,7 @@ struct VobInfo : public BaseVobInfo
 	D3DXMATRIX WorldMatrix;
 
 	/** BSP-Node this is stored in */
-	std::vector<BspVobInfo*> ParentBSPNodes;
+	std::vector<BspInfo*> ParentBSPNodes;
 
 	/** Color the underlaying polygon has */
 	DWORD GroundColor;
@@ -394,7 +394,7 @@ struct VobLightInfo
 	bool IsIndoorVob;
 
 	/** BSP-Node this is stored in */
-	std::vector<BspVobInfo*> ParentBSPNodes;
+	std::vector<BspInfo*> ParentBSPNodes;
 };
 
 
@@ -535,6 +535,7 @@ struct WorldInfo
 	WorldInfo()
 	{
 		BspTree = NULL;
+		CustomWorldLoaded = false;
 	}
 
 	D3DXVECTOR2 MidPoint;
@@ -543,11 +544,13 @@ struct WorldInfo
 	zCBspTree* BspTree;
 	zCWorld* MainWorld;
 	std::string WorldName;
+	bool CustomWorldLoaded;
 };
 
 class zCProgMeshProto;
 class zCModel;
 class zCModelPrototype;
+class zCModelMeshLib;
 class zCMesh;
 class WorldConverter
 {
@@ -587,7 +590,7 @@ public:
 	static void ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisualInfo* skeletalMeshInfo);
 	
 	/** Extracts a skeletal mesh from a zCMeshSoftSkin */
-	static void ExtractSkeletalMeshFromProto(zCModelPrototype* model, SkeletalMeshVisualInfo* skeletalMeshInfo);
+	static void ExtractSkeletalMeshFromProto(zCModelMeshLib* model, SkeletalMeshVisualInfo* skeletalMeshInfo);
 
 	/** Extracts a node-visual */
 	static void ExtractNodeVisual(int index, zCModelNodeInst* node, std::map<int, std::vector<MeshVisualInfo *>>& attachments);

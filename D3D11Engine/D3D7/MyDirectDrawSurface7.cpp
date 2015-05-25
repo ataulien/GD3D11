@@ -7,6 +7,7 @@
 #include "../BaseGraphicsEngine.h"
 #include "../BaseTexture.h"
 #include "../zCTexture.h"
+#include "../ModSpecific.h"
 
 #define DebugWriteTex(x)  DebugWrite(x)
 
@@ -96,10 +97,13 @@ void MyDirectDrawSurface7::BindToSlot(int slot)
 /** Loads additional resources if possible */
 void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 {
-	GothicTexture = ownedTexture;
-	TextureName = GothicTexture->GetNameWithoutExt();	
+	if(!GothicTexture)
+	{
+		GothicTexture = ownedTexture;
+		TextureName = GothicTexture->GetNameWithoutExt();	
 
-	Engine::GAPI->AddSurface(TextureName, this);
+		Engine::GAPI->AddSurface(TextureName, this);
+	}
 
 	if(Normalmap)
 	{
@@ -116,37 +120,59 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 	if(!TextureName.size() || Normalmap || FxMap)
 		return;
 
-	std::string normalmap = "system\\GD3D11\\textures\\replacements\\" + TextureName + "_normal.dds";
-	FILE* f = fopen(normalmap.c_str(), "rb");
+	FILE* f;
+	BaseTexture* fxMapTexture = NULL;
 	BaseTexture* nrmmapTexture = NULL;
-	if(f)
+
+	// Check for normalmap in our mods folder first, then in the original games
+	std::string nrmFolder = ModSpecific::GetModNormalmapPackName();
+	for(int i=0;i<2;i++)
 	{
-		// Create the texture object this is linked with
+		std::string normalmap = "system\\GD3D11\\textures\\replacements\\" + nrmFolder + "\\" + TextureName + "_normal.dds";
+		FILE* f = fopen(normalmap.c_str(), "rb");
 		
-		Engine::GraphicsEngine->CreateTexture(&nrmmapTexture);
-	
-		if(XR_SUCCESS != nrmmapTexture->Init(normalmap))
+		if(f)
 		{
-			delete nrmmapTexture;
-			nrmmapTexture = NULL;
-			LogWarn() << "Failed to load normalmap!";
+			// Create the texture object this is linked with
+		
+			Engine::GraphicsEngine->CreateTexture(&nrmmapTexture);
+	
+			if(XR_SUCCESS != nrmmapTexture->Init(normalmap))
+			{
+				delete nrmmapTexture;
+				nrmmapTexture = NULL;
+				LogWarn() << "Failed to load normalmap!";
+			}
+
+			break; // No need to check the other folders
 		}
+
+		nrmFolder = ModSpecific::NRMPACK_ORIGINAL;
 	}
 
-	std::string fxMap = "system\\GD3D11\\textures\\replacements\\" + TextureName + "_fx.dds";
-	f = fopen(fxMap.c_str(), "rb");
-	BaseTexture* fxMapTexture = NULL;
-	if(f)
+	// Check for normalmap in our mods folder first, then in the original games
+	nrmFolder = ModSpecific::GetModNormalmapPackName();
+	for(int i=0;i<2;i++)
 	{
-		// Create the texture object this is linked with
-		Engine::GraphicsEngine->CreateTexture(&fxMapTexture);
-	
-		if(XR_SUCCESS != fxMapTexture->Init(fxMap))
+		std::string fxMap = "system\\GD3D11\\textures\\replacements\\" + nrmFolder + "\\" + TextureName + "_fx.dds";
+		f = fopen(fxMap.c_str(), "rb");
+		
+		if(f)
 		{
-			delete fxMapTexture;
-			fxMapTexture = NULL;
-			LogWarn() << "Failed to load normalmap!";
+			// Create the texture object this is linked with
+			Engine::GraphicsEngine->CreateTexture(&fxMapTexture);
+	
+			if(XR_SUCCESS != fxMapTexture->Init(fxMap))
+			{
+				delete fxMapTexture;
+				fxMapTexture = NULL;
+				LogWarn() << "Failed to load normalmap!";
+			}
+
+			break; // No need to check the other folders
 		}
+
+		nrmFolder = ModSpecific::NRMPACK_ORIGINAL;
 	}
 
 
@@ -350,9 +376,14 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
 		lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount = 32;
 		lpDDSurfaceDesc->ddpfPixelFormat.dwRBitMask = 0x000000ff;
 
-		lpDDSurfaceDesc->lPitch = Engine::GraphicsEngine->GetBackbufferResolution().x * pixelSize;
+		// Gothic transforms this into a 256x256 texture anyways
+		lpDDSurfaceDesc->lPitch = 256 * pixelSize;
+		lpDDSurfaceDesc->dwWidth = 256;
+		lpDDSurfaceDesc->dwHeight = 256;
+
+		/*lpDDSurfaceDesc->lPitch = Engine::GraphicsEngine->GetBackbufferResolution().x * pixelSize;
 		lpDDSurfaceDesc->dwWidth = Engine::GraphicsEngine->GetBackbufferResolution().x;
-		lpDDSurfaceDesc->dwHeight = Engine::GraphicsEngine->GetBackbufferResolution().y;
+		lpDDSurfaceDesc->dwHeight = Engine::GraphicsEngine->GetBackbufferResolution().y;*/
 		lpDDSurfaceDesc->lpSurface = data;
 
 		LockedData = data;

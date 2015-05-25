@@ -2,7 +2,7 @@
 #include "pch.h"
 #include "BasePipelineStates.h"
 #include "Engine.h"
-#include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineBase.h"
 
 class D3D11DepthBufferState : public BaseDepthBufferState
 {
@@ -43,16 +43,25 @@ public:
 		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-		((D3D11GraphicsEngine *)Engine::GraphicsEngine)->GetDevice()->CreateDepthStencilState(&depthStencilDesc, &State);
+		((D3D11GraphicsEngineBase *)Engine::GraphicsEngine)->GetDevice()->CreateDepthStencilState(&depthStencilDesc, &State);
+
+		// Insert into state-map
+		int id = D3D11ObjectIDs::Counters.DepthStateCounter++;
+
+		D3D11ObjectIDs::DepthStateByID[id] = this;
 	}
 
 	virtual ~D3D11DepthBufferState(void)
 	{
 		if(State)State->Release();
+
+		Toolbox::EraseByElement<UINT8, D3D11DepthBufferState*>(D3D11ObjectIDs::DepthStateByID, this);
 	}
 
 	ID3D11DepthStencilState* State;
 	GothicDepthBufferStateInfo Values;
+
+
 };
 
 class D3D11BlendStateInfo : public BaseBlendStateInfo
@@ -81,16 +90,25 @@ public:
 		blendDesc.RenderTarget[0].BlendOpAlpha = (D3D11_BLEND_OP)bs.BlendOpAlpha;
 		blendDesc.RenderTarget[0].BlendEnable = bs.BlendEnabled;
 
-		((D3D11GraphicsEngine *)Engine::GraphicsEngine)->GetDevice()->CreateBlendState(&blendDesc, &State);
+		((D3D11GraphicsEngineBase *)Engine::GraphicsEngine)->GetDevice()->CreateBlendState(&blendDesc, &State);
+
+		// Insert into state-map
+		int id = D3D11ObjectIDs::Counters.BlendStateCounter++;
+
+		D3D11ObjectIDs::BlendStateByID[id] = this;
 	}
 
 	virtual ~D3D11BlendStateInfo(void)
 	{
 		if(State)State->Release();
+
+		Toolbox::EraseByElement<UINT8, D3D11BlendStateInfo*>(D3D11ObjectIDs::BlendStateByID, this);
 	}
 
 	ID3D11BlendState* State;
 	GothicBlendStateInfo Values;
+
+	
 };
 
 class D3D11RasterizerStateInfo : public BaseRasterizerStateInfo
@@ -118,15 +136,24 @@ public:
 		rasterizerDesc.MultisampleEnable = false;
 		rasterizerDesc.AntialiasedLineEnable = true;
 
-		((D3D11GraphicsEngine *)Engine::GraphicsEngine)->GetDevice()->CreateRasterizerState(&rasterizerDesc, &State);
+		((D3D11GraphicsEngineBase *)Engine::GraphicsEngine)->GetDevice()->CreateRasterizerState(&rasterizerDesc, &State);
+
+		// Insert into state-map
+		int id = D3D11ObjectIDs::Counters.RasterizerCounter++;
+
+		D3D11ObjectIDs::RasterizerStateByID[id] = this;
 	}
 
 	virtual ~D3D11RasterizerStateInfo(void)
 	{
 		if(State)State->Release();
+
+		Toolbox::EraseByElement<UINT8, D3D11RasterizerStateInfo*>(D3D11ObjectIDs::RasterizerStateByID, this);
 	}
 
 	ID3D11RasterizerState* State;
 	GothicRasterizerStateInfo Values;
+
+
 };
 

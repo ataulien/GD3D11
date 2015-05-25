@@ -1,9 +1,10 @@
 #include "pch.h"
 #include "D3D11LineRenderer.h"
-#include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineBase.h"
 #include "Engine.h"
 #include "BaseVertexBuffer.h"
 #include "GothicAPI.h"
+#include "D3D11VertexBuffer.h"
 
 D3D11LineRenderer::D3D11LineRenderer(void)
 {
@@ -20,7 +21,7 @@ D3D11LineRenderer::~D3D11LineRenderer(void)
 /** Adds a line to the list */
 XRESULT D3D11LineRenderer::AddLine(const LineVertex& v1, const LineVertex& v2)
 {
-	if(LineCache.size() >= 0xFFFF)
+	if(LineCache.size() >= 0xFFFFFFFF)
 	{
 		return XR_FAILED;
 	}
@@ -33,7 +34,7 @@ XRESULT D3D11LineRenderer::AddLine(const LineVertex& v1, const LineVertex& v2)
 /** Flushes the cached lines */
 XRESULT D3D11LineRenderer::Flush()
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine*)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase*)Engine::GraphicsEngine;
 
 	if(LineCache.size() == 0)
 		return XR_SUCCESS;
@@ -69,8 +70,21 @@ XRESULT D3D11LineRenderer::Flush()
 	engine->SetupVS_ExPerInstanceConstantBuffer();
 	engine->GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
+	engine->SetDefaultStates();
+	Engine::GAPI->GetRendererState()->BlendState.SetAlphaBlending();
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
+	engine->UpdateRenderStates();
+
 	// Draw the lines
-	engine->DrawVertexBuffer(LineBuffer, LineCache.size(), sizeof(LineVertex));
+	UINT offset = 0;
+	UINT uStride = sizeof(LineVertex);
+	ID3D11Buffer* buffer = ((D3D11VertexBuffer *)LineBuffer)->GetVertexBuffer();
+	engine->GetContext()->IASetVertexBuffers(0, 1, &buffer, &uStride, &offset);
+
+	//Draw the mesh
+	engine->GetContext()->Draw(LineCache.size(), 0);
+
+	//engine->DrawVertexBuffer(LineBuffer, LineCache.size(), sizeof(LineVertex));
 
 	// Clear for the next frame
 	ClearCache();

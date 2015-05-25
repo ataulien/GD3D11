@@ -4,11 +4,17 @@
 
 ZipArchive::ZipArchive(void)
 {
+	UnzipThread = NULL;
 }
 
 
 ZipArchive::~ZipArchive(void)
 {
+	if(UnzipThread)
+	{
+		UnzipThread->join(); // Wait for the thread to complete
+		delete UnzipThread;
+	}
 }
 
 /** unzips the given archive */
@@ -51,8 +57,12 @@ XRESULT ZipArchive::Unzip(const std::string& zip, const std::string& target)
 
 XRESULT ZipArchive::UnzipThreaded(const std::string& zip, const std::string& target, UnzipDoneCallback callback, void* cbUserdata)
 {
+	if(UnzipThread)
+		return XR_FAILED; // Already doing something
+
 	// Start unzip thread
-	UnzipThread = std::thread(UnzipThreadFunc, zip, target, callback, cbUserdata);
+	delete UnzipThread;
+	UnzipThread = new std::thread(UnzipThreadFunc, zip, target, callback, cbUserdata);
 
 	return XR_SUCCESS;
 }

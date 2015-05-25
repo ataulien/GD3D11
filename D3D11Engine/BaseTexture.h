@@ -43,5 +43,14 @@ public:
 
 	/** Generates mipmaps for this texture (may be slow!) */
 	virtual XRESULT GenerateMipMaps() = 0;
+
+	/** Returns this textures ID */
+	UINT16 GetID(){return ID;};
+
+	
+
+protected:
+	/** The ID of this texture */
+	UINT16 ID;
 };
 

@@ -51,5 +51,12 @@ public:
 		return mutex;
 	}
 
+	void PurgeCaches(void* classDef)
+	{
+#ifndef BUILD_GOTHIC_1_08k
+		XCALL(GothicMemoryLocations::zCResourceManager::PurgeCaches);
+#endif
+	}
+
 	static zCResourceManager* GetResourceManager(){return *(zCResourceManager **)GothicMemoryLocations::GlobalObjects::zCResourceManager;}
 };

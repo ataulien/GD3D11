@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "D3D11Texture.h"
 #include "Engine.h"
-#include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineBase.h"
 #include "GothicAPI.h"
 #include <D3DX11.h>
 #include "RenderToTextureBuffer.h"
@@ -11,10 +11,18 @@ D3D11Texture::D3D11Texture(void)
 	Texture = NULL;
 	ShaderResourceView = NULL;
 	Thumbnail = NULL;
+
+	// Insert into state-map
+	ID = D3D11ObjectIDs::Counters.TextureCounter++;
+
+	D3D11ObjectIDs::TextureByID[ID] = this;
 }
 
 D3D11Texture::~D3D11Texture(void)
 {
+	// Remove from state map
+	Toolbox::EraseByElement(D3D11ObjectIDs::TextureByID, this);
+
 	if (Thumbnail)Thumbnail->Release();
 	if (Texture)Texture->Release();
 	if (ShaderResourceView)ShaderResourceView->Release();
@@ -24,7 +32,7 @@ D3D11Texture::~D3D11Texture(void)
 XRESULT D3D11Texture::Init(INT2 size, ETextureFormat format, UINT mipMapCount, void* data, const std::string& fileName)
 {
 	HRESULT hr;
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	//Engine::GAPI->EnterResourceCriticalSection();
 
@@ -63,7 +71,7 @@ XRESULT D3D11Texture::Init(INT2 size, ETextureFormat format, UINT mipMapCount, v
 XRESULT D3D11Texture::Init(const std::string& file)
 {
 	HRESULT hr;
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	//LogInfo() << "Loading Engine-Texture: " << file;
 
@@ -94,7 +102,7 @@ XRESULT D3D11Texture::Init(const std::string& file)
 /** Updates the Texture-Object */
 XRESULT D3D11Texture::UpdateData(void* data, int mip)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	// Enter the critical section for safety while executing the deferred command list
 	Engine::GAPI->EnterResourceCriticalSection();
@@ -107,7 +115,7 @@ XRESULT D3D11Texture::UpdateData(void* data, int mip)
 /** Updates the Texture-Object using the deferred context (For loading in an other thread) */
 XRESULT D3D11Texture::UpdateDataDeferred(void* data, int mip, bool noLock)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	// Enter the critical section for safety while executing the deferred command list
 	if(!noLock)
@@ -162,7 +170,7 @@ UINT D3D11Texture::GetSizeInBytes(int mip)
 /** Binds this texture to a pixelshader */
 XRESULT D3D11Texture::BindToPixelShader(int slot)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	ID3D11ShaderResourceView* srv = ShaderResourceView;
 	engine->GetContext()->PSSetShaderResources(slot, 1, &srv);
@@ -173,7 +181,7 @@ XRESULT D3D11Texture::BindToPixelShader(int slot)
 /** Binds this texture to a pixelshader */
 XRESULT D3D11Texture::BindToVertexShader(int slot)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	ID3D11ShaderResourceView* srv = ShaderResourceView;
 	engine->GetContext()->VSSetShaderResources(slot, 1, &srv);
@@ -185,7 +193,7 @@ XRESULT D3D11Texture::BindToVertexShader(int slot)
 /** Binds this texture to a domainshader */
 XRESULT D3D11Texture::BindToDomainShader(int slot)
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	ID3D11ShaderResourceView* srv = ShaderResourceView;
 	engine->GetContext()->DSSetShaderResources(slot, 1, &srv);
@@ -196,7 +204,7 @@ XRESULT D3D11Texture::BindToDomainShader(int slot)
 /** Creates a thumbnail for this */
 XRESULT D3D11Texture::CreateThumbnail()
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	HRESULT hr;
 	// Since D2D can't load DXTn-Textures on Windows 7, we copy it over to a smaller texture here in d3d11
 
@@ -252,7 +260,7 @@ XRESULT D3D11Texture::GenerateMipMaps()
 	if(MipMapCount == 1)
 		return XR_SUCCESS;
 
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	Engine::GAPI->EnterResourceCriticalSection();
 

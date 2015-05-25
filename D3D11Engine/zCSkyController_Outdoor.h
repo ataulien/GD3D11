@@ -158,7 +158,10 @@ public:
 			return D3DXVECTOR3(0,0,0);
 		}*/
 
-		//float angle = GetMasterTime() * (float)D3DX_PI;
+		//float angle = GetMasterTime() * 2.0f * (float)D3DX_PI; // Get mastertime into rad, 0 and 12 are now at the horizon, 18 is in the sky
+		//angle += (float)D3DX_PI * 0.5f; // 12 is now in the sky, 18 horizon
+
+
 
 		float angle = ((GetMasterTime() * timeScale - 0.3f) * 1.25f + 0.5f) * 2.0f * (180.0f * (float)D3DX_PI / 180.0f);
 

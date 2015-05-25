@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "D3D11HDShader.h"
-#include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineBase.h"
 #include <D3DX11.h>
 #include "Engine.h"
 #include "GothicAPI.h"
@@ -16,11 +16,22 @@ D3D11HDShader::D3D11HDShader(void)
 	HullShader = NULL;
 	DomainShader = NULL;
 	ConstantBuffers = std::vector<D3D11ConstantBuffer*>();
+
+	// Insert into state-map
+	ID = 0;
+
+	if(!D3D11ObjectIDs::HDShadersByID.empty())
+		ID = D3D11ObjectIDs::Counters.HDShadersCounter + 1;
+
+	D3D11ObjectIDs::HDShadersByID[ID] = this;
 }
 
-
+ 
 D3D11HDShader::~D3D11HDShader(void)
 {
+	// Remove from state map
+	Toolbox::EraseByElement(D3D11ObjectIDs::HDShadersByID, this);
+
 	if(HullShader)HullShader->Release();
 	if(DomainShader)DomainShader->Release();
 
@@ -85,7 +96,7 @@ HRESULT D3D11HDShader::CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEn
 XRESULT D3D11HDShader::LoadShader(const char* hullShader, const char* domainShader)
 {
 	HRESULT hr;
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	ID3DBlob* hsBlob;
 	ID3DBlob* dsBlob;
@@ -119,7 +130,7 @@ XRESULT D3D11HDShader::LoadShader(const char* hullShader, const char* domainShad
 /** Applys the shaders */
 XRESULT D3D11HDShader::Apply()
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	engine->GetContext()->HSSetShader(HullShader, NULL, 0);
 	engine->GetContext()->DSSetShader(DomainShader, NULL, 0);
@@ -130,7 +141,7 @@ XRESULT D3D11HDShader::Apply()
 /** Unbinds the currently bound hull/domain shaders */
 void D3D11HDShader::Unbind()
 {
-	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	engine->GetContext()->HSSetShader(NULL, NULL, 0);
 	engine->GetContext()->DSSetShader(NULL, NULL, 0);

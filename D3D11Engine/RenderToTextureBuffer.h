@@ -13,6 +13,19 @@ struct RenderToTextureBuffer
 		ReleaseAll();
 	}
 
+	RenderToTextureBuffer(	ID3D11Texture2D* texture,
+							ID3D11ShaderResourceView* shaderResView,
+							ID3D11RenderTargetView* renderTargetView,
+							UINT sizeX,
+							UINT sizeY)
+	{
+		Texture = texture;
+		ShaderResView = shaderResView;
+		RenderTargetView = renderTargetView;
+		SizeX = sizeX;
+		SizeY = sizeY;
+	}
+
 	/** Creates the render-to-texture buffers */
 	RenderToTextureBuffer(ID3D11Device* device, UINT SizeX,UINT SizeY,DXGI_FORMAT Format, HRESULT* Result=NULL, DXGI_FORMAT RTVFormat=DXGI_FORMAT_UNKNOWN, DXGI_FORMAT SRVFormat=DXGI_FORMAT_UNKNOWN, int MipLevels = 1)
 	{
@@ -92,7 +105,9 @@ struct RenderToTextureBuffer
 	ID3D11RenderTargetView* GetRenderTargetView(){return RenderTargetView;}
 	ID3D11RenderTargetView** GetRenderTargetViewPtr(){return &RenderTargetView;}
 
-
+	void SetTexture(ID3D11Texture2D* tx){Texture = tx;}
+	void SetShaderResView(ID3D11ShaderResourceView* srv){ShaderResView = srv;}
+	void SetRenderTargetView(ID3D11RenderTargetView* rtv){RenderTargetView = rtv;}
 
 	UINT GetSizeX(){return SizeX;}
 	UINT GetSizeY(){return SizeY;}
@@ -101,12 +116,14 @@ private:
 	/** The Texture object */
 	ID3D11Texture2D* Texture;
 
-	UINT SizeX;
-	UINT SizeY;
-
 	/** Shader and rendertarget resource views */
 	ID3D11ShaderResourceView* ShaderResView;
 	ID3D11RenderTargetView* RenderTargetView;
+
+	UINT SizeX;
+	UINT SizeY;
+
+	
 
 	void ReleaseAll()
 	{
@@ -203,6 +220,11 @@ struct RenderToDepthStencilBuffer
 	ID3D11DepthStencilView* GetDepthStencilView(){return DepthStencilView;}
 	UINT GetSizeX(){return SizeX;}
 	UINT GetSizeY(){return SizeY;}
+
+	void SetTexture(ID3D11Texture2D* tx){Texture = tx;}
+	void SetShaderResView(ID3D11ShaderResourceView* srv){ShaderResView = srv;}
+	void SetDepthStencilView(ID3D11DepthStencilView* dsv){DepthStencilView = dsv;}
+
 private:
 
 	// The Texture object

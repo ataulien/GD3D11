@@ -121,7 +121,8 @@ XRESULT BaseAntTweakBar::Init()
 
 	TwAddVarRW(Bar_General, "VSync", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync, NULL);
 	
-
+	TwAddVarRW(Bar_General, "OcclusionCulling", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableOcclusionCulling, NULL);
+	TwAddVarRW(Bar_General, "Sort RenderQueue", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.SortRenderQueue, NULL);
 	
 
 	TwType t = TwDefineEnumFromString("ShadowmapSizeEnum", "512, 1024, 2048, 4096");
@@ -221,6 +222,7 @@ XRESULT BaseAntTweakBar::Init()
 	TwDefine(" FrameStats position='800 0'");
 	//TwAddVarRO(Bar_Info, "Version", TW_TYPE_CDSTRING, VERSION_NUMBER_STR, NULL);
 	TwAddVarRO(Bar_Info, "FPS", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererInfo.FPS, NULL);
+	TwAddVarRO(Bar_Info, "StateChanges", TW_TYPE_UINT32, &Engine::GAPI->GetRendererState()->RendererInfo.StateChanges, NULL);
 	TwAddVarRO(Bar_Info, "DrawnVobs", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnVobs, NULL);
 	TwAddVarRO(Bar_Info, "DrawnTriangles", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnTriangles, NULL);
 	TwAddVarRO(Bar_Info, "VobUpdates", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererInfo.FrameVobUpdates, NULL);
@@ -239,6 +241,21 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRO(Bar_Info, "LightingMS", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererInfo.Timing.LightingMS, NULL);
 	TwAddVarRO(Bar_Info, "TotalMS", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererInfo.Timing.TotalMS, NULL);
 
+	TwAddVarRO(Bar_Info, "SC_Textures,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_TX], NULL);
+	TwAddVarRO(Bar_Info, "SC_GeometryShader,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_GS], NULL);
+	TwAddVarRO(Bar_Info, "SC_RTVDSV,", TW_TYPE_UINT32,	&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_RTVDSV], NULL);
+	TwAddVarRO(Bar_Info, "SC_DomainShader,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_DS], NULL);
+	TwAddVarRO(Bar_Info, "SC_HullShader,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_HS], NULL);
+	TwAddVarRO(Bar_Info, "SC_PixelShader,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_PS], NULL);
+	TwAddVarRO(Bar_Info, "SC_InputLayout,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_IL], NULL);
+	TwAddVarRO(Bar_Info, "SC_VertexShader,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_VS], NULL);
+	TwAddVarRO(Bar_Info, "SC_IndexBuffer,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_IB], NULL);
+	TwAddVarRO(Bar_Info, "SC_VertexBuffer,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_VB], NULL);
+	TwAddVarRO(Bar_Info, "SC_RasterizerState,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_RS], NULL);
+	TwAddVarRO(Bar_Info, "SC_DepthStencilState,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_DSS], NULL);
+	TwAddVarRO(Bar_Info, "SC_SamplerState,", TW_TYPE_UINT32,	&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_SMPL], NULL);
+	TwAddVarRO(Bar_Info, "SC_BlendState,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_BS], NULL);
+					
 
 	Bar_HBAO = TwNewBar("HBAO+");
 	TwDefine(" HBAO+ position='1000 0'");

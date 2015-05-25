@@ -19,6 +19,6 @@ private:
 
 	static void UnzipThreadFunc(const std::string& zip, const std::string& target, UnzipDoneCallback callback, void* cbUserdata);
 
-	std::thread UnzipThread;
+	std::thread* UnzipThread;
 };
 

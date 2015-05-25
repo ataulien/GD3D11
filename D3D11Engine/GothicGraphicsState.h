@@ -479,7 +479,13 @@ struct GothicRendererSettings
 		ReplaceSunDirection = false;
 		AtmosphericScattering = true;
 		EnableDynamicLighting = true;
+
+#ifndef BUILD_GOTHIC_1_08k
 		EnableAutoupdates = true;
+#else
+		EnableAutoupdates = false;
+#endif
+
 		FastShadows = false;
 		MaxNumFaces = 0;
 		IndoorVobDrawRadius = 5000.0f;
@@ -535,10 +541,12 @@ struct GothicRendererSettings
 		BrightnessValue = 1.0f;
 		GammaValue = 1.0f;
 
+		EnableOcclusionCulling = false;
 		EnableSoftShadows = true;
 		EnableShadows = true;
 		EnableVSync = false;
 		DoZPrepass = true;
+		SortRenderQueue = true;
 
 		EnableTesselation = true;
 		EnableGodRays = true;
@@ -549,7 +557,7 @@ struct GothicRendererSettings
 		GodRayDecay = 0.97f;
 		GodRayWeight = 0.85f;
 		GodRayDensity = 0.70f;
-		GodRayColorMod = float3(1.0f, 0.7f, 0.8f);
+		GodRayColorMod = float3(1.0f, 0.8f, 0.6f);
 
 		RECT desktopRect;
 		GetClientRect(GetDesktopWindow(), &desktopRect);
@@ -617,6 +625,8 @@ struct GothicRendererSettings
 	bool EnableEditorPanel;
 	bool DoZPrepass;
 	bool EnableAutoupdates;
+	bool EnableOcclusionCulling;
+	bool SortRenderQueue;
 
 
 	int MaxNumFaces;
@@ -750,7 +760,32 @@ struct GothicRendererInfo
 		NearPlane = 0;	
 		FrameDrawnLights = 0;
 		WorldMeshDrawCalls = 0;
+
+		StateChanges = 0;
+		memset(StateChangesByState, 0, sizeof(StateChangesByState));
 	}
+
+	enum EStateChange
+	{
+		SC_TX,
+		SC_GS,
+		SC_RTVDSV,
+		SC_DS,
+		SC_HS,
+		SC_PS,
+		SC_IL,
+		SC_VS,
+		SC_IB,
+		SC_VB,
+		SC_RS,
+		SC_DSS,
+		SC_SMPL,
+		SC_BS,
+		SC_NUM_STATES // Total number of states we have
+	};
+
+	unsigned int StateChanges;
+	unsigned int StateChangesByState[SC_NUM_STATES];
 
 	int FrameDrawnTriangles;
 	int FrameDrawnVobs;

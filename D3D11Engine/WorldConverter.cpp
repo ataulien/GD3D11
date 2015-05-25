@@ -375,6 +375,7 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 	std::vector<MeshInfo *>& meshes = mesh->GetMeshes();
 	std::vector<std::string>& textures = mesh->GetTextures();
 	std::map<std::string, BaseTexture*> loadedTextures;
+	std::set<std::string> missingTextures;
 
 	// run through meshes and pack them into sections
 	for(unsigned int m = 0;m<meshes.size();m++)
@@ -384,14 +385,36 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 		MeshKey key;
 		key.Material = mat;
 		key.Texture = mat != NULL ? mat->GetTexture() : NULL;
+		
+		// Save missing textures
+		if(!mat)
+		{
+			missingTextures.insert(textures[m]);
+		}else
+		{
+			if(mat->GetMatGroup() == zMAT_GROUP_WATER)
+			{
+				// Give water surfaces a water-shader
+				MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom(mat->GetTexture());
+				if(info)
+				{
+					info->PixelShader = "PS_Water";
+					info->MaterialType = MaterialInfo::MT_Water;
+				}
+			}
+		}
 
 		//key.Lightmap = poly->GetLightmap();
 
 		for(unsigned int i=0;i<meshes[m]->Vertices.size();i++)
 		{
+			// Mesh needs to be rotated differently
 			meshes[m]->Vertices[i].Position = float3(meshes[m]->Vertices[i].Position.x, 
 				meshes[m]->Vertices[i].Position.y,
 				-meshes[m]->Vertices[i].Position.z);
+
+			// Fix disoriented texcoords
+			meshes[m]->Vertices[i].TexCoord = float2(meshes[m]->Vertices[i].TexCoord.x, -meshes[m]->Vertices[i].TexCoord.y);
 		}
 
 		for(unsigned int i=0;i<meshes[m]->Indices.size();i+=3)
@@ -468,6 +491,19 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 				section.WorldMeshes[key]->Vertices.push_back(*v[i]);
 			}
 		}
+	}
+
+	// Print textures we couldn't find any materials for if there are any
+	if(!missingTextures.empty())
+	{
+		std::string ms = "\nMissing materials for custom-mesh:\n";
+
+		for(auto it = missingTextures.begin(); it != missingTextures.end(); it++)
+		{
+			ms += "\t" + (*it)+ "\n";
+		}
+
+		LogWarn() << ms;
 	}
 
 	// Dont need that anymore
@@ -1460,7 +1496,7 @@ void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisu
 }
 
 /** Extracts a skeletal mesh from a zCMeshSoftSkin */
-void WorldConverter::ExtractSkeletalMeshFromProto(zCModelPrototype* model, SkeletalMeshVisualInfo* skeletalMeshInfo)
+void WorldConverter::ExtractSkeletalMeshFromProto(zCModelMeshLib* model, SkeletalMeshVisualInfo* skeletalMeshInfo)
 {
 	// This type has multiple skinned meshes inside
 	for(int i=0;i<model->GetMeshSoftSkinList()->NumInArray;i++)
@@ -1837,7 +1873,7 @@ void WorldConverter::Extract3DSMeshFromVisual2(zCProgMeshProto* visual, MeshVisu
 		// Get vertices
 		for(int t=0;t<visual->GetSubmeshes()[i].TriList.NumInArray;t++)
 		{				
-			for(int v=0;v<3;v++)
+			for(int v=2;v>=0;v--)
 			{
 				indices.push_back(visual->GetSubmeshes()[i].TriList.Array[t].wedge[v]);
 			}

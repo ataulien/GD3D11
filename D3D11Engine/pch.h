@@ -8,6 +8,7 @@
 #pragma warning(disable: 4731) // Change of ebp from inline assembly
 
 #include <Windows.h>
+#include <mmsystem.h>
 //#include <Imagehlp.h>
 #include <d3d11.h>
 #include "Types.h"

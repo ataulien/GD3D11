@@ -12,6 +12,7 @@
 #include "zCModelTexAniState.h"
 #include "zCVisual.h"
 #include "zCMeshSoftSkin.h"
+#include "zCObject.h"
 
 class zCVisual;
 class zCMeshSoftSkin;
@@ -52,10 +53,50 @@ struct zTMdl_NodeVobAttachment
 	zCModelNodeInst* NodeInst;
 };
 
+class zCModelMeshLib;
 struct zTMeshLibEntry
 {				
-	zCModelTexAniState	TexAniState;
-	int MeshLibPtr;
+	zCModelTexAniState TexAniState;
+	zCModelMeshLib* MeshLibPtr;
+};
+
+class zCModelMeshLib : public zCObject
+{
+public:
+	struct zTNodeMesh
+	{			
+		zCVisual* Visual;
+		int NodeIndex;	
+	};
+
+	/** This returns the list of nodes which hold information about the bones and attachments later */
+	zCArray<zTNodeMesh>* GetNodeList()
+	{
+		return &NodeList;
+	}
+
+	/** Returns the list of meshes which store the vertex-positions and weights */
+	zCArray<zCMeshSoftSkin *>* GetMeshSoftSkinList()
+	{
+#ifndef BUILD_GOTHIC_1_08k
+		return &SoftSkinList;
+#else
+		return NULL;
+#endif
+	}
+
+	const char* GetVisualName()
+	{
+		if(GetMeshSoftSkinList()->NumInArray > 0)
+			return GetMeshSoftSkinList()->Array[0]->GetObjectName();
+
+		return "";
+		//return __GetVisualName().ToChar();
+	}
+
+private:
+	zCArray<zTNodeMesh>			NodeList;
+	zCArray<zCMeshSoftSkin*>	SoftSkinList;
 };
 
 class zCModelPrototype
@@ -224,7 +265,7 @@ public:
 	}
 
 	/** Fills a vector of (viewspace) bone-transformation matrices for this frame */
-	void GetBoneTransforms(std::vector<D3DXMATRIX>* transforms, zCVob* vob)
+	void GetBoneTransforms(std::vector<D3DXMATRIX>* transforms, zCVob* vob = NULL)
 	{
 		if(!GetNodeList())
 			return;

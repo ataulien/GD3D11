@@ -2,6 +2,8 @@
 #ifndef ATMOSPHERIC_SCATTERING_H_
 #define ATMOSPHERIC_SCATTERING_H_
 
+static const float NIGHT_BRIGHTNESS = 1.5f;
+
 cbuffer Atmosphere : register( b1 )
 {
 	float AC_Kr4PI;
@@ -130,7 +132,7 @@ float3 ApplyAtmosphericScatteringGround(float3 worldPosition, float3 in_color, b
 	float3 c1 = v3Attenuate;
 	
 	float3 dayColor = c0 + in_color * c1;
-	float3 nightColor = float3(0.05,0.05,0.1) * 4.0f;
+	float3 nightColor = float3(0.20,0.20,0.4) * NIGHT_BRIGHTNESS;
 	float3 outColor;
 
 	if(applyNightshade)

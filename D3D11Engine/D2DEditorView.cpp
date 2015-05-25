@@ -681,7 +681,7 @@ void D2DEditorView::VisualizeMeshInfo(MeshInfo* m, const D3DXVECTOR4& color, boo
 		}
 
 		// Visualize triangle
-		D3DXVECTOR3 nrm = Toolbox::ComputeNormal(tri[0], tri[1], tri[2]);
+		//D3DXVECTOR3 nrm = Toolbox::ComputeNormal(tri[0], tri[1], tri[2]);
 		//Engine::GraphicsEngine->GetLineRenderer()->AddTriangle(tri[0] + nrm, tri[1] + nrm, tri[2] + nrm, color);
 
 		if(showBounds)

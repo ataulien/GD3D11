@@ -36,6 +36,8 @@
 #include "D3D11PipelineStates.h"
 #include "zCParticleFX.h"
 #include "win32ClipboardWrapper.h"
+#include "D3D11OcclusionQuerry.h"
+#include "ModSpecific.h"
 
 //#include "MemoryTracker.h"
 
@@ -108,6 +110,7 @@ D3D11GraphicsEngine::D3D11GraphicsEngine(void)
 	PresentPending = false;
 
 	LineRenderer = new D3D11LineRenderer;
+	Occlusion = new D3D11OcclusionQuerry;
 
 
 	RECT desktopRect;
@@ -123,28 +126,29 @@ D3D11GraphicsEngine::~D3D11GraphicsEngine(void)
 	GothicBlendStateInfo::DeleteCachedObjects();
 	GothicRasterizerStateInfo::DeleteCachedObjects();
 
-	delete InfiniteRangeConstantBuffer;
-	delete OutdoorSmallVobsConstantBuffer;
-	delete OutdoorVobsConstantBuffer;
+	delete Occlusion; Occlusion = NULL;
+	delete InfiniteRangeConstantBuffer;InfiniteRangeConstantBuffer = NULL;
+	delete OutdoorSmallVobsConstantBuffer;OutdoorSmallVobsConstantBuffer = NULL;
+	delete OutdoorVobsConstantBuffer;OutdoorVobsConstantBuffer = NULL;
 
-	delete QuadVertexBuffer;
-	delete QuadIndexBuffer;
+	delete QuadVertexBuffer;QuadVertexBuffer = NULL;
+	delete QuadIndexBuffer;QuadIndexBuffer = NULL;
 
-	delete LineRenderer;
-	delete DepthStencilBuffer;
-	delete DynamicInstancingBuffer;
-	delete PfxRenderer;
-	delete CloudBuffer;
-	delete DistortionTexture;
-	delete NoiseTexture;
-	delete ShaderManager;
-	delete TempVertexBuffer;
-	delete GBuffer1_Normals_SpecIntens_SpecPower;
-	delete GBuffer0_Diffuse;
-	delete HDRBackBuffer;
-	delete WorldShadowmap1;
-	delete InverseUnitSphereMesh;
-	delete UIView;
+	delete LineRenderer;LineRenderer = NULL;
+	delete DepthStencilBuffer;DepthStencilBuffer = NULL;
+	delete DynamicInstancingBuffer;DynamicInstancingBuffer = NULL;
+	delete PfxRenderer;PfxRenderer = NULL;
+	delete CloudBuffer;CloudBuffer = NULL;
+	delete DistortionTexture;DistortionTexture = NULL;
+	delete NoiseTexture;NoiseTexture = NULL;
+	delete ShaderManager;ShaderManager = NULL;
+	delete TempVertexBuffer;TempVertexBuffer = NULL;
+	delete GBuffer1_Normals_SpecIntens_SpecPower;GBuffer1_Normals_SpecIntens_SpecPower = NULL;
+	delete GBuffer0_Diffuse;GBuffer0_Diffuse = NULL;
+	delete HDRBackBuffer;HDRBackBuffer = NULL;
+	delete WorldShadowmap1;WorldShadowmap1 = NULL;
+	delete InverseUnitSphereMesh;InverseUnitSphereMesh = NULL;
+	delete UIView;UIView = NULL;
 
 	if(ReflectionCube)ReflectionCube->Release();
 	if (CubeSamplerState)CubeSamplerState->Release();
@@ -390,7 +394,6 @@ XRESULT D3D11GraphicsEngine::Init()
 	VERTEX_INDEX indices[] = {0,1,2,3,4,5};
 	QuadIndexBuffer->UpdateBuffer(indices, sizeof(indices));
 
-
 	return XR_SUCCESS;
 }
 
@@ -450,6 +453,10 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 						Engine::GAPI->GetIntParamFromConfig("zStartupWindowed");
 		scd.Windowed = windowed;
 
+#ifndef PUBLIC_RELEASE
+		scd.Windowed = true;
+#endif
+
 #ifdef BUILD_GOTHIC_1_08k
 #ifdef PUBLIC_RELEASE
 		scd.Windowed = false;
@@ -469,6 +476,7 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 
 		// Need to init AntTweakBar now that we have a working swapchain
 		XLE(Engine::AntTweakBar->Init());
+
 	}
 	else
 	{
@@ -489,15 +497,7 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 	LE(Device->CreateRenderTargetView(backbuffer, nullptr, &BackbufferRTV));
 	LE(Device->CreateShaderResourceView(backbuffer, nullptr, &BackbufferSRV));
 
-	// Create main view
-	if(!UIView)
-	{
-		if(Engine::GAPI->GetRendererState()->RendererSettings.EnableEditorPanel)
-		{
-			CreateMainUIView();
-		}
-	}
-	else
+	if(UIView)
 	{
 		UIView->Resize(Resolution, backbuffer);
 	}
@@ -559,6 +559,27 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 XRESULT D3D11GraphicsEngine::OnBeginFrame()
 {
 	Engine::GAPI->GetRendererState()->RendererInfo.Timing.StartTotal();
+
+	static bool s_firstFrame = true;
+	if(s_firstFrame)
+	{
+		// Check for normalmaps here, next release won't be using this file at all anyways...
+		if(!ModSpecific::NormalmapPackageInstalled(ModSpecific::NRMPACK_ORIGINAL) || 
+			!ModSpecific::NormalmapPackageInstalled(ModSpecific::GetModNormalmapPackName()))
+		{
+			LogInfo() << "Normalmaps missing, downloading now...";
+
+			CreateMainUIView();
+
+			if(UIView)
+			{
+				// Download missing content
+				UIView->RunContentDownloader();
+			}
+		}
+	}
+
+	s_firstFrame = false;
 
 	// Check resolution
 	/*RECT desktopRect;
@@ -1553,14 +1574,15 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		DrawDecalList(decals, false);
 	}
 
+	// FIXME: GodRays need the GBuffer1 from the scene, but Particles need to clear it! 
+	if(Engine::GAPI->GetRendererState()->RendererSettings.EnableGodRays)
+		PfxRenderer->RenderGodRays();
+
 	//DrawParticleEffects();
 	Engine::GAPI->DrawParticlesSimple();
 
 	// Draw debug lines
-	LineRenderer->Flush();
-	
-	if(Engine::GAPI->GetRendererState()->RendererSettings.EnableGodRays)
-	PfxRenderer->RenderGodRays();
+	LineRenderer->Flush();	
 
 	if(Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR)
 		PfxRenderer->RenderHDR();
@@ -1756,9 +1778,9 @@ XRESULT D3D11GraphicsEngine::DrawMeshInfoListAlphablended(const std::vector<std:
 	for(auto it = list.begin(); it != list.end(); it++)
 	{
 		int indicesNumMod = 1;
-		if((*it).first.Texture != NULL)
+		if((*it).first.Material->GetAniTexture() != NULL)
 		{
-			MyDirectDrawSurface7* surface = (*it).first.Texture->GetSurface();
+			MyDirectDrawSurface7* surface = (*it).first.Material->GetAniTexture()->GetSurface();
 			ID3D11ShaderResourceView* srv[3];
 			
 			// Get diffuse and normalmap
@@ -1772,7 +1794,7 @@ XRESULT D3D11GraphicsEngine::DrawMeshInfoListAlphablended(const std::vector<std:
 
 			// Get the right shader for it
 
-			BindShaderForTexture((*it).first.Texture, false, (*it).first.Material->GetAlphaFunc());
+			BindShaderForTexture((*it).first.Material->GetAniTexture(), false, (*it).first.Material->GetAlphaFunc());
 			
 			// Check for alphablending on world mesh
 			if(lastAlphaFunc != (*it).first.Material->GetAlphaFunc())
@@ -1800,7 +1822,7 @@ XRESULT D3D11GraphicsEngine::DrawMeshInfoListAlphablended(const std::vector<std:
 			info->Constantbuffer->BindToPixelShader(2);
 
 			// Don't let the game unload the texture after some time
-			(*it).first.Texture->CacheIn(0.6f);
+			(*it).first.Material->GetAniTexture()->CacheIn(0.6f);
 
 			// Draw the section-part
 			DrawVertexBufferIndexedUINT(NULL, NULL, 
@@ -1956,10 +1978,10 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 
 		for(std::list<std::pair<MeshKey, WorldMeshInfo *>>::iterator it = meshList.begin(); it != meshList.end(); it++)
 		{
-			if(!(*it).first.Texture)
+			if(!(*it).first.Material->GetAniTexture())
 				continue;
 
-			if((*it).first.Texture->HasAlphaChannel())
+			if((*it).first.Material->GetAniTexture()->HasAlphaChannel())
 				continue; // Don't pre-render stuff with alpha channel
 
 			if((*it).first.Info->MaterialType == MaterialInfo::MT_Water)
@@ -2003,7 +2025,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 
 			// Get the right shader for it
 
-			BindShaderForTexture((*it).first.Texture, false, (*it).first.Material->GetAlphaFunc());
+			BindShaderForTexture((*it).first.Material->GetAniTexture(), false, (*it).first.Material->GetAlphaFunc());
 			
 			// Check for alphablending on world mesh
 			if(((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND || (*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD) && !Engine::GAPI->GetRendererState()->BlendState.BlendEnabled)
@@ -2038,10 +2060,10 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			info->Constantbuffer->BindToPixelShader(2);
 
 			// Don't let the game unload the texture after some timep
-			(*it).first.Texture->CacheIn(0.6f);
+			(*it).first.Material->GetAniTexture()->CacheIn(0.6f);
 
 			boundInfo = info;
-			bound = (*it).first.Texture;
+			bound = (*it).first.Material->GetAniTexture();
 
 			// Bind normalmap to HDS
 			if((*it).second->MeshIndexBufferPNAEN)
@@ -2123,6 +2145,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = true;
 	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
 
+	// FIXME: Remove DrawWorldMeshNaive finally and put this into a proper location!
+	UpdateOcclusion();
 
 	return XR_SUCCESS;
 }
@@ -2523,7 +2547,8 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 	}
 
 	// Draw Ocean
-	Engine::GAPI->GetOcean()->Draw();
+	if(Engine::GAPI->GetOcean())
+		Engine::GAPI->GetOcean()->Draw();
 
 	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
 
@@ -2948,7 +2973,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 	}
 
 	// Vobs need this
-	Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = true;
+	Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = false;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
 	// Init drawcalls
@@ -3069,7 +3094,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 
 					for(unsigned int i=0;i<mlist.size();i++)
 					{
-						zCTexture* tx = (*itt).first.Texture;
+						zCTexture* tx = (*itt).first.Material->GetAniTexture();
 
 						if(!tx)
 							continue;
@@ -3228,7 +3253,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 
 	for(auto itt = AlphaMeshes.begin(); itt != AlphaMeshes.end(); itt++)
 	{
-		zCTexture* tx = (*itt).first.Texture;
+		zCTexture* tx = (*itt).first.Material->GetAniTexture();
 
 		if(!tx)
 			continue;
@@ -4549,18 +4574,21 @@ void D3D11GraphicsEngine::OnUIEvent(EUIEvent uiEvent)
 			CreateMainUIView();
 		}
 	
-		// Show settings
-		UIView->GetSettingsDialog()->SetHidden(!UIView->GetSettingsDialog()->IsHidden());
+		if(UIView)
+		{
+			// Show settings
+			UIView->GetSettingsDialog()->SetHidden(!UIView->GetSettingsDialog()->IsHidden());
 
-		// Free mouse
-		Engine::GAPI->SetEnableGothicInput(UIView->GetSettingsDialog()->IsHidden());
+			// Free mouse
+			Engine::GAPI->SetEnableGothicInput(UIView->GetSettingsDialog()->IsHidden());
+		}
 	}
 }
 
 /** Returns the data of the backbuffer */
 void D3D11GraphicsEngine::GetBackbufferData(byte** data, int& pixelsize)
 {
-	byte* d = new byte[GetBackbufferResolution().x * GetBackbufferResolution().y * 4];
+	byte* d = new byte[256 * 256* 4];
 
 	// Copy HDR scene to backbuffer
 	SetDefaultStates();
@@ -4574,19 +4602,23 @@ void D3D11GraphicsEngine::GetBackbufferData(byte** data, int& pixelsize)
 	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&gcb);
 	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
 
-	PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), BackbufferRTV, INT2(0,0), true);
+	//PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), BackbufferRTV, INT2(0,0), true);
 	
 	HRESULT hr;
-	ID3D11Resource *backbufferRes;
-	BackbufferRTV->GetResource(&backbufferRes);
+
+	// Buffer for scaling down the image
+	RenderToTextureBuffer* rt = new RenderToTextureBuffer(Device, 256, 256, DXGI_FORMAT_R8G8B8A8_UNORM);
+
+	// Downscale to 256x256
+	PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), rt->GetRenderTargetView(), INT2(256,256), true);
 
 	D3D11_TEXTURE2D_DESC texDesc;
 	texDesc.ArraySize = 1;
 	texDesc.BindFlags = 0;
 	texDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	texDesc.Width = GetBackbufferResolution().x;  // must be same as backbuffer
-	texDesc.Height = GetBackbufferResolution().y; // must be same as backbuffer
+	texDesc.Width = 256; // Gothic transforms the backbufferdata for savegamethumbs to 256x256-pictures anyways
+	texDesc.Height = 256;
 	texDesc.MipLevels = 1;
 	texDesc.MiscFlags = 0;
 	texDesc.SampleDesc.Count = 1;
@@ -4595,13 +4627,13 @@ void D3D11GraphicsEngine::GetBackbufferData(byte** data, int& pixelsize)
 
 	ID3D11Texture2D *texture;
 	LE(Device->CreateTexture2D(&texDesc, 0, &texture));
-	Context->CopyResource(texture, backbufferRes);
+	Context->CopyResource(texture, rt->GetTexture());
 
 	// Get data
 	D3D11_MAPPED_SUBRESOURCE res;
 	if(SUCCEEDED(Context->Map(texture, 0, D3D11_MAP_READ, 0, &res)))
 	{
-		memcpy(d, res.pData, GetBackbufferResolution().x * GetBackbufferResolution().y * 4);
+		memcpy(d, res.pData, 256 * 256 * 4);
 		Context->Unmap(texture, 0);
 	}
 
@@ -4609,6 +4641,7 @@ void D3D11GraphicsEngine::GetBackbufferData(byte** data, int& pixelsize)
 	*data = d;
 
 	texture->Release();
+	delete rt;
 }
 
 /** Binds the right shader for the given texture */
@@ -4824,6 +4857,8 @@ void D3D11GraphicsEngine::DrawQuadMarks()
 	SetActiveVertexShader("VS_Ex");
 	SetActivePixelShader("PS_World");
 
+	SetDefaultStates();
+
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
@@ -4866,6 +4901,7 @@ void D3D11GraphicsEngine::DrawQuadMarks()
 				Engine::GAPI->GetRendererState()->BlendState.SetAlphaBlending();
 				break;
 
+			case zMAT_ALPHA_FUNC_FUNC_NONE:
 			case zMAT_ALPHA_FUNC_TEST:
 				Engine::GAPI->GetRendererState()->BlendState.SetDefault();
 				break;
@@ -5294,3 +5330,34 @@ void D3D11GraphicsEngine::DrawParticleEffects()
 	}
 }
 
+
+/** Updates the occlusion for the bsp-tree */
+void D3D11GraphicsEngine::UpdateOcclusion()
+{
+	if(!Engine::GAPI->GetRendererState()->RendererSettings.EnableOcclusionCulling)
+		return;
+
+	// Set up states
+	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
+	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+
+	Engine::GAPI->GetRendererState()->BlendState.SetDefault();
+	Engine::GAPI->GetRendererState()->BlendState.ColorWritesEnabled = false; // Rasterization is faster without writes
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
+
+	Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = false; // Don't write the bsp-nodes to the depth buffer, also quicker
+	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
+
+	UpdateRenderStates();
+
+	// Set up occlusion pass
+	Occlusion->AdvanceFrameCounter();
+	Occlusion->BeginOcclusionPass();
+
+	// Do occlusiontests for the BSP-Tree
+	Occlusion->DoOcclusionForBSP(Engine::GAPI->GetNewRootNode());
+
+	Occlusion->EndOcclusionPass();
+
+	SetDefaultStates();
+}

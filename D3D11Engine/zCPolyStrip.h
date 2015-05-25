@@ -4,8 +4,9 @@
 #include "zCPolygon.h"
 #include "Engine.h"
 #include "GothicAPI.h"
+#include "zCObject.h"
 
-class zCPolyStrip
+class zCPolyStrip : public zCObject
 {
 public:
 #ifndef BUILD_GOTHIC_1_08k

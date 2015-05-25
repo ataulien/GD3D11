@@ -7,6 +7,7 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "D2DContentDownloadDialog.h"
+#include "ModSpecific.h"
 
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "d3d11.lib")
@@ -124,7 +125,7 @@ XRESULT D2DView::Init(const INT2& initialResolution, ID3D11Texture2D* rendertarg
 		return XR_FAILED;
 	}
 
-	IDXGISurface *dxgiBackbuffer;
+	IDXGISurface *dxgiBackbuffer = NULL;
 	rendertarget->QueryInterface(&dxgiBackbuffer);
 
 	D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties(
@@ -133,14 +134,14 @@ XRESULT D2DView::Init(const INT2& initialResolution, ID3D11Texture2D* rendertarg
 	if(FAILED(Factory->CreateDxgiSurfaceRenderTarget(dxgiBackbuffer, props, &RenderTarget)))
 	{
 		// Copy downloadlink of the platform update to clipboard
-		clipput("https://msdn.microsoft.com/en-us/library/windows/desktop/jj863687%28v=vs.85%29.aspx");
+		clipput("https://www.microsoft.com/en-us/download/details.aspx?id=36805");
 
 		LogWarnBox() << "Failed to share D3D11-Surface with D2D. If you are running on Windows 7, you may just need to install"
-						 "the latest platform-update, which enables you to use DXGI 1.1.\n"
-						 "You can get it here: https://msdn.microsoft.com/en-us/library/windows/desktop/jj863687%28v=vs.85%29.aspx \n"
+						 "the latest platform-update, which enables you to use DXGI 1.2.\n"
+						 "You can get it here: https://www.microsoft.com/en-us/download/details.aspx?id=36805 \n"
 						 "This will not crash the Renderer, but you will have to continue without editor-features.\n"
 						 "\nThe link has been copied to your clipboard.";
-		dxgiBackbuffer->Release();
+		if(dxgiBackbuffer)dxgiBackbuffer->Release();
 		Factory->Release();
 		Factory = NULL;
 		return XR_FAILED;
@@ -351,9 +352,33 @@ HRESULT D2DView::InitResources()
 	SettingsDialog = new D2DSettingsDialog(this, MainSubView);
 	SettingsDialog->SetHidden(true);
 
-	//D2DContentDownloadDialog* downloader = new D2DContentDownloadDialog(this, MainSubView, EDL_Normalmaps_Original);
+	
 
 	return XR_SUCCESS;
+}
+
+/** Runs the content downloader to download missing normalmaps for example */
+void D2DView::RunContentDownloader()
+{
+#ifdef BUILD_GOTHIC_1_08k
+	return;
+#endif
+
+	std::list<DownloadJob> jobs;
+	
+	// Check for original game normalmaps
+	if(!ModSpecific::NormalmapPackageInstalled(ModSpecific::NRMPACK_ORIGINAL))
+		jobs.push_back(DownloadJob(std::string(ModSpecific::NRMPACK_ORIGINAL) + ".zip", 
+		"system\\GD3D11\\textures\\replacements\\"));
+
+	// Check for the current mods normalmaps
+	if(!ModSpecific::NormalmapPackageInstalled(ModSpecific::GetModNormalmapPackName()) && 
+		ModSpecific::GetModNormalmapPackName() != std::string(ModSpecific::NRMPACK_ORIGINAL))
+		jobs.push_back(DownloadJob(std::string(ModSpecific::GetModNormalmapPackName()) + ".zip", 
+		"system\\GD3D11\\textures\\replacements\\" + ModSpecific::GetModNormalmapPackName()));
+
+	// This is registered here and deletes itself when the game closes
+	D2DContentDownloadDialog* downloader = new D2DContentDownloadDialog(this, MainSubView, EDL_Normalmaps_Find, jobs);
 }
 
 /** Draws the view */
@@ -547,6 +572,9 @@ void D2DView::DrawSmoothShadow(const D2D1_RECT_F* Rectangle,
 /** Processes a window-message. Return false to stop the message from going to children */
 bool D2DView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
+	if(!MainSubView)
+		return false;
+
 	return MainSubView->OnWindowMessage(hWnd, msg, wParam, lParam, D2D1::RectF(0, 0, RenderTarget->GetSize().width, RenderTarget->GetSize().height));
 }
 

@@ -37,7 +37,7 @@ typedef void (__thiscall* zCMaterialInitValues)(void *);
 typedef void (__fastcall* zCBspNodeRenderIndoor)(void *, int);
 typedef void (__fastcall* zCBspNodeRenderOutdoor)(void *, zCBspBase*, zTBBox3D, int, int);
 
-typedef void (__fastcall* zCBspBaseCollectPolysInBBox3D)(void*, const zTBBox3D&, zCPolygon **&, int&);
+typedef int (__fastcall* zCBspBaseCollectPolysInBBox3D)(void*, const zTBBox3D&, zCPolygon **&, int&);
 
 typedef int (__fastcall* zCBspBaseCheckRayAgainstPolys)(void*, const D3DXVECTOR3&, const D3DXVECTOR3&, D3DXVECTOR3&);
 

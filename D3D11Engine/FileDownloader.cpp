@@ -57,7 +57,7 @@ HRESULT __stdcall DownloadProgress::OnProgress(ULONG ulProgress, ULONG ulProgres
 
 	OwningDownloader->CallProgressCallback(info);
 
-	isDone = ulProgress == ulProgressMax;
+	//isDone = ulProgress == ulProgressMax;
 	return S_OK;
 }
 
@@ -68,6 +68,8 @@ FileDownloader::FileDownloader(const std::string& url, const std::string& target
 
 	Progress.OwningDownloader = this;
 	Progress.targetFile = targetFile;
+	Progress.isDone = false;
+	Progress.hasFailed = false;
 
 	// Create worker thread and start download
 	DownloadThread = std::thread(DownloadThreadFunc, this, url, targetFile, progressCallback, callbackUserdata);
@@ -76,6 +78,7 @@ FileDownloader::FileDownloader(const std::string& url, const std::string& target
 
 FileDownloader::~FileDownloader(void)
 {
+	DownloadThread.join();
 }
 
 /** Calls the progress callback */
@@ -94,7 +97,19 @@ void FileDownloader::DownloadThreadFunc(FileDownloader* dl, const std::string& u
 
 	if(FAILED(hr))
 	{
-		// Get out of constructor
-		throw std::exception("Failed to start download");
+		LogWarn() << "Failed to start contentdownload of " << url << " to " << targetFile;
+		dl->Progress.hasFailed = true;
+		return;
 	}
+
+
+	DownloadInfo info;
+	info.ulProgress = 0;
+	info.ulProgressMax = 0;
+	info.ulStatusCode = 0;
+	info.szStatusText = 0;
+	info.targetFile = targetFile;
+
+	dl->Progress.isDone = true;
+	progressCallback(dl, dl->CallbackUserdata, info);
 }

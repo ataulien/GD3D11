@@ -6,7 +6,7 @@
 #include "GothicAPI.h"
 #include "zSTRING.h"
 #include "zCArrayAdapt.h"
-
+#include "zCVisual.h"
 
 struct zTPMTriangle {
 	VERTEX_INDEX wedge[3];

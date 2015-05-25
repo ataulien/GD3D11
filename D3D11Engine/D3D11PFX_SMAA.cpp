@@ -104,11 +104,11 @@ bool D3D11PFX_SMAA::Init()
 	D3DX11_IMAGE_LOAD_INFO img;
 	img.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	img.MipLevels = 1;
-	D3DX11CreateShaderResourceViewFromFile(engine->GetDevice(), "system\\shaders\\SMAA_AreaTexDX10.dds", &img, NULL, &AreaTextureSRV, &hr);
+	hr = D3DX11CreateShaderResourceViewFromFile(engine->GetDevice(), "system\\shaders\\SMAA_AreaTexDX10.dds", &img, NULL, &AreaTextureSRV, &hr);
 	LE(hr);
 
 	img.Format = DXGI_FORMAT_R8_UNORM;
-	D3DX11CreateShaderResourceViewFromFile(engine->GetDevice(), "system\\shaders\\SMAA_SearchTex.dds", &img, NULL, &SearchTextureSRV, &hr);
+	hr = D3DX11CreateShaderResourceViewFromFile(engine->GetDevice(), "system\\shaders\\SMAA_SearchTex.dds", &img, NULL, &SearchTextureSRV, &hr);
 	LE(hr);
 
 	SMAAShader->GetVariableByName("areaTex")->AsShaderResource()->SetResource(AreaTextureSRV);

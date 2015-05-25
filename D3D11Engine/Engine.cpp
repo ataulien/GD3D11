@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "Engine.h"
 #include "GothicAPI.h"
-#include "D3D11GraphicsEngineTest.h"
+#include "D3D11GraphicsEngine.h"
 //#include "ReferenceD3D11GraphicsEngine.h"
 #include "D3D11AntTweakBar.h"
 #include "HookExceptionFilter.h"
+#include "GGame.h"
 
 namespace Engine
 {
@@ -42,9 +43,17 @@ namespace Engine
 		GAPI = new GothicAPI;
 		if(!GAPI)
 		{
-			LogErrorBox() << "Failed to create GothicAPI! Out of memory!";
+			LogErrorBox() << "Failed to create GothicAPI!";
 			exit(0);
 		}
+
+		Game = NULL;
+		/*Game = new GGame;
+		if(!Game)
+		{
+			LogErrorBox() << "Failed to create GGame!";
+			exit(0);
+		}*/
 	}
 
 	/** Loads the needed dll files from subdir */

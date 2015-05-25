@@ -21,6 +21,7 @@ class zCWorld;
 class zCVob
 {
 public:
+
 	/** Hooks the functions of this Class */
 	static void Hook()
 	{
@@ -30,6 +31,7 @@ public:
 		HookedFunctions::OriginalFunctions.original_zCVobEndMovement = (zCVobEndMovement)DetourFunction((BYTE *)GothicMemoryLocations::zCVob::EndMovement, (BYTE *)zCVob::Hooked_EndMovement);
 	}
 
+	/** Called when this vob got it's world-matrix changed */
 #ifdef BUILD_GOTHIC_1_08k
 	static void __fastcall Hooked_EndMovement(void* thisptr, void* unknwn)
 	{
@@ -56,6 +58,7 @@ public:
 	}
 #endif
 
+	/** Called on destruction */
 	static void __fastcall Hooked_Destructor(void* thisptr, void* unknwn)
 	{
 		hook_infunc
@@ -69,6 +72,7 @@ public:
 		hook_outfunc
 	}
 
+	/** Called when this vob is about to change the visual */
 	static void __fastcall Hooked_SetVisual(void* thisptr, void* unknwn, zCVisual* visual)
 	{
 		hook_infunc
@@ -82,39 +86,68 @@ public:
 		hook_outfunc
 	}
 
+	/** Returns the visual saved in this vob */
 	zCVisual* GetVisual()
 	{
 		XCALL(GothicMemoryLocations::zCVob::GetVisual);
 	}
 
+	/** Returns the name of this vob */
+	std::string GetName()
+	{
+		return __GetObjectName().ToChar();
+	}
+
+	/** Returns the world-position of this vob */
 	D3DXVECTOR3 GetPositionWorld() const
 	{
+		// Get the data right off the memory to save a function call
 		return D3DXVECTOR3(*(float *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_WorldPosX), 
 			*(float *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_WorldPosY), 
 			*(float *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_WorldPosZ));
 		//XCALL(GothicMemoryLocations::zCVob::GetPositionWorld);
 	}
 
+	/** Returns the local bounding box */
 	zTBBox3D GetBBoxLocal()
 	{
 		XCALL(GothicMemoryLocations::zCVob::GetBBoxLocal);
 	}
 
+	/** Returns a pointer to this vobs world-matrix */
 	D3DXMATRIX* GetWorldMatrixPtr()
 	{
 		return (D3DXMATRIX *)(this + GothicMemoryLocations::zCVob::Offset_WorldMatrixPtr);
 	}
 
+	/** Copys the world matrix into the given memory location */	
+	void GetWorldMatrix(D3DXMATRIX* m)
+	{
+		*m = *GetWorldMatrixPtr();
+	}
+
+	/** Returns the world-polygon right under this vob */
 	zCPolygon* GetGroundPoly()
 	{
 		return *(zCPolygon **)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_GroundPoly);
 	}
 
+	/** Returns whether this vob is currently in an indoor-location or not */
+	bool IsIndoorVob()
+	{
+		if(!GetGroundPoly())
+			return false;
+
+		return GetGroundPoly()->GetLightmap() != NULL;
+	}
+
+	/** Returns the world this vob resists in */
 	zCWorld* GetHomeWorld()
 	{
 		return *(zCWorld **)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_HomeWorld);
 	}
 
+	/** Returns whether this vob is currently in sleeping state or not. Sleeping state is something like a waiting (cached out) NPC */
 	int GetSleepingMode()
 	{
 		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_SleepingMode);
@@ -122,6 +155,7 @@ public:
 		return (flags & GothicMemoryLocations::zCVob::MASK_SkeepingMode);
 	}
 
+	/** Returns whether the visual of this vob is visible */
 	bool GetShowVisual()
 	{
 		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_Flags);
@@ -129,6 +163,7 @@ public:
 		return (flags & GothicMemoryLocations::zCVob::MASK_ShowVisual) != 0;
 	}
 
+	/** Alignemt to the camera */
 	EVisualCamAlignType GetAlignment()
 	{
 		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_CameraAlignment);
@@ -142,6 +177,11 @@ public:
 		return (EVisualCamAlignType)flags;
 	}
 
+protected:
+	zSTRING& __GetObjectName()
+	{
+		XCALL(GothicMemoryLocations::zCObject::GetObjectName);
+	}
 	
 
 	/*void DoFrameActivity()
@@ -149,10 +189,7 @@ public:
 		XCALL(GothicMemoryLocations::zCVob::DoFrameActivity);
 	}*/
 
-	void GetWorldMatrix(D3DXMATRIX* m)
-	{
-		*m = *GetWorldMatrixPtr();
-	}
+
 
 	/*zTBBox3D* GetBoundingBoxWS()
 	{

@@ -1,5 +1,5 @@
 #ifndef PARTITION_METHOD 
-#define PARTITION_METHOD "pow2" 
+#define PARTITION_METHOD "fractional_odd" 
 #endif 
  
 #define IN_PN_PATCH_SIZE 3 
@@ -22,6 +22,8 @@ cbuffer cbPNTriangles : register( b0 )
     bool4       g_clipping;                 // Should run clipping  
                                             // tests. 
 } 
+
+#define g_adaptive bool4(0,0,0,0)
 
 cbuffer cbObjectTessSettings : register( b1 ) 
 { 
@@ -141,10 +143,12 @@ float2 ProjectAndScale(float4x4 projMatrix, float3 inPos)
  
 float IsClipped(float4 clipPos) 
 { 
+   float clipBias = 0.01f * VT_DisplacementStrength;
+	
     // Test whether the position is entirely inside the view frustum. 
-    return (-clipPos.w <= clipPos.x && clipPos.x <= clipPos.w 
-         && -clipPos.w <= clipPos.y && clipPos.y <= clipPos.w 
-         && -clipPos.w <= clipPos.z && clipPos.z <= clipPos.w) 
+    return (-clipPos.w <= clipPos.x + clipBias && clipPos.x - clipBias <= clipPos.w 
+         && -clipPos.w <= clipPos.y + clipBias && clipPos.y - clipBias <= clipPos.w 
+         && -clipPos.w <= clipPos.z + clipBias && clipPos.z - clipBias <= clipPos.w) 
        ? 0.0f 
        : 1.0f; 
 } 
@@ -283,27 +287,15 @@ HS_ControlPointOutput HSMain(
                                             O.f3ViewPosition[1], 
                                             O.f3ViewPosition[2], 
                                            I[NextCPID].f3ViewPosition); 
-										  
     } else { 
-		//float maxZ = max(O.f3ViewPosition[0].z, I[NextCPID].f3ViewPosition.z);
-        //O.fOppositeEdgeLOD = maxZ < g_f4TessFactors.z ? g_f4TessFactors.x : 1; 
-		
-		O.fOppositeEdgeLOD = g_f4TessFactors.x;
+		float maxZ = max(O.f3ViewPosition[0].z, I[NextCPID].f3ViewPosition.z);
+        O.fOppositeEdgeLOD = maxZ < g_f4TessFactors.z ? g_f4TessFactors.x : 1; 
     }     
      
 	//O.fOppositeEdgeLOD *= O.f2TexCoord2.x; // Borders are stored here. Don't tesselate at borders!
 	 
     return O; 
 } 
-
-float SmoothEdgeLod(float lod)
-{
-	float scale = 0.2f;
-	float fl = floor(lod * scale) / scale;
-	float fr = 0.0f;//pow(frac(lod * scale), 10.0f) / scale;
-	
-	return max(1, fl + fr);
-}
  
 // The Hull Shader Constant function, which is run after all threads 
 // of the Hull Shader Control Point function (above) complete. 
@@ -337,18 +329,12 @@ HS_ConstantOutput HS_Constant(
     // TessFactor[1] => Edge(2, 0) 
     // TessFactor[2] => Edge(0, 1) 
 	
-	float factor = 1.0f;//VT_TesselationFactor;
+	float factor = VT_TesselationFactor;
 	
     O.fTessFactor[0] = I[1].fOppositeEdgeLOD * factor; 
     O.fTessFactor[1] = I[2].fOppositeEdgeLOD * factor; 
     O.fTessFactor[2] = I[0].fOppositeEdgeLOD * factor; 
      
-	for(int i=0;i<3;i++)
-	{
-		O.fTessFactor[i] = SmoothEdgeLod(O.fTessFactor[i]);
-	}
-	
-	 
     // There's no right or wrong answer here. We've chosen to say that  
     // the interior should be at least as tessellated as the most 
     // tessellated exterior edge. 

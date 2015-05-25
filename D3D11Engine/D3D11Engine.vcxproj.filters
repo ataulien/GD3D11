@@ -636,6 +636,26 @@
     <ClInclude Include="D3D11PFX_GodRays.h">
       <Filter>Engine\D3D11\PFX\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="D3D11OcclusionQuerry.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11RenderPipe.h" />
+    <ClInclude Include="GVobObject.h" />
+    <ClInclude Include="GVisual.h" />
+    <ClInclude Include="GStaticMeshVisual.h" />
+    <ClInclude Include="GWorld.h" />
+    <ClInclude Include="GWorldMesh.h" />
+    <ClInclude Include="D3D11WorldMesh.h" />
+    <ClInclude Include="GGame.h" />
+    <ClInclude Include="GSkeletalMeshVisual.h" />
+    <ClInclude Include="GModelVisual.h" />
+    <ClInclude Include="GMaterial.h" />
+    <ClInclude Include="GMorphMeshVisual.h" />
+    <ClInclude Include="GParticleFXVisual.h" />
+    <ClInclude Include="GDecalVisual.h" />
+    <ClInclude Include="D3D11GraphicsEngineQueued.h" />
+    <ClInclude Include="D3D11GraphicsEngineBase.h" />
+    <ClInclude Include="ModSpecific.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -906,6 +926,26 @@
     <ClCompile Include="zCSoundSystem.h">
       <Filter>ZenGin\Classes</Filter>
     </ClCompile>
+    <ClCompile Include="D3D11OcclusionQuerry.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11RenderPipe.cpp" />
+    <ClCompile Include="GVobObject.cpp" />
+    <ClCompile Include="GVisual.cpp" />
+    <ClCompile Include="GStaticMeshVisual.cpp" />
+    <ClCompile Include="GWorld.cpp" />
+    <ClCompile Include="GWorldMesh.cpp" />
+    <ClCompile Include="D3D11WorldMesh.cpp" />
+    <ClCompile Include="GGame.cpp" />
+    <ClCompile Include="GSkeletalMeshVisual.cpp" />
+    <ClCompile Include="GModelVisual.cpp" />
+    <ClCompile Include="GMaterial.cpp" />
+    <ClCompile Include="GMorphMeshVisual.cpp" />
+    <ClCompile Include="GParticleFXVisual.cpp" />
+    <ClCompile Include="GDecalVisual.cpp" />
+    <ClCompile Include="D3D11GraphicsEngineQueued.cpp" />
+    <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
+    <ClCompile Include="ModSpecific.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

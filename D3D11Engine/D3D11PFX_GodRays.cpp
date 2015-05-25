@@ -26,6 +26,8 @@ XRESULT D3D11PFX_GodRays::Render(RenderToTextureBuffer* fxbuffer)
 {
 	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
 
+	engine->SetDefaultStates();
+
 	D3DXVECTOR3 sunPosition = *Engine::GAPI->GetSky()->GetAtmosphereCB().AC_LightPos.toD3DXVECTOR3();
 	sunPosition *= Engine::GAPI->GetSky()->GetAtmosphereCB().AC_OuterRadius;
 	sunPosition += Engine::GAPI->GetCameraPosition(); // Maybe use cameraposition from sky?

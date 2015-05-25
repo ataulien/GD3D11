@@ -12,6 +12,7 @@
 #include "Logger.h"
 #include "BaseGraphicsEngine.h"
 #include "BaseLineRenderer.h"
+#include "GGame.h"
 
 class zCFileBIN;
 class zCVob;
@@ -100,26 +101,34 @@ public:
 		Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(start, 0xFF0000FF), LineVertex(end, 0xFFFFFFFF));
 #endif
 
-		zCBspBase* base = (zCBspBase*)thisptr;
-		BspVobInfo* newNode = Engine::GAPI->GetNewBspNode(base);
+		if(Engine::GAPI->GetLoadedWorldInfo()->CustomWorldLoaded)
+		{
+			zCBspBase* base = (zCBspBase*)thisptr;
+			BspInfo* newNode = Engine::GAPI->GetNewBspNode(base);
 
-		zCPolygon** polysOld = base->PolyList;
-		int numPolysOld = base->NumPolys;
+			zCPolygon** polysOld = base->PolyList;
+			int numPolysOld = base->NumPolys;
 		
-		base->PolyList = &newNode->NodePolygons[0];
-		base->NumPolys = newNode->NodePolygons.size();
+			base->PolyList = &newNode->NodePolygons[0];
+			base->NumPolys = newNode->NodePolygons.size();
 
-		// Call original function
-		int r = HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysNearestHit(thisptr, start, end, intersection);
+			// Call original function
+			int r = HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysNearestHit(thisptr, start, end, intersection);
 
-		base->PolyList = polysOld;
-		base->NumPolys = numPolysOld;
+			base->PolyList = polysOld;
+			base->NumPolys = numPolysOld;
 
-#ifdef DEBUG_SHOW_COLLISION
-		Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
-#endif
+	#ifdef DEBUG_SHOW_COLLISION
+			Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
+	#endif
 
-		return r;
+			return r;
+		}else
+		{
+			return HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysNearestHit(thisptr, start, end, intersection);
+		}
+
+		
 	}
 
 	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolysCache(void* thisptr, const D3DXVECTOR3& start, const D3DXVECTOR3& end, D3DXVECTOR3& intersection)
@@ -127,31 +136,37 @@ public:
 		// Get our version of this node
 		//Engine::GAPI->Get
 
-#ifdef DEBUG_SHOW_COLLISION
-		Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(start, 0xFF0000FF), LineVertex(end, 0xFFFFFFFF));
-#endif
+		if(Engine::GAPI->GetLoadedWorldInfo()->CustomWorldLoaded)
+		{
 
-		zCBspBase* base = (zCBspBase*)thisptr;
-		BspVobInfo* newNode = Engine::GAPI->GetNewBspNode(base);
+	#ifdef DEBUG_SHOW_COLLISION
+			Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(start, 0xFF0000FF), LineVertex(end, 0xFFFFFFFF));
+	#endif
 
-		zCPolygon** polysOld = base->PolyList;
-		int numPolysOld = base->NumPolys;
+			zCBspBase* base = (zCBspBase*)thisptr;
+			BspInfo* newNode = Engine::GAPI->GetNewBspNode(base);
+
+			zCPolygon** polysOld = base->PolyList;
+			int numPolysOld = base->NumPolys;
 		
-		base->PolyList = &newNode->NodePolygons[0];
-		base->NumPolys = newNode->NodePolygons.size();
+			base->PolyList = &newNode->NodePolygons[0];
+			base->NumPolys = newNode->NodePolygons.size();
 
-		// Call original function
-		//int r = HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysCache(thisptr, start, end, intersection);
-		int r = HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysNearestHit(thisptr, start, end, intersection); // Not supporting cache ATM
+			// Call original function
+			//int r = HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysCache(thisptr, start, end, intersection);
+			int r = HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysNearestHit(thisptr, start, end, intersection); // Not supporting cache ATM
 
-		base->PolyList = polysOld;
-		base->NumPolys = numPolysOld;
+			base->PolyList = polysOld;
+			base->NumPolys = numPolysOld;
 
-#ifdef DEBUG_SHOW_COLLISION
-		Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
-#endif
-
-		return r;
+	#ifdef DEBUG_SHOW_COLLISION
+			Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
+	#endif
+			return r;
+		}else
+		{
+			return HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolysCache(thisptr, start, end, intersection);
+		}
 	}
 
 	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolys(void* thisptr, const D3DXVECTOR3& start, const D3DXVECTOR3& end, D3DXVECTOR3& intersection)
@@ -160,51 +175,65 @@ public:
 		Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(start, 0xFF0000FF), LineVertex(end, 0xFFFFFFFF));
 #endif
 
-		zCBspBase* base = (zCBspBase*)thisptr;
-		BspVobInfo* newNode = Engine::GAPI->GetNewBspNode(base);
+		if(Engine::GAPI->GetLoadedWorldInfo()->CustomWorldLoaded)
+		{
+			zCBspBase* base = (zCBspBase*)thisptr;
+			BspInfo* newNode = Engine::GAPI->GetNewBspNode(base);
 
-		zCPolygon** polysOld = base->PolyList;
-		int numPolysOld = base->NumPolys;
+			zCPolygon** polysOld = base->PolyList;
+			int numPolysOld = base->NumPolys;
 		
-		base->PolyList = &newNode->NodePolygons[0];
-		base->NumPolys = newNode->NodePolygons.size();
+			base->PolyList = &newNode->NodePolygons[0];
+			base->NumPolys = newNode->NodePolygons.size();
 
-		// Call original function
-		int r = HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolys(thisptr, start, end, intersection);
+			// Call original function
+			int r = HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolys(thisptr, start, end, intersection);
 
-		base->PolyList = polysOld;
-		base->NumPolys = numPolysOld;
+			base->PolyList = polysOld;
+			base->NumPolys = numPolysOld;
 
-#ifdef DEBUG_SHOW_COLLISION
-		Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
-#endif
-		return r;
+	#ifdef DEBUG_SHOW_COLLISION
+			Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(intersection, 25.0f);
+	#endif
+			return r;
+		}else
+		{
+			return HookedFunctions::OriginalFunctions.original_zCBspBaseCheckRayAgainstPolys(thisptr, start, end, intersection);
+		}
 	}
 	
 	static int __fastcall hooked_zCBspBaseCollectPolysInBBox3D(void* thisptr, const zTBBox3D& bbox, zCPolygon **& polyList, int& numFound)
 	{
-		Engine::GAPI->CollectPolygonsInAABB(bbox, polyList, numFound);
-		//HookedFunctions::OriginalFunctions.original_zCBspBaseCollectPolysInBBox3D(thisptr, bbox, polyList, numFound);
-
-#ifdef DEBUG_SHOW_COLLISION
-		for(int i=0;i<numFound;i++)
+		if(Engine::GAPI->GetLoadedWorldInfo()->CustomWorldLoaded)
 		{
-			Engine::GraphicsEngine->GetLineRenderer()->AddTriangle(*polyList[i]->getVertices()[0]->Position.toD3DXVECTOR3(),
-				*polyList[i]->getVertices()[1]->Position.toD3DXVECTOR3(),
-				*polyList[i]->getVertices()[2]->Position.toD3DXVECTOR3());
+			Engine::GAPI->CollectPolygonsInAABB(bbox, polyList, numFound);
+			//HookedFunctions::OriginalFunctions.original_zCBspBaseCollectPolysInBBox3D(thisptr, bbox, polyList, numFound);
+
+	#ifdef DEBUG_SHOW_COLLISION
+			for(int i=0;i<numFound;i++)
+			{
+				Engine::GraphicsEngine->GetLineRenderer()->AddTriangle(*polyList[i]->getVertices()[0]->Position.toD3DXVECTOR3(),
+					*polyList[i]->getVertices()[1]->Position.toD3DXVECTOR3(),
+					*polyList[i]->getVertices()[2]->Position.toD3DXVECTOR3());
+			}
+
+
+			Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(bbox.Min, bbox.Max, D3DXVECTOR4(1,0,0,1));
+	#endif
+
+			return numFound != 0;
 		}
-
-
-		Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(bbox.Min, bbox.Max, D3DXVECTOR4(1,0,0,1));
-#endif
-
-		return numFound != 0;
+		else
+		{
+			return HookedFunctions::OriginalFunctions.original_zCBspBaseCollectPolysInBBox3D(thisptr, bbox, polyList, numFound);
+		}
 	}
 
 	static void __fastcall hooked_zCBspNodeRender(void* thisptr, void* unkwn)
 	{
 		// Start world rendering here
-		Engine::GraphicsEngine->OnStartWorldRendering();
+		if(XR_SUCCESS == Engine::GraphicsEngine->OnStartWorldRendering() && Engine::Game)
+			Engine::Game->DrawWorld();
 	}
 
 	static void __fastcall hooked_zCBspNodeRenderIndoor(void* thisptr, int clipFlags)
@@ -277,6 +306,9 @@ public:
 		LogInfo() << "World loaded, getting Levelmesh now!";
 		LogInfo() << " - Found " << tree->GetNumPolys() << " polygons";
 
+		// Save pointer to this
+		Engine::GAPI->GetLoadedWorldInfo()->BspTree = tree;
+
 //#ifdef BUILD_GOTHIC_1_08k
 		std::vector<zCPolygon *> polys;
 		tree->GetLOD0Polygons(polys);
@@ -286,8 +318,7 @@ public:
 		Engine::GAPI->OnGeometryLoaded(tree->GetPolygons());
 #endif*/
 
-		// Save pointer to this
-		Engine::GAPI->GetLoadedWorldInfo()->BspTree = tree;
+		
 	}
 
 	/** Returns only the polygons used in LOD0 of the world */
