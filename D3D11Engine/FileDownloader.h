@@ -4,6 +4,14 @@
 
 struct DownloadInfo
 {
+	DownloadInfo()
+	{
+		ulProgress = 0;
+		ulProgressMax = 0;
+		ulStatusCode = 0;
+		szStatusText = L"";
+	}
+
 	ULONG ulProgress;
 	ULONG ulProgressMax;
 	ULONG ulStatusCode;

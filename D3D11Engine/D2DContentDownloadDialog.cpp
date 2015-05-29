@@ -161,7 +161,8 @@ void D2DContentDownloadDialog::Draw(const D2D1_RECT_F& clientRectAbs, float delt
 	}
 
 	// Need to check again if the download failed and "RunNextJob()" has deleted the downloader
-	if(!Downloader || IsHidden())
+	if(!Downloader || IsHidden() || 
+		(Downloader->GetProgress().LastInfo.ulProgressMax == 0 && UnzipNumFiles == 0)) // Also don't draw if we are currently not doing anything
 		return;
 
 	// Size in mbyte

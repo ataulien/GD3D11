@@ -216,6 +216,7 @@ struct GothicMemoryLocations
 	struct zSTRING
 	{
 		static const unsigned int ToChar = 0x0045E2E0;
+		static const unsigned int ConstructorCharPtr = 0x004013A0;
 	};
 
 	struct zCModelPrototype
@@ -347,6 +348,7 @@ struct GothicMemoryLocations
 		static const unsigned int EnterWorld = 0x0063EAD0;
 		static const unsigned int TestKeys = 0x00660000;
 		static const unsigned int Var_Player = 0x008DBBB0;		
+		static const unsigned int Offset_GameView = 0x30;
 	};
 
 	struct zCView
@@ -354,6 +356,7 @@ struct GothicMemoryLocations
 		static const unsigned int SetMode = 0x00702180;
 		static const unsigned int REPL_SetMode_ModechangeStart = 0x007021A9;
 		static const unsigned int REPL_SetMode_ModechangeEnd = 0x0007021B8;
+		static const unsigned int PrintTimed = 0x006FE1A0;
 	};
 
 	struct zCVobLight

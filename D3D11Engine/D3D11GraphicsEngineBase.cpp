@@ -804,3 +804,4 @@ void D3D11GraphicsEngineBase::UpdateTransformsCB()
 
 	TransformsCB->UpdateBuffer(&cb);
 }
+

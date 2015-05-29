@@ -479,6 +479,9 @@ public:
 	/** Removes a surface */
 	void RemoveSurface(MyDirectDrawSurface7* surface);
 
+	/** Returns a texture from the given surface */
+	zCTexture* GetTextureBySurface(MyDirectDrawSurface7* surface);
+
 	/** Resets all vob-stats drawn this frame */
 	void ResetVobFrameStats(std::list<VobInfo *>& vobs);
 
@@ -592,6 +595,9 @@ public:
 
 	/** Loads the data out of a zCModelPrototype and stores it in the cache*/
 	SkeletalMeshVisualInfo* LoadzCModelPrototypeData(zCModelPrototype* model);
+
+	/** Prints a message to the screen for the given amount of time */
+	void PrintMessageTimed(const INT2& position, const std::string& strMessage, float time = 3000.0f, DWORD color = 0xFFFFFFFF);
 
 private:
 	/** Collects polygons in the given AABB */

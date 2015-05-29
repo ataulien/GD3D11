@@ -74,6 +74,9 @@ public:
 	/** Presents the current frame to the screen */
 	virtual XRESULT Present();
 
+	/** Saves a screenshot */
+	virtual void SaveScreenshot();
+
 	/** Draws a vertexbuffer, non-indexed */
 	virtual XRESULT DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int stride = sizeof(ExVertexStruct));
 
@@ -342,4 +345,7 @@ protected:
 
 	/** Occlusion query manager */
 	D3D11OcclusionQuerry* Occlusion;
+
+	/** If true, we will save a screenshot after the next frame */
+	bool SaveScreenshotNextFrame;
 };

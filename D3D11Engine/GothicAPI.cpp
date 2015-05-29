@@ -39,6 +39,7 @@
 #include "win32ClipboardWrapper.h"
 #include "zCSoundSystem.h"
 #include "ModSpecific.h"
+#include "zCView.h"
 
 /** Writes this info to a file */
 void MaterialInfo::WriteToFile(const std::string& name)
@@ -156,6 +157,8 @@ GothicAPI::~GothicAPI(void)
 void GothicAPI::OnGameStart()
 {
 	LoadMenuSettings(MENU_SETTINGS_FILE);
+
+	LogInfo() << "Running with Commandline: " << zCOption::GetOptions()->GetCommandline();
 
 	if(RendererState.RendererSettings.EnableAutoupdates && !zCOption::GetOptions()->IsParameter("XNOUPDATE"))
 		UpdateCheck::RunUpdater();
@@ -793,7 +796,15 @@ void GothicAPI::DrawWorldMeshNaive()
 
 	static float setfovH = RendererState.RendererSettings.FOVHoriz;
 	static float setfovV = RendererState.RendererSettings.FOVVert;
-	if(zCCamera::GetCamera() && (zCCamera::GetCamera() != CurrentCamera || setfovH != RendererState.RendererSettings.FOVHoriz || setfovV != RendererState.RendererSettings.FOVVert))
+
+	float fovH, fovV;
+	if(zCCamera::GetCamera())
+		zCCamera::GetCamera()->GetFOV(fovH, fovV);
+
+	if(zCCamera::GetCamera() && (zCCamera::GetCamera() != CurrentCamera 
+		|| setfovH != RendererState.RendererSettings.FOVHoriz 
+		|| setfovV != RendererState.RendererSettings.FOVVert
+		|| (fovH == 90.0f && fovV == 90.0f))) // FIXME: This is being reset after a dialog!
 	{
 		setfovH = RendererState.RendererSettings.FOVHoriz;
 		setfovV = RendererState.RendererSettings.FOVVert;
@@ -2948,6 +2959,8 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 	float vobOutdoorSmallDist = Engine::GAPI->GetRendererState()->RendererSettings.OutdoorSmallVobDrawRadius;
 	float vobSmallSize = Engine::GAPI->GetRendererState()->RendererSettings.SmallVobSize;
 
+	std::list<VobInfo*> removeList; // FIXME: This should not be needed!
+
 	// Add visible dynamically added vobs
 	for(std::list<VobInfo*>::iterator it = DynamicallyAddedVobs.begin(); it != DynamicallyAddedVobs.end(); it++)
 	{
@@ -2961,6 +2974,15 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 				(dist < vobOutdoorSmallDist && (*it)->VisualInfo->MeshSize < vobSmallSize) || 
 				(dist < vobOutdoorDist)))
 			{
+#ifdef BUILD_GOTHIC_1_08k
+				// FIXME: This is sometimes NULL, suggesting that the Vob is invalid. Why does this happen?
+				if(!(*it)->VobConstantBuffer)
+				{
+					removeList.push_back((*it));
+					continue;
+				}
+#endif
+
 				//if(memcmp(&(*it)->LastRenderPosition, (*it)->Vob->GetPositionWorld(), sizeof(D3DXVECTOR3)) != 0)
 				{
 					(*it)->LastRenderPosition = (*it)->Vob->GetPositionWorld();
@@ -2985,6 +3007,15 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 			}
 		}
 	}
+
+#ifdef BUILD_GOTHIC_1_08k
+	// FIXME: See above for info on this
+	for(auto it = removeList.begin();it!=removeList.end();it++)
+	{
+		RegisteredVobs.insert((*it)->Vob); // This vob isn't in this set anymore, but still in DynamicallyAddedVobs??
+		OnRemovedVob((*it)->Vob, oCGame::GetGame()->_zCSession_world);
+	}
+#endif
 }
 
 /** Collects visible sections from the current camera perspective */
@@ -3651,6 +3682,18 @@ void GothicAPI::RemoveSurface(MyDirectDrawSurface7* surface)
 std::list<SkeletalVobInfo *>& GothicAPI::GetSkeletalMeshVobs()
 {
 	return SkeletalMeshVobs;
+}
+
+/** Returns a texture from the given surface */
+zCTexture* GothicAPI::GetTextureBySurface(MyDirectDrawSurface7* surface)
+{
+	for(auto it = LoadedMaterials.begin();it != LoadedMaterials.end(); it++)
+	{
+		if((*it)->GetTexture() && (*it)->GetTexture()->GetSurface() == surface)
+			return (*it)->GetTexture();
+	}
+
+	return NULL;
 }
 
 /** Resets all vob-stats drawn this frame */
@@ -4531,4 +4574,12 @@ GOcean* GothicAPI::GetOcean()
 BspInfo* GothicAPI::GetNewRootNode()
 {
 	return &BspLeafVobLists[LoadedWorldInfo->BspTree->GetRootNode()];
+}
+
+/** Prints a message to the screen for the given amount of time */
+void GothicAPI::PrintMessageTimed(const INT2& position, const std::string& strMessage, float time, DWORD color)
+{
+	zCView* view = oCGame::GetGame()->GetGameView();
+	if(view)
+		view->PrintTimed(position.x, position.y, zSTRING(strMessage.c_str()), time, &color);
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "HookedFunctions.h"
+#include "oCGame.h"
 
 class zCView
 {
@@ -26,4 +27,9 @@ public:
 		hook_outfunc
 	}
 
+	/** Prints a message to the screen */
+	void PrintTimed(int posX, int posY, const zSTRING& strMessage, float time = 3000.0f, DWORD* col = NULL)
+	{
+		XCALL(GothicMemoryLocations::zCView::PrintTimed);
+	}
 };

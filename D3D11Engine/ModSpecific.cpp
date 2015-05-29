@@ -12,7 +12,7 @@ namespace ModSpecific
 			return NRMPACK_ORIGINAL;
 
 		// This hopefully gets all versions of this mod
-		if(gameini.find("LHIVER") != std::string::npos)
+		if(gameini.find("HIVER") != std::string::npos)
 			return NRMPACK_LHIVER;
 
 		if(gameini == "ODYSSEY.INI")
