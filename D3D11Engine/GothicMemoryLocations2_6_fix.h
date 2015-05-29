@@ -79,6 +79,7 @@ struct GothicMemoryLocations
 		static const unsigned int EnterWorld = 0x006C96F0;
 		static const unsigned int TestKeys = 0x006FD560;
 		static const unsigned int Var_Player = 0x00AB2684;
+		static const unsigned int Offset_GameView = 0x30;
 	};
 
 	struct oCNPC
@@ -95,6 +96,7 @@ struct GothicMemoryLocations
 		static const unsigned int SetMode = 0x007ABDB0;
 		static const unsigned int REPL_SetMode_ModechangeStart = 0x007ABDD9;
 		static const unsigned int REPL_SetMode_ModechangeEnd = 0x007ABDE8;
+		static const unsigned int PrintTimed = 0x007A7D20;
 	};
 
 	struct zCObject
@@ -307,6 +309,7 @@ struct GothicMemoryLocations
 		static const unsigned int BBox3DInFrustum = 0x0054B410;
 		static const unsigned int Var_FreeLook = 0x008CE42C;
 		static const unsigned int SetFOV = 0x0054A960;
+		static const unsigned int GetFOV_f2 = 0x0054A8F0;
 	};
 
 	struct zCProgMeshProto
@@ -405,6 +408,7 @@ struct GothicMemoryLocations
 	struct zSTRING
 	{
 		static const unsigned int ToChar = 0x004639D0;
+		static const unsigned int ConstructorCharPtr = 0x004010C0;
 	};
 
 

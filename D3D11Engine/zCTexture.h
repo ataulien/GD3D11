@@ -141,7 +141,8 @@ public:
 			zCResourceManager::GetResourceManager()->CacheIn(this, zCTextureCacheHack::ForceCacheIn ? -1 : priority);
 		}
 
-		if(!GetSurface() || !GetSurface()->IsSurfaceReady())
+		MyDirectDrawSurface7* surface = GetSurface();
+		if(!surface || !surface->IsSurfaceReady())
 		{
 			if(zCTextureCacheHack::ForceCacheIn)
 				zCResourceManager::GetResourceManager()->CacheIn(this, -1);

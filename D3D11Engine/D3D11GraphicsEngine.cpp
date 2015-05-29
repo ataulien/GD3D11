@@ -108,6 +108,7 @@ D3D11GraphicsEngine::D3D11GraphicsEngine(void)
 	RenderingStage = DES_MAIN;
 
 	PresentPending = false;
+	SaveScreenshotNextFrame = false;
 
 	LineRenderer = new D3D11LineRenderer;
 	Occlusion = new D3D11OcclusionQuerry;
@@ -1619,6 +1620,13 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 
 	SetDefaultStates();
 
+	// Save screenshot if wanted
+	if(SaveScreenshotNextFrame)
+	{
+		SaveScreenshot();
+		SaveScreenshotNextFrame = false;
+	}
+
 	return XR_SUCCESS;
 }
 
@@ -1831,6 +1839,27 @@ XRESULT D3D11GraphicsEngine::DrawMeshInfoListAlphablended(const std::vector<std:
 		}
 	}
 
+	Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = true;
+	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
+	Engine::GAPI->GetRendererState()->BlendState.ColorWritesEnabled = false;
+	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
+
+	UpdateRenderStates();
+
+	// Draw again, but only to depthbuffer this time to make them work with fogging
+	for(auto it = list.begin(); it != list.end(); it++)
+	{
+		if((*it).first.Material->GetAniTexture() != NULL)
+		{
+			// Draw the section-part
+			DrawVertexBufferIndexedUINT(NULL, NULL, 
+				(*it).second->Indices.size(),
+				(*it).second->BaseIndexLocation);
+		}
+	}
+
+	SetDefaultStates();
+
 	return XR_SUCCESS;
 }
 
@@ -1893,6 +1922,9 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 
 					if(!aniTex)
 						continue;
+
+					if(stricmp(aniTex->GetNameWithoutExt().c_str(), "NW_MISC_ROOF_01") == 0) 
+						LogInfo() << "XXX";
 
 					if(i == 1) // Second try, this is only true if we have many unloaded textures
 					{
@@ -1957,12 +1989,6 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	{
 		static bool cmp(const std::pair<MeshKey, MeshInfo *>& a, const std::pair<MeshKey, MeshInfo *>& b)
 		{
-			if(a.first.Texture->HasAlphaChannel())
-				return false; // Render alpha last
-
-			if(b.first.Texture->HasAlphaChannel())
-				return true; // Render alpha last
-
 			return a.first.Texture < b.first.Texture;
 		}
 	};
@@ -3885,6 +3911,10 @@ XRESULT D3D11GraphicsEngine::OnKeyDown(unsigned int key)
 		ReloadShaders();
 		break;
 
+	case VK_NUMPAD7:
+		SaveScreenshotNextFrame = true;
+		break;
+
 	case VK_F1:		
 		if(!UIView && !Engine::GAPI->GetRendererState()->RendererSettings.EnableEditorPanel)
 		{
@@ -5360,4 +5390,55 @@ void D3D11GraphicsEngine::UpdateOcclusion()
 	Occlusion->EndOcclusionPass();
 
 	SetDefaultStates();
+}
+
+/** Saves a screenshot */
+void D3D11GraphicsEngine::SaveScreenshot()
+{
+	HRESULT hr;
+
+	// Buffer for scaling down the image
+	RenderToTextureBuffer* rt = new RenderToTextureBuffer(Device, Resolution.x, Resolution.y, DXGI_FORMAT_R8G8B8A8_UNORM);
+
+	// Downscale to 256x256
+	PfxRenderer->CopyTextureToRTV(HDRBackBuffer->GetShaderResView(), rt->GetRenderTargetView());
+
+	D3D11_TEXTURE2D_DESC texDesc;
+	texDesc.ArraySize = 1;
+	texDesc.BindFlags = 0;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.Width = Resolution.x;  // must be same as backbuffer
+	texDesc.Height = Resolution.y; // must be same as backbuffer
+	texDesc.MipLevels = 1;
+	texDesc.MiscFlags = 0;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	ID3D11Texture2D *texture;
+	LE(Device->CreateTexture2D(&texDesc, 0, &texture));
+	Context->CopyResource(texture, rt->GetTexture());
+
+	char date[50];
+	char time[50];
+
+	// Format the filename
+	GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL,"dd_MM_yyyy",date,50);
+	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, "hh_mm_ss", time, 50);
+
+	// Create new folder if needed
+	CreateDirectory("system\\Screenshots", NULL);
+
+	std::string name = "system\\screenshots\\G2D3D11_" + std::string(date) + "__" + std::string(time) + ".jpg";
+
+	LogInfo() << "Saving screenshot to: " << name;
+
+	LE( D3DX11SaveTextureToFile(Context, texture, D3DX11_IFF_JPG, name.c_str()) );
+	texture->Release();
+
+	delete rt;
+
+	// Inform the user that a screenshot has been taken
+	Engine::GAPI->PrintMessageTimed(INT2(30,30), "Screenshot taken: " + name);
 }

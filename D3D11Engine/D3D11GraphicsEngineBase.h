@@ -188,6 +188,9 @@ public:
 	/** Creates a pipeline state */
 	virtual PipelineState* CreatePipelineState(const PipelineState* copy = NULL);
 
+	/** Saves a screenshot */
+	virtual void SaveScreenshot(){}
+
 	/** Draws a vertexarray, used for rendering gothics UI */
 	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct));
 

@@ -93,6 +93,7 @@ void VobInfo::UpdateVobConstantBuffer()
 {
 	VS_ExConstantBuffer_PerInstance cb;
 	cb.World = *Vob->GetWorldMatrixPtr();
+
 	VobConstantBuffer->UpdateBuffer(&cb);
 
 	LastRenderPosition = Vob->GetPositionWorld();

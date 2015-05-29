@@ -289,9 +289,9 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_ShaderMakros, "Filter shadows", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableSoftShadows, NULL);
 	TwAddButton(Bar_ShaderMakros, "Apply", (TwButtonCallback)ReloadShadersButtonCallback, this, NULL); 
 
-	Bar_TextureSettings = TwNewBar("TextureSettings");
+	/*Bar_TextureSettings = TwNewBar("TextureSettings");
 	TwAddVarRW(Bar_TextureSettings, "Texture", TW_TYPE_CSSTRING(256), TS_TextureName, "");
-	TwDefine(" TextureSettings size='455 180' valueswidth=200 position='400 320'");
+	TwDefine(" TextureSettings size='455 180' valueswidth=200 position='400 320'");*/
 
 	return XR_SUCCESS;
 }
@@ -312,7 +312,7 @@ void BaseAntTweakBar::SetActive(bool value)
 
 	if(IsActive)
 	{
-		InitTextureSettingsBar();
+		//InitTextureSettingsBar();
 	}
 }
 
@@ -329,7 +329,7 @@ void BaseAntTweakBar::Draw()
 		TwDraw();
 
 		// Check texture name
-		if(LastFrameActiveMaterialInfo != ActiveMaterialInfo)
+		/*if(LastFrameActiveMaterialInfo != ActiveMaterialInfo)
 		{
 			if(ActiveMaterialInfo)
 			{
@@ -371,7 +371,7 @@ void BaseAntTweakBar::Draw()
 				// Do this every frame on this one info to get the changes to the constantbuffer from the anttweakbar
 				TS_FrameTexturesInfos[ActiveMaterialInfo].Info->UpdateConstantbuffer();
 			}
-		}
+		}*/
 	}
 }
  

@@ -8,7 +8,7 @@
 #include "zCWorld.h"
 #include "zCBspTree.h"
 
-class zView;
+class zCView;
 
 #define GOTHIC_KEY_F1 0x3B
 #define GOTHIC_KEY_F2 0x3C
@@ -64,13 +64,18 @@ public:
 		return *(oCNPC **)GothicMemoryLocations::oCGame::Var_Player;
 	}
 
+	zCView* GetGameView()
+	{
+		return *(zCView **)THISPTR_OFFSET(GothicMemoryLocations::oCGame::Offset_GameView);
+	}
+
     int _vtbl;
     int _zCSession_csMan;        //zCCSManager*
     zCWorld* _zCSession_world;        //zCWorld*
     int _zCSession_camera;       //zCCamera*
     int _zCSession_aiCam;        //zCAICamera*
     zCVob* _zCSession_camVob;       //zCVob*
-    zView* _zCSession_viewport;     //zCView*
+    zCView* _zCSession_viewport;     //zCView*
 
 	static oCGame* GetGame() { return *(oCGame**)GothicMemoryLocations::GlobalObjects::oCGame; };
 };

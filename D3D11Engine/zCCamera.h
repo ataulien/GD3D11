@@ -47,6 +47,16 @@ public:
 #endif
 	}
 
+	void GetFOV(float& fovH, float& fovV)
+	{
+#ifdef BUILD_GOTHIC_2_6_fix
+		XCALL(GothicMemoryLocations::zCCamera::GetFOV_f2);
+#else
+		fovH = 90.0f;
+		fovV = 90.0f;
+#endif
+	}
+
 	void UpdateViewport()
 	{
 		XCALL(GothicMemoryLocations::zCCamera::UpdateViewport);

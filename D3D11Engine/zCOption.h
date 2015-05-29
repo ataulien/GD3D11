@@ -37,6 +37,15 @@ public:
 		return cmdLine.find("-" + cmd) != std::string::npos;
 	}
 
+	/** Returns the commandline */
+	std::string GetCommandline()
+	{
+		zSTRING* zCmdline = (zSTRING *)THISPTR_OFFSET(GothicMemoryLocations::zCOption::Offset_CommandLine);
+		std::string cmdLine = zCmdline->ToChar();
+
+		return cmdLine;
+	}
+
 	/** Returns the value of the given parameter. If the parameter is not in the commandline, it returns "" */
 	std::string ParameterValue(const std::string& str)
 	{
