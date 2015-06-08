@@ -35,9 +35,11 @@ struct ParticleRenderInfo
 
 struct ParticleInstanceInfo
 {
-	D3DXMATRIX worldview;
-	DWORD color;
+	float3 position;
+	float4 color;
 	float2 scale;
+	int drawMode; // 0 = billboard, 1 = y-locked billboard, 2 = y-plane, 3 = velo aligned
+	float3 velocity;
 };
 
 struct MeshKey
@@ -76,8 +78,6 @@ struct VisualTesselationSettings
 		buffer.VT_Roundness = 1.0f;
 		buffer.VT_TesselationFactor = 0.0f;
 		Constantbuffer = NULL;
-
-		UpdateConstantbuffer();
 	}
 
 	~VisualTesselationSettings()
@@ -628,5 +628,8 @@ public:
 
 	/** Converts ExVertexStruct into a zCPolygon*-Attay */
 	static void ConvertExVerticesTozCPolygons(const std::vector<ExVertexStruct>& vertices, const std::vector<VERTEX_INDEX>& indices, zCMaterial* material, std::vector<zCPolygon *>& polyArray);
+
+	/** Tesselates the given mesh the given amount of times */
+	static void TesselateMesh(WorldMeshInfo* mesh, int amount = 1);
 };
 

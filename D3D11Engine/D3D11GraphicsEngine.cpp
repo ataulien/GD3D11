@@ -6,6 +6,7 @@
 #include "D3D11PShader.h"
 #include "D3D11VShader.h"
 #include "D3D11HDShader.h"
+#include "D3D11GShader.h"
 #include "D3D11ConstantBuffer.h"
 #include "D3D11Texture.h"
 #include "Engine.h"
@@ -38,6 +39,7 @@
 #include "win32ClipboardWrapper.h"
 #include "D3D11OcclusionQuerry.h"
 #include "ModSpecific.h"
+#include "D3D11Effect.h"
 
 //#include "MemoryTracker.h"
 
@@ -66,6 +68,7 @@ D3D11GraphicsEngine::D3D11GraphicsEngine(void)
 	DepthStencilBuffer = NULL;
 	Device = NULL;
 	Context = NULL;
+	ReflectionCube2 = NULL;
 	DistortionTexture = NULL;
 	DeferredContext = NULL;
 	UIView = NULL;
@@ -105,6 +108,8 @@ D3D11GraphicsEngine::D3D11GraphicsEngine(void)
 	CubeSamplerState = NULL;
 	ClampSamplerState = NULL;
 
+	Effects = new D3D11Effect;
+
 	RenderingStage = DES_MAIN;
 
 	PresentPending = false;
@@ -127,6 +132,7 @@ D3D11GraphicsEngine::~D3D11GraphicsEngine(void)
 	GothicBlendStateInfo::DeleteCachedObjects();
 	GothicRasterizerStateInfo::DeleteCachedObjects();
 
+	delete Effects; Effects = NULL;
 	delete Occlusion; Occlusion = NULL;
 	delete InfiniteRangeConstantBuffer;InfiniteRangeConstantBuffer = NULL;
 	delete OutdoorSmallVobsConstantBuffer;OutdoorSmallVobsConstantBuffer = NULL;
@@ -151,6 +157,7 @@ D3D11GraphicsEngine::~D3D11GraphicsEngine(void)
 	delete InverseUnitSphereMesh;InverseUnitSphereMesh = NULL;
 	delete UIView;UIView = NULL;
 
+	if(ReflectionCube2)ReflectionCube2->Release();
 	if(ReflectionCube)ReflectionCube->Release();
 	if (CubeSamplerState)CubeSamplerState->Release();
 	if (ClampSamplerState)ClampSamplerState->Release();
@@ -273,6 +280,7 @@ XRESULT D3D11GraphicsEngine::Init()
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
 	Device->CreateSamplerState(&samplerDesc, &ShadowmapSamplerState);
 	Context->PSSetSamplers(2, 1, &ShadowmapSamplerState);
+	Context->VSSetSamplers(2, 1, &ShadowmapSamplerState);
 
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
@@ -353,6 +361,9 @@ XRESULT D3D11GraphicsEngine::Init()
 	if(S_OK != D3DX11CreateShaderResourceViewFromFile(Device, "system\\GD3D11\\Textures\\reflect_cube.dds", NULL, NULL, &ReflectionCube, NULL))
 		LogWarn() << "Failed to load file: system\\GD3D11\\Textures\\reflect_cube.dds";
 
+	if(S_OK != D3DX11CreateShaderResourceViewFromFile(Device, "system\\GD3D11\\Textures\\SkyCubemap2.dds", NULL, NULL, &ReflectionCube2, NULL))
+		LogWarn() << "Failed to load file: system\\GD3D11\\Textures\\SkyCubemap2.dds";
+	
 
 	// Init quad buffers
 	Engine::GraphicsEngine->CreateVertexBuffer(&QuadVertexBuffer);
@@ -681,6 +692,7 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame()
 	PS_DiffuseNormalmappedAlphatest = ShaderManager->GetPShader("PS_DiffuseNormalmappedAlphaTest");
 	PS_DiffuseAlphatest = ShaderManager->GetPShader("PS_DiffuseAlphaTest");
 	PS_Simple = ShaderManager->GetPShader("PS_Simple");
+	GS_Billboard = ShaderManager->GetGShader("GS_Billboard");
 	return XR_SUCCESS;
 }
 
@@ -1165,7 +1177,15 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBu
 	{
 		MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom(tex);
 		if(!info->Constantbuffer)
-			info->UpdateConstantbuffer();
+			info->UpdateConstantbuffer(); // TODO: Slow, save this somewhere!
+
+		// FIXME: Currently bodies and faces look really glossy. 
+		//		  This is only a temporary fix!	
+		if(info->buffer.SpecularIntensity != 0.05f)
+		{
+			info->buffer.SpecularIntensity = 0.05f;
+			info->UpdateConstantbuffer(); 
+		}
 
 		info->Constantbuffer->BindToPixelShader(2);
 
@@ -1504,6 +1524,9 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	// FIXME: Hack for texture caching!
 	zCTextureCacheHack::NumNotCachedTexturesInFrame = 0;
 
+	// Re-Bind the default sampler-state in case it was overwritten
+	Context->PSSetSamplers(0, 1, &DefaultSamplerState);
+
 	// Update view distances
 	InfiniteRangeConstantBuffer->UpdateBuffer(&D3DXVECTOR4(FLT_MAX, 0, 0, 0));
 	OutdoorSmallVobsConstantBuffer->UpdateBuffer(&D3DXVECTOR4(Engine::GAPI->GetRendererState()->RendererSettings.OutdoorSmallVobDrawRadius, 0, 0, 0));
@@ -1557,6 +1580,9 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 		Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR)
 		PfxRenderer->RenderHeightfog();
 
+	// Draw rain
+	if(Engine::GAPI->GetRainFXWeight() > 0.0f)
+		Effects->DrawRain();
 
 	SetActivePixelShader("PS_Simple");
 	SetActiveVertexShader("VS_Ex");
@@ -1656,6 +1682,7 @@ void D3D11GraphicsEngine::SetupVS_ExConstantBuffer()
 	ActiveVS->GetConstantBuffer()[0]->BindToVertexShader(0);
 	ActiveVS->GetConstantBuffer()[0]->BindToDomainShader(0);
 	ActiveVS->GetConstantBuffer()[0]->BindToHullShader(0);
+	ActiveVS->GetConstantBuffer()[0]->BindToGeometryShader(0);
 }
 
 void D3D11GraphicsEngine::SetupVS_ExPerInstanceConstantBuffer()
@@ -1886,6 +1913,9 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
 
+	// Bind reflection-cube to slot 4
+	Context->PSSetShaderResources(4, 1, &ReflectionCube);
+
 	// Set constant buffer
 	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&Engine::GAPI->GetRendererState()->GraphicsState);
 	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
@@ -1923,8 +1953,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 					if(!aniTex)
 						continue;
 
-					if(stricmp(aniTex->GetNameWithoutExt().c_str(), "NW_MISC_ROOF_01") == 0) 
-						LogInfo() << "XXX";
+					//if(stricmp(aniTex->GetNameWithoutExt().c_str(), "NW_MISC_ROOF_01") == 0) 
+					//	LogInfo() << "XXX";
 
 					if(i == 1) // Second try, this is only true if we have many unloaded textures
 					{
@@ -2119,7 +2149,8 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		}
 
 		// Check for tesselated mesh
-		if(tesselationEnabled && !ActiveHDS && (*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
+		//if(tesselationEnabled && !ActiveHDS && (*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
+		if(tesselationEnabled && !ActiveHDS && boundInfo->TextureTesselationSettings.buffer.VT_TesselationFactor > 0.0f)
 		{
 			// Set normal/displacement map
 			Context->DSSetShaderResources(0,1, &boundNormalmap);
@@ -2128,10 +2159,13 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		}
 
 		// Bind infos for this mesh
-		if((*it).second->TesselationSettings.buffer.VT_TesselationFactor > 0.0f)
+		if(boundInfo->TextureTesselationSettings.buffer.VT_TesselationFactor > 0.0f && !(*it).second->IndicesPNAEN.empty())
 		{
-			(*it).second->TesselationSettings.Constantbuffer->BindToDomainShader(1);
-			(*it).second->TesselationSettings.Constantbuffer->BindToHullShader(1);
+			//(*it).second->TesselationSettings.Constantbuffer->BindToDomainShader(1);
+			//(*it).second->TesselationSettings.Constantbuffer->BindToHullShader(1);
+
+			boundInfo->TextureTesselationSettings.Constantbuffer->BindToDomainShader(1);
+			boundInfo->TextureTesselationSettings.Constantbuffer->BindToHullShader(1);
 		}else if(ActiveHDS) // Unbind tesselation-shaders if the mesh doesn't support it
 		{
 			Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -2583,11 +2617,11 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 }
 
 /** Draws everything around the given position */
-void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int sectionRange, float vobXZRange)
+void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int sectionRange, float vobXZRange, bool cullFront)
 {
 	// Setup renderstates
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDefault();
-	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_FRONT;
+	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = cullFront ? GothicRasterizerStateInfo::CM_CULL_FRONT : GothicRasterizerStateInfo::CM_CULL_BACK;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
 	Engine::GAPI->GetRendererState()->DepthState.SetDefault();
@@ -2647,6 +2681,8 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
 	UpdateRenderStates();
 
+	float alphaRef = Engine::GAPI->GetRendererState()->GraphicsState.FF_AlphaRef;
+
 	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawWorldMesh)
 	{
 		// Bind wrapped mesh vertex buffers
@@ -2686,7 +2722,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 							{
 								if((*it).first.Material->GetTexture()->HasAlphaChannel())
 								{
-									if((*it).first.Material->GetTexture()->CacheIn(0.6f) == zRES_CACHED_IN)
+									if(alphaRef > 0.0f && (*it).first.Material->GetTexture()->CacheIn(0.6f) == zRES_CACHED_IN)
 									{
 										(*it).first.Material->GetTexture()->Bind(0);
 										ActivePS->Apply();
@@ -2899,7 +2935,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 						// Bind texture
 						if(tx && tx->HasAlphaChannel())
 						{
-							if(tx->CacheIn(0.6f) == zRES_CACHED_IN)
+							if(alphaRef > 0.0f && tx->CacheIn(0.6f) == zRES_CACHED_IN)
 							{
 								tx->Bind(0);
 								ActivePS->Apply();
@@ -3896,12 +3932,6 @@ void D3D11GraphicsEngine::DrawCloudMeshes()
 	srand(timeGetTime());
 }
 
-/** Returns the shadermanager */
-D3D11ShaderManager* D3D11GraphicsEngine::GetShaderManager()
-{
-	return ShaderManager;
-}
-
 /** Called when a key got pressed */
 XRESULT D3D11GraphicsEngine::OnKeyDown(unsigned int key)
 {
@@ -4028,13 +4058,19 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 
 	if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR) // Indoor worlds don't need shadowmaps for the world
 	{
-		RenderShadowmaps(WorldShadowCP);
+			RenderShadowmaps(WorldShadowCP);
 	}
 
 	SetDefaultStates();
 
 	// Restore gothics camera
 	Engine::GAPI->SetCameraReplacementPtr(NULL);
+
+	// Draw rainmap, if raining
+	if(Engine::GAPI->GetSceneWetness() > 0.00001f)
+	{
+		Effects->DrawRainShadowmap();
+	}
 
 	D3DXMATRIX view;
 	Engine::GAPI->GetViewMatrix(&view);
@@ -4189,14 +4225,30 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 	DS_ScreenQuadConstantBuffer scb;
 	scb.SQ_InvProj = plcb.PL_InvProj;
 	scb.SQ_InvView = plcb.PL_InvView;
+	scb.SQ_View = Engine::GAPI->GetRendererState()->TransformState.TransformView;
+
 	D3DXVec3TransformNormal(scb.SQ_LightDirectionVS.toD3DXVECTOR3(), sky->GetAtmosphereCB().AC_LightPos.toD3DXVECTOR3(), &view);
 
 	float3 sunColor = Engine::GAPI->GetRendererState()->RendererSettings.SunLightColor;
-	scb.SQ_LightColor = float4(sunColor.x, sunColor.y, sunColor.z,Engine::GAPI->GetRendererState()->RendererSettings.SunLightStrength);
+
+	// Modify light when raining
+	float rain = Engine::GAPI->GetRainFXWeight();
+	float wetness = Engine::GAPI->GetSceneWetness();
+
+	float sunStrength = Toolbox::lerp(Engine::GAPI->GetRendererState()->RendererSettings.SunLightStrength, 
+		Engine::GAPI->GetRendererState()->RendererSettings.RainSunLightStrength, 
+		std::min(1.0f, rain * 2.0f)); // Scale the darkening-factor faster here, so it matches more with the increasing fog-density
+
+	scb.SQ_LightColor = float4(sunColor.x, sunColor.y, sunColor.z, sunStrength);
 
 	scb.SQ_ShadowView = cr.ViewReplacement;
 	scb.SQ_ShadowProj = cr.ProjectionReplacement;
 	scb.SQ_ShadowmapSize = (float)WorldShadowmap1->GetSizeX();
+
+	// Get rain matrix
+	//scb.SQ_RainViewProj = Effects->GetRainShadowmapCameraRepl().ViewReplacement * Effects->GetRainShadowmapCameraRepl().ProjectionReplacement;
+	scb.SQ_RainView = Effects->GetRainShadowmapCameraRepl().ViewReplacement;
+	scb.SQ_RainProj = Effects->GetRainShadowmapCameraRepl().ProjectionReplacement;
 
 	//scb.SQ_ProjAB.x = Engine::GAPI->GetFarPlane() / (Engine::GAPI->GetFarPlane() - Engine::GAPI->GetNearPlane());
 	//scb.SQ_ProjAB.y = (-Engine::GAPI->GetFarPlane() * Engine::GAPI->GetNearPlane()) / (Engine::GAPI->GetFarPlane() - Engine::GAPI->GetNearPlane());
@@ -4215,7 +4267,15 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 
 	WorldShadowmap1->BindToPixelShader(Context, 3);
 
+
+	if(Effects->GetRainShadowmap())
+		Effects->GetRainShadowmap()->BindToPixelShader(Context, 4);
+
 	Context->PSSetSamplers(2,1, &ShadowmapSamplerState);
+
+	Context->PSSetShaderResources(5, 1, &ReflectionCube2);
+
+	DistortionTexture->BindToPixelShader(6);
 
 	PfxRenderer->DrawFullScreenQuad();
 
@@ -4244,8 +4304,13 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 }
 
 /** Renders the shadowmaps for the sun */
-void D3D11GraphicsEngine::RenderShadowmaps(const D3DXVECTOR3& cameraPosition)
+void D3D11GraphicsEngine::RenderShadowmaps(const D3DXVECTOR3& cameraPosition, RenderToDepthStencilBuffer* target, bool cullFront)
 {
+	if(!target)
+	{
+		target = WorldShadowmap1;
+	}
+
 	D3D11_VIEWPORT oldVP;
 	UINT n = 1;
 	Context->RSGetViewports(&n, &oldVP);
@@ -4256,9 +4321,10 @@ void D3D11GraphicsEngine::RenderShadowmaps(const D3DXVECTOR3& cameraPosition)
 	vp.TopLeftY = 0;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
-	vp.Width = (float)WorldShadowmap1->GetSizeX();
-	vp.Height = (float)WorldShadowmap1->GetSizeX();
+	vp.Width = (float)target->GetSizeX();
+	vp.Height = (float)target->GetSizeX();
 	Context->RSSetViewports(1, &vp);
+
 
 	// Set the rendering stage
 	D3D11ENGINE_RENDER_STAGE oldStage = RenderingStage;
@@ -4270,28 +4336,28 @@ void D3D11GraphicsEngine::RenderShadowmaps(const D3DXVECTOR3& cameraPosition)
 
 	ID3D11ShaderResourceView* srv = NULL;
 	Context->PSSetShaderResources(3,1,&srv);
-	Context->OMSetRenderTargets(0, NULL, WorldShadowmap1->GetDepthStencilView());
+	Context->OMSetRenderTargets(0, NULL, target->GetDepthStencilView());
 	//Context->OMSetRenderTargets(1, GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetViewPtr(), WorldShadowmap1->GetDepthStencilView());
 
 	//Engine::GAPI->SetFarPlane(20000.0f);
 
 	// Dont render shadows from the sun when it isn't on the sky
-	if (Engine::GAPI->GetSky()->GetAtmoshpereSettings().LightDirection.y > 0 && 
+	if ((target != WorldShadowmap1 || Engine::GAPI->GetSky()->GetAtmoshpereSettings().LightDirection.y > 0) && // Only stop rendering if the sun is down on main-shadowmap //TODO: Take this out of here!
 		Engine::GAPI->GetRendererState()->RendererSettings.DrawShadowGeometry &&
 		Engine::GAPI->GetRendererState()->RendererSettings.EnableShadows)
 	{
-		Context->ClearDepthStencilView(WorldShadowmap1->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+		Context->ClearDepthStencilView(target->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 		// Draw the world mesh without textures
-		DrawWorldAround(cameraPosition, 2, 10000.0f);
+		DrawWorldAround(cameraPosition, 2, 10000.0f, cullFront);
 	}else
 	{
 		if(Engine::GAPI->GetSky()->GetAtmoshpereSettings().LightDirection.y <= 0)
 		{
-			Context->ClearDepthStencilView(WorldShadowmap1->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 0.0f, 0); // Always shadow in the night
+			Context->ClearDepthStencilView(target->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 0.0f, 0); // Always shadow in the night
 		}else
 		{
-			Context->ClearDepthStencilView(WorldShadowmap1->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0); // Clear shadowmap when shadows not enabled
+			Context->ClearDepthStencilView(target->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0); // Clear shadowmap when shadows not enabled
 		}
 	}
 
@@ -4843,7 +4909,6 @@ void D3D11GraphicsEngine::DrawDecalList(const std::vector<zCVob *>& decals, bool
 		//DrawVertexBufferIndexed(QuadVertexBuffer, QuadIndexBuffer, 6);
 
 		ParticleInstanceInfo ii;
-		ii.worldview = mat;
 		ii.scale = D3DXVECTOR2(50,50);
 		ii.color = 0xFFFFFFFF;
 
@@ -5143,6 +5208,25 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 
 	int lastBlendMode = -1;
 
+	// Bind view/proj
+	SetupVS_ExConstantBuffer();
+
+	// Setup GS
+	GS_Billboard->Apply();
+
+	ParticleGSInfoConstantBuffer gcb;
+	gcb.CameraPosition = Engine::GAPI->GetCameraPosition();
+	GS_Billboard->GetConstantBuffer()[0]->UpdateBuffer(&gcb);
+	GS_Billboard->GetConstantBuffer()[0]->BindToGeometryShader(2);
+
+	SetActiveVertexShader("VS_ParticlePoint");
+	ActiveVS->Apply();
+
+	// Rendering points only
+	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+	UpdateRenderStates();
+
 	for(auto it = pvec.begin();it!=pvec.end();it++)
 	{
 		zCTexture* tx = std::get<0>((*it));
@@ -5190,10 +5274,28 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 			}
 		}
 
-		DrawInstanced(QuadVertexBuffer, QuadIndexBuffer, 6, &instances[0], sizeof(ParticleInstanceInfo), instances.size());
+		// Push data for the particles to the GPU
+		D3D11_BUFFER_DESC desc;
+		((D3D11VertexBuffer *)TempVertexBuffer)->GetVertexBuffer()->GetDesc(&desc);
+
+		if(desc.ByteWidth < sizeof(ParticleInstanceInfo) * instances.size())
+		{
+			LogInfo() << "(PARTICLE) TempVertexBuffer too small (" << desc.ByteWidth << "), need " << sizeof(ParticleInstanceInfo) * instances.size() << " bytes. Recreating buffer.";
+
+			// Buffer too small, recreate it
+			delete TempVertexBuffer;
+			TempVertexBuffer = new D3D11VertexBuffer();
+
+			TempVertexBuffer->Init(NULL, sizeof(ParticleInstanceInfo) * instances.size(), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		}
+
+		TempVertexBuffer->UpdateBuffer(&instances[0], sizeof(ParticleInstanceInfo) * instances.size());
+		
+		DrawVertexBuffer(TempVertexBuffer, instances.size(), sizeof(ParticleInstanceInfo));
 	}
 
-
+	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	Context->GSSetShader(NULL, 0, 0);
 
 	// Set usual rendertarget again
 	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
@@ -5212,6 +5314,9 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 
 	// Copy it back, putting distortion behind it
 	PfxRenderer->CopyTextureToRTV(PfxRenderer->GetTempBuffer()->GetShaderResView(), HDRBackBuffer->GetRenderTargetView(), INT2(0,0), true);
+
+
+	
 
 	SetDefaultStates();
 }
@@ -5358,6 +5463,12 @@ void D3D11GraphicsEngine::DrawParticleEffects()
 			DynamicInstancingBuffer->Init(NULL, data.NeededSize, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
 		}
 	}
+}
+
+/** Draws the particle-effects using the geometry shader */
+void D3D11GraphicsEngine::DrawParticleEffectsGS()
+{
+	PS_Simple->Apply();
 }
 
 

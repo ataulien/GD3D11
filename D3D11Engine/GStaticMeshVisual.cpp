@@ -7,6 +7,7 @@
 #include "GVobObject.h"
 #include "zCVob.h"
 #include "zCMaterial.h"
+#include <stdio.h>
 
 const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceInfo) * 64; // TODO: This is too small! But higher values are too memory intensive!
 
@@ -21,6 +22,8 @@ GStaticMeshVisual::GStaticMeshVisual(zCVisual* sourceVisual) : GVisual(sourceVis
 
 	// Create pipelinestates and instancing buffer
 	SwitchInstanceSpecificResources();
+
+	Instancing.InstancingBufferData = NULL;
 }
 
 
@@ -110,8 +113,7 @@ void GStaticMeshVisual::RegisterInstance(const RenderInfo& info)
 			{
 
 				// Huge safety-check to see if gothic didn't mess this up
-				if(PipelineStates[s]->BaseState.TextureIDs[0] == 0xFFFF ||
-					PipelineStates[s]->BaseState.ConstantBuffersVS[1] == NULL)
+				if(PipelineStates[s]->BaseState.TextureIDs[0] == 0xFFFF)
 				{
 
 					// Only draw if the texture is loaded
@@ -131,14 +133,16 @@ void GStaticMeshVisual::RegisterInstance(const RenderInfo& info)
 				}
 
 				// Give our instancingbuffer to the state
-				PipelineStates[s]->BaseState.VertexBuffers[1] = Instancing.InstancingBuffer;
-				PipelineStates[s]->BaseState.VertexStride[1] = sizeof(VobInstanceInfo);
-				Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates[s]);
+				if(PipelineStates[s]->BaseState.VertexBuffers[1] != Instancing.InstancingBuffer)
+				{
+					PipelineStates[s]->BaseState.VertexBuffers[1] = Instancing.InstancingBuffer;
+					PipelineStates[s]->BaseState.VertexStride[1] = sizeof(VobInstanceInfo);
+					Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates[s]);
 
-				PipelineStates[s]->BaseState.NumInstances = 0;
-
+					PipelineStates[s]->BaseState.NumInstances = 0;
+					}
 				// Register this state, instances are added afterwards
-				Engine::GraphicsEngine->PushPipelineState(PipelineStates[s]);
+				//Engine::GraphicsEngine->PushPipelineState(PipelineStates[s]);
 				s++;
 			}
 		}
@@ -148,13 +152,18 @@ void GStaticMeshVisual::RegisterInstance(const RenderInfo& info)
 		return; // Failed to map?
 
 	// arrayPos is valid, add the instance
-	memcpy((Instancing.InstancingBufferData) + arrayPos, &info.CallingVob->GetInstanceInfo(), sizeof(VobInstanceInfo));
+	//memcpy((Instancing.InstancingBufferData) + arrayPos, &info.CallingVob->GetInstanceInfo(), sizeof(VobInstanceInfo));
+	
+	//VobInstanceInfo* ii = ((VobInstanceInfo*)(Instancing.InstancingBufferData + arrayPos));
+	//*ii = info.CallingVob->GetInstanceInfo();
+	//std::copy(&info.CallingVob->GetInstanceInfo(), (&info.CallingVob->GetInstanceInfo()) + 1, ii);
+
 	Instancing.NumRegisteredInstances++;
 
 	// Save, in case we have to recreate the buffer. // TODO: This is only a temporary solution for the BSP-Pre-Draw
 	Instancing.FrameInstanceData.push_back(info.CallingVob->GetInstanceInfo());
 
-	int s = 0;
+	/*int s = 0;
 	for(auto it = VisualInfo.Meshes.begin();it != VisualInfo.Meshes.end(); it++)
 	{
 		std::vector<MeshInfo*>& meshes = (*it).second;
@@ -163,7 +172,7 @@ void GStaticMeshVisual::RegisterInstance(const RenderInfo& info)
 			PipelineStates[s]->BaseState.NumInstances = Instancing.NumRegisteredInstances;
 			s++;
 		}
-	}
+	}*/
 }
 
 
@@ -253,7 +262,8 @@ void GStaticMeshVisual::OnBeginDraw()
 /** Called when we are done drawing */
 void GStaticMeshVisual::OnEndDraw()
 {
-	// Check if we actually had something to do this frame
+	EndDrawInstanced();
+	/*// Check if we actually had something to do this frame
 	if(Instancing.NumRegisteredInstances != 0)
 	{
 		// Yes! This means that the instancing-buffer currently is mapped.
@@ -263,7 +273,7 @@ void GStaticMeshVisual::OnEndDraw()
 
 		Instancing.NumRegisteredInstances = 0;
 		Instancing.FrameInstanceData.clear();
-	}
+	}*/
 }
 
 /** Draws the instances registered in this buffer */
@@ -275,15 +285,27 @@ void GStaticMeshVisual::DrawInstances()
 /** Doubles the size the instancing buffer can hold (Recreates buffer) */
 XRESULT GStaticMeshVisual::IncreaseInstancingBufferSize()
 {
+	std::vector<VobInstanceInfo> tempData;
+
 	// Unmap, in case we are mapped
 	if(Instancing.InstancingBufferData)
 	{
+		// Save old data
+		//tempData.resize(Instancing.NumRegisteredInstances);
+		//memcpy(&tempData[0], Instancing.InstancingBufferData, Instancing.NumRegisteredInstances * sizeof(VobInstanceInfo));
+
 		XLE(Instancing.InstancingBuffer->Unmap());
 		Instancing.InstancingBufferData = NULL;
 	}
 
 	// Increase size
 	unsigned int size = Instancing.InstancingBuffer->GetSizeInBytes();
+
+	if(Instancing.NumRegisteredInstances != 0)
+	{
+		// This is more accurate in case we have this filled
+		size = Instancing.NumRegisteredInstances * sizeof(VobInstanceInfo);
+	}
 
 	// Recreate the buffer
 	delete Instancing.InstancingBuffer;
@@ -293,11 +315,114 @@ XRESULT GStaticMeshVisual::IncreaseInstancingBufferSize()
 	XLE(Instancing.InstancingBuffer->Init(NULL, size * 2, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE));
 
 	// Fill old data
-	//Instancing.InstancingBuffer->UpdateBuffer(&Instancing.FrameInstanceData[0], Instancing.FrameInstanceData.size() * sizeof(VobInstanceInfo));
+	// Instancing.InstancingBuffer->UpdateBuffer(&tempData[0], tempData.size() * sizeof(VobInstanceInfo));
 
 	// FIXME: This might leads to some objects disappearing for one frame because the buffer got emptied, but I don't
 	// want to write a full second array of instance-infos just because of that.
 	//Instancing.NumRegisteredInstances = 0;
 
 	return XR_SUCCESS;
+}
+
+/** Draws a batch of instance-infos. Returns a pointer to the instance-buffer and it's size.
+If the buffer is too small use .*/
+void GStaticMeshVisual::BeginDrawInstanced()
+{
+	// Already mapped?
+	if(Instancing.InstancingBufferData)
+	{
+		return;
+	}
+
+	// Map the buffer now and save the datapointer
+	UINT size;
+	XLE(Instancing.InstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&Instancing.InstancingBufferData, &size));
+}
+
+/** Can be called before you add instances to the buffer, so the visual can increase the size of the instancing buffer if needed */
+bool GStaticMeshVisual::OnAddInstances(int numInstances, VobInstanceInfo* instances)
+{
+	// Add the world-matrix of this vob to the instancing buffer
+	unsigned int arrayPos = (Instancing.NumRegisteredInstances) * sizeof(VobInstanceInfo);
+	Instancing.NumRegisteredInstances += numInstances;
+
+	// If the buffer is too small, resize it
+	bool recreate = arrayPos + numInstances * sizeof(VobInstanceInfo) >= Instancing.InstancingBuffer->GetSizeInBytes();
+	if(recreate)
+	{
+		
+		IncreaseInstancingBufferSize();
+		BeginDrawInstanced(); // Map again
+	}
+
+	memcpy(Instancing.InstancingBufferData + arrayPos, instances, numInstances * sizeof(VobInstanceInfo));
+
+	return !recreate;
+}
+
+/** Finishes the instanced-draw-call */
+void GStaticMeshVisual::EndDrawInstanced()
+{
+	// Check if we actually had something to do this frame
+	if(Instancing.InstancingBufferData != NULL)
+	{
+		// Yes! This means that the instancing-buffer currently is mapped.
+		// Unmap it now.
+
+		memcpy(Instancing.InstancingBufferData, &Instancing.FrameInstanceData[0], Instancing.FrameInstanceData.size() * sizeof(VobInstanceInfo));
+		//Toolbox::X_aligned_memcpy_sse2(Instancing.InstancingBufferData, &Instancing.FrameInstanceData[0], Instancing.FrameInstanceData.size() * sizeof(VobInstanceInfo));
+		//std::copy(Instancing.FrameInstanceData.begin(), Instancing.FrameInstanceData.end(), (VobInstanceInfo*)Instancing.InstancingBufferData);
+
+		XLE(Instancing.InstancingBuffer->Unmap());
+		Instancing.InstancingBufferData = NULL;
+
+		Instancing.FrameInstanceData.clear();
+	
+		if(Instancing.NumRegisteredInstances != 0)
+		{
+			int s = 0;
+			for(auto it = VisualInfo.Meshes.begin();it != VisualInfo.Meshes.end(); it++)
+			{
+				std::vector<MeshInfo*>& meshes = (*it).second;
+				for(int i=0;i<meshes.size();i++)
+				{
+
+					// Huge safety-check to see if gothic didn't mess this up
+					if(PipelineStates[s]->BaseState.TextureIDs[0] == 0xFFFF)
+					{
+
+						// Only draw if the texture is loaded
+						if((*it).first->GetTexture() && (*it).first->GetTexture()->CacheIn(0.6f) != zRES_CACHED_IN)
+						{
+							//s++;
+							//continue;
+							PipelineStates[s]->BaseState.TextureIDs[0] = 0;
+						}
+
+						// Get texture ID if everything is allright
+						if((*it).first &&
+							(*it).first->GetTexture() &&
+							(*it).first->GetTexture()->GetSurface() &&
+							(*it).first->GetTexture()->GetSurface()->GetEngineTexture())
+							PipelineStates[s]->BaseState.TextureIDs[0] = (*it).first->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
+					}
+
+					// Give our instancingbuffer to the state
+					//if(PipelineStates[s]->BaseState.VertexBuffers[1] != Instancing.InstancingBuffer)
+					{
+						PipelineStates[s]->BaseState.VertexBuffers[1] = Instancing.InstancingBuffer;
+						PipelineStates[s]->BaseState.VertexStride[1] = sizeof(VobInstanceInfo);
+						Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates[s]);
+					}
+					PipelineStates[s]->BaseState.NumInstances = Instancing.NumRegisteredInstances;
+
+					// Register this state
+					Engine::GraphicsEngine->PushPipelineState(PipelineStates[s]);
+					s++;
+				}
+			}
+		}
+	}
+
+	Instancing.NumRegisteredInstances = 0;
 }

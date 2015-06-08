@@ -15,7 +15,8 @@ public:
 	void BindToPixelShader(int slot);
 	void BindToDomainShader(int slot);
 	void BindToHullShader(int slot);
-
+	void BindToGeometryShader(int slot);
+	
 	/** Binds the constantbuffer */
 	ID3D11Buffer* Get(){ return Buffer; }
 

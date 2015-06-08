@@ -344,6 +344,13 @@ XRESULT D3D11GraphicsEngineBase::SetViewport(const ViewportInfo& viewportInfo)
 	return XR_SUCCESS;
 }
 
+
+/** Returns the shadermanager */
+D3D11ShaderManager* D3D11GraphicsEngineBase::GetShaderManager()
+{
+	return ShaderManager;
+}
+
 /** Called when the game wants to clear the bound rendertarget */
 XRESULT D3D11GraphicsEngineBase::Clear(const float4& color)
 {
@@ -760,6 +767,13 @@ XRESULT D3D11GraphicsEngineBase::SetActiveHDShader(const std::string& shader)
 {
 	ActiveHDS = ShaderManager->GetHDShader(shader);
 
+	return XR_SUCCESS;
+}
+
+XRESULT D3D11GraphicsEngineBase::SetActiveGShader(const std::string& shader)
+{
+	ActiveGS = ShaderManager->GetGShader(shader);
+	
 	return XR_SUCCESS;
 }
 

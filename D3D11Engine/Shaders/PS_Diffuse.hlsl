@@ -14,13 +14,6 @@ cbuffer MI_MaterialInfo : register( b2 )
 	float MI_ParallaxOcclusionStrength;
 }
 
-
-/*cbuffer POS_MaterialInfo : register( b3 )
-{
-	float3 OS_AmbientColor;
-	float OS_Pad;
-}*/
-
 cbuffer DIST_Distance : register( b3 )
 {
 	float DIST_DrawDistance;
@@ -35,7 +28,7 @@ SamplerState SS_samMirror : register( s1 );
 Texture2D	TX_Texture0 : register( t0 );
 Texture2D	TX_Texture1 : register( t1 );
 Texture2D	TX_Texture2 : register( t2 );
-
+TextureCube	TX_ReflectionCube : register( t4 );
 
 //--------------------------------------------------------------------------------------
 // Input / Output structures
@@ -81,7 +74,7 @@ DEFERRED_PS_OUTPUT PSMain( PS_INPUT Input ) : SV_TARGET
 #else
 	fx = 1.0f;
 #endif
-	
+		
 	DEFERRED_PS_OUTPUT output;
 	output.vDiffuse = float4(color.rgb, Input.vDiffuse.y);
 	//output.vDiffuse = float4(Input.vTexcoord2, 0, 1);

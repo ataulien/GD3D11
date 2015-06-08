@@ -67,6 +67,11 @@ void GWorld::DrawWorld()
 		
 		// Draw visible BSP-Nodes
 		BspDrawnVobs.clear();
+
+		// Frustum-check-functions from gothic need this
+		if(zCCamera::GetCamera())
+			zCCamera::GetCamera()->Activate();
+
 		DrawBspTreeVobs(BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]);
 
 		// Reset state on the drawn vobs
@@ -105,7 +110,8 @@ void GWorld::PrepareBspNodeVobPipelineStates(BspNodeInfo* node, std::set<GVisual
 
 		if(!vob->IsAlreadyCollectedFromTree())
 		{
-			vob->DrawVob();	
+			node->InstanceDataCache[vob->GetVisual()].push_back(vob->GetInstanceInfo());
+			//vob->DrawVob();	
 			vob->SetCollectedFromTreeSearch();
 			drawnVisuals.insert(vob->GetVisual());
 			drawnVobs.push_back(vob);
@@ -119,7 +125,8 @@ void GWorld::PrepareBspNodeVobPipelineStates(BspNodeInfo* node, std::set<GVisual
 
 		if(!vob->IsAlreadyCollectedFromTree())
 		{
-			vob->DrawVob();	
+			node->InstanceDataCache[vob->GetVisual()].push_back(vob->GetInstanceInfo());
+			//vob->DrawVob();	
 			vob->SetCollectedFromTreeSearch();
 			drawnVisuals.insert(vob->GetVisual());
 			drawnVobs.push_back(vob);
@@ -133,7 +140,8 @@ void GWorld::PrepareBspNodeVobPipelineStates(BspNodeInfo* node, std::set<GVisual
 
 		if(!vob->IsAlreadyCollectedFromTree())
 		{
-			vob->DrawVob();
+			node->InstanceDataCache[vob->GetVisual()].push_back(vob->GetInstanceInfo());
+			//vob->DrawVob();	
 			vob->SetCollectedFromTreeSearch();
 			drawnVisuals.insert(vob->GetVisual());
 			drawnVobs.push_back(vob);
@@ -197,21 +205,21 @@ void GWorld::PrepareBspTreeVobs(BspNodeInfo* base)
 	std::vector<GVobObject*> drawnVobs;
 
 	// Init instancing-buffers
-	BeginVisualFrame();
+	//BeginVisualFrame();
 
 	// Create the pipeline states
 	PrepareBspTreePipelineStates(base, drawnVisuals, drawnVobs);
 
 	// Unmap instancingbuffers again
-	EndVisualFrame();
+	//EndVisualFrame();
 
 	// Switch buffers for all drawn visuals, because we need to keep them now
 	// Leaving them would cause them to be overwritten by other nodes drawing these visuals
 	// Therefore we also need to delete all the states ourselfs
-	for(auto it = drawnVisuals.begin(); it != drawnVisuals.end(); it++)
+	/*for(auto it = drawnVisuals.begin(); it != drawnVisuals.end(); it++)
 	{
 		(*it)->SwitchInstanceSpecificResources();
-	}
+	}*/
 
 	for(auto it = drawnVobs.begin(); it != drawnVobs.end(); it++)
 	{
@@ -242,23 +250,19 @@ void GWorld::DrawBspTreeVobs(BspNodeInfo* base)
 		return;
 
 	float dist = Toolbox::ComputePointAABBDistance(Engine::GAPI->GetCameraPosition(), base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max);
-	//if(dist > 20000)
-	//	return;
-
-	// Frustum-check-functions from gothic need this
-	if(zCCamera::GetCamera())
-		zCCamera::GetCamera()->Activate();
+	if(dist > Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE)
+		return;
 
 	// Draw everything visible in the bsp-tree
-	DrawPreparedPipelineStatesRec(base, base->OriginalNode->BBox3D, 63);
-	return;
+	//DrawPreparedPipelineStatesRec(base, base->OriginalNode->BBox3D, 63);
+	//return;
 
 	if(base->OriginalNode->IsLeaf())
 	{
 		// Just draw everything here
-		// DrawBspNodeVobs(base, dist);
+		DrawBspNodeVobs(base, dist);
 
-		DrawPreparedPipelineStates(base);
+		//DrawPreparedPipelineStates(base);
 	}else
 	{
 		// We are just a node, continue with the tree
@@ -280,7 +284,9 @@ void GWorld::DrawPreparedPipelineStatesRec(BspNodeInfo* base, zTBBox3D boxCell, 
 	{
 		if (clipFlags>0) 
 		{
-			float yMaxWorld = Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()->BBox3D.Max.y;
+			float yMaxWorld = Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode() ?
+				Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()->BBox3D.Max.y :
+				10000.0f; // FIXME: Why does this even happen?
 
 			zTBBox3D nodeBox = base->OriginalNode->BBox3D;
 			//float nodeYMax = std::min(yMaxWorld, Engine::GAPI->GetCameraPosition().y);
@@ -305,20 +311,13 @@ void GWorld::DrawPreparedPipelineStatesRec(BspNodeInfo* base, zTBBox3D boxCell, 
 		// Also draw it if this is a crossing leaf, or the node isn't too huge
 		// Gothics BSP-Trees can get really stupid and huge sometimes, we don't need all the 
 		// precision here, it hurts instancing.
-		if(nodeClip == ZTCAM_CLIPTYPE_IN || (nodeClip == ZTCAM_CLIPTYPE_CROSSING && base->NumLevels < 6))
+		if(base->OriginalNode->IsLeaf())
 		{
 			//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, D3DXVECTOR4(0,1,0,1));
 
 			DrawPreparedPipelineStates(base);
-
-			// This also draws all sub-nodes if there are any, so just return here
-			// We are not calling the draw-method for each leaf, because we
-			// can much bigger instancing buffers for big nodes
 			return;
-		}
-
-		// If this node is only crossing, we may can break the visible nodes further down
-		if(nodeClip == ZTCAM_CLIPTYPE_CROSSING)
+		}else
 		{
 			//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, D3DXVECTOR4(1,1,0,1));
 
@@ -367,7 +366,22 @@ void GWorld::DrawPreparedPipelineStatesRec(BspNodeInfo* base, zTBBox3D boxCell, 
 /** Draws the prepared pipelinestates of a BSP-Node */
 void GWorld::DrawPreparedPipelineStates(BspNodeInfo* node)
 {
-	for(auto it = node->StaticObjectPipelineStates.begin(); it != node->StaticObjectPipelineStates.end(); it++)
+	// Draw all instances
+	for(auto it = node->InstanceDataCache.begin();it != node->InstanceDataCache.end();it++)
+	{
+		byte* data;
+		int size;
+
+		// Map the internal buffer
+		(*it).first->BeginDrawInstanced();
+
+
+		// Make sure the visual has time to increase the buffersize if needed and add our instances
+		(*it).first->OnAddInstances((*it).second.size(), &(*it).second[0]);
+	}
+
+
+	/*for(auto it = node->StaticObjectPipelineStates.begin(); it != node->StaticObjectPipelineStates.end(); it++)
 	{
 		PipelineState* s = (*it)->AssociatedState;
 
@@ -381,81 +395,101 @@ void GWorld::DrawPreparedPipelineStates(BspNodeInfo* node)
 
 			s->BaseState.BSPSkipState = true;
 		}
-	}
+	}*/
 }
 
 /** Draws all vobs in the given node */
 void GWorld::DrawBspNodeVobs(BspNodeInfo* node, float nodeDistance)
 {
 	const float dist = FLT_MAX;
+	const float vobIndoorDist = Engine::GAPI->GetRendererState()->RendererSettings.IndoorVobDrawRadius;
+	const float vobOutdoorDist = Engine::GAPI->GetRendererState()->RendererSettings.OutdoorVobDrawRadius;
+	const float vobOutdoorSmallDist = Engine::GAPI->GetRendererState()->RendererSettings.OutdoorSmallVobDrawRadius;
+	const float vobSmallSize = Engine::GAPI->GetRendererState()->RendererSettings.SmallVobSize;
+	const float visualFXDrawRadius = Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius;
 
 	// Draw normal vobs
-	for(auto it = node->Vobs.begin(); it != node->Vobs.end(); it++)
+	if(nodeDistance < vobOutdoorDist)
 	{
-		GVobObject* vob = (*it);
-
-		if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+		for(auto it = node->Vobs.begin(); it != node->Vobs.end(); it++)
 		{
-			// Just draw // TODO: Implement culling
-			vob->DrawVob();
-			vob->SetCollectedFromTreeSearch();
-			BspDrawnVobs.push_back(vob);
+			GVobObject* vob = (*it);
+
+			if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+			{
+				// Just draw // TODO: Implement culling
+				vob->DrawVob();
+				vob->SetCollectedFromTreeSearch();
+				BspDrawnVobs.push_back(vob);
+			}
 		}
 	}
 
 	// Draw small vobs
-	for(auto it = node->SmallVobs.begin(); it != node->SmallVobs.end(); it++)
+	if(nodeDistance < vobOutdoorSmallDist)
 	{
-		GVobObject* vob = (*it);
-
-		if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+		for(auto it = node->SmallVobs.begin(); it != node->SmallVobs.end(); it++)
 		{
-			// Just draw // TODO: Implement culling
-			vob->DrawVob();
-			vob->SetCollectedFromTreeSearch();
-			BspDrawnVobs.push_back(vob);
+			GVobObject* vob = (*it);
+
+			if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+			{
+				// Just draw // TODO: Implement culling
+				vob->DrawVob();
+				vob->SetCollectedFromTreeSearch();
+				BspDrawnVobs.push_back(vob);
+			}
 		}
 	}
 
 	// Draw indoor vobs
-	for(auto it = node->IndoorVobs.begin(); it != node->IndoorVobs.end(); it++)
+	if(nodeDistance < vobIndoorDist)
 	{
-		GVobObject* vob = (*it);
-
-		if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+		for(auto it = node->IndoorVobs.begin(); it != node->IndoorVobs.end(); it++)
 		{
-			// Just draw // TODO: Implement culling
-			vob->DrawVob();
-			vob->SetCollectedFromTreeSearch();
-			BspDrawnVobs.push_back(vob);
+			GVobObject* vob = (*it);
+
+			if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+			{
+				// Just draw // TODO: Implement culling
+				vob->DrawVob();
+				vob->SetCollectedFromTreeSearch();
+				BspDrawnVobs.push_back(vob);
+			}
 		}
 	}
 
 	// Draw indoor lights
-	for(auto it = node->IndoorLights.begin(); it != node->IndoorLights.end(); it++)
+	if(nodeDistance < visualFXDrawRadius / 2.0f)
 	{
-		GVobObject* vob = (*it);
-
-		if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+		for(auto it = node->IndoorLights.begin(); it != node->IndoorLights.end(); it++)
 		{
-			// Just draw // TODO: Implement culling
-			vob->DrawVob();
-			vob->SetCollectedFromTreeSearch();
-			BspDrawnVobs.push_back(vob);
+			GVobObject* vob = (*it);
+
+			if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+			{
+				// Just draw // TODO: Implement culling
+				vob->DrawVob();
+				vob->SetCollectedFromTreeSearch();
+				BspDrawnVobs.push_back(vob);
+			}
 		}
 	}
 
 	// Draw normal lights
-	for(auto it = node->Lights.begin(); it != node->Lights.end(); it++)
+	if(nodeDistance < visualFXDrawRadius)
 	{
-		GVobObject* vob = (*it);
-
-		if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+		for(auto it = node->Lights.begin(); it != node->Lights.end(); it++)
 		{
-			// Just draw // TODO: Implement culling
-			vob->DrawVob();
-			vob->SetCollectedFromTreeSearch();
-			BspDrawnVobs.push_back(vob);
+			GVobObject* vob = (*it);
+
+			if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+			{
+				// Just draw // TODO: Implement culling
+				vob->DrawVob();
+				vob->SetCollectedFromTreeSearch();
+				BspDrawnVobs.push_back(vob);
+			}
 		}
 	}
 }
@@ -470,7 +504,7 @@ void GWorld::BuildBSPTree(zCBspTree* bspTree)
 	BuildBspTreeHelper(bspTree->GetRootNode());
 
 	// Prepare rendering
-	PrepareBspTreeVobs(BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]);
+	// PrepareBspTreeVobs(BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]);
 
 	// Calculate levels of the tree
 	BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]->CalculateLevels();

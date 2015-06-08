@@ -366,6 +366,9 @@ void D2DView::RunContentDownloader()
 
 	std::list<DownloadJob> jobs;
 	
+	// Make sure this folder exists
+	CreateDirectory("system\\GD3D11\\textures\\replacements", NULL);
+
 	// Check for original game normalmaps
 	if(!ModSpecific::NormalmapPackageInstalled(ModSpecific::NRMPACK_ORIGINAL))
 		jobs.push_back(DownloadJob(std::string(ModSpecific::NRMPACK_ORIGINAL) + ".zip", 

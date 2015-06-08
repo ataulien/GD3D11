@@ -48,6 +48,9 @@ VS_OUTPUT VSMain( VS_INPUT Input )
 	
 	p.y = -p.y;
 	
+	// Remove the stupid half-pixel offset from pre D3D10
+	p.xy -= 0.5f / V_ViewportSize;
+	
 	//p.xy /= float2(1920,1080); 
 			
 	Output.vPosition = float4(p, 1);

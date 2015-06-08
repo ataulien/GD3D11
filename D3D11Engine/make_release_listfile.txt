@@ -1,0 +1,15 @@
+ddraw.dll
+GFSDK_SSAO.win32.dll
+d3dcompiler_46.dll
+COPYING
+Assimp32.dll
+AntTweakBar.dll
+GD3D11\Data\*.*
+GD3D11\Meshes\*.*
+GD3D11\Meshes\Infos\*.*
+GD3D11\shaders\*.*
+GD3D11\shaders\include\*.*
+GD3D11\shaders\CSFFT\*.*
+GD3D11\textures\*.*
+GD3D11\textures\infos\*.*
+GD3D11\textures\Raindrops\*.*

@@ -110,6 +110,8 @@ XRESULT D3D11PShader::LoadShader(const char* pixelShader, std::vector<D3D10_SHAD
 	PixelShader->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(pixelShader), pixelShader);
 #endif
 
+	psBlob->Release();
+
 	return XR_SUCCESS;
 }
 

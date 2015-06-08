@@ -53,11 +53,11 @@ PS_OUTPUT PSMain( PS_INPUT Input )
 	// Center the UV
 	float2 uvCenter = Input.vTexcoord - 0.5f;
 	float weight = dot(color.rgb, float3(0.333f, 0.333f, 0.333f)) * pow(color.a, 1/4.0f);
-	weight *= 2.2f; // Scale the distortion down a bit
+	weight *= 2.5f; // Scale the distortion down a bit
 	weight *= min(1.0f, (1.0f - (Input.vPosition.z)) * 8.0f);
 		
 	// Store the direction to the center of the uv-plane as distortion
-	o.gb1 = float4(uvCenter * weight, 0, color.a);
+	o.gb1 = float4(uvCenter * float2(-1,1) * weight, 0, color.a);
 	return o;
 }
 

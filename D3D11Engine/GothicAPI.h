@@ -78,7 +78,7 @@ struct CameraReplacement
 };
 
 /** Version of this struct */
-const int MATERIALINFO_VERSION = 3;
+const int MATERIALINFO_VERSION = 4;
 
 struct MaterialInfo
 {
@@ -140,6 +140,9 @@ struct MaterialInfo
 	std::string PixelShader;
 	EMaterialType MaterialType;
 	Buffer buffer;
+
+	/** Base tesselationsettings for this texture. Can be overwritten by ZEN-Resources */
+	VisualTesselationSettings TextureTesselationSettings;
 };
 
 struct ParticleFrameData
@@ -352,7 +355,8 @@ public:
 	/** Traces a visual info. Returns -1 if not hit, distance otherwise */
 	float TraceVisualInfo(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, BaseVisualInfo* visual, zCMaterial** hitMaterial = NULL);
 
-
+	/** Applies tesselation-settings for all mesh-parts using the given info */
+	void ApplyTesselationSettingsForAllMeshPartsUsing(MaterialInfo* info, int amount = 1);
 
 	/** Returns the GSky-Object */
 	GSky* GetSky();
@@ -544,6 +548,12 @@ public:
 
 	/** Returns the current cursor position, in pixels */
 	POINT GetCursorPosition();
+
+	/** Returns the current weight of the rain-fx. The bigger value of ours and gothics is returned. */
+	float GetRainFXWeight();
+
+	/** Returns the wetness of the scene. Lasts longer than RainFXWeight */
+	float GetSceneWetness();
 
 	/** Saves the users settings from the menu */
 	XRESULT SaveMenuSettings(const std::string& file);
@@ -750,5 +760,8 @@ private:
 
 	/** Map of parameters from the .ini */
 	std::map<std::string, int> ConfigIntValues;
+
+	/** The overall wetness of the current scene */
+	float SceneWetness;
 };
 

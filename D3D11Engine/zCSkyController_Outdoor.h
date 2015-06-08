@@ -93,6 +93,32 @@ public:
 class zCSkyController_Outdoor : public zCSkyController
 {
 public:
+
+	/** Hooks the functions of this Class */
+	static void Hook()
+	{
+		// Overwrite the rain-renderfunction and particle-updates
+		DWORD dwProtect;
+		VirtualProtect((void *)GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPStart, 
+			GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPEnd 
+			- GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPStart, 
+			PAGE_EXECUTE_READWRITE, &dwProtect);
+
+		REPLACE_RANGE(GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPStart, GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPEnd - 1, INST_NOP);
+	}
+
+	/** Updates the rain-weight and sound-effects */
+	void ProcessRainFX()
+	{
+		XCALL(GothicMemoryLocations::zCSkyController_Outdoor::ProcessRainFX);
+	}
+
+	/** Returns the rain-fx weight */
+	float GetRainFXWeight()
+	{
+		return *(float *)THISPTR_OFFSET(GothicMemoryLocations::zCSkyController_Outdoor::Offset_OutdoorRainFXWeight);
+	}
+
 	/*zCSkyPlanet* GetSun()
 	{
 		return *(zCSkyPlanet **)(((char *)this) + GothicMemoryLocations::zCSkyController_Outdoor::Offset_Sun);

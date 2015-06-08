@@ -210,10 +210,15 @@ struct RenderToDepthStencilBuffer
 		if(Result)*Result=hr;
 	}
 
+	void BindToVertexShader(ID3D11DeviceContext* context, int slot)
+	{
+		context->VSSetShaderResources(slot, 1, &ShaderResView);
+	}
+
 	void BindToPixelShader(ID3D11DeviceContext* context, int slot)
 	{
 		context->PSSetShaderResources(slot, 1, &ShaderResView);
-	};
+	}
 
 	ID3D11Texture2D* GetTexture(){return Texture;}
 	ID3D11ShaderResourceView* GetShaderResView(){return ShaderResView;}

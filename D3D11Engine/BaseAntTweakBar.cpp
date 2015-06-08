@@ -170,6 +170,25 @@ XRESULT BaseAntTweakBar::Init()
 
 	TwAddVarRW(Bar_General, "VisualFXDrawRadius", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius, NULL);
 
+	TwAddVarRW(Bar_General, "RainRadius", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.RainRadiusRange, NULL);
+	TwAddVarRW(Bar_General, "RainHeight", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.RainHeightRange, NULL);
+	TwAddVarRW(Bar_General, "NumRainParticles", TW_TYPE_UINT32, &Engine::GAPI->GetRendererState()->RendererSettings.RainNumParticles, NULL);
+	TwDefine(" General/NumRainParticles  step=1000");
+
+	TwAddVarRW(Bar_General, "RainMoveParticles", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.RainMoveParticles, NULL);
+	TwAddVarRW(Bar_General, "RainUseInitialSet", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.RainUseInitialSet, NULL);	
+	
+	TwAddVarRW(Bar_General, "RainGlobalVelocity", TW_TYPE_DIR3F, &Engine::GAPI->GetRendererState()->RendererSettings.RainGlobalVelocity, NULL);
+	TwAddVarRW(Bar_General, "RainSceneWettness", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.RainSceneWettness, NULL);
+	TwDefine(" General/RainSceneWettness  step=0.01 min=0 max=1");	
+
+	TwAddVarRW(Bar_General, "RainSunLightStrength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.RainSunLightStrength, NULL);
+	TwDefine(" General/RainSunLightStrength  step=0.01 min=0");
+
+	TwAddVarRW(Bar_General, "RainFogDensity", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.RainFogDensity, NULL);
+	TwDefine(" General/RainFogDensity  step=0.00001 min=0");
+
+	TwAddVarRW(Bar_General, "RainFogColor", TW_TYPE_COLOR3F, &Engine::GAPI->GetRendererState()->RendererSettings.RainFogColor, NULL);
 
 	//TwAddVarRW(Bar_General, "SmallVobSize", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.SmallVobSize, NULL);
 	//TwAddVarRW(Bar_General, "AtmosphericScattering", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.AtmosphericScattering, NULL);

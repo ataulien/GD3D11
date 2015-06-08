@@ -165,6 +165,10 @@ struct DS_ScreenQuadConstantBuffer
 {
 	D3DXMATRIX SQ_InvProj; // Optimize out!
 	D3DXMATRIX SQ_InvView;
+	D3DXMATRIX SQ_View;
+
+	D3DXMATRIX SQ_RainViewProj;
+
 	float3 SQ_LightDirectionVS;
 	float SQ_ShadowmapSize;
 
@@ -172,6 +176,9 @@ struct DS_ScreenQuadConstantBuffer
 
 	D3DXMATRIX SQ_ShadowView;
 	D3DXMATRIX SQ_ShadowProj;
+
+	D3DXMATRIX SQ_RainView;
+	D3DXMATRIX SQ_RainProj;
 
 	//float2 SQ_ProjAB;
 	//float2 SQ_Pad2;
@@ -190,11 +197,32 @@ struct CloudConstantBuffer
 	float C_Pad2;
 };
 
+struct AdvanceRainConstantBuffer
+{
+	float3 AR_LightPosition;
+	float AR_FPS;
+	
+	float3 AR_CameraPosition;
+	float AR_Radius;
+	
+	float AR_Height;
+	float3 AR_GlobalVelocity;
+
+	int AR_MoveRainParticles;
+	float3 AR_Pad1;
+};
+
 struct VS_ExConstantBuffer_PerFrame
 {
 	D3DXMATRIX View;
 	D3DXMATRIX Projection;
 	D3DXMATRIX ViewProj;
+};
+
+struct ParticlePointShadingConstantBuffer
+{
+	D3DXMATRIX View;
+	D3DXMATRIX Projection;
 };
 
 struct VS_ExConstantBuffer_PerInstance
@@ -218,6 +246,13 @@ struct GrassConstantBuffer
 	float3 G_Pad1;
 };
 
+struct WettnessConstantBuffer
+{
+	D3DXMATRIX W_InvProj;
+	float W_Wettness;
+	float3 W_Pad1;
+};
+
 struct DefaultHullShaderConstantBuffer
 {
 	float H_EdgesPerScreenHeight;
@@ -228,6 +263,13 @@ struct DefaultHullShaderConstantBuffer
 	float2 h_pad2;
 };
 
+struct ParticleGSInfoConstantBuffer
+{
+	float3 CameraPosition;
+    float PGS_RainFxWeight;
+	float PGS_RainHeight;
+	float3 PGS_Pad;
+};
 
 struct PNAENConstantBuffer
 {
@@ -278,9 +320,9 @@ struct AtmosphereConstantBuffer
 	float3 AC_CameraPos;
 	float AC_Time;
 	float3 AC_LightPos;
-	float AC_pad2;
+	float AC_SceneWettness;
 
 	float3 AC_SpherePosition;
-	float AC_pad3;
+	float AC_RainFXWeight;
 };
 #pragma pack (pop)
