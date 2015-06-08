@@ -560,7 +560,7 @@ struct GothicRendererSettings
 		RainMoveParticles = true;
 		RainGlobalVelocity = D3DXVECTOR3(250, -1000, 0);
 		RainUseInitialSet = false;
-		RainSceneWettness = 1.0f;
+		RainSceneWettness = 0.0f;
 		RainSunLightStrength = 0.50f;
 		RainFogColor = D3DXVECTOR3(0.28f, 0.28f, 0.28f);
 		RainFogDensity = 0.00500f;
