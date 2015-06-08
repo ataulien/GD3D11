@@ -250,7 +250,7 @@ XRESULT D2DEditorView::InitControls()
 	SelectedMeshTessAmountSlider->GetSlider()->SetPositionAndSize(D2D1::Point2F(0, 0), D2D1::SizeF(150, 15));
 	SelectedMeshTessAmountSlider->UpdateDimensions();
 	SelectedMeshTessAmountSlider->GetSlider()->SetSliderChangedCallback(TextureSettingsSliderChanged, this);
-	SelectedMeshTessAmountSlider->GetSlider()->SetMinMax(0.0f, 1.0f);
+	SelectedMeshTessAmountSlider->GetSlider()->SetMinMax(0.0f, 2.0f);
 	SelectedMeshTessAmountSlider->GetSlider()->SetValue(0.0f);
 	SelectionTabControl->AddControlToTab(SelectedMeshTessAmountSlider, "Selection/Texture");
 
@@ -393,7 +393,8 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 				L"F1 - Close editor\n"
 				L"Shift-Click - Place Hero\n"
 				L"Pos: " + Toolbox::ToWideChar(float3(Engine::GAPI->GetCameraPosition()).toString()) +
-				L"Time: " + std::to_wstring(oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetMasterTime());
+				L"\nTime: " + std::to_wstring(oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetMasterTime()) +
+				L"\nWetness: " + std::to_wstring(Engine::GAPI->GetSceneWetness());
 			break;
 
 		case EM_SELECT_POLY:
@@ -865,10 +866,25 @@ void D2DEditorView::UpdateSelectionPanel()
 	if(Selection.SelectedMesh)
 	{
 		WorldMeshInfo* info = (WorldMeshInfo *)Selection.SelectedMesh;
+		MaterialInfo* mi;
+		
+		if(Selection.SelectedMaterial)
+			mi = Engine::GAPI->GetMaterialInfoFrom(Selection.SelectedMaterial->GetTexture());
+		else
+			mi = NULL;
 
-		SelectedTexDisplacementSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_DisplacementStrength);
-		SelectedMeshRoundnessSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_Roundness);
-		SelectedMeshTessAmountSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_TesselationFactor);
+		// Get settings from MI, if possible
+		if(mi)
+		{
+			SelectedTexDisplacementSlider->GetSlider()->SetValue(mi->TextureTesselationSettings.buffer.VT_DisplacementStrength);
+			SelectedMeshRoundnessSlider->GetSlider()->SetValue(mi->TextureTesselationSettings.buffer.VT_Roundness);
+			SelectedMeshTessAmountSlider->GetSlider()->SetValue(mi->TextureTesselationSettings.buffer.VT_TesselationFactor);
+		}else
+		{
+			SelectedTexDisplacementSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_DisplacementStrength);
+			SelectedMeshRoundnessSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_Roundness);
+			SelectedMeshTessAmountSlider->GetSlider()->SetValue(info->TesselationSettings.buffer.VT_TesselationFactor);
+		}
 	}
 }
 
@@ -1089,6 +1105,10 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 
 					if(info)
 					{
+						// Set the offline-tesselation factor
+						info->TextureTesselationSettings.buffer.VT_TesselationFactor = 2;
+
+						// Overwrite shader
 						info->TesselationShaderPair = "PNAEN_Tesselation";
 					}
 				}
@@ -1367,22 +1387,29 @@ void D2DEditorView::TextureSettingsSliderChanged(SV_Slider* sender, void* userda
 			WorldMeshInfo* mesh = (WorldMeshInfo *)v->Selection.SelectedMesh; // FIXME: Make this nicer
 			mesh->TesselationSettings.buffer.VT_DisplacementStrength = sender->GetValue();
 			mesh->TesselationSettings.UpdateConstantbuffer();
+
+			info->TextureTesselationSettings.buffer.VT_DisplacementStrength = sender->GetValue();
 		}else if(sender == v->SelectedMeshTessAmountSlider->GetSlider() && v->Selection.SelectedMesh)
 		{
 			WorldMeshInfo* mesh = (WorldMeshInfo *)v->Selection.SelectedMesh; // FIXME: Make this nicer
 
 			if(!mesh->MeshIndexBufferPNAEN)
 			{
-				v->SmoothMesh(mesh, false);
+				// Apply tesselation for all meshes using this material, don't tesselate yet
+				Engine::GAPI->ApplyTesselationSettingsForAllMeshPartsUsing(info, sender->GetValue() > 1.0f ? 2 : 1);
 			}
 
 			mesh->TesselationSettings.buffer.VT_TesselationFactor = sender->GetValue();
 			mesh->TesselationSettings.UpdateConstantbuffer();
+
+			info->TextureTesselationSettings.buffer.VT_TesselationFactor = sender->GetValue();
 		}else if(sender == v->SelectedMeshRoundnessSlider->GetSlider() && v->Selection.SelectedMesh)
 		{
 			WorldMeshInfo* mesh = (WorldMeshInfo *)v->Selection.SelectedMesh; // FIXME: Make this nicer
 			mesh->TesselationSettings.buffer.VT_Roundness = sender->GetValue();
 			mesh->TesselationSettings.UpdateConstantbuffer();
+
+			info->TextureTesselationSettings.buffer.VT_Roundness = sender->GetValue();
 		}
 		
 		/*else if(sender == v->SelectedTexSpecModulationSlider->GetSlider())
@@ -1392,6 +1419,7 @@ void D2DEditorView::TextureSettingsSliderChanged(SV_Slider* sender, void* userda
 
 		// Update and save the info
 		info->UpdateConstantbuffer();
+		info->TextureTesselationSettings.UpdateConstantbuffer();
 		info->WriteToFile(v->Selection.SelectedMaterial->GetTexture()->GetNameWithoutExt());
 	}
 }
@@ -1468,7 +1496,7 @@ void D2DEditorView::SmoothMesh(WorldMeshInfo* mesh, bool tesselate)
 	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
 	mesh->MeshIndexBuffer->Init(&mesh->Indices[0], mesh->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
 
-	mesh->TesselationSettings.buffer.VT_TesselationFactor = 1.0f;
+	mesh->TesselationSettings.buffer.VT_TesselationFactor = 2.0f;
 	mesh->TesselationSettings.buffer.VT_DisplacementStrength = 0.5f;
 	mesh->TesselationSettings.UpdateConstantbuffer();
 

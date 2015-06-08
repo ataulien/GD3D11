@@ -212,6 +212,15 @@ XRESULT D3D11VShader::LoadShader(const char* vertexShader, int layout, std::vect
 		{ "INSTANCE_COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 	};
 
+	const D3D11_INPUT_ELEMENT_DESC layout11[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "DIFFUSE", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
 	switch (layout)
 	{
 	case 1:
@@ -263,7 +272,14 @@ XRESULT D3D11VShader::LoadShader(const char* vertexShader, int layout, std::vect
 		LE(engine->GetDevice()->CreateInputLayout(layout10, ARRAYSIZE(layout10), vsBlob->GetBufferPointer(),
 			vsBlob->GetBufferSize(), &InputLayout));
 		break;
+
+	case 11:
+		LE(engine->GetDevice()->CreateInputLayout(layout11, ARRAYSIZE(layout11), vsBlob->GetBufferPointer(),
+			vsBlob->GetBufferSize(), &InputLayout));
+		break;
 	}
+
+	vsBlob->Release();
 
 	return XR_SUCCESS;
 }

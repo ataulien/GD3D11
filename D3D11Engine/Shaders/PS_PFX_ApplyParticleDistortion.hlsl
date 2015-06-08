@@ -40,7 +40,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	// Alpha is just the luminance of the rendered particles
 	float alpha = dot(color.rgb, float3(0.333f, 0.333f, 0.333f)) * 2.0f;
 	
-	//return float4(0,1,0,1);
+	//return float4(saturate(+ distortion),0,1);
 	//return float4(color.aaa, 1);
 	
 	return float4(scene + color.rgb, 1);

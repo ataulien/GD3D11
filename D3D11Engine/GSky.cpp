@@ -283,6 +283,8 @@ XRESULT GSky::RenderSky()
 	AtmosphereCB.AC_g = Atmosphere.G;
 	AtmosphereCB.AC_Wavelength = Atmosphere.WaveLengths;
 	AtmosphereCB.AC_SpherePosition = sp;
+	AtmosphereCB.AC_SceneWettness = Engine::GAPI->GetSceneWetness();
+	AtmosphereCB.AC_RainFXWeight = Engine::GAPI->GetRainFXWeight();
 
 	//Engine::GraphicsEngine->DrawSky();
 

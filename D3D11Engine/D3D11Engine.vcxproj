@@ -264,7 +264,9 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="D3D11AntTweakBar.h" />
     <ClInclude Include="D3D11ConstantBuffer.h" />
     <ClInclude Include="ConstantBufferStructs.h" />
+    <ClInclude Include="D3D11Effect.h" />
     <ClInclude Include="D3D11FullscreenQuad.h" />
+    <ClInclude Include="D3D11GodRayEffect.h" />
     <ClInclude Include="D3D11GraphicsEngine.h" />
     <ClInclude Include="D3D11GraphicsEngineBase.h" />
     <ClInclude Include="D3D11GraphicsEngineQueued.h">
@@ -274,6 +276,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="D3D11GraphicsEngineTest.h" />
+    <ClInclude Include="D3D11GShader.h" />
     <ClInclude Include="D3D11HDShader.h" />
     <ClInclude Include="D3D11LineRenderer.h" />
     <ClInclude Include="D3D11NVHBAO.h" />
@@ -465,7 +468,9 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D2DVobSettingsDialog.cpp" />
     <ClCompile Include="D3D11AntTweakBar.cpp" />
     <ClCompile Include="D3D11ConstantBuffer.cpp" />
+    <ClCompile Include="D3D11Effect.cpp" />
     <ClCompile Include="D3D11FullscreenQuad.cpp" />
+    <ClCompile Include="D3D11GodRayEffect.cpp" />
     <ClCompile Include="D3D11GraphicsEngine.cpp" />
     <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
     <ClCompile Include="D3D11GraphicsEngineQueued.cpp">
@@ -475,6 +480,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="D3D11GraphicsEngineTest.cpp" />
+    <ClCompile Include="D3D11GShader.cpp" />
     <ClCompile Include="D3D11HDShader.cpp" />
     <ClCompile Include="D3D11LineRenderer.cpp" />
     <ClCompile Include="D3D11NVHBAO.cpp" />

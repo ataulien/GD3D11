@@ -159,7 +159,7 @@ void GParticleFXVisual::DrawVisual(const RenderInfo& info)
 
 			// Put matrix into instance-info // TODO: Find a better way of this rather than 
 											 // doing matrix calculations for every particle!
-			ii.worldview = mat;
+			//ii.worldview = mat;
 
 			// We only use quad polys, but the original engine has the option to
 			// use a single triangle for a particle. To simulate this, we need to half the size

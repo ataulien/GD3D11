@@ -126,6 +126,12 @@ struct GothicMemoryLocations
 		static const unsigned int GetUnderwaterFX = 0x005E0050;
 
 		static const unsigned int SetCameraLocationHint = 0x005E6790;
+
+		static const unsigned int LOC_ProcessRainFXNOPStart = 0x005EB149;
+		static const unsigned int LOC_ProcessRainFXNOPEnd = 0x005EB216;
+
+		static const unsigned int ProcessRainFX = 0x005EAF30;
+		static const unsigned int Offset_OutdoorRainFXWeight = 0x69C;
 	};
 
 	struct zCSkyController

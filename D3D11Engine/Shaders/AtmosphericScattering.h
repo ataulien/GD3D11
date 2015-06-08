@@ -28,10 +28,10 @@ cbuffer Atmosphere : register( b1 )
 	float3 AC_CameraPos;
 	float AC_Time;
 	float3 AC_LightPos;
-	float AC_pad2;
+	float AC_SceneWettness;
 
 	float3 AC_SpherePosition;
-	float AC_pad3;
+	float AC_RainFXWeight;
 };
 
 // The scale equation calculated by Vernier's Graphical Analysis
@@ -126,6 +126,9 @@ float3 ApplyAtmosphericScatteringGround(float3 worldPosition, float3 in_color, b
 		v3SamplePoint += v3SampleRay;
 	}
 	
+	// Shut off blue tint of geometry when raining
+	v3FrontColor =  lerp(v3FrontColor, 0.0f, AC_SceneWettness);
+	
 	// Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
 	float3 c0 = v3FrontColor * (vInvWavelength * AC_KrESun + AC_KmESun);
 	//c0 = lerp(dot(float3(0.333f,0.333f,0.333f), c0), c0, 0.5f);
@@ -133,6 +136,7 @@ float3 ApplyAtmosphericScatteringGround(float3 worldPosition, float3 in_color, b
 	
 	float3 dayColor = c0 + in_color * c1;
 	float3 nightColor = float3(0.20,0.20,0.4) * NIGHT_BRIGHTNESS;
+	nightColor = lerp(nightColor, float3(0.24,0.24,0.24) * NIGHT_BRIGHTNESS * 0.8f, AC_SceneWettness); // Grey fog when raining
 	float3 outColor;
 
 	if(applyNightshade)

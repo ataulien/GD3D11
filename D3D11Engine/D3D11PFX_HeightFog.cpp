@@ -118,7 +118,6 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 		cb.HF_WeightZFar = Toolbox::lerp(cb.HF_WeightZFar, WORLD_SECTION_SIZE * 0.8, Engine::GAPI->GetFogOverride());
 	}
 
-
 	/*static float s_smoothHeight = Engine::GAPI->GetRendererState()->RendererSettings.FogHeight;
 	static float s_smoothZF = cb.HF_WeightZFar;
 	static float s_smoothZN = cb.HF_WeightZNear;
@@ -149,11 +148,31 @@ XRESULT D3D11PFX_HeightFog::Render(RenderToTextureBuffer* fxbuffer)
 	cb.HF_ProjAB = float2(	Engine::GAPI->GetProjectionMatrix()._33,
 							Engine::GAPI->GetProjectionMatrix()._34);
 
+
+	// Modify fog when raining
+	float rain = Engine::GAPI->GetRainFXWeight();
+
+	// Color
+	D3DXVec3Lerp(cb.HF_FogColorMod.toD3DXVECTOR3(), 
+		cb.HF_FogColorMod.toD3DXVECTOR3(), 
+		&Engine::GAPI->GetRendererState()->RendererSettings.RainFogColor, 
+		std::min(1.0f, rain * 2.0f)); // Scale color faster here, so it looks better on light rain
+
+	// Raining Density, only when not in fogzone
+	cb.HF_GlobalDensity = Toolbox::lerp(cb.HF_GlobalDensity, Engine::GAPI->GetRendererState()->RendererSettings.RainFogDensity, rain * (1.0f - Engine::GAPI->GetFogOverride()));
+
+
+
+
 	hfPS->GetConstantBuffer()[0]->UpdateBuffer(&cb);
 	hfPS->GetConstantBuffer()[0]->BindToPixelShader(0);
 
 	vs->GetConstantBuffer()[0]->UpdateBuffer(&vcb);
 	vs->GetConstantBuffer()[0]->BindToVertexShader(0);
+
+	GSky* sky = Engine::GAPI->GetSky();
+	hfPS->GetConstantBuffer()[1]->UpdateBuffer(&sky->GetAtmosphereCB());
+	hfPS->GetConstantBuffer()[1]->BindToPixelShader(1);
 
 	engine->GetContext()->OMSetRenderTargets(1, &oldRTV, NULL);
 

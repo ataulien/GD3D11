@@ -41,6 +41,9 @@
 #include "ModSpecific.h"
 #include "zCView.h"
 
+// Duration how long the scene will stay wet, in MS
+const DWORD SCENE_WETNESS_DURATION_MS = 60 * 5 * 1000;
+
 /** Writes this info to a file */
 void MaterialInfo::WriteToFile(const std::string& name)
 {
@@ -59,6 +62,7 @@ void MaterialInfo::WriteToFile(const std::string& name)
 
 	// Then the data
 	fwrite(&buffer, sizeof(MaterialInfo::Buffer), 1, f);
+	fwrite(&TextureTesselationSettings.buffer, sizeof(VisualTesselationSettings::Buffer), 1, f);
 
 	fclose(f);
 }
@@ -97,9 +101,15 @@ void MaterialInfo::LoadFromFile(const std::string& name)
 		buffer.FresnelFactor = 0.5f;
 	}
 
+	if(version >= 4)
+	{
+		fread(&TextureTesselationSettings.buffer, sizeof(VisualTesselationSettings::Buffer), 1, f);
+	}
+
 	fclose(f);
 
 	UpdateConstantbuffer();
+	TextureTesselationSettings.UpdateConstantbuffer();
 }
 
 /** creates/updates the constantbuffer */
@@ -339,6 +349,10 @@ void GothicAPI::OnWorldUpdate()
 			}
 		}
 	}
+
+	// Do rain-effects
+	if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
+			oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->ProcessRainFX();
 }
 
 /** Returns gothics fps-counter */
@@ -604,6 +618,17 @@ void GothicAPI::OnGeometryLoaded(zCPolygon** polys, unsigned int numPolygons)
 	}
 #endif
 	LogInfo() << "Done extracting world!";
+
+
+	// Apply tesselation
+	for(auto it = LoadedMaterials.begin(); it != LoadedMaterials.end(); it++)
+	{
+		MaterialInfo* info = GetMaterialInfoFrom((*it)->GetTexture());
+		if(info)
+		{
+			ApplyTesselationSettingsForAllMeshPartsUsing(info, info->TextureTesselationSettings.buffer.VT_TesselationFactor > 1.0f ? 2 : 1);
+		}
+	}
 }
 
 /** Called when the game is about to load a new level */
@@ -706,6 +731,9 @@ void GothicAPI::OnWorldLoaded()
 		GetSky()->SetSkyTexture(ESkyTexture::ST_NewWorld); // Make newworld default
 		RendererState.RendererSettings.SetupNewWorldSpecificValues();
 	}
+
+	// Reset wetness
+	SceneWetness = GetRainFXWeight();
 
 #ifndef PUBLIC_RELEASE
 	// Enable input again, disabled it when loading started
@@ -1812,7 +1840,6 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	D3DXVECTOR3 vobPos = vi->Vob->GetPositionWorld();
 	int numSoftSkins = model->GetMeshSoftSkinList()->NumInArray;
 
-
 	// Draw submeshes
 	//if(model->GetMeshSoftSkinList()->NumInArray)
 
@@ -1834,7 +1861,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		{
 			__try {
 				Draw(vi, transforms, fatness);
-			}__except(ExpFilter(GetExceptionInformation(), GetExceptionCode()))
+			}__except(EXCEPTION_EXECUTE_HANDLER)
 			{
 				Except(vi, visName, vobName, pos);
 			}
@@ -1842,7 +1869,14 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 
 		static void Except(SkeletalVobInfo* vi, std::string* visName, std::string* vobName, D3DXVECTOR3* pos)
 		{
-			LogErrorBox() << "FAULTY MODEL! PLEASE REPORT THIS TO DEGENERATED @ WOG!\nUseful info for him\n\nDraw Model: Visname: " << visName << " Vobname: " << vobName << "VobPos: " << float3(*pos).toString();
+			static bool done = false;
+
+			if(!done)
+				LogErrorBox() << "FAULTY MODEL! PLEASE REPORT THIS TO DEGENERATED @ WOG!\nUseful info for him\n\nDraw Model: Visname: " << visName->c_str() << " Vobname: " << vobName->c_str() << "VobPos: " << float3(*pos).toString();
+		
+			Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(*pos, 50.0f, D3DXVECTOR4(1,0,0,1));
+
+			done = true;
 		}
 	};
 
@@ -1979,11 +2013,12 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 						{
 							(*itm).first->GetAniTexture()->Bind(0);
 							g->BindShaderForTexture((*itm).first->GetAniTexture());
-							MaterialInfo* info = GetMaterialInfoFrom((*itm).first->GetAniTexture());
-							if(!info->Constantbuffer)
-							info->UpdateConstantbuffer();
 
-							info->Constantbuffer->BindToPixelShader(2);
+							//MaterialInfo* info = GetMaterialInfoFrom((*itm).first->GetAniTexture());
+							//if(!info->Constantbuffer)
+							//	info->UpdateConstantbuffer();
+
+							//info->Constantbuffer->BindToPixelShader(2);
 						}
 						else
 							continue;
@@ -2017,6 +2052,7 @@ void GothicAPI::OnParticleFXDeleted(zCParticleFX* pfx)
 			it = ParticleEffectVobs.erase(it);
 	}
 }
+
 
 /** Draws a zCParticleFX */
 void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameData& data)
@@ -2055,6 +2091,9 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 	fx->CheckDependentEmitter();
 
 	//fx->UpdateParticleFX();
+
+	D3DXMATRIX sw; source->GetWorldMatrix(&sw);
+	D3DXMatrixTranspose(&sw, &sw);
 
 	zTParticle* pfx = fx->GetFirstParticle();
 	if(pfx)
@@ -2155,97 +2194,27 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 			// Generate instance info
 			ParticleInstanceInfo ii;
 			ii.scale = D3DXVECTOR2(p->Size.x, p->Size.y);
+			ii.drawMode = 0;
 
 			// Construct world matrix
 			int alignment = fx->GetEmitter()->GetVisAlignment();
 			if(alignment == zPARTICLE_ALIGNMENT_XY)
 			{
-				D3DXMATRIX rot;
-				D3DXMatrixRotationX(&rot, (float)(D3DX_PI / 2.0f));
-				D3DXMatrixTranslation(&world, p->PositionWS.x, p->PositionWS.y, p->PositionWS.z);
-				world = rot * world;
-			}else
+				ii.drawMode = 2;
+			}else if(alignment == zPARTICLE_ALIGNMENT_VELOCITY || alignment == zPARTICLE_ALIGNMENT_VELOCITY_3D)
 			{
-				if(alignment == zPARTICLE_ALIGNMENT_VELOCITY)
-				{
-					D3DXMATRIX sw; source->GetWorldMatrix(&sw);
-					D3DXMatrixTranspose(&sw, &sw);
-
-					D3DXVECTOR3 velNrm; D3DXVec3Normalize(&velNrm, &p->Vel);
-					D3DXVec3Normalize(&velNrm, &velNrm);
-					D3DXVECTOR3 velPosY; D3DXVec3TransformNormal(&velPosY, &velNrm, &sw);
-					
-					D3DXVECTOR3 velPosX = D3DXVECTOR3(-velPosY.y, velPosY.x, velPosY.z);
-					D3DXVECTOR3 xdim = velPosX * ii.scale.x;
-					D3DXVECTOR3 ydim = velPosY * ii.scale.y;
-
-					ii.scale.x = -xdim.x + ydim.x;
-					ii.scale.y = -xdim.y + ydim.y;
-
-					if(abs(ii.scale.x) < abs(ii.scale.y))
-						ii.scale.x = abs(ii.scale.y / 1.5f) * (ii.scale.x < 0 ? -1 : 1);
-					else
-						ii.scale.y = abs(ii.scale.x / 1.5f) * (ii.scale.y < 0 ? -1 : 1);
-				}
+				// Rotate velocity so it fits with the vob
+				D3DXVECTOR3 velNrm; 
+				D3DXVec3Normalize(&velNrm, &p->Vel);
 				
-				//D3DXMatrixIdentity(&world);
-				D3DXMatrixTranslation(&world, p->PositionWS.x, p->PositionWS.y, p->PositionWS.z);			
-			}
+				D3DXVec3TransformNormal(&velNrm, &velNrm, &sw);
 
-			
-			D3DXMatrixTranspose(&world, &world);
+				ii.velocity = velNrm;
 
-#ifndef PUBLIC_RELEASE
-			/*if(p->PolyStrip)
-			{
-				// Collect vertices from strip
-				std::vector<ExVertexStruct> stripVx;
-				p->PolyStrip->GenerateVertexBuffer(stripVx);
+				//if(alignment == zPARTICLE_ALIGNMENT_VELOCITY)
+					ii.drawMode = 3;
 
-				// bind blend-state and texture
-				RendererState.BlendState = inf.BlendState;
-				RendererState.BlendState.SetDirty();
-				texture->Bind(0);
-				
-				Engine::GraphicsEngine->SetupPerInstanceConstantBuffer();
-
-				// Draw
-				Engine::GraphicsEngine->SetActiveVertexShader("VS_Ex");
-				Engine::GraphicsEngine->SetActivePixelShader("PS_Simple");
-				Engine::GraphicsEngine->DrawVertexArray(&stripVx[0], stripVx.size());
-				continue;
-			}*/
-#endif
-
-			//Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(p->PositionWS, 20.0f, D3DXVECTOR4(1,0,0,1));
-
-			//RendererState.TransformState.TransformWorld = world * view;
-			//DrawTriangle();
-
-			D3DXMATRIX mat = view * world;
-			
-			// Undo all rotations from view
-			if(alignment != zPARTICLE_ALIGNMENT_XY) 
-			{
-				for(int x=0;x<3;x++)
-				{
-					for(int y=0;y<3;y++) 
-					{
-						if ( x==y )
-							mat(x,y) = 1.0;
-						else
-							mat(x,y) = 0.0;
-					}
-				}
-			}
-
-			//mat *= scale;
-
-			//D3DXMatrixTranspose(&mat, &mat);	
-			
-			// Set computed matrix to instance info
-			ii.worldview = mat;
-			
+			} // TODO: Y-Locked!
 
 			if(!fx->GetEmitter()->GetVisIsQuadPoly())
 			{
@@ -2268,19 +2237,10 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 
 			color.w = std::max(color.w, 0.0f);
 
-			ii.color = color.ToDWORD();
+			ii.position = p->PositionWS;
+			ii.color = color;
+			ii.velocity = p->Vel;
 			part.push_back(ii);
-
-			/*if(data.BufferPosition + sizeof(ii) <= data.BufferSize)
-			{
-				memcpy(data.Buffer + data.BufferPosition, &ii, sizeof(ii)); // Copy instance info into buffer
-			}
-
-			data.BufferPosition += sizeof(ii); // Increase buffer position to next element
-			data.NeededSize += sizeof(ii); // Update the buffersize next frame, skip the particle effect for now
-			*/
-			//if(FrameParticles[texture].size() > 1024)
-			//	break;
 
 			fx->UpdateParticle(p);
 
@@ -2289,8 +2249,6 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 
 		FrameParticleInfo[texture] = inf;
 	}
-
-
 
 	// Create new particles?
 	fx->CreateParticlesUpdateDependencies();
@@ -3262,7 +3220,7 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 
 		if(base->OriginalNode->IsLeaf())
 		{
-			//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max);
+			//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, D3DXVECTOR4(1,1,0,1));
 
 			// Check if this leaf is inside the frustum
 			bool insideFrustum = true;
@@ -4582,4 +4540,72 @@ void GothicAPI::PrintMessageTimed(const INT2& position, const std::string& strMe
 	zCView* view = oCGame::GetGame()->GetGameView();
 	if(view)
 		view->PrintTimed(position.x, position.y, zSTRING(strMessage.c_str()), time, &color);
+}
+
+/** Applies tesselation-settings for all mesh-parts using the given info */
+void GothicAPI::ApplyTesselationSettingsForAllMeshPartsUsing(MaterialInfo* info, int amount)
+{
+	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
+	{
+		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
+		{
+			WorldMeshSectionInfo& section = (*ity).second;
+
+			
+			for(auto it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+			{
+				if((*it).first.Info == info && (*it).second->IndicesPNAEN.empty() && info->TextureTesselationSettings.buffer.VT_TesselationFactor > 0.5f)
+				{
+					// Tesselate this mesh
+					WorldConverter::TesselateMesh((*it).second, amount);
+				}
+			}
+		}
+	}
+}
+
+/** Returns the current weight of the rain-fx. The bigger value of ours and gothics is returned. */
+float GothicAPI::GetRainFXWeight()
+{
+	float myRainFxWeight = RendererState.RendererSettings.RainSceneWettness;
+	float gRainFxWeight = 0.0f;
+
+	if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
+			gRainFxWeight = oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetRainFXWeight();
+
+	// This doesn't seem to go as high as 1, scale it so it does.
+	gRainFxWeight = std::min(gRainFxWeight / 0.85f, 1.0f);
+
+	// Return the higher of the two, so we get the chance to overwrite it
+	return std::max(myRainFxWeight, gRainFxWeight);
+}
+
+/** Returns the wetness of the scene. Lasts longer than RainFXWeight */
+float GothicAPI::GetSceneWetness()
+{
+	float rain = GetRainFXWeight();
+	static DWORD s_rainStopTime = timeGetTime();
+
+	if(rain >= SceneWetness)
+	{	
+		SceneWetness = rain; // Rain is starting or still going
+		s_rainStopTime = timeGetTime(); // Just querry this until we fall into the else-branch some time
+	}
+	else
+	{
+		// Rain has just stopped, get time of how long the rain isn't going anymore
+		DWORD rainStoppedFor = (float)(timeGetTime() - s_rainStopTime);
+
+		// Get ratio between duration and that time. This value is near 1 when we almost reached the duration
+		float ratio = rainStoppedFor / (float)SCENE_WETNESS_DURATION_MS;
+
+		// clamp at 1.0f so the whole thing doesn't start over when reaching 0
+		if(ratio >= 1.0f)
+			ratio = 1.0f;
+
+		// make the wetness last longer by applying a pow, then inverse it so 1 means that the scene is actually wet
+		SceneWetness = std::max(0.0f, 1.0f - pow(ratio, 8.0f));
+	}
+
+	return SceneWetness;
 }

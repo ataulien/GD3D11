@@ -129,9 +129,8 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 	for(int i=0;i<2;i++)
 	{
 		std::string normalmap = "system\\GD3D11\\textures\\replacements\\" + nrmFolder + "\\" + TextureName + "_normal.dds";
-		FILE* f = fopen(normalmap.c_str(), "rb");
-		
-		if(f)
+
+		if(Toolbox::FileExists(normalmap))
 		{
 			// Create the texture object this is linked with
 		
@@ -155,9 +154,8 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 	for(int i=0;i<2;i++)
 	{
 		std::string fxMap = "system\\GD3D11\\textures\\replacements\\" + nrmFolder + "\\" + TextureName + "_fx.dds";
-		f = fopen(fxMap.c_str(), "rb");
-		
-		if(f)
+
+		if(Toolbox::FileExists(fxMap))
 		{
 			// Create the texture object this is linked with
 			Engine::GraphicsEngine->CreateTexture(&fxMapTexture);

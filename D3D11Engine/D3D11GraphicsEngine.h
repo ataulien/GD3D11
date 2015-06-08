@@ -32,6 +32,7 @@ class D3D11HDShader;
 class D3D11OcclusionQuerry;
 struct MeshInfo;
 struct RenderToTextureBuffer;
+class D3D11Effect;
 class D3D11GraphicsEngine : public D3D11GraphicsEngineBase
 {
 public:
@@ -192,7 +193,7 @@ public:
 	virtual void DrawVobSingle(VobInfo* vob);
 
 	/** Draws everything around the given position */
-	void DrawWorldAround(const D3DXVECTOR3& position, int sectionRange, float vobXZRange);
+	void DrawWorldAround(const D3DXVECTOR3& position, int sectionRange, float vobXZRange, bool cullFront = true);
 
 	/** Draws the static vobs instanced */
 	XRESULT DrawVOBsInstanced();
@@ -213,13 +214,10 @@ public:
 	void DrawCloudMeshes();
 
 	/** Renders the shadowmaps for the sun */
-	void RenderShadowmaps(const D3DXVECTOR3& cameraPosition);
+	void RenderShadowmaps(const D3DXVECTOR3& cameraPosition, RenderToDepthStencilBuffer* target = NULL, bool cullFront = true);
 
 	/** Updates the occlusion for the bsp-tree */
 	void UpdateOcclusion();
-
-	/** Returns the shadermanager */
-	D3D11ShaderManager* GetShaderManager();
 
 	/** Recreates the renderstates */
 	XRESULT UpdateRenderStates();
@@ -257,6 +255,9 @@ public:
 	/** Draws the particle-effects */
 	void DrawParticleEffects();
 
+	/** Draws the particle-effects using the geometry shader */
+	void DrawParticleEffectsGS();
+
 	/** Draws underwater effects */
 	void DrawUnderwaterEffects();
 
@@ -285,6 +286,9 @@ protected:
 	ID3D11RasterizerState* WorldRasterizerState;
 	ID3D11RasterizerState* HUDRasterizerState;
 	ID3D11DepthStencilState* DefaultDepthStencilState;
+
+	/** Effects wrapper */
+	D3D11Effect* Effects;
 
 	/** Swapchain buffers */
 	ID3D11RenderTargetView* BackbufferRTV;
@@ -333,6 +337,7 @@ protected:
 
 	/** Reflection */
 	ID3D11ShaderResourceView* ReflectionCube;
+	ID3D11ShaderResourceView* ReflectionCube2;
 
 	/** Constantbuffers for view-distances */
 	D3D11ConstantBuffer* InfiniteRangeConstantBuffer;

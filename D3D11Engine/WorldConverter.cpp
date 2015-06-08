@@ -1088,7 +1088,13 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 	Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshVertexBuffer);
 	Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshIndexBuffer);
 	
+	LogInfo() << "Smoothing worldmesh normals...";
+	DWORD sStart = timeGetTime();
 
+	// Generate smooth normals
+	MeshModifier::ComputeSmoothNormals(wrappedVertices);
+
+	LogInfo() << "Process took " << timeGetTime() - sStart << "ms";
 
 	// Init and fill them
 	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
@@ -2507,4 +2513,74 @@ void WorldConverter::ConvertExVerticesTozCPolygons(const std::vector<ExVertexStr
 		// Add to array
 		polyArray.push_back(poly);
 	}
+}
+
+/** Tesselates the given mesh the given amount of times */
+void WorldConverter::TesselateMesh(WorldMeshInfo* mesh, int amount)
+{
+	// Copy old vertices so we can directly write to the vectors again
+	std::vector<ExVertexStruct> vxOld = mesh->Vertices;
+	std::vector<unsigned short> ixOld = mesh->Indices;
+	
+	// Tesselate if the outcome would still be in 16-bit range
+	if(amount > 1 && mesh->Vertices.size() + (mesh->Indices.size() / 3) < 0x0000FFFF)
+	{
+		std::vector<ExVertexStruct> meshTess;
+		for(unsigned int i=0;i<mesh->Indices.size();i+=3)
+		{
+			ExVertexStruct vx[3];
+			vx[0] = mesh->Vertices[mesh->Indices[i]];
+			vx[1] = mesh->Vertices[mesh->Indices[i+1]];
+			vx[2] = mesh->Vertices[mesh->Indices[i+2]];
+
+		
+			std::vector<ExVertexStruct> triTess;
+			WorldConverter::TesselateTriangle(vx, triTess, 1);
+
+			// Append
+			for(unsigned int v=0;v<triTess.size();v++)
+			{
+				meshTess.push_back(triTess[v]);
+			}
+		}
+	
+		mesh->Vertices.clear();
+		mesh->Indices.clear();
+
+		// Index
+		WorldConverter::IndexVertices(&meshTess[0], meshTess.size(), mesh->Vertices, mesh->Indices);
+	}
+
+	// Create new normals
+	//WorldConverter::GenerateVertexNormals(mesh->Vertices, mesh->Indices);
+
+	MeshModifier::ComputePNAEN18Indices(mesh->Vertices, mesh->Indices, mesh->IndicesPNAEN, true, true);
+	if(mesh->Vertices.size() >= 0xFFFF)
+	{
+		// Too large
+		return;
+	}
+
+
+	// Cleanup
+	delete mesh->MeshVertexBuffer;
+	delete mesh->MeshIndexBuffer;
+	delete mesh->MeshIndexBufferPNAEN;
+
+	// Recreate the buffers
+	Engine::GraphicsEngine->CreateVertexBuffer(&mesh->MeshVertexBuffer);
+	Engine::GraphicsEngine->CreateVertexBuffer(&mesh->MeshIndexBufferPNAEN);
+	Engine::GraphicsEngine->CreateVertexBuffer(&mesh->MeshIndexBuffer);
+
+	// Init and fill them
+	mesh->MeshVertexBuffer->Init(&mesh->Vertices[0], mesh->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	mesh->MeshIndexBuffer->Init(&mesh->Indices[0], mesh->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+
+	mesh->TesselationSettings.buffer.VT_TesselationFactor = 1.0f;
+	mesh->TesselationSettings.buffer.VT_DisplacementStrength = 0.5f;
+	mesh->TesselationSettings.UpdateConstantbuffer();
+
+	// Mark dirty
+	mesh->SaveInfo = true;
 }

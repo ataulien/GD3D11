@@ -689,6 +689,15 @@
     <ClInclude Include="D3D11GraphicsEngineQueued.h" />
     <ClInclude Include="D3D11GraphicsEngineBase.h" />
     <ClInclude Include="ModSpecific.h" />
+    <ClInclude Include="D3D11GodRayEffect.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11GShader.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11Effect.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1000,6 +1009,15 @@
     <ClCompile Include="D3D11GraphicsEngineQueued.cpp" />
     <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
     <ClCompile Include="ModSpecific.cpp" />
+    <ClCompile Include="D3D11GodRayEffect.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11GShader.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11Effect.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

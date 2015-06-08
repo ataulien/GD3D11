@@ -124,6 +124,9 @@ XRESULT D3D11HDShader::LoadShader(const char* hullShader, const char* domainShad
 	DomainShader->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(domainShader), domainShader);
 #endif
 
+	hsBlob->Release();
+	dsBlob->Release();
+
 	return XR_SUCCESS;
 }
 

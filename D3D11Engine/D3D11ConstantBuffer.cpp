@@ -79,6 +79,14 @@ void D3D11ConstantBuffer::BindToHullShader(int slot)
 	BufferDirty = false;
 }
 
+void D3D11ConstantBuffer::BindToGeometryShader(int slot)
+{
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
+	engine->GetContext()->GSSetConstantBuffers(slot, 1, &Buffer);
+
+	BufferDirty = false;
+}
+
 /** Returns whether this buffer has been updated since the last bind */
 bool D3D11ConstantBuffer::IsDirty()
 {

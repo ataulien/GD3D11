@@ -70,6 +70,9 @@ struct BspNodeInfo
 	/** Pipeline-states for everything static in this Node */
 	std::vector<PipelineState::PipelineSortItem*> StaticObjectPipelineStates;
 
+	/** Cache for instancing-info, so we can copy it to the buffers in batches */
+	std::map<GVisual*, std::vector<VobInstanceInfo>> InstanceDataCache;
+
 	/** Num of sub-nodes this node has */
 	unsigned int NumLevels;
 

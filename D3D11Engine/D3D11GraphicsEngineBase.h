@@ -8,6 +8,7 @@ class D3D11PShader;
 class D3D11VShader;
 class D3D11HDShader;
 class D3D11Texture;
+class D3D11GShader;
 
 struct D3D11PipelineState : public PipelineState
 {
@@ -106,6 +107,8 @@ namespace D3D11ObjectIDs
 
 	__declspec(selectany) std::map<UINT8, D3D11HDShader *> HDShadersByID;
 
+	__declspec(selectany) std::map<UINT8, D3D11GShader *> GShadersByID;
+
 	__declspec(selectany) std::map<UINT8, D3D11DepthBufferState*> DepthStateByID;
 
 	__declspec(selectany) std::map<UINT8, D3D11BlendStateInfo*> BlendStateByID;
@@ -122,6 +125,7 @@ namespace D3D11ObjectIDs
 		int TextureCounter;
 		int VShadersCounter;
 		int HDShadersCounter;
+		int GShadersCounter;
 		int DepthStateCounter;
 		int BlendStateCounter;
 		int RasterizerCounter;
@@ -191,6 +195,9 @@ public:
 	/** Saves a screenshot */
 	virtual void SaveScreenshot(){}
 
+	/** Returns the shadermanager */
+	D3D11ShaderManager* GetShaderManager();
+
 	/** Draws a vertexarray, used for rendering gothics UI */
 	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct));
 
@@ -223,6 +230,7 @@ public:
 	virtual XRESULT SetActivePixelShader(const std::string& shader);
 	virtual XRESULT SetActiveVertexShader(const std::string& shader);
 	virtual XRESULT SetActiveHDShader(const std::string& shader);
+	virtual XRESULT SetActiveGShader(const std::string& shader);
 
 	/** Returns the transforms constantbuffer */
 	BaseConstantBuffer* GetTransformsCB();
@@ -272,10 +280,12 @@ protected:
 	D3D11PShader* PS_Simple;
 	D3D11VShader* VS_Ex;
 	D3D11VShader* VS_ExInstancedObj;
+	D3D11GShader* GS_Billboard;
 
 	D3D11VShader* ActiveVS;
 	D3D11PShader* ActivePS;
 	D3D11HDShader* ActiveHDS;
+	D3D11GShader* ActiveGS;
 
 	/** FixedFunction-State render states */
 	ID3D11RasterizerState* FFRasterizerState;

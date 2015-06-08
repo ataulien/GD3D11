@@ -9,12 +9,19 @@ cbuffer DS_ScreenQuadConstantBuffer : register( b0 )
 {
 	matrix SQ_InvProj; // Optimize out!
 	matrix SQ_InvView;
+	matrix SQ_View;
+	
+	matrix SQ_RainViewProj;
+	
 	float3 SQ_LightDirectionVS;
 	float SQ_ShadowmapSize;
 	
 	float4 SQ_LightColor;
 	matrix SQ_ShadowView;
 	matrix SQ_ShadowProj;
+	
+	matrix SQ_RainView;
+	matrix SQ_RainProj;
 	
 	float SQ_ShadowStrength;
 	float SQ_ShadowAOStrength;
@@ -32,8 +39,9 @@ Texture2D	TX_Diffuse : register( t0 );
 Texture2D	TX_Nrm_SI_SP : register( t1 );
 Texture2D	TX_Depth : register( t2 );
 Texture2D	TX_Shadowmap : register( t3 );
-
-
+Texture2D	TX_RainShadowmap : register( t4 );
+TextureCube	TX_ReflectionCube : register( t5 );
+Texture2D	TX_Distortion : register( t6 );
 
 
 //--------------------------------------------------------------------------------------
@@ -85,10 +93,25 @@ float IsInShadow(float3 wsPosition, Texture2D shadowmap, SamplerComparisonState 
 	return shadowmap.SampleCmpLevelZero(samplerState, projectedTexCoords.xy, vShadowSamplingPos.z);
 }
 
-float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, float distance, float vertLighting)
+float IsWet(float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, matrix viewProj)
+{
+	float4 vShadowSamplingPos = mul(float4(wsPosition, 1), mul(SQ_RainView, SQ_RainProj));
+	
+	float2 projectedTexCoords;
+	vShadowSamplingPos.xyz /= vShadowSamplingPos.w;
+    projectedTexCoords[0] = vShadowSamplingPos.x/2.0f +0.5f;
+    projectedTexCoords[1] = vShadowSamplingPos.y/-2.0f +0.5f;
+	
+	float bias = 0.001f;
+	return shadowmap.SampleCmpLevelZero( samplerState, projectedTexCoords.xy, vShadowSamplingPos.z - bias);
+}
+
+
+
+float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, float distance, float vertLighting, matrix viewProj, float bias = 0.01f, float softnessScale = 1.0f)
 {
 	// Reconstruct VS World ShadowViewPosition from depth
-	float4 vShadowSamplingPos = mul(float4(wsPosition, 1), mul(SQ_ShadowView, SQ_ShadowProj));
+	float4 vShadowSamplingPos = mul(float4(wsPosition, 1), viewProj);
 	
 	float2 projectedTexCoords;
 	vShadowSamplingPos.xyz /= vShadowSamplingPos.w;
@@ -98,14 +121,12 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 	float shadow = 1.0f;
 	if( !(projectedTexCoords.x > 1 || projectedTexCoords.y > 1 ||
 		projectedTexCoords.x < 0 || projectedTexCoords.y < 0))
-	{
-		float bias = lerp(0.00005f, 0.0001f, distance / 1000);
-		
+	{	
 #if SHD_FILTER_16TAP_PCF
 		//return shadowmap.SampleCmpLevelZero( samplerState, projectedTexCoords.xy, vShadowSamplingPos.z - 0.00001f);
 		//return shadowmap.Sample(SS_Linear, projectedTexCoords).r > vShadowSamplingPos.z ? 1 : 0;
 		
-		//float dist = shadowmap.Sample(SS_Linear, projectedTexCoords).r - vShadowSamplingPos.z;
+		float dist = shadowmap.Sample(SS_Linear, projectedTexCoords).r - vShadowSamplingPos.z;
 		
 		//return dist * 10.0f;
 		
@@ -126,7 +147,7 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 			}
 		}*/
 		
-		float scale = 1.0f;//1 + (minValue - vShadowSamplingPos.z) * 500.0f;
+		float scale = softnessScale;//1 + (minValue - vShadowSamplingPos.z) * 500.0f;
 		
 	 
 		//perform PCF filtering on a 4 x 4 texel neighborhood
@@ -156,6 +177,130 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 	shadow = lerp(shadow, vertLighting, saturate(border));
 	
 	return saturate(shadow);
+}
+
+static const float WEIGHT_BIAS = -0.55;
+static const float WEIGHT_MUL = 0.7;
+
+/** Applys normal-deformation for the rain */
+void ApplyRainNormalDeformation(inout float3 vsNormal, float3 wsPosition, inout float3 diffuse)
+{
+	// Need worldspace normal for this
+	float3 wsNormal = mul(vsNormal, (float3x3)SQ_InvView).xyz;
+	
+	float2 groundDir = normalize(float2(0.1f, 0.1f) + saturate(cross(wsNormal, float3(0.0f,1.0f,0.0f)).xz));
+	
+	const float scale = 1000.0f;
+	float2 uv[4] = {wsPosition.zy / scale, 
+					wsPosition.xz / (scale*2),
+					wsPosition.xz / (scale*2),					
+					wsPosition.xy / scale};
+	
+	float groundSpeed = 0.1f * AC_RainFXWeight;
+	float downSpeed = 0.2f * AC_RainFXWeight;
+	uv[0] += float2(0, AC_Time * downSpeed);
+	uv[1] += float2(AC_Time * groundSpeed, AC_Time * groundSpeed);
+	uv[2] = uv[2] * float2(0.8f, 1.2f) + float2(-AC_Time * groundSpeed * 0.7f, AC_Time * groundSpeed * 0.4f);
+	uv[3] += float2(0, AC_Time * downSpeed);
+	
+	// Create weights for all 3 axis
+	float3 weights = float3(abs(wsNormal.x),
+							abs(wsNormal.y),
+							abs(wsNormal.z));
+							
+	// Tighten up the blending zone:
+	weights = (weights + WEIGHT_BIAS) * WEIGHT_MUL;
+	weights = max(weights, 0);						
+							
+	weights /= (weights.x + weights.y +
+				weights.z ).xxx;
+				
+	weights.xz *= 0.6f;
+	weights.y *= 0.7f;
+		
+	float3 dist[3] =  {normalize((TX_Distortion.Sample(SS_Linear, uv[0]).zyx * 2 - 1)), 
+					  normalize((TX_Distortion.Sample(SS_Linear, uv[1]).xzy * 2 - 1)) * 0.5f + 
+					  normalize((TX_Distortion.Sample(SS_Linear, uv[2]).xzy * 2 - 1)) * 0.5f, 
+					  normalize((TX_Distortion.Sample(SS_Linear, uv[3]).xyz * 2 - 1))};
+		
+	weights = pow(weights, 4.0f);
+		
+	const float distWeight = 0.9f;
+		
+	// Sample the distortion-texture for all 3 axis
+	for(int i=0;i<3;i++)
+	{		
+		// Add to normal
+		wsNormal = lerp(wsNormal, dist[i], weights[i] * distWeight);//distWeight * weights[i]); 
+	}
+
+	wsNormal = normalize(wsNormal);
+	//diffuse.xyz = wsNormal;
+	
+	vsNormal = normalize(mul(wsNormal, (float3x3)SQ_View).xyz);
+}
+
+/** Returns new diffusecolor (rgb)*/
+void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inout float3 vsNormal, in out float3 diffuse, in out float specIntensity, in out float specPower, out float specAdd)
+{
+	// Ask the rain-shadowmap if we can hit this pixel
+	float pixelWettnes = ComputeShadowValue(0.0f, wsPosition, TX_RainShadowmap, SS_Comp, vsPosition.z, 1.0f, mul(SQ_RainView, SQ_RainProj), 0.001f, 2.5f) * AC_SceneWettness;
+	
+	//IsWet(wsPosition, TX_RainShadowmap, SS_Comp) * AC_SceneWettness;
+
+	float3 vsNormalCpy = vsNormal;
+	
+	// Apply water-effects
+	float3 nrm = vsNormal;
+	ApplyRainNormalDeformation(nrm, wsPosition, diffuse.rgb);
+	vsNormal = lerp(vsNormal, nrm, AC_RainFXWeight); // Only apply deformation if it's actually raining
+	
+	// Get fresnel-effect
+	float fresnel = pow(1.0f - max(0.0f, dot(vsNormal, -vsDir)), 160.0f);
+	
+	
+	//vsNormalCpy.z *= 0.3f;
+	//vsNormalCpy = normalize(vsNormalCpy);
+	
+	// Scale specular intensity and power
+	specIntensity = lerp(specIntensity, 0.0, pixelWettnes);
+	specPower = lerp(specPower, 150.0f, pixelWettnes);
+	
+	// Reflection
+	float3 reflect_vec = reflect(-vsDir.xyz, vsNormal.xyz);
+	
+	// sample reflection cube
+	float4 refCube = TX_ReflectionCube.Sample(SS_Linear, reflect_vec);
+	float3 reflection = refCube.rgb * refCube.a;
+	
+	float3 l1 = normalize(float3(0.0f,0.5f,-1.0f));
+	float3 l2 = normalize(mul(normalize(float3(-0.333f,0.533f,0.333f)), (float3x3)SQ_View));
+	float3 l3 = normalize(mul(normalize(float3(0,0.566f,-0.666f)), (float3x3)SQ_View));
+	
+	float3 H_1 = normalize(l1 + vsDir);
+	float3 H_2 = normalize(l2 + vsDir);
+	float3 H_3 = normalize(l3 + vsDir);
+	float spec1 = CalcBlinnPhongLighting(vsNormal, H_1);
+	float spec2 = CalcBlinnPhongLighting(vsNormal, H_2);
+	float spec3 = CalcBlinnPhongLighting(vsNormal, H_3);
+		
+	// power the reflection 
+	reflection = pow(reflection, 3.0f) * 1.29f;
+	//reflection += fresnel * 0.1f;
+	
+	reflection += pow(spec1, specPower) * 0.7f + pow(spec2, specPower) * 0.7f + pow(spec3, specPower) * 0.6f;
+	
+	// Compute wet pixel color
+	float diffuseLum = dot(diffuse, float3(0.3333f,0.3333f,0.3333f));
+	float3 wetPixel = lerp(diffuseLum, diffuse, 0.6f) * 0.4f; // Desaturate and darken the scene a bit	
+	
+	
+	
+	
+	specAdd = reflection * pixelWettnes *0.17f;
+	diffuse = lerp(diffuse, wetPixel, pixelWettnes);
+	
+
 }
 
 //--------------------------------------------------------------------------------------
@@ -190,12 +335,13 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float expDepth = TX_Depth.Sample(SS_Linear, uv).r;
 	float3 vsPosition = VSPositionFromDepth(expDepth, uv);
 	float3 wsPosition = mul(float4(vsPosition, 1), SQ_InvView).xyz;
+	float3 V = normalize(-vsPosition);
 	
 #if SHD_ENABLE
 	//return float4(mul(float4(wsPosition, 1), mul(SQ_ShadowView, SQ_ShadowProj)).xyz, 1);
 	
 	// Get shadowing
-	float shadow = ComputeShadowValue(uv, wsPosition, TX_Shadowmap, SS_Comp, vsPosition.z, vertLighting);
+	float shadow = ComputeShadowValue(uv, wsPosition, TX_Shadowmap, SS_Comp, vsPosition.z, vertLighting, mul(SQ_ShadowView, SQ_ShadowProj), lerp(0.00005f, 0.0001f, vsPosition.z / 1000));
 	
 #else
 	float shadow = vertLighting;
@@ -218,8 +364,16 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	}*/
 	
 	
+	
+	// Compute wettness
+	float specWet;
+	ApplySceneWettness(wsPosition, vsPosition, V, normal, diffuse.rgb, specIntensity, specPower, specWet);
+	
+	// Boost specWet when not in shadow
+	specWet += specWet * shadow;
+		
 	// Compute specular lighting
-	float3 V = normalize(-vsPosition);
+	
 	float3 H = normalize(SQ_LightDirectionVS + V );
 	float spec = CalcBlinnPhongLighting(normal, H);
 	float specMod = pow(dot(float3(0.333f,0.333f,0.333f), diffuse.rgb), 2);
@@ -228,20 +382,24 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	
 	//return float4(diffuse.rgb, 1);
 	
+	float4 lightColor = SQ_LightColor;
+	lightColor.rgb = lerp(lightColor.rgb, lightColor.rgb * 0.8f, AC_SceneWettness);
+	
 	// Apply sunlight
-	float sunStrength = dot(SQ_LightColor.rgb, float3(0.333f,0.333f,0.333f));
+	float sunStrength = dot(lightColor.rgb, float3(0.333f,0.333f,0.333f));
 	
 	float vertAO = lerp(pow(saturate(vertLighting * 2), 2), 1.0f, 0.5f);
 	float sun = saturate(dot(normalize(SQ_LightDirectionVS), normal) * shadow) * 1.0f;
 
-	float3 specBare = pow(spec, specPower) * specIntensity * SQ_LightColor.rgb * sun;
+	spec = pow(spec, specPower) * specIntensity;
+	float3 specBare = spec * lightColor.rgb * sun + specWet * lightColor.rgb;
 	float3 specColored = saturate(lerp(specBare, specBare * diffuse.rgb, specMod));
 	
 	float shadowAO = lerp(1.0f, vertLighting, SQ_ShadowAOStrength);
 	float worldAO = lerp(1.0f, vertLighting, SQ_WorldAOStrength);
 	
 	float3 litPixel = lerp( diffuse * SQ_ShadowStrength * sunStrength * shadowAO, 
-							diffuse * SQ_LightColor * SQ_LightColor.a * worldAO, sun) 
+							diffuse * lightColor * lightColor.a * worldAO, sun) 
 				  + specColored;
 	
 	float fresnel = pow(1.0f - max(0.0f, dot(normal, V)), 10.0f);

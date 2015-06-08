@@ -38,6 +38,7 @@ public:
 	{
 		B_VERTEXBUFFER = D3D11_BIND_VERTEX_BUFFER,
 		B_INDEXBUFFER = D3D11_BIND_INDEX_BUFFER,
+		B_STREAM_OUT = D3D11_BIND_STREAM_OUTPUT
 	};
 
 	/** Creates the vertexbuffer with the given arguments */

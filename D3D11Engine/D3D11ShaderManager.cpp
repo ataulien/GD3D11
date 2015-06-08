@@ -3,6 +3,7 @@
 #include "D3D11Vshader.h"
 #include "D3D11PShader.h"
 #include "D3D11HDShader.h"
+#include "D3D11GShader.h"
 #include "D3D11ConstantBuffer.h"
 #include "GothicGraphicsState.h"
 #include "ConstantBufferStructs.h"
@@ -47,7 +48,16 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerInstance));
 
+	Shaders.push_back(ShaderInfo("VS_ParticlePoint", "VS_ParticlePoint.hlsl", "v", 11));
+	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
+
+	Shaders.push_back(ShaderInfo("VS_ParticlePointShaded", "VS_ParticlePointShaded.hlsl", "v", 11));
+	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
+	Shaders.back().cBufferSizes.push_back(sizeof(ParticlePointShadingConstantBuffer));
 	
+
+	Shaders.push_back(ShaderInfo("VS_AdvanceRain", "VS_AdvanceRain.hlsl", "v", 11));
+	Shaders.back().cBufferSizes.push_back(sizeof(AdvanceRainConstantBuffer));
 
 	Shaders.push_back(ShaderInfo("VS_Ocean", "VS_Ocean.hlsl", "v", 1));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
@@ -104,6 +114,9 @@ XRESULT D3D11ShaderManager::Init()
 	//Shaders.push_back(ShaderInfo("FixedFunctionPipelineEmulationPS", "FixedFunctionPipelineEmulationPS.hlsl", "p", 1));
 	Shaders.push_back(ShaderInfo("PS_Simple", "PS_Simple.hlsl", "p"));
 
+	Shaders.push_back(ShaderInfo("PS_Rain", "PS_Rain.hlsl", "p"));
+
+	
 
 	Shaders.push_back(ShaderInfo("PS_World", "PS_World.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(GothicGraphicsState));
@@ -154,6 +167,7 @@ XRESULT D3D11ShaderManager::Init()
 
 	Shaders.push_back(ShaderInfo("PS_PFX_Heightfog", "PS_PFX_Heightfog.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(HeightfogConstantBuffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
 
 	Shaders.push_back(ShaderInfo("PS_PFX_UnderwaterFinal", "PS_PFX_UnderwaterFinal.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(RefractionInfoConstantBuffer));
@@ -219,6 +233,16 @@ XRESULT D3D11ShaderManager::Init()
 	
 	Shaders.push_back(ShaderInfo("PNAEN_Tesselation", "PNAEN_Tesselation.hlsl", "hd"));
 	Shaders.back().cBufferSizes.push_back(sizeof(PNAENConstantBuffer));
+
+	Shaders.push_back(ShaderInfo("GS_Billboard", "GS_Billboard.hlsl", "g"));
+	Shaders.back().cBufferSizes.push_back(sizeof(ParticleGSInfoConstantBuffer));
+
+	Shaders.push_back(ShaderInfo("GS_Raindrops", "GS_Raindrops.hlsl", "g"));
+	Shaders.back().cBufferSizes.push_back(sizeof(ParticleGSInfoConstantBuffer));
+
+
+	Shaders.push_back(ShaderInfo("GS_ParticleStreamOut", "VS_AdvanceRain.hlsl", "g", 11));
+	Shaders.back().cBufferSizes.push_back(sizeof(ParticleGSInfoConstantBuffer));
 
 	D3D10_SHADER_MACRO m;
 	std::vector<D3D10_SHADER_MACRO> makros;
@@ -441,7 +465,39 @@ XRESULT D3D11ShaderManager::LoadShaders()
 						PShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
 					}
 				}
+			}else if (Shaders[i].type == "g")
+			{
+				// See if this is a reload
+				if(GShaders.count(Shaders[i].name) > 0)
+				{
+					D3D11GShader* gs = new D3D11GShader();
+					if(XR_SUCCESS != gs->LoadShader(("system\\GD3D11\\shaders\\" + Shaders[i].fileName).c_str(), Shaders[i].shaderMakros, Shaders[i].layout != 0, Shaders[i].layout))
+					{
+						LogError() << "Failed to reload shader: " << Shaders[i].fileName;
+
+						delete gs;
+					}else
+					{
+						// Compilation succeeded, switch the shader
+						delete GShaders[Shaders[i].name];
+						GShaders[Shaders[i].name] = gs;
+
+						for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
+						{
+							GShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+						}
+					}
+				}else
+				{
+					GShaders[Shaders[i].name] = new D3D11GShader();
+					XLE(GShaders[Shaders[i].name]->LoadShader(("system\\GD3D11\\shaders\\" + Shaders[i].fileName).c_str(), Shaders[i].shaderMakros, Shaders[i].layout != 0, Shaders[i].layout));
+					for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
+					{
+						GShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+					}
+				}
 			}
+
 			fclose(f);
 		}
 
@@ -546,4 +602,10 @@ D3D11PShader* D3D11ShaderManager::GetPShader(std::string shader)
 D3D11HDShader* D3D11ShaderManager::GetHDShader(std::string shader)
 {
 	return HDShaders[shader];
+}
+
+
+D3D11GShader* D3D11ShaderManager::GetGShader(std::string shader)
+{
+	return GShaders[shader];
 }

@@ -525,7 +525,7 @@ struct GothicRendererSettings
 		EnableSMAA = true;
 
 		TesselationFactor = 20.0f;
-		TesselationRange = 4000.0f;
+		TesselationRange = 8.0f;
 
 		ShadowMapSize = 2048;
 		WorldShadowRangeScale = 8.0f;
@@ -553,6 +553,17 @@ struct GothicRendererSettings
 
 		FOVHoriz = 90.0f;
 		FOVVert = 90.0f;
+
+		RainRadiusRange = 5000.0f;
+		RainHeightRange = 1000.0f;
+		RainNumParticles = 150000;
+		RainMoveParticles = true;
+		RainGlobalVelocity = D3DXVECTOR3(250, -1000, 0);
+		RainUseInitialSet = false;
+		RainSceneWettness = 1.0f;
+		RainSunLightStrength = 0.50f;
+		RainFogColor = D3DXVECTOR3(0.28f, 0.28f, 0.28f);
+		RainFogDensity = 0.00500f;
 
 		GodRayDecay = 0.97f;
 		GodRayWeight = 0.85f;
@@ -675,6 +686,18 @@ struct GothicRendererSettings
 	HBAOSettings HbaoSettings;
 
 	bool FixViewFrustum;
+
+	float RainRadiusRange;
+	float RainHeightRange;
+	UINT RainNumParticles;
+	bool RainMoveParticles;
+	bool RainUseInitialSet;
+	D3DXVECTOR3 RainGlobalVelocity;
+	float RainSceneWettness;
+
+	float RainSunLightStrength;
+	D3DXVECTOR3 RainFogColor;
+	float RainFogDensity;
 };
 
 struct GothicRendererTiming

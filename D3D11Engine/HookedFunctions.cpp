@@ -21,6 +21,7 @@
 #include "zCResourceManager.h"
 #include "zCQuadMark.h"
 #include "oCNPC.h"
+#include "zCSkyController_Outdoor.h"
 
 #if _MSC_VER >= 1300
 #include <Tlhelp32.h>
@@ -59,6 +60,7 @@ void HookedFunctionInfo::InitHooks()
 	//zCResourceManager::Hook();
 	zCQuadMark::Hook();
 	oCNPC::Hook();
+	zCSkyController_Outdoor::Hook();
 
 	//original_zCExceptionHandler_UnhandledExceptionFilter = (zCExceptionHandlerUnhandledExceptionFilter)DetourFunction((BYTE *)GothicMemoryLocations::Functions::zCExceptionHandler_UnhandledExceptionFilter, (BYTE *)HookedFunctionInfo::hooked_zCExceptionHandlerUnhandledExceptionFilter);
 	//original_HandledWinMain = (HandledWinMain)DetourFunction((BYTE *)GothicMemoryLocations::Functions::HandledWinMain, (BYTE *)HookedFunctionInfo::hooked_HandledWinMain);
