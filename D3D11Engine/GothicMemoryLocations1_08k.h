@@ -88,6 +88,12 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_OverrideFlag = 0x564;
 
 		static const unsigned int SetCameraLocationHint = 0x005BC7D0;
+
+		static const unsigned int LOC_ProcessRainFXNOPStart = 0x005C0FB0;
+		static const unsigned int LOC_ProcessRainFXNOPEnd = 0x005C107D;
+
+		static const unsigned int ProcessRainFX = 0x005C0DC0;
+		static const unsigned int Offset_OutdoorRainFXWeight = 0x66C;
 	};
 
 	struct zCParticleEmitter

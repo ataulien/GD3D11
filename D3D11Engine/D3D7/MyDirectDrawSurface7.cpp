@@ -486,6 +486,7 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 		{
 			EngineTexture->UpdateData(dst, 0);
 			Engine::GAPI->AddFrameLoadedTexture(this);
+			SetReady(true); // No need to load other stuff to get this ready
 		}
 
 		delete[] dst;
@@ -605,12 +606,13 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 			if(Engine::GAPI->GetMainThreadID() != GetCurrentThreadId())
 			{
 				EngineTexture->UpdateDataDeferred(LockedData, 0);
-				Engine::GAPI->AddFrameLoadedTexture(this);
+				Engine::GAPI->AddFrameLoadedTexture(this);			
 			}
 			else
 			{
 				EngineTexture->UpdateData(LockedData, 0);
 				Engine::GAPI->AddFrameLoadedTexture(this);
+				SetReady(true); // No need to load other stuff to get this ready
 			}
 		}
 	}

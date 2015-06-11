@@ -326,10 +326,16 @@ XRESULT D3D11Effect::DrawRainShadowmap()
 		PS_Diffuse->GetConstantBuffer()[0]->BindToPixelShader(0);
 	}
 
+	// Disable stuff like NPCs and usable things as they don't need to cast rain-shadows
+	bool oldDrawSkel = Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes;
+	Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes = false;
+
 	// Draw rain-shadowmap
 	e->RenderShadowmaps(p, RainShadowmap, false);
 	
+
 	// Restore old settings
+	Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes = oldDrawSkel;
 	Engine::GAPI->GetRendererState()->GraphicsState.FF_AlphaRef = oldAlphaRef;
 	if(PS_Diffuse)
 	{

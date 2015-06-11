@@ -51,6 +51,7 @@ const INT2 DEFAULT_RESOLUTION = INT2(1920 * RES_UPSCALE, 1080*  RES_UPSCALE);
 
 const int NUM_UNLOADEDTEXCOUNT_FORCE_LOAD_TEXTURES = 100;
 
+const float DEFAULT_NORMALMAP_STRENGTH = 0.1f;
 const float DEFAULT_FAR_PLANE = 50000.0f;
 const D3DXVECTOR4 UNDERWATER_COLOR_MOD = D3DXVECTOR4(0.5f, 0.7f, 1.0f, 1.0f);
 
@@ -1189,6 +1190,20 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBu
 
 		info->Constantbuffer->BindToPixelShader(2);
 
+		// Bind a default normalmap in case the scene is wet and we currently have none
+		if(!tex->GetSurface()->GetNormalmap() && Engine::GAPI->GetSceneWetness())
+		{
+			// Modify the strength of that default normalmap for the material info
+			if(info->buffer.NormalmapStrength * Engine::GAPI->GetSceneWetness() != 0.1f)
+			{
+				info->buffer.NormalmapStrength = DEFAULT_NORMALMAP_STRENGTH * Engine::GAPI->GetSceneWetness();
+				info->UpdateConstantbuffer();
+			}
+
+			DistortionTexture->BindToPixelShader(1);
+		}
+
+		// Select shader
 		BindShaderForTexture(tex);
 	
 		if(RenderingStage == DES_MAIN)
@@ -2068,11 +2083,24 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		{
 			MyDirectDrawSurface7* surface = (*it).first.Texture->GetSurface();
 			ID3D11ShaderResourceView* srv[3];
+			MaterialInfo* info = (*it).first.Info;
 			
 			// Get diffuse and normalmap
 			srv[0] = ((D3D11Texture *)surface->GetEngineTexture())->GetShaderResourceView();
 			srv[1] = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
 			srv[2] = surface->GetFxMap() ? ((D3D11Texture *)surface->GetFxMap())->GetShaderResourceView() : NULL;
+
+			// Bind a default normalmap in case the scene is wet and we currently have none
+			if(Engine::GAPI->GetSceneWetness() > 0.0f && !srv[1])
+			{
+				// Modify the strength of that default normalmap for the material info
+				if(info->buffer.NormalmapStrength * Engine::GAPI->GetSceneWetness() != 0.1f)
+				{
+					info->buffer.NormalmapStrength = DEFAULT_NORMALMAP_STRENGTH * Engine::GAPI->GetSceneWetness();
+					info->UpdateConstantbuffer();
+				}
+				srv[1] = ((D3D11Texture*)DistortionTexture)->GetShaderResourceView();
+			}
 
 			boundNormalmap = srv[1];
 
@@ -2109,7 +2137,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 				UpdateRenderStates();
 			}
 
-			MaterialInfo* info = (*it).first.Info;
+			
 			if(!info->Constantbuffer)
 				info->UpdateConstantbuffer();
 			
@@ -3183,12 +3211,24 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 						{
 							MyDirectDrawSurface7* surface = tx->GetSurface();
 							ID3D11ShaderResourceView* srv[3];
+							MaterialInfo* info = (*itt).first.Info;
 			
 							// Get diffuse and normalmap
 							srv[0] = ((D3D11Texture *)surface->GetEngineTexture())->GetShaderResourceView();
 							srv[1] = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
 							srv[2] = surface->GetFxMap() ? ((D3D11Texture *)surface->GetFxMap())->GetShaderResourceView() : NULL;
 
+							// Bind a default normalmap in case the scene is wet and we currently have none
+							if(Engine::GAPI->GetSceneWetness() > 0.0f && !srv[1])
+							{
+								// Modify the strength of that default normalmap for the material info
+								if(info->buffer.NormalmapStrength * Engine::GAPI->GetSceneWetness() != 0.1f)
+								{
+									info->buffer.NormalmapStrength = DEFAULT_NORMALMAP_STRENGTH * Engine::GAPI->GetSceneWetness();
+									info->UpdateConstantbuffer();
+								}
+								srv[1] = ((D3D11Texture*)DistortionTexture)->GetShaderResourceView();
+							}
 							// Bind both
 							Context->PSSetShaderResources(0,3, srv);
 
@@ -3201,7 +3241,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 							// Force alphatest on vobs for now
 							BindShaderForTexture(tx, true, 0);
 									
-							MaterialInfo* info = (*itt).first.Info;
+							
 							if(!info->Constantbuffer)
 								info->UpdateConstantbuffer();
 
@@ -4754,7 +4794,8 @@ void D3D11GraphicsEngine::BindShaderForTexture(zCTexture* texture, bool forceAlp
 		newShader = PS_Simple;
 	}else if(texture->HasAlphaChannel() || forceAlphaTest)
 	{
-		if(texture->GetSurface()->GetNormalmap())
+		if(texture->GetSurface()->GetNormalmap() 
+			|| Engine::GAPI->GetSceneWetness()) // There is always a normalmap bound if the scene is wet, at least a basic one!
 		{
 			if(texture->GetSurface()->GetFxMap())
 			{
@@ -4769,7 +4810,8 @@ void D3D11GraphicsEngine::BindShaderForTexture(zCTexture* texture, bool forceAlp
 		}
 	}else
 	{
-		if(texture->GetSurface()->GetNormalmap())
+		if(texture->GetSurface()->GetNormalmap()
+			|| Engine::GAPI->GetSceneWetness()) // There is always a normalmap bound if the scene is wet, at least a basic one!)
 		{
 			if(texture->GetSurface()->GetFxMap())
 			{

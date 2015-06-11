@@ -296,8 +296,8 @@ void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inou
 	
 	
 	
-	
-	specAdd = reflection * pixelWettnes *0.17f;
+	// Scale the total amount of spec-lighting by the wetness factor and whether the scene is currently drying out or it's still raining
+	specAdd = reflection * pixelWettnes * lerp(0.08f, 0.17f, AC_RainFXWeight);
 	diffuse = lerp(diffuse, wetPixel, pixelWettnes);
 	
 
