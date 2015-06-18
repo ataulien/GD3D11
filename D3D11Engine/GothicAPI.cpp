@@ -1346,6 +1346,18 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 
 	VobInfo* vi = VobMap[vob];
 	SkeletalVobInfo* svi = SkeletalVobMap[vob];
+	
+
+	// Tell all dynamic lights that we removed a vob they could have cached
+	for(auto it = VobLightMap.begin(); it != VobLightMap.end(); it++)
+	{
+		if((*it).second->LightShadowBuffers)
+			(*it).second->LightShadowBuffers->OnVobRemovedFromWorld(vi);
+
+		if((*it).second->LightShadowBuffers)
+			(*it).second->LightShadowBuffers->OnVobRemovedFromWorld(svi);
+	}
+
 	VobLightInfo* li = VobLightMap[(zCVobLight *)vob];
 
 	// Erase it from the particle-effect list

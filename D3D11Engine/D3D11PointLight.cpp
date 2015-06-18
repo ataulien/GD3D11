@@ -260,3 +260,16 @@ void D3D11PointLight::DebugDrawCubeMap()
 		Engine::GraphicsEngine->DrawQuad(pPosition, pSize);
 	}
 }
+
+/** Called when a vob got removed from the world */
+void D3D11PointLight::OnVobRemovedFromWorld(BaseVobInfo* vob)
+{
+	// See if we have this vob registered
+	if(std::find(VobCache.begin(), VobCache.end(), vob) != VobCache.end()
+		|| std::find(SkeletalVobCache.begin(), SkeletalVobCache.end(), vob) != SkeletalVobCache.end())
+	{
+		// Clear cache, if so
+		VobCache.clear();
+		SkeletalVobCache.clear();
+	}
+}

@@ -896,8 +896,8 @@ XRESULT D3D11GraphicsEngine::Present()
 	SetDefaultStates();
 	//LineRenderer->ClearCache();
 
-	if(DebugPointlight)
-		DebugPointlight->DebugDrawCubeMap();
+	//if(DebugPointlight)
+	//	DebugPointlight->DebugDrawCubeMap();
 
 
 	if(UIView)UIView->Render(Engine::GAPI->GetFrameTimeSec());
@@ -4390,12 +4390,13 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 			if((*itv)->LightShadowBuffers)
 			{
 				// Check if this lights even needs an update
-				bool needsUpdate = ((D3D11PointLight *)(*itv)->LightShadowBuffers)->NeedsUpdate() || (*itv)->UpdateShadows;
+				bool needsUpdate = ((D3D11PointLight *)(*itv)->LightShadowBuffers)->NeedsUpdate();
 
 				// Add to the updatequeue if it does
-				if(needsUpdate)
+				if(needsUpdate || (*itv)->UpdateShadows)
 				{
-					if(partialShadowUpdate)
+					// Always update the light if the light itself moved
+					if(partialShadowUpdate && !needsUpdate)
 					{
 						// Only add once. This list should never be very big, so it should be ok to search it like this
 						// This needs to be done to make sure a light will get updated only once and won't block the queue
