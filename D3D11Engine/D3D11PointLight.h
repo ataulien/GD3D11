@@ -25,6 +25,9 @@ public:
 	/** Returns if this light needs an update */
 	bool NeedsUpdate();
 
+	/** Called when a vob got removed from the world */
+	virtual void OnVobRemovedFromWorld(BaseVobInfo* vob);
+
 protected:
 	/** Renders the scene with the given view-proj-matrices */
 	void RenderCubemapFace(const D3DXMATRIX& view, const D3DXMATRIX& proj, UINT faceIdx);
