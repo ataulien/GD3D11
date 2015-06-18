@@ -131,7 +131,7 @@ public:
 		rasterizerDesc.DepthBias = rs.ZBias;
 		rasterizerDesc.DepthBiasClamp = 0;
 		rasterizerDesc.SlopeScaledDepthBias = 0;
-		rasterizerDesc.DepthClipEnable = false;
+		rasterizerDesc.DepthClipEnable = rs.DepthClipEnable;
 		rasterizerDesc.ScissorEnable = false;
 		rasterizerDesc.MultisampleEnable = false;
 		rasterizerDesc.AntialiasedLineEnable = true;

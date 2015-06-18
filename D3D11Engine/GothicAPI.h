@@ -323,6 +323,7 @@ public:
 
 	/** Returns the loaded skeletal mesh vobs */
 	std::list<SkeletalVobInfo *>& GetSkeletalMeshVobs();
+	std::list<SkeletalVobInfo *>& GetAnimatedSkeletalMeshVobs();
 
 	/** Returns the current cameraposition */
 	D3DXVECTOR3 GetCameraPosition();
@@ -515,6 +516,9 @@ public:
 	/** Teleports the player to the given location */
 	void SetPlayerPosition(const D3DXVECTOR3& pos);
 
+	/** Returns the player-vob */
+	zCVob* GetPlayerVob();
+
 	/** Returns the map of static mesh visuals */
 	const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& GetStaticMeshVisuals(){return StaticMeshVisuals;}
 
@@ -663,6 +667,7 @@ private:
 
 	/** List of vobs with skeletal meshes (Having a zCModel-Visual) */
 	std::list<SkeletalVobInfo *> SkeletalMeshVobs;
+	std::list<SkeletalVobInfo *> AnimatedSkeletalVobs;
 
 	/** List of Vobs having a zCParticleFX-Visual */
 	std::list<zCVob *> ParticleEffectVobs;
@@ -691,6 +696,7 @@ private:
 	std::hash_map<zCVob*, VobInfo*> VobMap;
 	std::hash_map<zCVobLight*, VobLightInfo*> VobLightMap;
 	std::hash_map<zCVob*, SkeletalVobInfo*> SkeletalVobMap;
+
 
 	/** Map of VobInfo-Lists for zCBspLeafs */
 	std::hash_map<zCBspBase *, BspInfo> BspLeafVobLists;

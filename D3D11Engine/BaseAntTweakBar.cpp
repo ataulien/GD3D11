@@ -112,7 +112,14 @@ XRESULT BaseAntTweakBar::Init()
 #endif
 
 	TwAddVarRW(Bar_General, "SMAA", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableSMAA, NULL);
+	TwAddVarRW(Bar_General, "Sharpen", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.SharpenFactor, NULL);
+	TwDefine(" General/Sharpen  step=0.01 min=0");
+
 	TwAddVarRW(Bar_General, "DynamicLighting", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting, NULL);	
+
+	TwType epls = TwDefineEnumFromString("PointlightShadowsEnum", "0 {Disabled}, 1 {Dynamic only}, 2 {Full}");
+	TwAddVarRW(Bar_General, "PointlightShadows", epls, &Engine::GAPI->GetRendererState()->RendererSettings.EnablePointlightShadows, NULL);
+
 	//TwAddVarRW(Bar_General, "FastShadows", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.FastShadows, NULL);	
 	TwAddVarRW(Bar_General, "DrawShadowGeometry", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawShadowGeometry, NULL);
 	TwAddVarRW(Bar_General, "DoZPrepass", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DoZPrepass, NULL);
@@ -123,6 +130,10 @@ XRESULT BaseAntTweakBar::Init()
 	
 	TwAddVarRW(Bar_General, "OcclusionCulling", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableOcclusionCulling, NULL);
 	TwAddVarRW(Bar_General, "Sort RenderQueue", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.SortRenderQueue, NULL);
+	
+	TwAddVarRW(Bar_General, "AllowWorldMeshTesselation", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.AllowWorldMeshTesselation, NULL);
+	TwAddVarRW(Bar_General, "TesselationFrustumCulling", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationFrustumCulling, NULL);
+
 	
 
 	TwType t = TwDefineEnumFromString("ShadowmapSizeEnum", "512, 1024, 2048, 4096");
@@ -146,10 +157,10 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "WireframeVobs", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.WireframeVobs, NULL);	
 	
 
-	TwAddVarRW(Bar_General, "TesselationFactor", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationFactor, NULL);
+	TwAddVarRW(Bar_General, "OldTesselationFactor", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationFactor, NULL);
 	TwDefine(" General/TesselationFactor  step=0.1 min=1");
 
-	TwAddVarRW(Bar_General, "TesselationRange", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationRange, NULL);
+	TwAddVarRW(Bar_General, "TesselationEdgeLength", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationRange, NULL);
 	TwDefine(" General/TesselationRange  step=0.1 min=1");
 
 	

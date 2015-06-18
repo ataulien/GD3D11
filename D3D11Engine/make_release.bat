@@ -4,7 +4,7 @@ set p=%CD%
 
 del ..\PreviewBuilds\GD3D11_PreviewReleaseG2.zip
 cd %G2_SYSTEM_PATH%
-CALL 7z a -tzip -mm=LZMA -mx=9 %p%\GD3D11_PreviewReleaseG2.zip @%p%\make_release_listfile.txt
+CALL 7z a -tzip %p%\GD3D11_PreviewReleaseG2.zip @%p%\make_release_listfile.txt
 echo %p%
 cd %p%
 

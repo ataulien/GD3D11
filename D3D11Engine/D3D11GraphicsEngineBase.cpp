@@ -13,6 +13,7 @@
 #include "D3D11ConstantBuffer.h"
 #include "D3D11PShader.h"
 #include "D3D11VShader.h"
+#include "D3D11PointLight.h"
 
 
 const int DRAWVERTEXARRAY_BUFFER_SIZE = 2048 * sizeof(ExVertexStruct);
@@ -819,3 +820,13 @@ void D3D11GraphicsEngineBase::UpdateTransformsCB()
 	TransformsCB->UpdateBuffer(&cb);
 }
 
+/** Creates a bufferobject for a shadowed point light */
+XRESULT D3D11GraphicsEngineBase::CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo)
+{
+	if(Engine::GAPI->GetRendererState()->RendererSettings.EnablePointlightShadows > 0)
+		*outPL = new D3D11PointLight(lightInfo);
+	else
+		*outPL = NULL;
+
+	return XR_SUCCESS;
+}

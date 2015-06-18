@@ -297,6 +297,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="D3D11PipelineStates.h" />
+    <ClInclude Include="D3D11PointLight.h" />
     <ClInclude Include="D3D11PShader.h" />
     <ClInclude Include="D3D11RenderPipe.h" />
     <ClInclude Include="D3D11ShaderManager.h" />
@@ -355,6 +356,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="oCNPC.h" />
     <ClInclude Include="oCSpawnManager.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="ShadowedPointLight.h" />
     <ClInclude Include="SV_GMeshInfoView.h" />
     <ClInclude Include="squish-1.11\alpha.h" />
     <ClInclude Include="squish-1.11\clusterfit.h" />
@@ -490,6 +492,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="D3D11PointLight.cpp" />
     <ClCompile Include="D3D11PShader.cpp" />
     <ClCompile Include="D3D11RenderPipe.cpp" />
     <ClCompile Include="D3D11ShaderManager.cpp" />
@@ -573,6 +576,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="BaseVertexBuffer.cpp" />
+    <ClCompile Include="ShadowedPointLight.cpp" />
     <ClCompile Include="SV_GMeshInfoView.cpp" />
     <ClCompile Include="squish-1.11\alpha.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>

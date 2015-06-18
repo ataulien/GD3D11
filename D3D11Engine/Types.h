@@ -31,6 +31,11 @@ struct INT2
 
 	INT2(){}
 
+	std::string toString()
+	{
+		return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+	}
+
 	int x;
 	int y;
 };
@@ -225,6 +230,12 @@ struct float2
 	{
 		this->x = (float)x;
 		this->y = (float)y;
+	}
+
+	float2(const INT2& i)
+	{
+		this->x = (float)i.x;
+		this->y = (float)i.y;
 	}
 
 	float2(const D3DXVECTOR2& v)

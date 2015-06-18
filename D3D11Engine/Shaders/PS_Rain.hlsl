@@ -207,7 +207,7 @@ void rainResponse(PS_INPUT input, float3 lightVector, float lightIntensity, floa
         float3 tex3 = float3(textureCoordsH1, input.vTexcoord.y, texIndicesV2.x);        
         float3 tex4 = float3(textureCoordsH2, input.vTexcoord.y, texIndicesV2.y);
 
-		const float v2MaxFactor = 0.015f; 
+		const float v2MaxFactor = 0.010f; 
 		
         // Sample opacity from the textures
         float col1 = TX_RainTextureArray.Sample(SS_Anisotropic, tex1).r * min(g_rainfactors[texIndicesV1.x], v2MaxFactor);

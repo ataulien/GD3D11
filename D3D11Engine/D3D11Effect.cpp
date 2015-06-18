@@ -284,8 +284,6 @@ XRESULT D3D11Effect::DrawRainShadowmap()
 	D3D11GraphicsEngine* e = (D3D11GraphicsEngine *)Engine::GraphicsEngine; // TODO: This has to be a cast to D3D11GraphicsEngineBase!
 	GothicRendererState& state = *Engine::GAPI->GetRendererState();
 
-	e->GetContext()->ClearDepthStencilView(RainShadowmap->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-
 	CameraReplacement& cr = RainShadowmapCameraRepl;
 
 	// Get the section we are currently in

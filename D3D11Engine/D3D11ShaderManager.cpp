@@ -31,6 +31,10 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.push_back(ShaderInfo("VS_Ex", "VS_Ex.hlsl", "v", 1));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerInstance));
+
+	Shaders.push_back(ShaderInfo("VS_ExCube", "VS_ExCube.hlsl", "v", 1));
+	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
+	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerInstance));
 	
 	Shaders.push_back(ShaderInfo("VS_PNAEN", "VS_PNAEN.hlsl", "v", 1));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
@@ -80,6 +84,12 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerInstanceSkeletal));
 	Shaders.back().cBufferSizes.push_back(NUM_MAX_BONES * sizeof(D3DXMATRIX));
 
+	Shaders.push_back(ShaderInfo("VS_ExSkeletalCube", "VS_ExSkeletalCube.hlsl", "v", 3));
+	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
+	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerInstanceSkeletal));
+	Shaders.back().cBufferSizes.push_back(NUM_MAX_BONES * sizeof(D3DXMATRIX));
+
+	
 	Shaders.push_back(ShaderInfo("VS_PNAEN_Skeletal", "VS_PNAEN_Skeletal.hlsl", "v", 3));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerInstanceSkeletal));
@@ -158,9 +168,7 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.back().cBufferSizes.push_back(sizeof(PFXVS_ConstantBuffer));
 
 	Shaders.push_back(ShaderInfo("PS_PFX_Simple", "PS_PFX_Simple.hlsl", "p"));
-	Shaders.push_back(ShaderInfo("PS_PFX_GammaCorrectInv", "PS_PFX_GammaCorrectInv.hlsl", "p"));
-	Shaders.back().cBufferSizes.push_back(sizeof(GammaCorrectConstantBuffer));
-	
+
 
 	Shaders.push_back(ShaderInfo("PS_PFX_GaussBlur", "PS_PFX_GaussBlur.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(BlurConstantBuffer));
@@ -216,6 +224,9 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.push_back(ShaderInfo("PS_DS_PointLight", "PS_DS_PointLight.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(DS_PointLightConstantBuffer));
 
+	Shaders.push_back(ShaderInfo("PS_DS_PointLightDynShadow", "PS_DS_PointLightDynShadow.hlsl", "p"));
+	Shaders.back().cBufferSizes.push_back(sizeof(DS_PointLightConstantBuffer));
+
 	Shaders.push_back(ShaderInfo("PS_DS_AtmosphericScattering", "PS_DS_AtmosphericScattering.hlsl", "p"));
 	Shaders.back().cBufferSizes.push_back(sizeof(DS_ScreenQuadConstantBuffer));
 	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
@@ -240,6 +251,8 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.push_back(ShaderInfo("GS_Raindrops", "GS_Raindrops.hlsl", "g"));
 	Shaders.back().cBufferSizes.push_back(sizeof(ParticleGSInfoConstantBuffer));
 
+	Shaders.push_back(ShaderInfo("GS_Cubemap", "GS_Cubemap.hlsl", "g"));
+	Shaders.back().cBufferSizes.push_back(sizeof(CubemapGSConstantBuffer));
 
 	Shaders.push_back(ShaderInfo("GS_ParticleStreamOut", "VS_AdvanceRain.hlsl", "g", 11));
 	Shaders.back().cBufferSizes.push_back(sizeof(ParticleGSInfoConstantBuffer));
@@ -262,6 +275,28 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));
 
 	makros.clear();
+
+	m.Name = "APPLY_RAIN_EFFECTS";
+	m.Definition = "1";
+	makros.push_back(m);
+
+	m.Name = "SHD_ENABLE";
+	m.Definition = "1";
+	makros.push_back(m);
+
+	Shaders.push_back(ShaderInfo("PS_DS_AtmosphericScattering_Rain", "PS_DS_AtmosphericScattering.hlsl", "p", makros));
+	Shaders.back().cBufferSizes.push_back(sizeof(DS_ScreenQuadConstantBuffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
+
+	makros.clear();
+
+	Shaders.push_back(ShaderInfo("PS_LinDepth", "PS_LinDepth.hlsl", "p"));
+	Shaders.back().cBufferSizes.push_back(sizeof(GothicGraphicsState));
+	Shaders.back().cBufferSizes.push_back(sizeof(AtmosphereConstantBuffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(MaterialInfo::Buffer));
+	Shaders.back().cBufferSizes.push_back(sizeof(PerObjectState));
+
+	
 	m.Name = "NORMALMAPPING";
 	m.Definition = "1";
 	makros.push_back(m);
@@ -365,7 +400,15 @@ XRESULT D3D11ShaderManager::Init()
 	makros.push_back(m);
 	Shaders.push_back(ShaderInfo("PS_Preview_TexturedLit", "PS_Preview.hlsl", "p", makros));
 
+	makros.clear();
 
+	Shaders.push_back(ShaderInfo("PS_PFX_Sharpen", "PS_PFX_Sharpen.hlsl", "p"));
+	Shaders.back().cBufferSizes.push_back(sizeof(GammaCorrectConstantBuffer));
+
+	Shaders.push_back(ShaderInfo("PS_PFX_GammaCorrectInv", "PS_PFX_GammaCorrectInv.hlsl", "p"));
+	Shaders.back().cBufferSizes.push_back(sizeof(GammaCorrectConstantBuffer));
+
+	
 	// --- LPP
 	makros.clear();
 	m.Name = "NORMALMAPPING";

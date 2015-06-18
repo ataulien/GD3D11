@@ -16,6 +16,12 @@ struct LineVertex
 		Color = color;
 	}
 
+	LineVertex(const D3DXVECTOR3& position, const float4& color)
+	{
+		Position = position;
+		Color = color;
+	}
+
 	float4 Position;
 	float4 Color;
 };

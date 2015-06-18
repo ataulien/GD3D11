@@ -245,6 +245,7 @@ void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inou
 {
 	// Ask the rain-shadowmap if we can hit this pixel
 	float pixelWettnes = ComputeShadowValue(0.0f, wsPosition, TX_RainShadowmap, SS_Comp, vsPosition.z, 1.0f, mul(SQ_RainView, SQ_RainProj), 0.001f, 2.5f) * AC_SceneWettness;
+	pixelWettnes = pixelWettnes < 0.001f ? 0 : pixelWettnes;
 	
 	//IsWet(wsPosition, TX_RainShadowmap, SS_Comp) * AC_SceneWettness;
 
@@ -253,7 +254,7 @@ void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inou
 	// Apply water-effects
 	float3 nrm = vsNormal;
 	ApplyRainNormalDeformation(nrm, wsPosition, diffuse.rgb);
-	vsNormal = lerp(vsNormal, nrm, AC_RainFXWeight); // Only apply deformation if it's actually raining
+	vsNormal = lerp(vsNormal, nrm, AC_RainFXWeight * pixelWettnes); // Only apply deformation if it's actually raining
 	
 	// Get fresnel-effect
 	float fresnel = pow(1.0f - max(0.0f, dot(vsNormal, -vsDir)), 160.0f);
@@ -285,19 +286,19 @@ void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inou
 	float spec3 = CalcBlinnPhongLighting(vsNormal, H_3);
 		
 	// power the reflection 
-	reflection = pow(reflection, 3.0f) * 1.29f;
+	reflection = pow(reflection, 2.5f) * 1.39f;
 	//reflection += fresnel * 0.1f;
 	
 	reflection += pow(spec1, specPower) * 0.7f + pow(spec2, specPower) * 0.7f + pow(spec3, specPower) * 0.6f;
 	
 	// Compute wet pixel color
 	float diffuseLum = dot(diffuse, float3(0.3333f,0.3333f,0.3333f));
-	float3 wetPixel = lerp(diffuseLum, diffuse, 0.6f) * 0.4f; // Desaturate and darken the scene a bit	
+	float3 wetPixel = lerp(diffuseLum, diffuse, 0.6f) * 0.6f; // Desaturate and darken the scene a bit	
 	
 	
 	
 	// Scale the total amount of spec-lighting by the wetness factor and whether the scene is currently drying out or it's still raining
-	specAdd = reflection * pixelWettnes * lerp(0.08f, 0.17f, AC_RainFXWeight);
+	specAdd = reflection * pixelWettnes * lerp(0.08f, 0.10f, AC_RainFXWeight);
 	diffuse = lerp(diffuse, wetPixel, pixelWettnes);
 	
 
@@ -366,12 +367,14 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	
 	
 	// Compute wettness
-	float specWet;
+	float specWet = 0.0f;
+	
+#ifdef APPLY_RAIN_EFFECTS
 	ApplySceneWettness(wsPosition, vsPosition, V, normal, diffuse.rgb, specIntensity, specPower, specWet);
 	
 	// Boost specWet when not in shadow
 	specWet += specWet * shadow;
-		
+#endif
 	// Compute specular lighting
 	
 	float3 H = normalize(SQ_LightDirectionVS + V );

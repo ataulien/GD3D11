@@ -177,6 +177,9 @@ public:
 	/** Creates a constantbuffer object (Not registered inside) */
 	virtual XRESULT CreateConstantBuffer(BaseConstantBuffer** outCB, void* data, int size);
 
+	/** Creates a bufferobject for a shadowed point light */
+	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo);
+
 	/** Returns a list of available display modes */
 	virtual XRESULT GetDisplayModeList(std::vector<DisplayModeInfo>* modeList, bool includeSuperSampling = false);
 
@@ -278,6 +281,7 @@ protected:
 	D3D11PShader* PS_DiffuseNormalmappedAlphatestFxMap;
 	D3D11PShader* PS_DiffuseAlphatest;
 	D3D11PShader* PS_Simple;
+	D3D11PShader* PS_LinDepth;
 	D3D11VShader* VS_Ex;
 	D3D11VShader* VS_ExInstancedObj;
 	D3D11GShader* GS_Billboard;
