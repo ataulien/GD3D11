@@ -8,6 +8,8 @@
 #include "D3D11PfxRenderer.h"
 #include "D3D11ShaderManager.h"
 #include "D3D11VShader.h"
+#include "GothicAPI.h"
+#include "D3D11PShader.h"
 
 D3D11PFX_SMAA::D3D11PFX_SMAA(D3D11PfxRenderer* rnd) : D3D11PFX_Effect(rnd)
 {
@@ -213,7 +215,26 @@ void D3D11PFX_SMAA::RenderPostFX(ID3D11ShaderResourceView* renderTargetSRV)
 	ID3D11ShaderResourceView* srv = TempRTV->GetShaderResView();
 	engine->GetContext()->PSSetShaderResources(0, 1, &srv);
 
-	FxRenderer->CopyTextureToRTV(TempRTV->GetShaderResView(), OldRTV);
+
+	if(Engine::GAPI->GetRendererState()->RendererSettings.SharpenFactor > 0.0f)
+	{	
+		D3D11PShader* sharpenPS = engine->GetShaderManager()->GetPShader("PS_PFX_Sharpen");
+		sharpenPS->Apply();
+
+		GammaCorrectConstantBuffer gcb;
+		gcb.G_Gamma = Engine::GAPI->GetGammaValue();
+		gcb.G_Brightness = Engine::GAPI->GetBrightnessValue();
+		gcb.G_TextureSize = engine->GetResolution();
+		gcb.G_SharpenStrength = Engine::GAPI->GetRendererState()->RendererSettings.SharpenFactor;
+
+		sharpenPS->GetConstantBuffer()[0]->UpdateBuffer(&gcb);
+		sharpenPS->GetConstantBuffer()[0]->BindToPixelShader(0);
+
+		FxRenderer->CopyTextureToRTV(TempRTV->GetShaderResView(), OldRTV, INT2(0,0), true);
+	}else
+	{
+		FxRenderer->CopyTextureToRTV(TempRTV->GetShaderResView(), OldRTV);
+	}
 
 	engine->GetContext()->PSSetShaderResources(0, 3, NoSRV);
 

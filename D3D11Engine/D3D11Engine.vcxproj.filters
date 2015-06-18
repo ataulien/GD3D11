@@ -698,6 +698,10 @@
     <ClInclude Include="D3D11Effect.h">
       <Filter>Engine\D3D11</Filter>
     </ClInclude>
+    <ClInclude Include="D3D11PointLight.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowedPointLight.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1018,6 +1022,10 @@
     <ClCompile Include="D3D11Effect.cpp">
       <Filter>Engine\D3D11</Filter>
     </ClCompile>
+    <ClCompile Include="D3D11PointLight.cpp">
+      <Filter>Engine\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowedPointLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

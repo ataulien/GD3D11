@@ -24,7 +24,10 @@ struct GammaCorrectConstantBuffer
 {
 	float G_Gamma;
 	float G_Brightness;
-	float2 G_Pad;
+	float2 G_TextureSize;
+	
+	float G_SharpenStrength;
+	float3 G_pad1;
 };
 
 struct OceanSettingsConstantBuffer
@@ -261,6 +264,12 @@ struct DefaultHullShaderConstantBuffer
 	float H_FarPlane;
 	float2 H_ScreenResolution;
 	float2 h_pad2;
+};
+
+struct CubemapGSConstantBuffer
+{
+	D3DXMATRIX PCR_View[6]; // View matrices for cube map rendering
+	D3DXMATRIX PCR_ViewProj[6];
 };
 
 struct ParticleGSInfoConstantBuffer

@@ -29,7 +29,8 @@ cbuffer FFPipelineConstantBuffer : register( b0 )
 
 	float FF_FogNear;
 	float FF_FogFar;
-	float2 ggs_Pad1;
+	float FF_zNear;
+	float FF_zFar;
 
 	/** Lighting section */
 	float3 FF_AmbientLighting;

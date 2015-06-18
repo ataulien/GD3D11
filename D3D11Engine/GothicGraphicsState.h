@@ -8,6 +8,7 @@ const int GSWITCH_FOG = 1;
 const int GSWITCH_ALPHAREF = 2;
 const int GSWITCH_LIGHING = 4;
 const int GSWITCH_REFLECTIONS = 8;
+const int GSWITCH_LINEAR_DEPTH = 16;
 
 /** A single fixed function stage */
 struct FixedFunctionStage
@@ -88,7 +89,8 @@ struct GothicGraphicsState
 
 	float FF_FogNear;
 	float FF_FogFar;
-	float2 ggs_Pad1;
+	float FF_zNear;
+	float FF_zFar;
 
 	/** Lighting section */
 	float3 FF_AmbientLighting;
@@ -368,11 +370,12 @@ struct GothicRasterizerStateInfo : public GothicPipelineState
 		ZBias = 0;
 		FrontCounterClockwise = false;
 		Wireframe = false;
-		
+		DepthClipEnable = false;
 	}
 
 	ECullMode CullMode;
 	bool FrontCounterClockwise;
+	bool DepthClipEnable;
 	int ZBias;
 	bool Wireframe;
 	
@@ -462,6 +465,14 @@ struct HBAOSettings
 
 struct GothicRendererSettings
 {
+	enum EPointLightShadowMode
+	{
+		PLS_DISABLED = 0,
+		PLS_DYNAMIC_ONLY = 1,
+		PLS_FULL = 2,
+	};
+
+
 	/** Sets the default values for this struct */
 	void SetDefault()
 	{
@@ -549,10 +560,18 @@ struct GothicRendererSettings
 		SortRenderQueue = true;
 
 		EnableTesselation = true;
+		AllowWorldMeshTesselation = false;
+		TesselationFrustumCulling = true;
+		EnablePointlightShadows = PLS_FULL;
+		MinLightShadowUpdateRange = 300.0f;
+		PartialDynamicShadowUpdates = true;
+
 		EnableGodRays = true;
 
 		FOVHoriz = 90.0f;
 		FOVVert = 90.0f;
+
+		SharpenFactor = 0.8f;
 
 		RainRadiusRange = 5000.0f;
 		RainHeightRange = 1000.0f;
@@ -621,6 +640,8 @@ struct GothicRendererSettings
 	bool EnableVSync;
 	bool EnableSMAA;
 	bool EnableTesselation;
+	bool AllowWorldMeshTesselation;
+	bool TesselationFrustumCulling;
 	bool FastShadows;
 	bool ReplaceSunDirection;
 	bool AtmosphericScattering;
@@ -638,9 +659,13 @@ struct GothicRendererSettings
 	bool EnableAutoupdates;
 	bool EnableOcclusionCulling;
 	bool SortRenderQueue;
-
+	EPointLightShadowMode EnablePointlightShadows;
+	float MinLightShadowUpdateRange;
+	bool PartialDynamicShadowUpdates;
 
 	int MaxNumFaces;
+
+	float SharpenFactor;
 
 	int SectionDrawRadius;
 	float IndoorVobDrawRadius;

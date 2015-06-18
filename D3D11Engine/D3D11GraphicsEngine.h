@@ -11,13 +11,17 @@ enum D3D11ENGINE_RENDER_STAGE
 {
 	DES_Z_PRE_PASS,
 	DES_MAIN,
-	DES_SHADOWMAP
+	DES_SHADOWMAP,
+	DES_SHADOWMAP_CUBE
 };
 
 const int DRAWVERTEXARRAY_BUFFER_SIZE = 2048 * sizeof(ExVertexStruct);
 const int NUM_MAX_BONES = 96;
 const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceInfo) * 2048;
 
+const int POINTLIGHT_SHADOWMAP_SIZE = 128;
+
+class D3D11PointLight;
 class D3D11VShader;
 class D3D11PShader;
 class D3D11PfxRenderer;
@@ -194,7 +198,12 @@ public:
 
 	/** Draws everything around the given position */
 	void DrawWorldAround(const D3DXVECTOR3& position, int sectionRange, float vobXZRange, bool cullFront = true);
-
+	void DrawWorldAround(const D3DXVECTOR3& position, 
+					     float range,
+					     bool cullFront = true, 
+						 bool indoor = false,
+					     std::list<VobInfo*>* renderedVobs = NULL, std::list<SkeletalVobInfo*>* renderedMobs = NULL);
+					     
 	/** Draws the static vobs instanced */
 	XRESULT DrawVOBsInstanced();
 
@@ -214,7 +223,17 @@ public:
 	void DrawCloudMeshes();
 
 	/** Renders the shadowmaps for the sun */
-	void RenderShadowmaps(const D3DXVECTOR3& cameraPosition, RenderToDepthStencilBuffer* target = NULL, bool cullFront = true);
+	void RenderShadowmaps(const D3DXVECTOR3& cameraPosition, RenderToDepthStencilBuffer* target = NULL, bool cullFront = true, ID3D11DepthStencilView* dsvOverwrite = NULL, ID3D11RenderTargetView* debugRTV = NULL);
+
+	/** Renders the shadowmaps for a pointlight */
+	void RenderShadowCube(const D3DXVECTOR3& position, 
+		float range, 
+		RenderToDepthStencilBuffer* targetCube, 
+		ID3D11DepthStencilView* face,
+		ID3D11RenderTargetView* debugRTV = NULL, 
+		bool cullFront = true, 
+		bool indoor = false,
+		std::list<VobInfo*>* renderedVobs = NULL, std::list<SkeletalVobInfo*>* renderedMobs = NULL); 
 
 	/** Updates the occlusion for the bsp-tree */
 	void UpdateOcclusion();
@@ -275,9 +294,17 @@ public:
 
 	/** Creates the main UI-View */
 	void CreateMainUIView();
+
+	/** Returns a dummy cube-rendertarget used for pointlight shadowmaps */
+	RenderToTextureBuffer* GetDummyCubeRT(){return DummyShadowCubemapTexture;}
 protected:
 	/** Test draw world */
 	void TestDrawWorldMesh();
+
+	D3D11PointLight* DebugPointlight;
+
+	// Using a list here to determine which lights to update, since we don't want to update every light every frame.
+	std::list<VobLightInfo*> FrameShadowUpdateLights;
 
 	/** D3D11 Objects */
 	ID3D11SamplerState* ClampSamplerState;
@@ -296,6 +323,7 @@ protected:
 	RenderToTextureBuffer* GBuffer0_Diffuse;
 	RenderToTextureBuffer* GBuffer1_Normals_SpecIntens_SpecPower; // Normals / SpecIntensity / SpecPower
 	RenderToTextureBuffer* DepthStencilBufferCopy;
+	RenderToTextureBuffer* DummyShadowCubemapTexture; // PS-Stage needs to have a rendertarget bound to execute SV_Depth-Writes, as it seems.
 
 	/** Temp-Arrays for storing data to be put in constant buffers */
 	D3DXMATRIX Temp2D3DXMatrix[2];

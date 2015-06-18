@@ -7,14 +7,15 @@
 #include "BaseTexture.h"
 #include "GothicGraphicsState.h"
 #include "zCPolygon.h"
+#include "ShadowedPointLight.h"
 
 
 /** Square size of a single world-section */
 const float WORLD_SECTION_SIZE = 16000;
 
-const float4 DEFAULT_LIGHTMAP_POLY_COLOR_F = float4(0.20f, 0.20f,0.20f,0.20f);
+const float4 DEFAULT_LIGHTMAP_POLY_COLOR_F = float4(0.05f, 0.05f,0.05f,0.05f);
 const DWORD DEFAULT_LIGHTMAP_POLY_COLOR = DEFAULT_LIGHTMAP_POLY_COLOR_F.ToDWORD();
-const float3 DEFAULT_INDOOR_VOB_AMBIENT = float3(0.25f, 0.25f, 0.25f);
+const float3 DEFAULT_INDOOR_VOB_AMBIENT = float3(0.15f, 0.15f, 0.15f);
 
 class zCMaterial;
 class zCPolygon;
@@ -375,13 +376,22 @@ struct VobInfo : public BaseVobInfo
 };
 
 class zCVobLight;
+class ShadowedPointLight;
 struct VobLightInfo
 {
 	VobLightInfo()
 	{
 		Vob = NULL;
+		LightShadowBuffers = NULL;
 		VisibleInRenderPass = false;
 		IsIndoorVob = false;
+		DynamicShadows = true;
+		UpdateShadows = true;
+	}
+
+	~VobLightInfo()
+	{
+		delete LightShadowBuffers;
 	}
 
 	/** Vob the data came from */
@@ -395,6 +405,11 @@ struct VobLightInfo
 
 	/** BSP-Node this is stored in */
 	std::vector<BspInfo*> ParentBSPNodes;
+
+	/** Buffers for doing shadows on this light */
+	ShadowedPointLight* LightShadowBuffers;
+	bool DynamicShadows; // Whether this light should be able to have dynamic shadows
+	bool UpdateShadows; // Whether to update this lights shadows on the next occasion
 };
 
 

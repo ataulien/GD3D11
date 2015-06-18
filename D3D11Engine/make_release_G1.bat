@@ -5,7 +5,7 @@ echo Creating ZIP for G1...
 
 del ..\PreviewBuilds\GD3D11_PreviewReleaseG1.zip
 cd /d %G1_SYSTEM_PATH%
-CALL 7z a -tzip -mm=LZMA -mx=9 %p%\GD3D11_PreviewReleaseG1.zip @%p%\make_release_listfile.txt
+CALL 7z a -tzip %p%\GD3D11_PreviewReleaseG1.zip @%p%\make_release_listfile.txt
 echo %p%
 cd /d %p%
  

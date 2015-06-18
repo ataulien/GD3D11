@@ -170,6 +170,18 @@ void GothicAPI::OnGameStart()
 
 	LogInfo() << "Running with Commandline: " << zCOption::GetOptions()->GetCommandline();
 
+	// Get forced resolution from commandline
+	std::string res = zCOption::GetOptions()->ParameterValue("ZRES");
+	if(!res.empty())
+	{
+		std::string x = res.substr(0, res.find_first_of(','));
+		std::string y = res.substr(res.find_first_of(','));
+		RendererState.RendererSettings.LoadedResolution.x = atoi(x.c_str());
+		RendererState.RendererSettings.LoadedResolution.y = atoi(y.c_str());
+
+		LogInfo() << "Forcing resolution via zRes-Commandline to: " << RendererState.RendererSettings.LoadedResolution.toString(); 
+	}
+
 	if(RendererState.RendererSettings.EnableAutoupdates && !zCOption::GetOptions()->IsParameter("XNOUPDATE"))
 		UpdateCheck::RunUpdater();
 
@@ -571,6 +583,7 @@ void GothicAPI::ResetVobs()
 		delete (*it);
 	}
 	SkeletalMeshVobs.clear();
+	AnimatedSkeletalVobs.clear();
 
 	// Delete light vobs
 	for(std::hash_map<zCVobLight*, VobLightInfo*>::iterator it = VobLightMap.begin(); it != VobLightMap.end(); it++)
@@ -1439,6 +1452,16 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 		}
 	}
 
+	for(std::list<SkeletalVobInfo *>::iterator it = AnimatedSkeletalVobs.begin(); it != AnimatedSkeletalVobs.end(); it++)
+	{
+		if((*it)->Vob == vob)
+		{
+			SkeletalVobInfo* vi = (*it);
+			it = AnimatedSkeletalVobs.erase(it);
+			break;
+		}
+	}
+
 	// Erase it from dynamically loaded vobs
 	for(std::list<VobInfo *>::iterator it = DynamicallyAddedVobs.begin(); it != DynamicallyAddedVobs.end(); it++)
 	{
@@ -1694,6 +1717,12 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 			{
 				SkeletalMeshVobs.push_back(vi);
 				SkeletalVobMap[vob] = vi;
+
+				// If this can be animated, put it into another map as well
+				if(!((SkeletalMeshVisualInfo *)vi->VisualInfo)->SkeletalMeshes.empty())
+				{
+					AnimatedSkeletalVobs.push_back(vi);
+				}
 			}else
 			{
 				// Must be inventory
@@ -1804,8 +1833,6 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	if(model->GetDrawHandVisualsOnly())
 		return; // Not supported yet
 
-	g->SetDefaultStates();
-
 	D3DXMATRIX world;
 	vi->Vob->GetWorldMatrix(&world);
 
@@ -1839,6 +1866,13 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	std::string vobname = vi->Vob->GetName();
 	D3DXVECTOR3 vobPos = vi->Vob->GetPositionWorld();
 	int numSoftSkins = model->GetMeshSoftSkinList()->NumInArray;
+
+#ifndef PUBLIC_RELEASE
+	if(visname == "PAL_234_RITTER")
+	{
+		sinf(1.0f);
+	}
+#endif
 
 	// Draw submeshes
 	//if(model->GetMeshSoftSkinList()->NumInArray)
@@ -1882,13 +1916,18 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 
 	fns::CatchDraw(vi, &visname, &vobname, &vobPos, transforms, fatness);
 
-	g->SetActiveVertexShader("VS_Ex");
+	if(g->GetRenderingStage() == DES_SHADOWMAP_CUBE)
+		g->SetActiveVertexShader("VS_ExCube");
+	else 
+	{
+		g->SetActiveVertexShader("VS_Ex");
 
-	g->SetDefaultStates();
-	RendererState.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
-	RendererState.RasterizerState.SetDirty();
-	g->UpdateRenderStates();
-	
+		g->SetDefaultStates();
+		RendererState.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
+		RendererState.RasterizerState.SetDirty();
+		g->UpdateRenderStates();
+	}
+
 	std::map<int, std::vector<MeshVisualInfo *>>& nodeAttachments = vi->NodeAttachments;
 	for(unsigned int i=0;i<transforms.size();i++)
 	{
@@ -3284,9 +3323,12 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 			if(RendererState.RendererSettings.EnableDynamicLighting && insideFrustum)
 			{
 				// Add dynamic lights
+				float minDynamicUpdateLightRange = Engine::GAPI->GetRendererState()->RendererSettings.MinLightShadowUpdateRange;
+				D3DXVECTOR3 playerPosition = Engine::GAPI->GetPlayerVob() != NULL ? Engine::GAPI->GetPlayerVob()->GetPositionWorld() : D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
 				for(int i=0;i<leaf->LightVobList.NumInArray;i++)
 				{
-					if(D3DXVec3Length(&(Engine::GAPI->GetCameraPosition() - leaf->LightVobList.Array[i]->GetPositionWorld())) + leaf->LightVobList.Array[i]->GetLightRange() < visualFXDrawRadius)
+					float lightCameraDist = D3DXVec3Length(&(Engine::GAPI->GetCameraPosition() - leaf->LightVobList.Array[i]->GetPositionWorld()));
+					if(lightCameraDist + leaf->LightVobList.Array[i]->GetLightRange() < visualFXDrawRadius)
 					{
 						zCVobLight* v = leaf->LightVobList.Array[i];
 						VobLightInfo** vi = &VobLightMap[leaf->LightVobList.Array[i]];
@@ -3294,9 +3336,13 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 						// Check if we already have this light
 						if(!*vi)
 						{
-							// Add if not
+							// Add if not. This light must have been added during gameplay
 							*vi = new VobLightInfo;
 							(*vi)->Vob = leaf->LightVobList.Array[i];
+
+							// Create shadow-buffers for these lights since it was dynamically added to the world
+							if(RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_DYNAMIC_ONLY)
+								Engine::GraphicsEngine->CreateShadowedPointLight(&(*vi)->LightShadowBuffers, *vi);
 						}
 
 						if(!(*vi)->VisibleInRenderPass && (*vi)->Vob->IsEnabled())
@@ -3305,6 +3351,12 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 
 							//D3DXVECTOR3 mid = base->BBox3D.Min * 0.5f + base->BBox3D.Max * 0.5f;
 							//Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex((*vi)->Vob->GetPositionWorld()), LineVertex(mid));
+
+							float lightPlayerDist = D3DXVec3Length(&(playerPosition - leaf->LightVobList.Array[i]->GetPositionWorld()));
+							if((*vi)->Vob->GetLightRange() > minDynamicUpdateLightRange 
+								&& lightPlayerDist < (*vi)->Vob->GetLightRange() * 1.5f 
+								&& RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_FULL)
+								(*vi)->UpdateShadows = true;
 
 							// Render it
 							lights.push_back(*vi);
@@ -3430,6 +3482,12 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 					vi->Vob = leaf->LightVobList.Array[i];
 					VobLightMap[leaf->LightVobList.Array[i]] = vi;
 
+					if(RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_FULL)
+					{
+						// Create shadowcubemap, if wanted
+						Engine::GraphicsEngine->CreateShadowedPointLight(&vi->LightShadowBuffers, vi);
+					}
+
 					if(((zCVob *)vi->Vob)->GetGroundPoly() && ((zCVob *)vi->Vob)->GetGroundPoly()->GetLightmap())
 					{
 						vi->IsIndoorVob = true;
@@ -3438,27 +3496,30 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 
 
 				VobLightInfo* vi = VobLightMap[leaf->LightVobList.Array[i]];
-				if(!vi->IsIndoorVob)
-				{
-					// Only add once
-					if(std::find(bvi.Lights.begin(), bvi.Lights.end(), vi) == bvi.Lights.end())
-					{
-						vi->ParentBSPNodes.push_back(&bvi);
 
-						bvi.Lights.push_back(vi);
+				if(vi)
+				{
+					if(!vi->IsIndoorVob)
+					{
+						// Only add once
+						if(std::find(bvi.Lights.begin(), bvi.Lights.end(), vi) == bvi.Lights.end())
+						{
+							vi->ParentBSPNodes.push_back(&bvi);
+
+							bvi.Lights.push_back(vi);
+						}
+					}
+					else
+					{
+						// Only add once
+						if(std::find(bvi.IndoorLights.begin(), bvi.IndoorLights.end(), vi) == bvi.IndoorLights.end())
+						{
+							vi->ParentBSPNodes.push_back(&bvi);
+
+							bvi.IndoorLights.push_back(vi);
+						}
 					}
 				}
-				else
-				{
-					// Only add once
-					if(std::find(bvi.IndoorLights.begin(), bvi.IndoorLights.end(), vi) == bvi.IndoorLights.end())
-					{
-						vi->ParentBSPNodes.push_back(&bvi);
-
-						bvi.IndoorLights.push_back(vi);
-					}
-				}
-
 				//zCVob* vob = (zCVob *) leaf->LightVobList.Array[i];
 				//Engine::GraphicsEngine->GetLineRenderer()->AddAABB(vob->GetPositionWorld(), D3DXVECTOR3(50,50,50));
 			}
@@ -3642,6 +3703,12 @@ std::list<SkeletalVobInfo *>& GothicAPI::GetSkeletalMeshVobs()
 	return SkeletalMeshVobs;
 }
 
+/** Returns the loaded skeletal mesh vobs */
+std::list<SkeletalVobInfo *>& GothicAPI::GetAnimatedSkeletalMeshVobs()
+{
+	return AnimatedSkeletalVobs;
+}
+
 /** Returns a texture from the given surface */
 zCTexture* GothicAPI::GetTextureBySurface(MyDirectDrawSurface7* surface)
 {
@@ -3679,6 +3746,12 @@ void GothicAPI::SetPlayerPosition(const D3DXVECTOR3& pos)
 {
 	if(oCGame::GetPlayer())
 		oCGame::GetPlayer()->ResetPos(pos);
+}
+
+/** Returns the player-vob */
+zCVob* GothicAPI::GetPlayerVob()
+{
+	return oCGame::GetPlayer();
 }
 
 /** Loads resources created for this .ZEN */
@@ -4028,7 +4101,10 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 	RECT r;
 	GetClientRect(GetDesktopWindow(), &r);
 	if(res.x > r.right ||res.y > r.bottom)
+	{
+		LogInfo() << "Reducing resolution from (" << res.x << ", " << res.y << " to (" << r.right << ", " << r.bottom << ") because users desktop resolution got lowered";
 		res = INT2(r.right, r.bottom);
+	}
 
 	s.LoadedResolution = res;
 
@@ -4605,6 +4681,10 @@ float GothicAPI::GetSceneWetness()
 
 		// make the wetness last longer by applying a pow, then inverse it so 1 means that the scene is actually wet
 		SceneWetness = std::max(0.0f, 1.0f - pow(ratio, 8.0f));
+
+		// Just force to 0 when this reached a tiny amount so we can switch the shaders
+		if(SceneWetness < 0.00001f)
+			SceneWetness = 0.0f;
 	}
 
 	return SceneWetness;
