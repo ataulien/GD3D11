@@ -1891,7 +1891,12 @@ void WorldConverter::Extract3DSMeshFromVisual2(zCProgMeshProto* visual, MeshVisu
 				ExVertexStruct vx;
 				vx.Position = posList[visual->GetSubmeshes()[i].WedgeList.Array[v].position];
 				vx.TexCoord	= visual->GetSubmeshes()[i].WedgeList.Array[v].texUV;
-				vx.Color = 0xFFFFFFFF;
+
+				//if(visual->GetSubmeshes()[i].Material)
+				//	vx.Color = visual->GetSubmeshes()[i].Material->GetColor(); // Bake materialcolor into the mesh. This is ok for the most meshes.
+				//else
+					vx.Color = 0xFFFFFFFF;
+
 				vx.Normal = visual->GetSubmeshes()[i].WedgeList.Array[v].normal;
 
 				vertices.push_back(vx);

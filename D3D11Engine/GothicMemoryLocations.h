@@ -30,5 +30,9 @@
 #endif
 
 #ifdef BUILD_GOTHIC_2_6_fix
+#ifdef BUILD_SPACER
+#include "GothicMemoryLocations2_6_fix_Spacer.h"
+#else
 #include "GothicMemoryLocations2_6_fix.h"
+#endif
 #endif

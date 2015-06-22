@@ -207,6 +207,9 @@ struct GothicMemoryLocations
 		static const unsigned int zCParser = 0xAB40C0;
 		static const unsigned int zRenderer = 0x00982F08;
 		static const unsigned int zSound = 0x0099B03C;
+		
+		static const unsigned int NOP_FreelookWindowedCheckStart = 0x004816D7;
+		static const unsigned int NOP_FreelookWindowedCheckEnd = 0x004816DB;
 	};
 
 	struct zCSoundSystem
@@ -256,6 +259,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_LightColor = 0x140; // Right before Range
 		static const unsigned int Offset_Range = 0x144;
 		static const unsigned int Offset_LightInfo =  0x164;
+		static const unsigned int Offset_IsStatic = 0x164;
 		static const unsigned int Mask_LightEnabled = 0x20;
 		static const unsigned int DoAnimation = 0x006081C0;
 	};
@@ -421,6 +425,7 @@ struct GothicMemoryLocations
 
 	struct zCMaterial
 	{
+		static const unsigned int Offset_Color = 0x38;
 		static const unsigned int Offset_Texture = 0x34;
 		static const unsigned int Offset_AlphaFunc = 0x74;
 		static const unsigned int Offset_MatGroup = 0x40;

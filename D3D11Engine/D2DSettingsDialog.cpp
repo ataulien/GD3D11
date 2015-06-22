@@ -11,7 +11,7 @@
 
 D2DSettingsDialog::D2DSettingsDialog(D2DView* view, D2DSubView* parent) : D2DDialog(view, parent)
 {
-	SetPositionCentered(D2D1::Point2F(view->GetRenderTarget()->GetSize().width / 2, view->GetRenderTarget()->GetSize().height / 2), D2D1::SizeF(500, 250));
+	SetPositionCentered(D2D1::Point2F(view->GetRenderTarget()->GetSize().width / 2, view->GetRenderTarget()->GetSize().height / 2), D2D1::SizeF(500, 300));
 	Header->SetCaption("Settings");
 
 	// Get display modes
@@ -78,11 +78,18 @@ XRESULT D2DSettingsDialog::InitControls()
 	hbaoCheckbox->SetPosition(D2D1::Point2F(5, hbaoCheckbox->GetPosition().y));
 	hbaoCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.HbaoSettings.Enabled);
 
+	SV_Checkbox* vsyncCheckbox = new SV_Checkbox(MainView, MainPanel);
+	vsyncCheckbox->SetSize(D2D1::SizeF(160, 20));
+	vsyncCheckbox->SetCaption("Enable VSync");
+	vsyncCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync);
+	vsyncCheckbox->AlignUnder(hbaoCheckbox, 5);
+	vsyncCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync);
+
 	SV_Checkbox* godraysCheckbox = new SV_Checkbox(MainView, MainPanel);
 	godraysCheckbox->SetSize(D2D1::SizeF(160, 20));
 	godraysCheckbox->SetCaption("Enable GodRays");
 	godraysCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableGodRays);
-	godraysCheckbox->AlignUnder(hbaoCheckbox, 5);
+	godraysCheckbox->AlignUnder(vsyncCheckbox, 5);
 	godraysCheckbox->SetPosition(D2D1::Point2F(5, godraysCheckbox->GetPosition().y));
 	godraysCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableGodRays);
 
@@ -161,17 +168,12 @@ XRESULT D2DSettingsDialog::InitControls()
 	hdrCheckbox->SetPosition(D2D1::Point2F(170, hdrCheckbox->GetPosition().y));
 	hdrCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR);*/
 
-	SV_Checkbox* vsyncCheckbox = new SV_Checkbox(MainView, MainPanel);
-	vsyncCheckbox->SetSize(D2D1::SizeF(160, 20));
-	vsyncCheckbox->SetCaption("Enable VSync");
-	vsyncCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync);
-	vsyncCheckbox->AlignUnder(Header, 5);
-	vsyncCheckbox->SetPosition(D2D1::Point2F(170, vsyncCheckbox->GetPosition().y));
-	vsyncCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync);
+
 
 	SV_Label* outdoorVobsDDLabel = new SV_Label(MainView, MainPanel);
 	outdoorVobsDDLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
-	outdoorVobsDDLabel->AlignUnder(vsyncCheckbox, 10);
+	outdoorVobsDDLabel->AlignUnder(Header, 5);
+	outdoorVobsDDLabel->SetPosition(D2D1::Point2F(170, outdoorVobsDDLabel->GetPosition().y));
 	outdoorVobsDDLabel->SetCaption("Object draw distance:");
 
 	SV_Slider* outdoorVobsDDSlider = new SV_Slider(MainView, MainPanel);
@@ -225,6 +227,27 @@ XRESULT D2DSettingsDialog::InitControls()
 	worldDDSlider->SetValue((float)Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius);
 
 
+
+	SV_Label* dynShadowLabel = new SV_Label(MainView, MainPanel);
+	dynShadowLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
+	dynShadowLabel->AlignUnder(worldDDSlider, 8);
+	dynShadowLabel->SetCaption("Dynamic shadows:");
+
+	SV_Slider* dynShadowSlider = new SV_Slider(MainView, MainPanel);
+	dynShadowSlider->SetPositionAndSize(D2D1::Point2F(10, 22), D2D1::SizeF(150, 15));
+	dynShadowSlider->AlignUnder(dynShadowLabel, 5);
+	dynShadowSlider->SetDataToUpdate((int*)&Engine::GAPI->GetRendererState()->RendererSettings.EnablePointlightShadows);
+	dynShadowSlider->SetIsIntegralSlider(true);
+	dynShadowSlider->SetMinMax(0.0f, GothicRendererSettings::_PLS_NUM_SETTINGS-1);
+
+	static char* dsValues[] = {"Disabled", "Static only", "Update dynamic", "Update all"};
+	std::vector<std::string> dsStrings = std::vector<std::string>(dsValues, dsValues + sizeof(dsValues) / sizeof(dsValues[0]));
+	dynShadowSlider->SetDisplayValues(dsStrings);
+
+	dynShadowSlider->SetValue((float)Engine::GAPI->GetRendererState()->RendererSettings.EnablePointlightShadows);
+
+
+
 	// Third column
 	// FOV
 	SV_Label* horizFOVLabel = new SV_Label(MainView, MainPanel);
@@ -244,7 +267,7 @@ XRESULT D2DSettingsDialog::InitControls()
 
 	SV_Label* vertFOVLabel = new SV_Label(MainView, MainPanel);
 	vertFOVLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
-	vertFOVLabel->AlignUnder(horizFOVSlider, 10);
+	vertFOVLabel->AlignUnder(horizFOVSlider, 8);
 	vertFOVLabel->SetCaption("Vertical FOV:");
 
 	SV_Slider* vertFOVSlider = new SV_Slider(MainView, MainPanel);
@@ -257,7 +280,7 @@ XRESULT D2DSettingsDialog::InitControls()
 
 	SV_Label* brightnessLabel = new SV_Label(MainView, MainPanel);
 	brightnessLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
-	brightnessLabel->AlignUnder(vertFOVSlider, 10);
+	brightnessLabel->AlignUnder(vertFOVSlider, 8);
 	brightnessLabel->SetCaption("Brightness:");
 
 	SV_Slider* brightnessSlider = new SV_Slider(MainView, MainPanel);
@@ -269,7 +292,7 @@ XRESULT D2DSettingsDialog::InitControls()
 
 	SV_Label* contrastLabel = new SV_Label(MainView, MainPanel);
 	contrastLabel->SetPositionAndSize(D2D1::Point2F(10, 10), D2D1::SizeF(150, 12));
-	contrastLabel->AlignUnder(brightnessSlider, 10);
+	contrastLabel->AlignUnder(brightnessSlider, 8);
 	contrastLabel->SetCaption("Contrast:");
 
 	SV_Slider* contrastSlider = new SV_Slider(MainView, MainPanel);
@@ -284,7 +307,7 @@ XRESULT D2DSettingsDialog::InitControls()
 	updateCheckbox->SetSize(D2D1::SizeF(160, 20));
 	updateCheckbox->SetCaption("Enable Autoupdates");
 	updateCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableAutoupdates);
-	updateCheckbox->AlignUnder(contrastSlider, 10);
+	updateCheckbox->AlignUnder(contrastSlider, 8);
 	updateCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableAutoupdates);
 
 

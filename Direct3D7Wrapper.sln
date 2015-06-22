@@ -7,6 +7,7 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release_G1|Win32 = Release_G1|Win32
 		Release_NoOpt_G1|Win32 = Release_NoOpt_G1|Win32
+		Release_NoOpt_Spacer|Win32 = Release_NoOpt_Spacer|Win32
 		Release_NoOpt|Win32 = Release_NoOpt|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
@@ -15,6 +16,8 @@ Global
 		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_G1|Win32.Build.0 = Release_G1|Win32
 		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt_G1|Win32.ActiveCfg = Release_NoOpt_G1|Win32
 		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt_G1|Win32.Build.0 = Release_NoOpt_G1|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt_Spacer|Win32.ActiveCfg = Release_NoOpt_Spacer|Win32
+		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt_Spacer|Win32.Build.0 = Release_NoOpt_Spacer|Win32
 		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt|Win32.ActiveCfg = Release_NoOpt|Win32
 		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release_NoOpt|Win32.Build.0 = Release_NoOpt|Win32
 		{4F42CE68-EB4D-4355-9DCA-28F611D3845F}.Release|Win32.ActiveCfg = Release|Win32

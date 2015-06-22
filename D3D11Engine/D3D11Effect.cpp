@@ -329,7 +329,7 @@ XRESULT D3D11Effect::DrawRainShadowmap()
 	Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes = false;
 
 	// Draw rain-shadowmap
-	e->RenderShadowmaps(p, RainShadowmap, false);
+	e->RenderShadowmaps(p, RainShadowmap, true, false);
 	
 
 	// Restore old settings

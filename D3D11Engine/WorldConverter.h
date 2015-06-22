@@ -385,7 +385,7 @@ struct VobLightInfo
 		LightShadowBuffers = NULL;
 		VisibleInRenderPass = false;
 		IsIndoorVob = false;
-		DynamicShadows = true;
+		DynamicShadows = false;
 		UpdateShadows = true;
 	}
 
@@ -410,6 +410,9 @@ struct VobLightInfo
 	ShadowedPointLight* LightShadowBuffers;
 	bool DynamicShadows; // Whether this light should be able to have dynamic shadows
 	bool UpdateShadows; // Whether to update this lights shadows on the next occasion
+
+	/** Position where we were rendered the last time */
+	D3DXVECTOR3 LastRenderedPosition;
 };
 
 

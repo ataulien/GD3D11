@@ -1,6 +1,6 @@
 ddraw.dll
 GFSDK_SSAO.win32.dll
-d3dcompiler_46.dll
+D3DCompiler_43.dll
 COPYING
 Assimp32.dll
 AntTweakBar.dll

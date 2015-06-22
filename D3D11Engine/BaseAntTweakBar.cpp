@@ -117,7 +117,7 @@ XRESULT BaseAntTweakBar::Init()
 
 	TwAddVarRW(Bar_General, "DynamicLighting", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting, NULL);	
 
-	TwType epls = TwDefineEnumFromString("PointlightShadowsEnum", "0 {Disabled}, 1 {Dynamic only}, 2 {Full}");
+	TwType epls = TwDefineEnumFromString("PointlightShadowsEnum", "0 {Disabled}, 1 {Static}, 2 {Update Dynamic}, 3 {Full}");
 	TwAddVarRW(Bar_General, "PointlightShadows", epls, &Engine::GAPI->GetRendererState()->RendererSettings.EnablePointlightShadows, NULL);
 
 	//TwAddVarRW(Bar_General, "FastShadows", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.FastShadows, NULL);	
@@ -408,7 +408,7 @@ void BaseAntTweakBar::Draw()
 /** Updates the TS_Bar */
 void BaseAntTweakBar::UpdateTextureSettingsBar()
 {
-		TwRemoveVar(Bar_TextureSettings, "NormalmapDepth");
+		/*TwRemoveVar(Bar_TextureSettings, "NormalmapDepth");
 		TwRemoveVar(Bar_TextureSettings, "SpecularIntensity");
 		TwRemoveVar(Bar_TextureSettings, "SpecularPower");
 		TwRemoveVar(Bar_TextureSettings, "DisplacementFactor");
@@ -430,7 +430,7 @@ void BaseAntTweakBar::UpdateTextureSettingsBar()
 		TwDefine(" TextureSettings/TriplanarTextureScale  step=0.1");
 
 		TwAddVarRW(Bar_TextureSettings, "TriplanarFresnelFactor", TW_TYPE_FLOAT, &TS_FrameTexturesInfos[ActiveMaterialInfo].Info->buffer.FresnelFactor, NULL);
-		TwDefine(" TextureSettings/TriplanarFresnelFactor  step=0.01");
+		TwDefine(" TextureSettings/TriplanarFresnelFactor  step=0.01");*/
 }
 
 static bool FrameTexEnumCompare(TS_TextureInfo& a, TS_TextureInfo& b)

@@ -234,6 +234,7 @@ public:
 	enum EUIEvent
 	{
 		UI_OpenSettings,
+		UI_OpenEditor
 	};
 
 	BaseGraphicsEngine(void);

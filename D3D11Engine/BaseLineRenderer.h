@@ -4,21 +4,24 @@
 #pragma pack (push, 1)	
 struct LineVertex
 {
+	LineVertex(){}
 	LineVertex(const D3DXVECTOR3& position, DWORD color = 0xFFFFFFFF)
 	{
 		Position = position;
 		Color = color;
 	}
 
-	LineVertex(const D3DXVECTOR3& position, const D3DXVECTOR4& color)
+	LineVertex(const D3DXVECTOR3& position, const D3DXVECTOR4& color, float zScale = 1.0f)
 	{
 		Position = position;
+		Position.w = zScale;
 		Color = color;
 	}
 
-	LineVertex(const D3DXVECTOR3& position, const float4& color)
+	LineVertex(const D3DXVECTOR3& position, const float4& color, float zScale = 1.0f)
 	{
 		Position = position;
+		Position.w = zScale;
 		Color = color;
 	}
 

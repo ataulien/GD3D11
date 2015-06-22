@@ -86,8 +86,52 @@ public:
 		hook_outfunc
 	}
 
+#ifdef BUILD_SPACER
+	/** Returns the helper-visual for this class
+		This actually uses a map to lookup the visual. Beware for performance-issues! */
+	zCVisual* GetClassHelperVisual()
+	{
+		XCALL(GothicMemoryLocations::zCVob::GetClassHelperVisual);
+	}
+
 	/** Returns the visual saved in this vob */
 	zCVisual* GetVisual()
+	{
+		zCVisual* visual = GetMainVisual();
+
+		if(!visual)
+			visual = GetClassHelperVisual();
+
+		return visual;
+	}
+#else
+	/** Returns the visual saved in this vob */
+	zCVisual* GetVisual()
+	{
+		return GetMainVisual();
+	}
+#endif
+
+#ifdef BUILD_GOTHIC_1_08k
+	void _EndMovement()
+	{
+		XCALL(GothicMemoryLocations::zCVob::EndMovement);
+	}
+#else
+	void _EndMovement(int p=1)
+	{
+		XCALL(GothicMemoryLocations::zCVob::EndMovement);
+	}
+#endif
+
+	/** Updates the vobs transforms */
+	void EndMovement()
+	{
+		_EndMovement();
+	}
+
+	/** Returns the visual saved in this vob */
+	zCVisual* GetMainVisual()
 	{
 		XCALL(GothicMemoryLocations::zCVob::GetVisual);
 	}
@@ -106,6 +150,14 @@ public:
 			*(float *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_WorldPosY), 
 			*(float *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_WorldPosZ));
 		//XCALL(GothicMemoryLocations::zCVob::GetPositionWorld);
+	}
+
+	/** Sets this vobs position */
+	void SetPositionWorld(const D3DXVECTOR3& v) 
+	{
+#ifdef BUILD_SPACER
+		XCALL(GothicMemoryLocations::zCVob::SetPositionWorld);
+#endif
 	}
 
 	/** Returns the local bounding box */
@@ -157,6 +209,20 @@ public:
 
 	/** Returns whether the visual of this vob is visible */
 	bool GetShowVisual()
+	{
+		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_Flags);
+
+#ifndef BUILD_SPACER
+		return GetShowMainVisual();
+#else
+		// Show helpers in spacer if wanted
+		bool showHelpers = (*(int *)GothicMemoryLocations::zCVob::s_ShowHelperVisuals) != 0;
+		return GetShowMainVisual() || showHelpers;
+#endif
+	}
+
+	/** Returns whether to show the main visual or not. Only used for the spacer */
+	bool GetShowMainVisual()
 	{
 		unsigned int flags = *(unsigned int *)THISPTR_OFFSET(GothicMemoryLocations::zCVob::Offset_Flags);
 

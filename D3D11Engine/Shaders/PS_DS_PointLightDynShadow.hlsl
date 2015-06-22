@@ -141,7 +141,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float ndl = max(0, dot(lightDir, normal));
 	
 	// Apply dynamic shadow
-	ndl *= IsInShadow(wsPosition, TX_ShadowCube, SS_Comp);
+	float shadow = IsInShadow(wsPosition, TX_ShadowCube, SS_Comp);
 	//return float4(ndl.rrr,1);
 	
 	// Get rid of lighting on the backfaces of normalmapped surfaces
@@ -165,6 +165,8 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	// Blend this with the lights color and the worlds diffuse color
 	// Also apply specular lighting
 	float3 lighting = color * diffuse.rgb + specColored;
+	
+	lighting *= shadow;
 	
 	//lighting = GetShadow(uv);
 	

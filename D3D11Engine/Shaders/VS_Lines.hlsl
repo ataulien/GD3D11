@@ -40,6 +40,8 @@ VS_OUTPUT VSMain( VS_INPUT Input )
 	Output.vPosition = mul( float4(Input.vPosition.xyz,1), mul(M_World, M_ViewProj) );
 	Output.vDiffuse  = Input.vDiffuse;
 		
+	Output.vPosition.z *= Input.vPosition.w;
+		
 	return Output;
 }
 

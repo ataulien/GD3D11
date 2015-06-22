@@ -237,6 +237,7 @@ struct GothicMemoryLocations
 
 	struct zCMaterial
 	{
+		static const unsigned int Offset_Color = 0x38;
 		static const unsigned int Offset_Texture = 0x34;
 		static const unsigned int Offset_AlphaFunc = 0x70;
 		static const unsigned int Offset_MatGroup = 0x40;

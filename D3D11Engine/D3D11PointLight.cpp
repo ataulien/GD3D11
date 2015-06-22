@@ -77,7 +77,7 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
 		SkeletalVobCache.clear();
 	}
 
-	LastUpdatePosition = vEyePt;
+	
 
 	// Update indoor/outdoor-state
 	LightInfo->IsIndoorVob = LightInfo->Vob->IsIndoorVob();
@@ -152,6 +152,8 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
 
 	Engine::GAPI->GetRendererState()->RasterizerState.DepthClipEnable = oldDepthClip;
 	Engine::GAPI->GetRendererState()->GraphicsState.SetGraphicsSwitch(GSWITCH_LINEAR_DEPTH, false);
+
+	LastUpdatePosition = vEyePt;
 }
 
 /** Renders all cubemap faces at once, using the geometry shader */
@@ -167,8 +169,11 @@ void D3D11PointLight::RenderFullCubemap()
 
 	float range = LightInfo->Vob->GetLightRange() * 1.1f;
 
+	// Draw no npcs if this is a static light
+	bool noNPCs = false;//!LightInfo->Vob->IsStatic();
+
 	// Draw cubemap
-	engine->RenderShadowCube(LightInfo->Vob->GetPositionWorld(), range, DepthCubemap, NULL, NULL, false, LightInfo->IsIndoorVob, &VobCache, &SkeletalVobCache);
+	engine->RenderShadowCube(LightInfo->Vob->GetPositionWorld(), range, DepthCubemap, NULL, NULL, false, LightInfo->IsIndoorVob, noNPCs, &VobCache, &SkeletalVobCache);
 
 	//Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes = oldDrawSkel;
 }

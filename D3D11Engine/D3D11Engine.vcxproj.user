@@ -44,4 +44,9 @@
     <LocalDebuggerWorkingDirectory>C:\Program Files (x86)\Steam\SteamApps\common\Gothic II\system</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">
+    <LocalDebuggerCommand>$(G2_SYSTEM_PATH)\Spacer2.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(G2_SYSTEM_PATH)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

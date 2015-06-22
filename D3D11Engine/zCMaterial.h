@@ -90,6 +90,12 @@ public:
 		XCALL(GothicMemoryLocations::zCMaterial::GetAniTexture);
 	}
 
+	/** Returns the color-mod of this material */
+	DWORD GetColor()
+	{
+		return *(DWORD *)THISPTR_OFFSET(GothicMemoryLocations::zCMaterial::Offset_Color);
+	}
+
 	/** Returns single texture, because not all seem to be animated and returned by GetAniTexture? */
 	zCTexture* GetTextureSingle()
 	{
