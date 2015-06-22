@@ -25,6 +25,11 @@ public:
 		TT_VIEW_INV
 	};
 
+	static bool IsFreeLookActive()
+	{
+		return (*(int *)(GothicMemoryLocations::zCCamera::Var_FreeLook)) != 0;
+	}
+
 	D3DXMATRIX const& GetTransform(const ETransformType type)
 	{
 		XCALL(GothicMemoryLocations::zCCamera::GetTransform);

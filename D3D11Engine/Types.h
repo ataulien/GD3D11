@@ -199,6 +199,17 @@ struct float4
 
 	float4(){}
 
+	D3DXVECTOR4* toD3DXVECTOR4() const
+	{
+		return (D3DXVECTOR4 *)this;
+	}
+
+	D3DXVECTOR3* toD3DXVECTOR3() const
+	{
+		return (D3DXVECTOR3 *)this;
+	}
+
+
 	DWORD ToDWORD() const
 	{
 		BYTE a = (BYTE)(w * 255.0f);

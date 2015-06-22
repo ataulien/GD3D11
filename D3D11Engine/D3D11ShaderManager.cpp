@@ -120,6 +120,7 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerInstance));
 
 	Shaders.push_back(ShaderInfo("PS_Lines", "PS_Lines.hlsl", "p"));
+	Shaders.push_back(ShaderInfo("PS_LinesSel", "PS_LinesSel.hlsl", "p"));
 
 	//Shaders.push_back(ShaderInfo("FixedFunctionPipelineEmulationPS", "FixedFunctionPipelineEmulationPS.hlsl", "p", 1));
 	Shaders.push_back(ShaderInfo("PS_Simple", "PS_Simple.hlsl", "p"));

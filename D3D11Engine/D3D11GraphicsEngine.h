@@ -197,11 +197,12 @@ public:
 	virtual void DrawVobSingle(VobInfo* vob);
 
 	/** Draws everything around the given position */
-	void DrawWorldAround(const D3DXVECTOR3& position, int sectionRange, float vobXZRange, bool cullFront = true);
+	void DrawWorldAround(const D3DXVECTOR3& position, int sectionRange, float vobXZRange, bool cullFront = true, bool dontCull = false);
 	void DrawWorldAround(const D3DXVECTOR3& position, 
 					     float range,
 					     bool cullFront = true, 
 						 bool indoor = false,
+						 bool noNPCs = false,
 					     std::list<VobInfo*>* renderedVobs = NULL, std::list<SkeletalVobInfo*>* renderedMobs = NULL);
 					     
 	/** Draws the static vobs instanced */
@@ -223,7 +224,7 @@ public:
 	void DrawCloudMeshes();
 
 	/** Renders the shadowmaps for the sun */
-	void RenderShadowmaps(const D3DXVECTOR3& cameraPosition, RenderToDepthStencilBuffer* target = NULL, bool cullFront = true, ID3D11DepthStencilView* dsvOverwrite = NULL, ID3D11RenderTargetView* debugRTV = NULL);
+	void RenderShadowmaps(const D3DXVECTOR3& cameraPosition, RenderToDepthStencilBuffer* target = NULL, bool cullFront = true, bool dontCull = false, ID3D11DepthStencilView* dsvOverwrite = NULL, ID3D11RenderTargetView* debugRTV = NULL);
 
 	/** Renders the shadowmaps for a pointlight */
 	void RenderShadowCube(const D3DXVECTOR3& position, 
@@ -233,6 +234,7 @@ public:
 		ID3D11RenderTargetView* debugRTV = NULL, 
 		bool cullFront = true, 
 		bool indoor = false,
+		bool noNPCs = false,
 		std::list<VobInfo*>* renderedVobs = NULL, std::list<SkeletalVobInfo*>* renderedMobs = NULL); 
 
 	/** Updates the occlusion for the bsp-tree */
@@ -340,6 +342,7 @@ protected:
 	RenderToTextureBuffer* CloudBuffer;
 	BaseTexture* DistortionTexture;
 	BaseTexture* NoiseTexture;
+	BaseTexture* WhiteTexture;
 
 	/** Lighting */
 	GMesh* InverseUnitSphereMesh;

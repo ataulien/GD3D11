@@ -78,7 +78,7 @@ struct CameraReplacement
 };
 
 /** Version of this struct */
-const int MATERIALINFO_VERSION = 4;
+const int MATERIALINFO_VERSION = 5;
 
 struct MaterialInfo
 {
@@ -96,8 +96,7 @@ struct MaterialInfo
 		buffer.SpecularPower = 60.0f;
 		buffer.NormalmapStrength = 1.0f;
 		buffer.DisplacementFactor = 1.0f;
-		buffer.TextureScale = 1.0f;
-		buffer.FresnelFactor = 0.5f;
+		buffer.Color = 0xFFFFFFFF;
 
 		Constantbuffer = NULL;
 
@@ -125,9 +124,7 @@ struct MaterialInfo
 		float NormalmapStrength;
 		float DisplacementFactor;
 
-		float TextureScale;
-		float FresnelFactor;
-		float2 MI_Pad;
+		float4 Color;
 	};
 
 	/** creates/updates the constantbuffer */
@@ -183,6 +180,9 @@ public:
 
 	/** Message-Callback for the main window */
 	LRESULT OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+	/** Sends a message to the original gothic-window */
+	void SendMessageToGameWindow(UINT msg, WPARAM wParam, LPARAM lParam);
 
 	/** Called when the game is about to load a new level */
 	void OnLoadWorld(const std::string& levelName, int loadMode);

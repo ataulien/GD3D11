@@ -183,10 +183,10 @@ static const float WEIGHT_BIAS = -0.55;
 static const float WEIGHT_MUL = 0.7;
 
 /** Applys normal-deformation for the rain */
-void ApplyRainNormalDeformation(inout float3 vsNormal, float3 wsPosition, inout float3 diffuse)
+void ApplyRainNormalDeformation(inout float3 vsNormal, float3 wsPosition, inout float3 diffuse, out float3 wsNormal)
 {
 	// Need worldspace normal for this
-	float3 wsNormal = mul(vsNormal, (float3x3)SQ_InvView).xyz;
+	wsNormal = mul(vsNormal, (float3x3)SQ_InvView).xyz;
 	
 	float2 groundDir = normalize(float2(0.1f, 0.1f) + saturate(cross(wsNormal, float3(0.0f,1.0f,0.0f)).xz));
 	
@@ -244,7 +244,7 @@ void ApplyRainNormalDeformation(inout float3 vsNormal, float3 wsPosition, inout 
 void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inout float3 vsNormal, in out float3 diffuse, in out float specIntensity, in out float specPower, out float specAdd)
 {
 	// Ask the rain-shadowmap if we can hit this pixel
-	float pixelWettnes = ComputeShadowValue(0.0f, wsPosition, TX_RainShadowmap, SS_Comp, vsPosition.z, 1.0f, mul(SQ_RainView, SQ_RainProj), 0.001f, 2.5f) * AC_SceneWettness;
+	float pixelWettnes = ComputeShadowValue(0.0f, wsPosition, TX_RainShadowmap, SS_Comp, vsPosition.z, 1.0f, mul(SQ_RainView, SQ_RainProj), 0.0001f, 2.5f) * AC_SceneWettness;
 	pixelWettnes = pixelWettnes < 0.001f ? 0 : pixelWettnes;
 	
 	//IsWet(wsPosition, TX_RainShadowmap, SS_Comp) * AC_SceneWettness;
@@ -253,7 +253,10 @@ void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inou
 	
 	// Apply water-effects
 	float3 nrm = vsNormal;
-	ApplyRainNormalDeformation(nrm, wsPosition, diffuse.rgb);
+	float3 wsNormal;
+	ApplyRainNormalDeformation(nrm, wsPosition, diffuse.rgb, wsNormal);
+	pixelWettnes *= 1 - pow(saturate(dot(wsNormal, float3(0,-1,0))), 4.0f);
+	
 	vsNormal = lerp(vsNormal, nrm, AC_RainFXWeight * pixelWettnes); // Only apply deformation if it's actually raining
 	
 	// Get fresnel-effect

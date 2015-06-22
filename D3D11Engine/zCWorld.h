@@ -202,7 +202,7 @@ public:
 		memcpy(originalzCWorldRender, worldRender, 0x255);
 
 		// zCBspTree::Render(void)
-		REPLACE_CALL(GothicMemoryLocations::zCWorld::Call_Render_zCBspTreeRender, INST_NOP);
+		//REPLACE_CALL(GothicMemoryLocations::zCWorld::Call_Render_zCBspTreeRender, INST_NOP);
 
 		// Increase farplane 
 		//camera.SetFarPlane(80000.0f); // Does this even do something

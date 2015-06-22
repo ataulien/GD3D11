@@ -73,6 +73,9 @@
     <Filter Include="Engine\GAPI\Update">
       <UniqueIdentifier>{10f4b86e-92b5-45f4-be3c-a1e2d9895e30}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\D2D\Views\Editor">
+      <UniqueIdentifier>{bbb9a900-54fc-4e56-9cb6-9b7d93f6b1e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -669,6 +672,21 @@
       <Filter>Engine\D3D11</Filter>
     </ClInclude>
     <ClInclude Include="ShadowedPointLight.h" />
+    <ClInclude Include="GothicMemoryLocations2_6_fix_Spacer.h">
+      <Filter>ZenGin</Filter>
+    </ClInclude>
+    <ClInclude Include="WidgetContainer.h">
+      <Filter>Engine\D2D\Views\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorLinePrimitive.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseWidget.h">
+      <Filter>Engine\D2D\Views\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Widget_TransRot.h">
+      <Filter>Engine\D2D\Views\Editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -972,6 +990,18 @@
       <Filter>Engine\D3D11</Filter>
     </ClCompile>
     <ClCompile Include="ShadowedPointLight.cpp" />
+    <ClCompile Include="WidgetContainer.cpp">
+      <Filter>Engine\D2D\Views\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorLinePrimitive.cpp">
+      <Filter>Engine\GAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseWidget.cpp">
+      <Filter>Engine\D2D\Views\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget_TransRot.cpp">
+      <Filter>Engine\D2D\Views\Editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

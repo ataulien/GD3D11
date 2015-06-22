@@ -16,7 +16,7 @@ struct VobInfo;
 struct SkeletalVobInfo;
 class zCMaterial;
 class zCVob;
-
+class WidgetContainer;
 struct SelectionInfo
 {
 	SelectionInfo()
@@ -212,6 +212,6 @@ protected:
 	/** Vegetation settings */
 	float VegLastUniformScale;
 
-	
+	WidgetContainer* Widgets;
 };
 

@@ -26,12 +26,15 @@
 #include "SV_NamedSlider.h"
 #include "zCModel.h"
 #include "D2DView.h"
+#include "Widget_TransRot.h"
+#include "WidgetContainer.h"
 
 D2DEditorView::D2DEditorView(D2DView* view, D2DSubView* parent) : D2DSubView(view, parent)
 {
 	InitControls();
-	
+
 	IsEnabled = false;
+
 	Mode = EM_IDLE;
 	DraggedBoxMinLocal = D3DXVECTOR3(-700,-500,-700);
 	DraggedBoxMaxLocal = D3DXVECTOR3(700,500,700);
@@ -61,12 +64,14 @@ D2DEditorView::D2DEditorView(D2DView* view, D2DSubView* parent) : D2DSubView(vie
 	MMovedAfterClick = false;
 
 	SelectedSomething = false;
+
+	Widgets = new WidgetContainer;
 }
 
 
 D2DEditorView::~D2DEditorView(void)
 {
-
+	delete Widgets;
 }
 
 /** Initializes the controls of this view */
@@ -429,6 +434,8 @@ void D2DEditorView::Update(float deltaTime)
 	if(!IsEnabled || Engine::AntTweakBar->GetActive())
 		return;
 
+	Widgets->Render();
+
 	if(Selection.SelectedMesh)
 	{
 		VisualizeMeshInfo(Selection.SelectedMesh, D3DXVECTOR4(1,0,0,1));
@@ -440,7 +447,7 @@ void D2DEditorView::Update(float deltaTime)
 			Selection.SelectedVegetationBox->VisualizeGrass(D3DXVECTOR4(1,0,0,1));
 	}
 
-	if(IsMouseInsideEditorWindow())
+	if(IsMouseInsideEditorWindow() || Widgets->IsWidgetClicked())
 	{
 		return;
 	}
@@ -805,6 +812,9 @@ void D2DEditorView::OnMouseClick(int button)
 
 				UpdateSelectionPanel();
 
+				Widgets->ClearSelection();
+				Widgets->AddSelection(TracedVobInfo);
+
 			}else if(TracedSkeletalVobInfo)
 			{
 				Selection.SelectedSkeletalVob = TracedSkeletalVobInfo;
@@ -814,6 +824,8 @@ void D2DEditorView::OnMouseClick(int button)
 				Selection.SelectedMaterial = TracedMaterial;
 				UpdateSelectionPanel();
 
+				Widgets->ClearSelection();
+				Widgets->AddSelection(TracedSkeletalVobInfo);
 			}else if(TracedVegetationBox)
 			{
 				Selection.SelectedVegetationBox = TracedVegetationBox;
@@ -835,6 +847,16 @@ void D2DEditorView::OnMouseClick(int button)
 				UpdateSelectionPanel();
 			}
 		}
+	}
+
+	if(button == 1)
+	{
+		POINT p; GetCursorPos(&p);
+		DWORD lp = (p.y << 16) | p.x;
+
+		// Notify the game about a rightclick
+		Engine::GAPI->SendMessageToGameWindow(WM_RBUTTONDOWN, 0, lp);
+		Engine::GAPI->SendMessageToGameWindow(WM_RBUTTONUP, 0, lp);
 	}
 }
 
@@ -924,14 +946,15 @@ void D2DEditorView::DoEditorMovement()
 	SetCursor(NULL);
 
 	// Get current cursor pos
-	POINT p = D2DView::GetCursorPosition();
+	POINT p; GetCursorPos(&p);
+	//= D2DView::GetCursorPosition();
 	
 	RECT r;
 	GetWindowRect(Engine::GAPI->GetOutputWindow(), &r);
 
 	POINT mid;
-	mid.x = (int)(r.left * 0.5f + r.right * 0.5f);
-	mid.y = (int)(r.top * 0.5f + r.bottom *0.5f);
+	mid.x = (int)(r.left / 2 + r.right / 2);
+	mid.y = (int)(r.top / 2 + r.bottom / 2);
 
 	// Get difference to last frame
 	D3DXVECTOR2 diff;
@@ -939,8 +962,7 @@ void D2DEditorView::DoEditorMovement()
 	diff.y = (float)(p.y - mid.y);
 
 	// Lock the mouse in center
-	SetCursorPos((int)(r.left * 0.5f + r.right * 0.5f), 
-				 (int)(r.top * 0.5f + r.bottom *0.5f));
+	SetCursorPos(mid.x, mid.y);
 
 	// Move the camera-vob
 	zCVob* cVob = oCGame::GetGame()->_zCSession_camVob;
@@ -1048,8 +1070,10 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 	if(Engine::AntTweakBar->GetActive())
 		return true;
 
+	bool t = zCOption::GetOptions()->IsParameter("XNoDevMenu");
+
 	// Always allow opening/closing the editor
-	if(msg == WM_KEYDOWN && wParam == VK_F1 && !zCOption::GetOptions()->IsParameter("XNoDevMenu"))
+	if(msg == WM_KEYDOWN && (wParam == VK_F1 || wParam == 'O') && !zCOption::GetOptions()->IsParameter("XNoDevMenu"))
 	{
 		IsEnabled = !IsEnabled;
 		Engine::GAPI->GetRendererState()->RendererSettings.DisableWatermark = false;
@@ -1136,8 +1160,8 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 				GetWindowRect(Engine::GAPI->GetOutputWindow(), &r);
 
 				// Lock the mouse in center
-				SetCursorPos((int)(r.left * 0.5f + r.right * 0.5f), 
-							 (int)(r.top * 0.5f + r.bottom *0.5f));
+				SetCursorPos((int)(r.left / 2 + r.right / 2), 
+							 (int)(r.top / 2 + r.bottom / 2));
 			}
 		}
 		break;
@@ -1172,6 +1196,8 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 		break;
 
 	}
+
+	Widgets->OnWindowMessage(hWnd, msg, wParam, lParam);
 
 	return true;
 }

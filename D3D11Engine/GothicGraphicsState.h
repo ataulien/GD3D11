@@ -468,8 +468,10 @@ struct GothicRendererSettings
 	enum EPointLightShadowMode
 	{
 		PLS_DISABLED = 0,
-		PLS_DYNAMIC_ONLY = 1,
-		PLS_FULL = 2,
+		PLS_STATIC_ONLY = 1,
+		PLS_UPDATE_DYNAMIC = 2,
+		PLS_FULL = 3,
+		_PLS_NUM_SETTINGS
 	};
 
 
@@ -532,7 +534,12 @@ struct GothicRendererSettings
 		FixViewFrustum = false;
 		DisableWatermark = true;
 		DisableRendering = false;
+
+#ifdef BUILD_SPACER
+		EnableEditorPanel = true;
+#else
 		EnableEditorPanel = false;
+#endif
 		EnableSMAA = true;
 
 		TesselationFactor = 20.0f;
@@ -562,7 +569,7 @@ struct GothicRendererSettings
 		EnableTesselation = true;
 		AllowWorldMeshTesselation = false;
 		TesselationFrustumCulling = true;
-		EnablePointlightShadows = PLS_FULL;
+		EnablePointlightShadows = PLS_UPDATE_DYNAMIC;
 		MinLightShadowUpdateRange = 300.0f;
 		PartialDynamicShadowUpdates = true;
 

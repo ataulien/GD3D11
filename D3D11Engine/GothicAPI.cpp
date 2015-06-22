@@ -89,16 +89,6 @@ void MaterialInfo::LoadFromFile(const std::string& name)
 		{
 			buffer.DisplacementFactor = 0.7f;
 		}
-
-		if(buffer.TextureScale == 0)
-		{
-			buffer.TextureScale = 3.3f;
-		}
-	}
-
-	if(version < 3)
-	{
-		buffer.FresnelFactor = 0.5f;
 	}
 
 	if(version >= 4)
@@ -107,6 +97,8 @@ void MaterialInfo::LoadFromFile(const std::string& name)
 	}
 
 	fclose(f);
+
+	buffer.Color = float4(1,1,1,1);
 
 	UpdateConstantbuffer();
 	TextureTesselationSettings.UpdateConstantbuffer();
@@ -294,6 +286,14 @@ void GothicAPI::OnGameStart()
 /** Called to update the world, before rendering */
 void GothicAPI::OnWorldUpdate()
 {
+#ifdef BUILD_SPACER
+	zCBspBase* rootBsp = oCGame::GetGame()->_zCSession_world->GetBspTree()->GetRootNode();
+	BspInfo* root = &BspLeafVobLists[rootBsp];
+
+	if(!root->OriginalNode)
+		Engine::GAPI->OnWorldLoaded();
+#endif
+
 	RendererState.RendererInfo.Reset();
 	RendererState.RendererInfo.FPS = GetFramesPerSecond();
 	RendererState.GraphicsState.FF_Time = GetTimeSeconds();
@@ -434,6 +434,7 @@ void GothicAPI::SetEnableGothicInput(bool value)
 	if(!value)
 		disableCounter++;
 
+#ifndef BUILD_SPACER
 	// zMouse, false
 	input->SetDeviceEnabled(2, value ? 1 : 0);
 	input->SetDeviceEnabled(1, value ? 1 : 0);
@@ -441,6 +442,7 @@ void GothicAPI::SetEnableGothicInput(bool value)
 /*#ifdef BUILD_GOTHIC_1_08k
 	return;
 #endif*/
+
 
 	IDirectInputDevice7A* dInputMouse = *(IDirectInputDevice7A **)GothicMemoryLocations::GlobalObjects::DInput7DeviceMouse;
 	IDirectInputDevice7A* dInputKeyboard = *(IDirectInputDevice7A **)GothicMemoryLocations::GlobalObjects::DInput7DeviceKeyboard;
@@ -461,6 +463,7 @@ void GothicAPI::SetEnableGothicInput(bool value)
 		else
 			dInputKeyboard->Acquire();
 	}
+#endif
 
 }
 
@@ -751,6 +754,12 @@ void GothicAPI::OnWorldLoaded()
 #ifndef PUBLIC_RELEASE
 	// Enable input again, disabled it when loading started
 	SetEnableGothicInput(true);
+#endif
+
+
+	// Enable the editorpanel, if in spacer
+#ifdef BUILD_SPACER
+	Engine::GraphicsEngine->OnUIEvent(BaseGraphicsEngine::UI_OpenEditor);
 #endif
 }
 
@@ -1145,11 +1154,19 @@ void GothicAPI::OnVobMoved(zCVob* vob)
 {
 	auto it = VobMap.find(vob);
 
-	if(it != VobMap.end() && !(*it).second->ParentBSPNodes.empty())
+	if(it != VobMap.end())
 	{
-		// Move vob into the dynamic list, if not already done
-		MoveVobFromBspToDynamic((*it).second);
-	}
+		if(!(*it).second->ParentBSPNodes.empty())
+		{
+			// Move vob into the dynamic list, if not already done
+			MoveVobFromBspToDynamic((*it).second);
+		}
+
+		(*it).second->LastRenderPosition = (*it).second->Vob->GetPositionWorld();
+		(*it).second->UpdateVobConstantBuffer();
+
+		Engine::GAPI->GetRendererState()->RendererInfo.FrameVobUpdates++;
+	}	
 }
 
 /** Called when a visual got removed */
@@ -1575,6 +1592,11 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 
 	if(!vob->GetVisual())
 		return; // Don't need it if we can't render it
+
+#ifdef BUILD_SPACER
+	if(strncmp(vob->GetVisual()->GetObjectName(), "INVISIBLE_", strlen("INVISIBLE_"))==0)
+		return;
+#endif
 
 	// Add the vob to the set
 	std::set<zCVob *>::iterator it = RegisteredVobs.find(vob);
@@ -2792,6 +2814,15 @@ LRESULT CALLBACK GothicAPI::GothicWndProc(
 	return Engine::GAPI->OnWindowMessage(hWnd, msg, wParam, lParam);
 }
 
+/** Sends a message to the original gothic-window */
+void GothicAPI::SendMessageToGameWindow(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if(OriginalGothicWndProc)
+	{
+		CallWindowProc((WNDPROC)OriginalGothicWndProc, OutputWindow, msg, wParam, lParam);
+	}
+}
+
 /** Message-Callback for the main window */
 LRESULT GothicAPI::OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -2844,11 +2875,22 @@ LRESULT GothicAPI::OnWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 		}
 		break;
 
+#ifdef BUILD_SPACER
+	case WM_SIZE:
+		// Reset resolution to windowsize
+		Engine::GraphicsEngine->SetWindow(hWnd);
+		break;
+#endif
 	}
 
 	// This is only processed when the bar is activated, so just call this here
 	Engine::AntTweakBar->OnWindowMessage(hWnd, msg, wParam, lParam);
 	Engine::GraphicsEngine->OnWindowMessage(hWnd, msg, wParam, lParam);
+
+#ifdef BUILD_SPACER
+	if(msg == WM_RBUTTONDOWN)
+		return 0; // We handle this ourselfes, because we need the ability to hold down the RMB
+#endif
 
 	if(OriginalGothicWndProc)
 	{
@@ -2994,10 +3036,7 @@ void GothicAPI::CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<Vob
 
 				//if(memcmp(&(*it)->LastRenderPosition, (*it)->Vob->GetPositionWorld(), sizeof(D3DXVECTOR3)) != 0)
 				{
-					(*it)->LastRenderPosition = (*it)->Vob->GetPositionWorld();
-					(*it)->UpdateVobConstantBuffer();
 
-					Engine::GAPI->GetRendererState()->RendererInfo.FrameVobUpdates++;
 				}
 
 				VobInstanceInfo vii;
@@ -3214,6 +3253,8 @@ static void CVVH_AddNotDrawnVobToList(std::vector<VobLightInfo *>& target, std::
 				//(*it)->VisualInfo->Instances.push_back((*it)->WorldMatrix);
 				target.push_back((*it));
 				(*it)->VisibleInRenderPass = true;
+
+
 			}
 		}
 	}
@@ -3337,6 +3378,11 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 				// Add dynamic lights
 				float minDynamicUpdateLightRange = Engine::GAPI->GetRendererState()->RendererSettings.MinLightShadowUpdateRange;
 				D3DXVECTOR3 playerPosition = Engine::GAPI->GetPlayerVob() != NULL ? Engine::GAPI->GetPlayerVob()->GetPositionWorld() : D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
+
+				// Take cameraposition if we are freelooking
+				if(zCCamera::IsFreeLookActive())
+					playerPosition = Engine::GAPI->GetCameraPosition();
+
 				for(int i=0;i<leaf->LightVobList.NumInArray;i++)
 				{
 					float lightCameraDist = D3DXVec3Length(&(Engine::GAPI->GetCameraPosition() - leaf->LightVobList.Array[i]->GetPositionWorld()));
@@ -3353,7 +3399,7 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 							(*vi)->Vob = leaf->LightVobList.Array[i];
 
 							// Create shadow-buffers for these lights since it was dynamically added to the world
-							if(RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_DYNAMIC_ONLY)
+							if(RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_STATIC_ONLY)
 								Engine::GraphicsEngine->CreateShadowedPointLight(&(*vi)->LightShadowBuffers, *vi);
 						}
 
@@ -3365,11 +3411,16 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 							//Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex((*vi)->Vob->GetPositionWorld()), LineVertex(mid));
 
 							float lightPlayerDist = D3DXVec3Length(&(playerPosition - leaf->LightVobList.Array[i]->GetPositionWorld()));
-							if((*vi)->Vob->GetLightRange() > minDynamicUpdateLightRange 
-								&& lightPlayerDist < (*vi)->Vob->GetLightRange() * 1.5f 
-								&& RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_FULL)
-								(*vi)->UpdateShadows = true;
 
+							// Update the lights shadows if: Light is dynamic or full shadow-updates are set
+							if(RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_FULL
+								|| (RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_UPDATE_DYNAMIC && !(*vi)->Vob->IsStatic()))
+							{
+								// Now check for distances, etc
+								if( (*vi)->Vob->GetLightRange() > minDynamicUpdateLightRange 
+									&& lightPlayerDist < (*vi)->Vob->GetLightRange() * 1.5f)
+									(*vi)->UpdateShadows = true;
+							}
 							// Render it
 							lights.push_back(*vi);
 						}
@@ -3531,6 +3582,14 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 							bvi.IndoorLights.push_back(vi);
 						}
 					}
+
+#ifdef BUILD_SPACER
+					// Add lights to drawable voblist, so we can draw their helper-visuals when wanted
+					// Also, make sure they end up in the dynamic list, so their visuals don't stay in place
+					//VobInfo* v = VobMap[leaf->LightVobList.Array[i]];
+					//if(v)
+					//	MoveVobFromBspToDynamic(v);
+#endif
 				}
 				//zCVob* vob = (zCVob *) leaf->LightVobList.Array[i];
 				//Engine::GraphicsEngine->GetLineRenderer()->AddAABB(vob->GetPositionWorld(), D3DXVECTOR3(50,50,50));
@@ -3578,6 +3637,7 @@ BspInfo* GothicAPI::GetNewBspNode(zCBspBase* base)
 /** Disables a problematic method which causes the game to conflict with other applications on startup */
 void GothicAPI::DisableErrorMessageBroadcast()
 {
+#ifndef BUILD_SPACER
 #ifndef BUILD_GOTHIC_1_08k
 	LogInfo() << "Disabling global message broadcast";
 
@@ -3589,7 +3649,7 @@ void GothicAPI::DisableErrorMessageBroadcast()
 	// NOP it
 	REPLACE_RANGE(GothicMemoryLocations::zERROR::BroadcastStart, GothicMemoryLocations::zERROR::BroadcastEnd-1, INST_NOP);
 #endif
-
+#endif
 }
 
 /** Sets/Gets the far-plane */
@@ -4059,6 +4119,8 @@ XRESULT GothicAPI::SaveMenuSettings(const std::string& file)
 	fwrite(&s.EnableTesselation, sizeof(s.EnableTesselation), 1, f);
 	fwrite(&s.EnableSMAA, sizeof(s.EnableSMAA), 1, f);
 
+	fwrite(&s.EnablePointlightShadows, sizeof(s.EnablePointlightShadows), 1, f);
+
 	fclose(f);
 
 	return XR_SUCCESS;
@@ -4144,6 +4206,8 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 	fread(&s.EnableTesselation, sizeof(s.EnableTesselation), 1, f);
 
 	fread(&s.EnableSMAA, sizeof(s.EnableSMAA), 1, f);
+
+	fread(&s.EnablePointlightShadows, sizeof(s.EnablePointlightShadows), 1, f);
 
 	fclose(f);
 
@@ -4658,7 +4722,7 @@ float GothicAPI::GetRainFXWeight()
 	float myRainFxWeight = RendererState.RendererSettings.RainSceneWettness;
 	float gRainFxWeight = 0.0f;
 
-	if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
+	if(oCGame::GetGame() && oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
 			gRainFxWeight = oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetRainFXWeight();
 
 	// This doesn't seem to go as high as 1, scale it so it does.

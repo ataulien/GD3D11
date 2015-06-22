@@ -66,6 +66,11 @@ void HookedFunctionInfo::InitHooks()
 	//original_HandledWinMain = (HandledWinMain)DetourFunction((BYTE *)GothicMemoryLocations::Functions::HandledWinMain, (BYTE *)HookedFunctionInfo::hooked_HandledWinMain);
 	//original_ExitGameFunc = (ExitGameFunc)DetourFunction((BYTE *)GothicMemoryLocations::Functions::ExitGameFunc, (BYTE *)HookedFunctionInfo::hooked_ExitGameFunc);
 
+	// Kill the check for doing freelook only in fullscreen, since we force the game to run windowed internally
+	//int flSize = GothicMemoryLocations::GlobalObjects::NOP_FreelookWindowedCheckEnd - GothicMemoryLocations::GlobalObjects::NOP_FreelookWindowedCheckStart;
+	//VirtualProtect((void *)GothicMemoryLocations::GlobalObjects::NOP_FreelookWindowedCheckStart, flSize, PAGE_EXECUTE_READWRITE, &dwProtect);
+	//REPLACE_RANGE(GothicMemoryLocations::GlobalObjects::NOP_FreelookWindowedCheckStart, GothicMemoryLocations::GlobalObjects::NOP_FreelookWindowedCheckEnd-1, INST_NOP);
+
 	// Hook the single bink-function
 	DetourFunction((BYTE *)GothicMemoryLocations::zCBinkPlayer::GetPixelFormat, (BYTE *)HookedFunctionInfo::hooked_zBinkPlayerGetPixelFormat);
 

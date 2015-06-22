@@ -25,6 +25,12 @@ public:
 		XCALL(GothicMemoryLocations::zCVobLight::DoAnimation);
 	}
 
+	bool IsStatic()
+	{
+		int flags = *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCVobLight::Offset_IsStatic);
+		return (flags & 1) != 0;
+	}
+
 #ifndef PUBLIC_RELEASE
 	byte data1[0x140];
 	float flt[10];

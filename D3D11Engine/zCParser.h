@@ -15,14 +15,14 @@
 class zCParser 
 {
 public:
-#ifndef BUILD_GOTHIC_1_08k
-	static zCParser* GetParser(){return (zCParser *)GothicMemoryLocations::GlobalObjects::zCParser;}
-#else
+#if defined(BUILD_GOTHIC_1_08k) || defined(BUILD_SPACER)
 	static void CallFunc(int symbolId, ...)
 	{
 		
 	}
 
 	static zCParser* GetParser(){return NULL;}
+#else
+	static zCParser* GetParser(){return (zCParser *)GothicMemoryLocations::GlobalObjects::zCParser;}
 #endif
 };
