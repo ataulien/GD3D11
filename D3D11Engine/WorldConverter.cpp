@@ -113,6 +113,15 @@ void VobInfo::UpdateVobConstantBuffer()
 	//D3DXMatrixTranspose(&WorldMatrix, &cb.World);
 }
 
+/** Updates the vobs constantbuffer */
+void SkeletalVobInfo::UpdateVobConstantBuffer()
+{
+	VS_ExConstantBuffer_PerInstance cb;
+	cb.World = *Vob->GetWorldMatrixPtr();
+
+	VobConstantBuffer->UpdateBuffer(&cb);
+}
+
 /** creates/updates the constantbuffer */
 void VisualTesselationSettings::UpdateConstantbuffer()
 {
@@ -341,6 +350,88 @@ XRESULT MeshInfo::Create(ExVertexStruct* vertices, unsigned int numVertices, VER
 
 	return XR_SUCCESS;
 }
+
+/** Collects all world-polys in the specific range. Drops all materials that have no alphablending */
+void WorldConverter::WorldMeshCollectPolyRange(const D3DXVECTOR3& position, float range, std::map<int, std::map<int, WorldMeshSectionInfo>>& inSections, std::map<MeshKey, WorldMeshInfo*, cmpMeshKey>& outMeshes)
+{
+	INT2 s = GetSectionOfPos(position);
+	MeshKey opaqueKey;
+	opaqueKey.Material = NULL;
+	opaqueKey.Info = NULL;
+	opaqueKey.Texture = NULL;
+
+	WorldMeshInfo* opaqueMesh = new WorldMeshInfo;
+	outMeshes[opaqueKey] = opaqueMesh;
+
+	// Generate the meshes
+	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
+	{
+		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
+		{
+			D3DXVECTOR2 a = D3DXVECTOR2((float)((*itx).first - s.x), (float)((*ity).first - s.y));
+			if(D3DXVec2Length(&a) < 2)
+			{
+				WorldMeshSectionInfo& section = (*ity).second;
+
+				// Check all polys from all meshes
+				for(std::map<MeshKey, WorldMeshInfo*>::const_iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
+				{
+					WorldMeshInfo* m;
+					
+					// Create new mesh-part for alphatested surfaces
+					if((*it).first.Texture && (*it).first.Texture->HasAlphaChannel())
+					{
+						m = new WorldMeshInfo;
+						outMeshes[(*it).first] = m;
+					}else
+					{
+						// Just use the same mesh for opaque surfaces
+						m = opaqueMesh;
+					}
+
+					for(unsigned int i=0;i<(*it).second->Indices.size();i+=3)
+					{
+						// Check if one of them is in range
+						float range2 = range*range;
+						if(D3DXVec3LengthSq(&(position - *(*it).second->Vertices[(*it).second->Indices[i+0]].Position.toD3DXVECTOR3())) < range2
+							|| D3DXVec3LengthSq(&(position - *(*it).second->Vertices[(*it).second->Indices[i+1]].Position.toD3DXVECTOR3())) < range2
+							|| D3DXVec3LengthSq(&(position - *(*it).second->Vertices[(*it).second->Indices[i+2]].Position.toD3DXVECTOR3())) < range2)
+						{
+							for(int v=0;v<3;v++)
+								m->Vertices.push_back((*it).second->Vertices[(*it).second->Indices[i+v]]);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Index all meshes
+	for(auto it=outMeshes.begin();it!=outMeshes.end();it++)
+	{
+		if((*it).second->Vertices.empty())
+		{
+			it = outMeshes.erase(it);
+			continue;
+		}
+
+		std::vector<VERTEX_INDEX> indices;
+		std::vector<ExVertexStruct> vertices;
+		IndexVertices(&(*it).second->Vertices[0], (*it).second->Vertices.size(), vertices, indices);
+
+		(*it).second->Vertices = vertices;
+		(*it).second->Indices = indices;
+
+		// Create the buffers
+		Engine::GraphicsEngine->CreateVertexBuffer(&(*it).second->MeshVertexBuffer);
+		Engine::GraphicsEngine->CreateVertexBuffer(&(*it).second->MeshIndexBuffer);
+
+		// Init and fill them
+		(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+		(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	}
+}
+
 /** Converts a loaded custommesh to be the worldmesh */
 XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<int, std::map<int, WorldMeshSectionInfo>>* outSections, WorldInfo* info, MeshInfo** outWrappedMesh)
 {

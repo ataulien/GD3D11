@@ -241,6 +241,8 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_NodeList = 0x64;
 		static const unsigned int Offset_MeshSoftSkinList = 0x64 + 16;
 		static const unsigned int LoadModelASC = 0x0059E760;
+		static const unsigned int ReadMeshAndTreeMSB = 0x00593180;
+		
 	};
 
 	struct zCModelMeshLib

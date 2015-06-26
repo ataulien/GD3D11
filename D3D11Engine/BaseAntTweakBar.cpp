@@ -103,6 +103,7 @@ XRESULT BaseAntTweakBar::Init()
 
 	TwAddVarRW(Bar_General, "Draw WorldMesh", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawWorldMesh, NULL);
 	TwAddVarRW(Bar_General, "Draw Skeletal Meshes", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes, NULL);
+	TwAddVarRW(Bar_General, "Draw Mobs", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawMobs, NULL);
 	TwAddVarRW(Bar_General, "Draw ParticleEffects", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawParticleEffects, NULL);
 	//TwAddVarRW(Bar_General, "Draw Sky", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawSky, NULL);
 	TwAddVarRW(Bar_General, "Draw Fog", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawFog, NULL);	

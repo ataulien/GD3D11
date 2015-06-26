@@ -203,7 +203,7 @@ public:
 					     bool cullFront = true, 
 						 bool indoor = false,
 						 bool noNPCs = false,
-					     std::list<VobInfo*>* renderedVobs = NULL, std::list<SkeletalVobInfo*>* renderedMobs = NULL);
+					     std::list<VobInfo*>* renderedVobs = NULL, std::list<SkeletalVobInfo*>* renderedMobs = NULL, std::map<MeshKey, WorldMeshInfo*, cmpMeshKey>* worldMeshCache = NULL);
 					     
 	/** Draws the static vobs instanced */
 	XRESULT DrawVOBsInstanced();
@@ -235,7 +235,7 @@ public:
 		bool cullFront = true, 
 		bool indoor = false,
 		bool noNPCs = false,
-		std::list<VobInfo*>* renderedVobs = NULL, std::list<SkeletalVobInfo*>* renderedMobs = NULL); 
+		std::list<VobInfo*>* renderedVobs = NULL, std::list<SkeletalVobInfo*>* renderedMobs = NULL, std::map<MeshKey, WorldMeshInfo*, cmpMeshKey>* worldMeshCache = NULL); 
 
 	/** Updates the occlusion for the bsp-tree */
 	void UpdateOcclusion();

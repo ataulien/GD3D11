@@ -6,11 +6,111 @@
 #include "Engine.h"
 #include "zCVobLight.h"
 #include "BaseLineRenderer.h"
+#include "WorldConverter.h"
 
-D3D11PointLight::D3D11PointLight(VobLightInfo* info)
+D3D11LightCreatorThread::D3D11LightCreatorThread()
+{
+	EndThread = false;
+	IsRunning = false;
+}
+
+void D3D11LightCreatorThread::RunThread()
+{
+	IsRunning = true;
+	Thread = new std::thread(Threadfunc, this);
+}
+
+D3D11LightCreatorThread::~D3D11LightCreatorThread()
+{
+	EndThread = true;
+	CV.notify_all();
+
+	Thread->join();
+	delete Thread;
+}
+
+void D3D11LightCreatorThread::Threadfunc(D3D11LightCreatorThread* t)
+{
+	//std::unique_lock<std::mutex> lk(t->EmptyMutex);
+
+	while(!t->EndThread)
+	{
+		while(t->Queue.empty());
+			//t->CV.wait(lk); // Wait when we don't have something to do
+
+		if(t->EndThread)
+			break; // check again, if EndThread was set to true while we were waiting
+
+		// Get piece of work
+		t->QueueMutex.lock();
+		D3D11PointLight* p = t->Queue.back();
+		t->Queue.pop_back();
+		t->QueueMutex.unlock();
+
+		// Init light
+		p->InitResources();
+	}
+}
+
+D3D11PointLight::D3D11PointLight(VobLightInfo* info, bool dynamicLight)
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	LightInfo = info;
+	DynamicLight = dynamicLight;
+
+	LastUpdatePosition = LightInfo->Vob->GetPositionWorld();
+
+	DepthCubemap = NULL;
+	ViewMatricesCB = NULL;
+
+	if(!dynamicLight)
+	{
+		InitDone = false;
+
+		// Init thread when wanted
+		if(!D3D11PointlightCreatorNS::CreatorThread.IsRunning)
+		{
+			D3D11PointlightCreatorNS::CreatorThread.RunThread();
+		}
+
+		// Add to queue
+		D3D11PointlightCreatorNS::CreatorThread.QueueMutex.lock();
+		D3D11PointlightCreatorNS::CreatorThread.Queue.push_back(this);
+		D3D11PointlightCreatorNS::CreatorThread.QueueMutex.unlock();
+
+		// Notify the thread
+		D3D11PointlightCreatorNS::CreatorThread.CV.notify_all();
+	}else
+	{
+		InitResources();
+	}
+
+	DrawnOnce = false;
+}
+
+
+D3D11PointLight::~D3D11PointLight(void)
+{
+	// Make sure we are out of the init-queue
+	while(!InitDone);
+
+	delete DepthCubemap;
+	delete ViewMatricesCB;
+
+	for(auto it=WorldMeshCache.begin();it!=WorldMeshCache.end();it++)
+		delete (*it).second;
+}
+
+/** Returns true if this is the first time that light is being rendered */
+bool D3D11PointLight::NotYetDrawn()
+{
+	return !DrawnOnce;
+}
+
+/** Initializes the resources of this light */
+void D3D11PointLight::InitResources()
+{
+	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	// Create texture-cube for this light
 	DepthCubemap = new RenderToDepthStencilBuffer(engine->GetDevice(), 
@@ -25,7 +125,15 @@ D3D11PointLight::D3D11PointLight(VobLightInfo* info)
 	// Create constantbuffer for the view-matrices
 	engine->CreateConstantBuffer(&ViewMatricesCB, NULL, sizeof(CubemapGSConstantBuffer));
 
-
+	// Generate worldmesh cache if we aren't a dynamically added light
+	if(!DynamicLight)
+	{
+		WorldConverter::WorldMeshCollectPolyRange(LightInfo->Vob->GetPositionWorld(), LightInfo->Vob->GetLightRange(), Engine::GAPI->GetWorldSections(), WorldMeshCache);
+		WorldCacheInvalid = false;
+	}else
+	{
+		WorldCacheInvalid = true;
+	}
 	/*DebugTextureCubemap = new RenderToTextureBuffer(engine->GetDevice(), 
 		POINTLIGHT_SHADOWMAP_SIZE,
 		POINTLIGHT_SHADOWMAP_SIZE,
@@ -35,24 +143,37 @@ D3D11PointLight::D3D11PointLight(VobLightInfo* info)
 		DXGI_FORMAT_UNKNOWN,
 		1,
 		6);*/
-}
 
+	// Init the cubemap
+	//RenderCubemap(true);
 
-D3D11PointLight::~D3D11PointLight(void)
-{
-	delete DepthCubemap;
-	delete ViewMatricesCB;
+	InitDone = true;
 }
 
 /** Returns if this light needs an update */
 bool D3D11PointLight::NeedsUpdate()
 {
-	return LightInfo->Vob->GetPositionWorld() != LastUpdatePosition;
+	return LightInfo->Vob->GetPositionWorld() != LastUpdatePosition || NotYetDrawn();
+}
+
+/** Returns true if the light could need an update, but it's not very important */
+bool D3D11PointLight::WantsUpdate()
+{
+	// If dynamic, update colorchanging lights too, because they are mostly lamps and campfires
+	// They wouldn't need an update just because of the colorchange, but most of them are dominant lights so it looks better
+	if(Engine::GAPI->GetRendererState()->RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_UPDATE_DYNAMIC)
+		if(LightInfo->Vob->GetLightColor() != LastUpdateColor)
+			return true;
+
+	return false;
 }
 
 /** Draws the surrounding scene into the cubemap */
 void D3D11PointLight::RenderCubemap(bool forceUpdate)
 {
+	if(!InitDone)
+		return;
+
 	//if(!GetAsyncKeyState('X'))
 	//	return;
 	D3D11GraphicsEngineBase* engineBase = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
@@ -66,15 +187,21 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
     D3DXVECTOR3 vLookDir;
     D3DXVECTOR3 vUpDir;
 
-	if(!NeedsUpdate())
+	if(!NeedsUpdate() && !WantsUpdate())
 	{
 		if(!forceUpdate)
 			return; // Don't update when we don't need to
 	}else
 	{
-		// Position changed, refresh our caches
-		VobCache.clear();
-		SkeletalVobCache.clear();
+		if(LightInfo->Vob->GetPositionWorld() != LastUpdatePosition)
+		{
+			// Position changed, refresh our caches
+			VobCache.clear();
+			SkeletalVobCache.clear();
+
+			// Invalidate worldcache
+			WorldCacheInvalid = true;
+		}
 	}
 
 	
@@ -153,7 +280,9 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
 	Engine::GAPI->GetRendererState()->RasterizerState.DepthClipEnable = oldDepthClip;
 	Engine::GAPI->GetRendererState()->GraphicsState.SetGraphicsSwitch(GSWITCH_LINEAR_DEPTH, false);
 
+	LastUpdateColor = LightInfo->Vob->GetLightColor();
 	LastUpdatePosition = vEyePt;
+	DrawnOnce = true;
 }
 
 /** Renders all cubemap faces at once, using the geometry shader */
@@ -173,7 +302,11 @@ void D3D11PointLight::RenderFullCubemap()
 	bool noNPCs = false;//!LightInfo->Vob->IsStatic();
 
 	// Draw cubemap
-	engine->RenderShadowCube(LightInfo->Vob->GetPositionWorld(), range, DepthCubemap, NULL, NULL, false, LightInfo->IsIndoorVob, noNPCs, &VobCache, &SkeletalVobCache);
+	std::map<MeshKey, WorldMeshInfo*, cmpMeshKey>* wc = &WorldMeshCache;
+	if(&WorldCacheInvalid)
+		wc = NULL;
+
+	engine->RenderShadowCube(LightInfo->Vob->GetPositionWorld(), range, DepthCubemap, NULL, NULL, false, LightInfo->IsIndoorVob, noNPCs, &VobCache, &SkeletalVobCache, wc);
 
 	//Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes = oldDrawSkel;
 }
@@ -213,13 +346,19 @@ void D3D11PointLight::RenderCubemapFace(const D3DXMATRIX& view, const D3DXMATRIX
 
 /** Binds the shadowmap to the pixelshader */
 void D3D11PointLight::OnRenderLight()
-{
+{	
+	if(!InitDone)
+		return;
+
 	DepthCubemap->BindToPixelShader(((D3D11GraphicsEngineBase *)Engine::GraphicsEngine)->GetContext(), 3);
 }
 
 /** Debug-draws the cubemap to the screen */
 void D3D11PointLight::DebugDrawCubeMap()
 {
+	if(!InitDone)
+		return;
+
 	D3D11GraphicsEngineBase* engineBase = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *) engineBase; // TODO: Remove and use newer system!
 

@@ -271,7 +271,7 @@ public:
 	virtual XRESULT CreateConstantBuffer(BaseConstantBuffer** outCB, void* data, int size) = 0;
 
 	/** Creates a bufferobject for a shadowed point light */
-	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo){return XR_SUCCESS;}
+	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic = false){return XR_SUCCESS;}
 
 	/** Returns a list of available display modes */
 	virtual XRESULT GetDisplayModeList(std::vector<DisplayModeInfo>* modeList, bool includeSuperSampling = false) = 0;

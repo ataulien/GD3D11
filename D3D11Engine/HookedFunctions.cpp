@@ -53,6 +53,7 @@ void HookedFunctionInfo::InitHooks()
 	zCVisual::Hook();
 	zCTimer::Hook();
 	zCModel::Hook();
+	zCModelPrototype::Hook();
 	oCSpawnManager::Hook();
 	zCVob::Hook();
 	zCTexture::Hook();

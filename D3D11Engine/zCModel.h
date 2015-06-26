@@ -106,6 +106,7 @@ public:
 	static void Hook()
 	{
 		//HookedFunctions::OriginalFunctions.original_zCModelPrototypeLoadModelASC = (zCModelPrototypeLoadModelASC)DetourFunction((BYTE *)GothicMemoryLocations::zCModelPrototype::LoadModelASC, (BYTE *)zCModelPrototype::Hooked_LoadModelASC);
+		//HookedFunctions::OriginalFunctions.original_zCModelPrototypeReadMeshAndTreeMSB = (zCModelPrototypeReadMeshAndTreeMSB)DetourFunction((BYTE *)GothicMemoryLocations::zCModelPrototype::ReadMeshAndTreeMSB, (BYTE *)zCModelPrototype::Hooked_ReadMeshAndTreeMSB);
 
 	}
 
@@ -120,7 +121,26 @@ public:
 		{
 			
 		}
+
+		return r;
 	}
+
+	/** This is called on load time for models */
+	static int __fastcall Hooked_ReadMeshAndTreeMSB(void* thisptr, void* unknwn, int& i, class zCFileBIN& f)
+	{
+		LogInfo() << "Loading Model!";
+		int r = HookedFunctions::OriginalFunctions.original_zCModelPrototypeReadMeshAndTreeMSB(thisptr, i, f);
+
+		// Pre-Load this model for us, too
+		if(r)
+		{
+		}
+
+		return r;
+	}
+
+	
+
 
 	/** This returns the list of nodes which hold information about the bones and attachments later */
 	zCArray<zCModelNode *>* GetNodeList()

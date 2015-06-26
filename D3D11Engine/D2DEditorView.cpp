@@ -1073,7 +1073,11 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 	bool t = zCOption::GetOptions()->IsParameter("XNoDevMenu");
 
 	// Always allow opening/closing the editor
+#ifndef BUILD_SPACER
 	if(msg == WM_KEYDOWN && (wParam == VK_F1 || wParam == 'O') && !zCOption::GetOptions()->IsParameter("XNoDevMenu"))
+#else
+	if(msg == WM_KEYDOWN && (wParam == VK_F1))
+#endif
 	{
 		IsEnabled = !IsEnabled;
 		Engine::GAPI->GetRendererState()->RendererSettings.DisableWatermark = false;
