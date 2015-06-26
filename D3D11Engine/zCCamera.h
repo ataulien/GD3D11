@@ -27,7 +27,11 @@ public:
 
 	static bool IsFreeLookActive()
 	{
+#ifdef BUILD_GOTHIC_2_6_fix
 		return (*(int *)(GothicMemoryLocations::zCCamera::Var_FreeLook)) != 0;
+#else
+		return false;
+#endif
 	}
 
 	D3DXMATRIX const& GetTransform(const ETransformType type)

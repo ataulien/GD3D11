@@ -2057,7 +2057,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 						key.Texture = aniTex;
 
 						// Check for alphablending
-						if((*itm).first.Material->GetAlphaFunc() > zMAT_ALPHA_FUNC_FUNC_NONE)
+						if((*itm).first.Material->GetAlphaFunc() > zMAT_ALPHA_FUNC_FUNC_NONE && (*itm).first.Material->GetAlphaFunc() != zMAT_ALPHA_FUNC_TEST)
 						{
 							FrameTransparencyMeshes.push_back((*itm));
 						}else
@@ -2069,7 +2069,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 					}else
 					{
 						// Check for alphablending
-						if((*itm).first.Material->GetAlphaFunc() > zMAT_ALPHA_FUNC_FUNC_NONE)
+						if((*itm).first.Material->GetAlphaFunc() > zMAT_ALPHA_FUNC_FUNC_NONE && (*itm).first.Material->GetAlphaFunc() != zMAT_ALPHA_FUNC_TEST)
 						{
 							FrameTransparencyMeshes.push_back((*itm));
 						}else
@@ -2172,6 +2172,21 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 
 			BindShaderForTexture((*it).first.Material->GetAniTexture(), false, (*it).first.Material->GetAlphaFunc());
 			
+			// No backfaceculling for alphatested materials, fixes forests looking stupid in G1
+			if((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_TEST || (*it).first.Texture->HasAlphaChannel())
+			{
+				Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
+				Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+
+				UpdateRenderStates();
+			}else
+			{
+				Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
+				Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+
+				UpdateRenderStates();
+			}
+
 			// Check for alphablending on world mesh
 			if(((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND || (*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD) && !Engine::GAPI->GetRendererState()->BlendState.BlendEnabled)
 			{

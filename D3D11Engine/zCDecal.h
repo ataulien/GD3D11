@@ -5,6 +5,7 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "zSTRING.h"
+#include "zCMaterial.h"
 #include "zCVisual.h"
 
 struct DecalSettings
@@ -29,7 +30,7 @@ public:
 	bool GetAlphaTestEnabled()
 	{
 #ifdef BUILD_GOTHIC_1_08k
-		return true;
+		return GetDecalSettings()->DecalMaterial->GetAlphaFunc() == zMAT_ALPHA_FUNC_TEST;
 #else
 		XCALL(GothicMemoryLocations::zCDecal::GetAlphaTestEnabled);
 #endif

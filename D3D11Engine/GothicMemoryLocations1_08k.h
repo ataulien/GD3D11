@@ -372,6 +372,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_Range = 0x124;
 		static const unsigned int Offset_LightInfo =  0x144;
 		static const unsigned int Mask_LightEnabled = 0x20;
+		static const unsigned int Offset_IsStatic = 0x164;
 		static const unsigned int DoAnimation = 0x005DB820;
 	};
 
