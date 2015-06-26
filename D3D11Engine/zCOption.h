@@ -40,10 +40,13 @@ public:
 	/** Returns the commandline */
 	std::string GetCommandline()
 	{
+#ifdef BUILD_GOTHIC_2_6_fix
 		zSTRING* zCmdline = (zSTRING *)THISPTR_OFFSET(GothicMemoryLocations::zCOption::Offset_CommandLine);
 		std::string cmdLine = zCmdline->ToChar();
 
 		return cmdLine;
+#endif
+		return "";
 	}
 
 	/** Returns the value of the given parameter. If the parameter is not in the commandline, it returns "" */
@@ -119,14 +122,25 @@ public:
 		BaseGraphicsEngine* engine = Engine::GraphicsEngine;
 		LogInfo() << "Reading Gothic-Config: " << var;
 
+		if(!engine)
+		{
+			LogWarn() << "ENGINE wasn't initialized yet! WTF!";
+		}
+
 		if(_stricmp(var, "zVidResFullscreenX") == 0)
 		{
-			LogInfo() << "Forcing zVidResFullscreenX: " << engine->GetResolution().x;
-			return engine->GetResolution().x;
+			if(engine)
+			{
+				LogInfo() << "Forcing zVidResFullscreenX: " << engine->GetResolution().x;
+				return engine->GetResolution().x;
+			}
 		}else if(_stricmp(var, "zVidResFullscreenY") == 0)
 		{
-			LogInfo() << "Forcing zVidResFullscreenY: " << engine->GetResolution().y;
-			return engine->GetResolution().y;
+			if(engine)
+			{
+				LogInfo() << "Forcing zVidResFullscreenY: " << engine->GetResolution().y;
+				return engine->GetResolution().y;
+			}
 		}else if(_stricmp(var, "zVidResFullscreenBPP") == 0)
 		{
 			return 32;

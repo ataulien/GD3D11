@@ -464,6 +464,7 @@ void GothicAPI::SetEnableGothicInput(bool value)
 			dInputKeyboard->Acquire();
 	}
 
+#ifdef BUILD_GOTHIC_2_6_fix
 	// Kill the check for doing freelook only in fullscreen, since we force the game to run windowed internally
 	const int flSize = GothicMemoryLocations::GlobalObjects::NOP_FreelookWindowedCheckEnd - GothicMemoryLocations::GlobalObjects::NOP_FreelookWindowedCheckStart;
 
@@ -487,6 +488,7 @@ void GothicAPI::SetEnableGothicInput(bool value)
 	{	
 		memcpy((void*)GothicMemoryLocations::GlobalObjects::NOP_FreelookWindowedCheckStart, &s_CheckInst[0], flSize);
 	}*/
+#endif
 #endif
 
 }

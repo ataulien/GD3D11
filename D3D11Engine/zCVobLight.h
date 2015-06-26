@@ -27,7 +27,7 @@ public:
 
 	bool IsStatic()
 	{
-		int flags = *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCVobLight::Offset_IsStatic);
+		int flags = *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCVobLight::Offset_LightInfo);
 		return (flags & 1) != 0;
 	}
 
