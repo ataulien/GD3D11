@@ -11,6 +11,7 @@
 #define STOP_TIMING Engine::GAPI->GetRendererState()->RendererInfo.Timing.Stop
 
 const std::string MENU_SETTINGS_FILE = "system\\GD3D11\\UserSettings.bin";
+const float INDOOR_LIGHT_DISTANCE_SCALE_FACTOR = 0.5f;
 
 class zCModelPrototype;
 struct BspInfo
@@ -46,6 +47,7 @@ struct BspInfo
 	std::vector<VobInfo *> SmallVobs;
 	std::vector<VobLightInfo *> Lights;
 	std::vector<VobLightInfo *> IndoorLights;
+	std::vector<SkeletalVobInfo *> Mobs;
 
 	// This is filled in case we have loaded a custom worldmesh
 	std::vector<zCPolygon *> NodePolygons;
@@ -216,6 +218,9 @@ public:
 
 	/** Called when a vob moved */
 	void OnVobMoved(zCVob* vob);
+
+	/** Called when a zCModel was loaded */
+	void OnLoadzCModel(zCModelPrototype* model);
 	
 
 	/** Called when a material got removed */
@@ -409,7 +414,7 @@ public:
 	std::vector<VobInfo *>::iterator MoveVobFromBspToDynamic(VobInfo* vob, std::vector<VobInfo *>* source);
 
 	/** Collects vobs using gothics BSP-Tree */
-	void CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<VobLightInfo *>& lights);
+	void CollectVisibleVobs(std::vector<VobInfo *>& vobs, std::vector<VobLightInfo *>& lights, std::vector<SkeletalVobInfo *>& mobs);
 
 	/** Collects visible sections from the current camera perspective */
 	void CollectVisibleSections(std::list<WorldMeshSectionInfo*>& sections);
@@ -624,7 +629,7 @@ private:
 	void BuildBspVobMapCacheHelper(zCBspBase* base);
 
 	/** Recursive helper function to draw collect the vobs */
-	void CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int clipFlags, std::vector<VobInfo *>& vobs, std::vector<VobLightInfo  *>& lights);
+	void CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int clipFlags, std::vector<VobInfo *>& vobs, std::vector<VobLightInfo  *>& lights, std::vector<SkeletalVobInfo *>& mobs);
 
 	/** Applys the suppressed textures */
 	void ApplySuppressedSectionTextures();

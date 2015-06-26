@@ -315,6 +315,8 @@ struct SkeletalMeshVisualInfo : public BaseVisualInfo
 
 	/** Submeshes of this visual */
 	std::map<zCMaterial *, std::vector<SkeletalMeshInfo*>> SkeletalMeshes;
+
+
 };
 
 struct BaseVobInfo
@@ -424,6 +426,8 @@ struct SkeletalVobInfo : public BaseVobInfo
 		Vob = NULL;
 		VisualInfo = NULL;
 		IndoorVob = false;
+		VisibleInRenderPass = false;
+		VobConstantBuffer = NULL;
 	}
 
 	~SkeletalVobInfo()
@@ -435,13 +439,24 @@ struct SkeletalVobInfo : public BaseVobInfo
 			for(unsigned int i=0;i<(*it).second.size();i++)
 				delete (*it).second[i];
 		}
+
+		delete VobConstantBuffer;
 	}
+
+	/** Updates the vobs constantbuffer */
+	void UpdateVobConstantBuffer();
+
+	/** Constantbuffer which holds this vobs world matrix */
+	BaseConstantBuffer* VobConstantBuffer;
 
 	/** Map of visuals attached to nodes */
 	std::map<int, std::vector<MeshVisualInfo *>> NodeAttachments;
 
 	/** Indoor* */
 	bool IndoorVob;
+
+	/** Flag to see if this vob was drawn in the current render pass. Used to collect the same vob only once. */
+	bool VisibleInRenderPass;
 };
 
 struct SectionInstanceCache
@@ -576,6 +591,9 @@ public:
 	WorldConverter(void);
 	virtual ~WorldConverter(void);
 
+	/** Collects all world-polys in the specific range. Drops all materials that have no alphablending */
+	static void WorldMeshCollectPolyRange(const D3DXVECTOR3& position, float range, std::map<int,std::map<int, WorldMeshSectionInfo>>& inSections, std::map<MeshKey, WorldMeshInfo*, cmpMeshKey>& outMeshes);
+
 	/** Converts the worldmesh into a more usable format */
 	static HRESULT ConvertWorldMesh(zCPolygon** polys, unsigned int numPolygons, std::map<int, std::map<int, WorldMeshSectionInfo>>* outSections, WorldInfo* info, MeshInfo** outWrappedMesh);
 
@@ -609,6 +627,7 @@ public:
 	
 	/** Extracts a skeletal mesh from a zCMeshSoftSkin */
 	static void ExtractSkeletalMeshFromProto(zCModelMeshLib* model, SkeletalMeshVisualInfo* skeletalMeshInfo);
+
 
 	/** Extracts a node-visual */
 	static void ExtractNodeVisual(int index, zCModelNodeInst* node, std::map<int, std::vector<MeshVisualInfo *>>& attachments);

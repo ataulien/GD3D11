@@ -160,9 +160,9 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 		if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs || 
 			Engine::GAPI->GetRendererState()->RendererSettings.EnableDynamicLighting)
 		{
-			if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum ||
+			/*if(!Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum ||
 				(Engine::GAPI->GetRendererState()->RendererSettings.FixViewFrustum && FrameVisibleVobs.empty()))
-				Engine::GAPI->CollectVisibleVobs(FrameVisibleVobs, FrameVisibleLights);
+				Engine::GAPI->CollectVisibleVobs(FrameVisibleVobs, FrameVisibleLights);*/
 
 			// Push the data to the GPU
 			FillInstancingBuffer(FrameVisibleVobs);

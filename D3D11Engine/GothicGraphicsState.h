@@ -483,6 +483,7 @@ struct GothicRendererSettings
 		DrawVOBs = true;
 		DrawWorldMesh = true;
 		DrawSkeletalMeshes = true;	
+		DrawMobs = true;
 
 		DrawParticleEffects = true;
 
@@ -640,6 +641,7 @@ struct GothicRendererSettings
 	bool DrawVOBs;
 	bool DrawWorldMesh;
 	bool DrawSkeletalMeshes;
+	bool DrawMobs;
 	bool DrawParticleEffects;
 	bool DrawSky;
 	bool DrawFog;

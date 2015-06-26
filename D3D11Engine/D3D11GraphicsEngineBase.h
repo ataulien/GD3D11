@@ -178,7 +178,7 @@ public:
 	virtual XRESULT CreateConstantBuffer(BaseConstantBuffer** outCB, void* data, int size);
 
 	/** Creates a bufferobject for a shadowed point light */
-	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo);
+	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic = false);
 
 	/** Returns a list of available display modes */
 	virtual XRESULT GetDisplayModeList(std::vector<DisplayModeInfo>* modeList, bool includeSuperSampling = false);
@@ -293,8 +293,11 @@ protected:
 
 	/** FixedFunction-State render states */
 	ID3D11RasterizerState* FFRasterizerState;
+	size_t FFRasterizerStateHash;
 	ID3D11BlendState* FFBlendState;
+	size_t FFBlendStateHash;
 	ID3D11DepthStencilState* FFDepthStencilState;
+	size_t FFDepthStencilStateHash;
 
 	/** Debug line-renderer */
 	D3D11LineRenderer* LineRenderer;

@@ -821,10 +821,10 @@ void D3D11GraphicsEngineBase::UpdateTransformsCB()
 }
 
 /** Creates a bufferobject for a shadowed point light */
-XRESULT D3D11GraphicsEngineBase::CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo)
+XRESULT D3D11GraphicsEngineBase::CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic)
 {
 	if(Engine::GAPI->GetRendererState()->RendererSettings.EnablePointlightShadows > 0)
-		*outPL = new D3D11PointLight(lightInfo);
+		*outPL = new D3D11PointLight(lightInfo, dynamic);
 	else
 		*outPL = NULL;
 

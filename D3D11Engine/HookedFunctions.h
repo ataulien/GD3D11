@@ -67,6 +67,7 @@ typedef void (__thiscall* oCWorldDisableVob)(void*, zCVob*);
 typedef void (__fastcall* oCWorldRemoveFromLists)(void*, zCVob*);
 typedef int (__thiscall* zCBinkPlayerOpenVideo)(void*, class zSTRING);
 typedef int (__thiscall* zCModelPrototypeLoadModelASC)(void*, class zSTRING const &);
+typedef int (__thiscall* zCModelPrototypeReadMeshAndTreeMSB)(void*,int &, class zCFileBIN &);
 
 typedef void (__thiscall* zCActiveSndAutoCalcObstruction)(void*, int);
 
@@ -132,6 +133,7 @@ struct HookedFunctionInfo
 	zCBspBaseCheckRayAgainstPolys original_zCBspBaseCheckRayAgainstPolysNearestHit;
 	//zCActiveSndAutoCalcObstruction original_zCActiveSndAutoCalcObstruction;
 	zCModelPrototypeLoadModelASC original_zCModelPrototypeLoadModelASC;
+	zCModelPrototypeReadMeshAndTreeMSB original_zCModelPrototypeReadMeshAndTreeMSB;
 
 	/** Function hooks */
 	static int __stdcall hooked_HandledWinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR szCmdLine, int sw);
