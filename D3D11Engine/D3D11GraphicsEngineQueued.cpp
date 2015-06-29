@@ -48,7 +48,7 @@ void D3D11GraphicsEngineQueued::DrawPipelineState(const PipelineState* state)
 		break;
 
 	case PipelineState::DCT_DrawIndexedInstanced:
-		Context->DrawIndexedInstanced(state->BaseState.NumIndices, state->BaseState.NumInstances, 0, 0, 0);
+		Context->DrawIndexedInstanced(state->BaseState.NumIndices, state->BaseState.NumInstances, 0, 0, state->BaseState.InstanceOffset);
 		break;
 	}
 }

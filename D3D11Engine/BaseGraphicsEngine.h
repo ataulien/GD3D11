@@ -74,6 +74,7 @@ struct PipelineState
 		BaseState.NumTextures = 0;
 		BaseState.NumInstances = 0;
 		BaseState.BSPSkipState = false;
+		BaseState.InstanceOffset = 0;
 
 		memset(BaseState.TextureIDs, 0xFF, sizeof(BaseState.TextureIDs));
 
@@ -141,6 +142,7 @@ struct PipelineState
 		UINT NumIndices;
 		UINT NumVertices;
 		UINT NumInstances;
+		UINT InstanceOffset;
 
 		/** Index-buffer */
 		BaseVertexBuffer* IndexBuffer;

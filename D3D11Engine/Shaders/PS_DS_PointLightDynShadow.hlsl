@@ -26,6 +26,47 @@ cbuffer DS_PointLightConstantBuffer : register( b0 )
 	matrix PL_ShadowProj; // Optimize out!
 };
 
+static const float BLUR_SCALE = 0.029f;
+static const int BLUR_COUNT = 8;
+static const float3 BLUR_OFFSETS[] = 
+{
+	/*float3(1,0,0),
+	float3(0,1,0),
+	float3(0,0,1),
+	float3(-1,0,0),
+	float3(0,-1,0),
+	float3(0,0,-1),*/
+	
+	
+float3(	0.054426466605825*2-1	,
+		0.057144871008184*2-1	,
+		0.57025665350736*2-1	),
+float3(	0.32904030165125*2-1	,
+		0.22406590786952*2-1	,
+		0.76940122329136*2-1	),
+float3(	0.90462177475198*2-1	,
+		0.091382070021416*2-1	,
+		0.0065345494107038*2-1	),
+float3(	0.93540243382352*2-1	,
+		0.61764284391778*2-1	,
+		0.103979589466*2-1		),
+		
+		
+		
+float3(	0.44626536287659*2-1	,
+		0.19266830440269*2-1	,
+		0.73062449308607*2-1	),
+float3(	0.0084832706528172*2-1	,
+		0.83200742948428*2-1	,
+		0.43927977813374*2-1	),
+float3(	0.28579624476181*2-1	,
+		0.57096250149001*2-1	,
+		0.0095401159532089*2-1	),
+float3(	0.55814247604373*2-1	,
+		0.59385285228205*2-1	,
+		0.44374119743879*2-1	)
+};
+
 //--------------------------------------------------------------------------------------
 // Textures and Samplers
 //--------------------------------------------------------------------------------------
@@ -78,13 +119,13 @@ float IsInShadow(float3 wsPosition, TextureCube shadowCube, SamplerComparisonSta
 	
 	// Get dir from pointlight to pixel
 	float distance = length(wsPosition - Pl_PositionWorld);
-	float3 dir = wsPosition - Pl_PositionWorld;
+	float3 dir = normalize(wsPosition - Pl_PositionWorld);
 	
 	float zFar = PL_Range * 2.0f;
 	float zNear = 50.0f;
 
-	float s = shadowCube.Sample(SS_Linear, dir).r;
-	s *= zFar;
+	//float s = shadowCube.Sample(SS_Linear, dir).r;
+	//s *= zFar;
 	//s = -51.2820549f / (s - 1.02564108f);
 	//s = (zNear * zFar) / (zFar - s * (zFar - zNear));
 	
@@ -92,8 +133,16 @@ float IsInShadow(float3 wsPosition, TextureCube shadowCube, SamplerComparisonSta
 	
 	distance = distance / zFar;
 	
+	float shd = 0;
+	for(int i=0;i<BLUR_COUNT;i++)
+	{
+		shd += shadowCube.SampleCmpLevelZero(samplerState, dir + BLUR_OFFSETS[i] * BLUR_SCALE, distance - bias);
+	}
+	shd /= BLUR_COUNT;
+	return shd;
+	
 	//return s < distance - bias?  0.0f : 1.0f;
-	return shadowCube.SampleCmpLevelZero(samplerState, dir, distance - bias);
+	//return shadowCube.SampleCmpLevelZero(samplerState, dir, distance - bias);
 }
 
 //--------------------------------------------------------------------------------------

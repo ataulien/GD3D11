@@ -598,11 +598,15 @@ float EditorLinePrimitive::IntersectPrimitive(D3DXVECTOR3* RayOrigin, D3DXVECTOR
 	// Go through all line segments and intersect them
 	for(i = 0; i < NumVertices; i+=2)
 	{	
+		D3DXVECTOR3 vx[2];
+		D3DXVec3TransformCoord(&vx[0], Vertices[i].Position.toD3DXVECTOR3(), &WorldMatrix);
+		D3DXVec3TransformCoord(&vx[1], Vertices[i+1].Position.toD3DXVECTOR3(), &WorldMatrix);
 
-		float Dist = IntersectLineSegment(&Origin, &Dir, Vertices[i].Position.toD3DXVECTOR3(), Vertices[i+1].Position.toD3DXVECTOR3(), Epsilon);
+		//float Dist = IntersectLineSegment(&Origin, &Dir, Vertices[i].Position.toD3DXVECTOR3(), Vertices[i+1].Position.toD3DXVECTOR3(), Epsilon);
+		float Dist = IntersectLineSegment(RayOrigin, RayDirection, &vx[0], &vx[1], Epsilon);
 		if(Dist < Shortest || Shortest == -1)
 		{
-			Shortest = Dist;
+			Shortest = Dist / Scale.x;
 		}
 	}
 
@@ -611,6 +615,7 @@ float EditorLinePrimitive::IntersectPrimitive(D3DXVECTOR3* RayOrigin, D3DXVECTOR
 		FLOAT fBary1, fBary2;
 		FLOAT fDist;
 		int NumIntersections=0;
+		Shortest = FLT_MAX;
 		
 		for( DWORD i = 0; i < NumSolidVertices; i+=3 )
 		{
@@ -622,7 +627,7 @@ float EditorLinePrimitive::IntersectPrimitive(D3DXVECTOR3* RayOrigin, D3DXVECTOR
 			if( IntersectTriangle( &Origin, &Dir, v0, v1, v2,
 				&fDist, &fBary1, &fBary2 ) )
 			{
-				//if( fDist < Shortest  || Shortest == -1)
+				if( fDist < Shortest  || Shortest == -1)
 				{
 					NumIntersections++;
 					Shortest=0;

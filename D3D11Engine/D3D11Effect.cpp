@@ -168,7 +168,7 @@ XRESULT D3D11Effect::DrawRain()
 	D3D11VertexBuffer* b = NULL;
 
 	// Use initial-data if we don't have something in the stream-buffers yet
-	if(firstFrame || state.RendererSettings.RainUseInitialSet)
+	if(firstFrame || state.RendererSettings.RainUseInitialSet || Engine::GAPI->IsGamePaused())
 		b = (D3D11VertexBuffer *)RainBufferInitial;
 	else
 		b = (D3D11VertexBuffer *)RainBufferDrawFrom;
@@ -228,7 +228,7 @@ XRESULT D3D11Effect::DrawRain()
 	// Disable depth-write
 	state.DepthState.DepthWriteEnabled = false;
 	state.DepthState.SetDirty();
-	state.DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS_EQUAL;
+	state.DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::DEFAULT_DEPTH_COMP_STATE;
 
 	// Disable culling
 	state.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;

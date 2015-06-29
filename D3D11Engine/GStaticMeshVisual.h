@@ -69,6 +69,10 @@ protected:
 		/** Data of the InstancingBuffer. This is only valid between OnBeginDraw and OnEndDraw and when
 			InstanceBufferData is greater than 0 */
 		byte* InstancingBufferData;
+
+		/** Index this visual has in the global instancing buffer */
+		int InstanceTypeIndex;
+		int InstanceBufferOffset;
 	} Instancing;
 };
 

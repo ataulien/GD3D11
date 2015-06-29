@@ -22,6 +22,7 @@
 #include <hash_set>
 #include <list>
 #include <algorithm>
+#include <future>
 
 #include <set>
 #include <signal.h>

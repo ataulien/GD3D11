@@ -197,7 +197,7 @@ void Widget_TransRot::DoHoverTest(HWND hw)
 	Pos = Engine::GAPI->GetCameraPosition();
 
 	// Check the trans widget
-	float Width = 0.15 * 5;
+	float Width = 0.15;
 	float Eps = 0.01;
 
 	

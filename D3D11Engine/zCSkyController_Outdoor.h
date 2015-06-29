@@ -119,6 +119,16 @@ public:
 		return *(float *)THISPTR_OFFSET(GothicMemoryLocations::zCSkyController_Outdoor::Offset_OutdoorRainFXWeight);
 	}
 
+	/** Returns the currently active weather type */
+	zTWeather GetWeatherType()
+	{
+#ifdef BUILD_GOTHIC_2_6_fix
+		return *(zTWeather *)THISPTR_OFFSET(GothicMemoryLocations::zCSkyController_Outdoor::Offset_WeatherType); 
+#else
+		return zTWeather::zTWEATHER_RAIN;
+#endif
+	}
+
 	/*zCSkyPlanet* GetSun()
 	{
 		return *(zCSkyPlanet **)(((char *)this) + GothicMemoryLocations::zCSkyController_Outdoor::Offset_Sun);

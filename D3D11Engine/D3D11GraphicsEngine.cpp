@@ -52,7 +52,7 @@ const INT2 DEFAULT_RESOLUTION = INT2(1920 * RES_UPSCALE, 1080*  RES_UPSCALE);
 
 const int NUM_UNLOADEDTEXCOUNT_FORCE_LOAD_TEXTURES = 100;
 
-const float DEFAULT_NORMALMAP_STRENGTH = 0.20f;
+const float DEFAULT_NORMALMAP_STRENGTH = 0.10f;
 const float DEFAULT_FAR_PLANE = 50000.0f;
 const D3DXVECTOR4 UNDERWATER_COLOR_MOD = D3DXVECTOR4(0.5f, 0.7f, 1.0f, 1.0f);
 
@@ -1331,7 +1331,7 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBu
 	//Draw the mesh
 	Context->DrawIndexed(numIndices, 0, 0);
 
-	if(ActiveHDS && RenderingStage == DES_MAIN)
+	if(ActiveHDS)
 	{
 		Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		Context->DSSetShader(NULL, NULL, NULL);
@@ -2178,11 +2178,17 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 				Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
 				Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
+				Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS;
+				Engine::GAPI->GetRendererState()->DepthState.SetDirty();
+
 				UpdateRenderStates();
 			}else
 			{
 				Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
 				Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+
+				Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::DEFAULT_DEPTH_COMP_STATE;
+				Engine::GAPI->GetRendererState()->DepthState.SetDirty();
 
 				UpdateRenderStates();
 			}
@@ -2226,7 +2232,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			bound = (*it).first.Material->GetAniTexture();
 
 			// Bind normalmap to HDS
-			if((*it).second->MeshIndexBufferPNAEN)
+			if(!(*it).second->IndicesPNAEN.empty())
 			{
 				Context->DSSetShaderResources(0,1, &boundNormalmap);
 				Context->HSSetShaderResources(0,1, &boundNormalmap);
@@ -2726,7 +2732,7 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 
 	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
 
-	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS_EQUAL;
+	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::DEFAULT_DEPTH_COMP_STATE;
 	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
 }
 
@@ -4190,6 +4196,7 @@ XRESULT D3D11GraphicsEngine::OnKeyDown(unsigned int key)
 	switch (key)
 	{
 	case VK_NUMPAD0:
+		Engine::GAPI->PrintMessageTimed(INT2(30,30), "Reloading shaders...");
 		ReloadShaders();
 		break;
 
@@ -4500,8 +4507,8 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		float dist = D3DXVec3Length(&(*plcb.Pl_PositionWorld.toD3DXVECTOR3() - Engine::GAPI->GetCameraPosition()));
 
 		// Scale indoor light-distance so they fade out earlier
-		if(vob->IsIndoorVob())
-			dist /= INDOOR_LIGHT_DISTANCE_SCALE_FACTOR;
+		//if(vob->IsIndoorVob())
+		//	dist /= INDOOR_LIGHT_DISTANCE_SCALE_FACTOR;
 
 		// Gradually fade in the lights
 		if( dist + plcb.PL_Range < Engine::GAPI->GetRendererState()->RendererSettings.VisualFXDrawRadius)
@@ -4575,90 +4582,95 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnLights++;
 	}
 
-	if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_INDOOR)
-		return XR_SUCCESS; // No sunlight for indoor worlds
-
-	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
-	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
-
-	// Modify light when raining
-	float rain = Engine::GAPI->GetRainFXWeight();
-	float wetness = Engine::GAPI->GetSceneWetness();
-
-	// Switch global light shader when raining
-	if(wetness > 0.0f)
+	if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() != zBSP_MODE_INDOOR)
 	{
-		SetActivePixelShader("PS_DS_AtmosphericScattering_Rain");
-	}else
-	{
-		SetActivePixelShader("PS_DS_AtmosphericScattering");
+#ifdef BUILD_GOTHIC_1_08k
+		// *cough cough* somehow this makes the worldmesh disappear in indoor locations
+		// TODO: Fixme
+		Engine::GAPI->GetRendererState()->RendererSettings.EnableSMAA = false;
+#endif
+
+		Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
+		Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
+
+		// Modify light when raining
+		float rain = Engine::GAPI->GetRainFXWeight();
+		float wetness = Engine::GAPI->GetSceneWetness();
+
+		// Switch global light shader when raining
+		if(wetness > 0.0f)
+		{
+			SetActivePixelShader("PS_DS_AtmosphericScattering_Rain");
+		}else
+		{
+			SetActivePixelShader("PS_DS_AtmosphericScattering");
+		}
+
+		//SetActivePixelShader("PS_DS_SimpleSunlight");
+		SetActiveVertexShader("VS_PFX");
+
+		SetupVS_ExMeshDrawCall();
+
+		GSky* sky = Engine::GAPI->GetSky();
+		ActivePS->GetConstantBuffer()[1]->UpdateBuffer(&sky->GetAtmosphereCB());
+		ActivePS->GetConstantBuffer()[1]->BindToPixelShader(1);
+
+		DS_ScreenQuadConstantBuffer scb;
+		scb.SQ_InvProj = plcb.PL_InvProj;
+		scb.SQ_InvView = plcb.PL_InvView;
+		scb.SQ_View = Engine::GAPI->GetRendererState()->TransformState.TransformView;
+
+		D3DXVec3TransformNormal(scb.SQ_LightDirectionVS.toD3DXVECTOR3(), sky->GetAtmosphereCB().AC_LightPos.toD3DXVECTOR3(), &view);
+
+		float3 sunColor = Engine::GAPI->GetRendererState()->RendererSettings.SunLightColor;
+
+	
+
+		float sunStrength = Toolbox::lerp(Engine::GAPI->GetRendererState()->RendererSettings.SunLightStrength, 
+			Engine::GAPI->GetRendererState()->RendererSettings.RainSunLightStrength, 
+			std::min(1.0f, rain * 2.0f)); // Scale the darkening-factor faster here, so it matches more with the increasing fog-density
+
+		scb.SQ_LightColor = float4(sunColor.x, sunColor.y, sunColor.z, sunStrength);
+
+		scb.SQ_ShadowView = cr.ViewReplacement;
+		scb.SQ_ShadowProj = cr.ProjectionReplacement;
+		scb.SQ_ShadowmapSize = (float)WorldShadowmap1->GetSizeX();
+
+		// Get rain matrix
+		//scb.SQ_RainViewProj = Effects->GetRainShadowmapCameraRepl().ViewReplacement * Effects->GetRainShadowmapCameraRepl().ProjectionReplacement;
+		scb.SQ_RainView = Effects->GetRainShadowmapCameraRepl().ViewReplacement;
+		scb.SQ_RainProj = Effects->GetRainShadowmapCameraRepl().ProjectionReplacement;
+
+		//scb.SQ_ProjAB.x = Engine::GAPI->GetFarPlane() / (Engine::GAPI->GetFarPlane() - Engine::GAPI->GetNearPlane());
+		//scb.SQ_ProjAB.y = (-Engine::GAPI->GetFarPlane() * Engine::GAPI->GetNearPlane()) / (Engine::GAPI->GetFarPlane() - Engine::GAPI->GetNearPlane());
+	
+		scb.SQ_ShadowStrength = Engine::GAPI->GetRendererState()->RendererSettings.ShadowStrength;
+		scb.SQ_ShadowAOStrength = Engine::GAPI->GetRendererState()->RendererSettings.ShadowAOStrength;
+		scb.SQ_WorldAOStrength = Engine::GAPI->GetRendererState()->RendererSettings.WorldAOStrength;
+
+		ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&scb);
+		ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
+
+		PFXVS_ConstantBuffer vscb;
+		vscb.PFXVS_InvProj = scb.SQ_InvProj;
+		ActiveVS->GetConstantBuffer()[0]->UpdateBuffer(&vscb);
+		ActiveVS->GetConstantBuffer()[0]->BindToVertexShader(0);
+
+		WorldShadowmap1->BindToPixelShader(Context, 3);
+
+
+		if(Effects->GetRainShadowmap())
+			Effects->GetRainShadowmap()->BindToPixelShader(Context, 4);
+
+		Context->PSSetSamplers(2,1, &ShadowmapSamplerState);
+
+		Context->PSSetShaderResources(5, 1, &ReflectionCube2);
+
+		DistortionTexture->BindToPixelShader(6);
+
+		PfxRenderer->DrawFullScreenQuad();
+
 	}
-
-	//SetActivePixelShader("PS_DS_SimpleSunlight");
-	SetActiveVertexShader("VS_PFX");
-
-	SetupVS_ExMeshDrawCall();
-
-	GSky* sky = Engine::GAPI->GetSky();
-	ActivePS->GetConstantBuffer()[1]->UpdateBuffer(&sky->GetAtmosphereCB());
-	ActivePS->GetConstantBuffer()[1]->BindToPixelShader(1);
-
-	DS_ScreenQuadConstantBuffer scb;
-	scb.SQ_InvProj = plcb.PL_InvProj;
-	scb.SQ_InvView = plcb.PL_InvView;
-	scb.SQ_View = Engine::GAPI->GetRendererState()->TransformState.TransformView;
-
-	D3DXVec3TransformNormal(scb.SQ_LightDirectionVS.toD3DXVECTOR3(), sky->GetAtmosphereCB().AC_LightPos.toD3DXVECTOR3(), &view);
-
-	float3 sunColor = Engine::GAPI->GetRendererState()->RendererSettings.SunLightColor;
-
-	
-
-	float sunStrength = Toolbox::lerp(Engine::GAPI->GetRendererState()->RendererSettings.SunLightStrength, 
-		Engine::GAPI->GetRendererState()->RendererSettings.RainSunLightStrength, 
-		std::min(1.0f, rain * 2.0f)); // Scale the darkening-factor faster here, so it matches more with the increasing fog-density
-
-	scb.SQ_LightColor = float4(sunColor.x, sunColor.y, sunColor.z, sunStrength);
-
-	scb.SQ_ShadowView = cr.ViewReplacement;
-	scb.SQ_ShadowProj = cr.ProjectionReplacement;
-	scb.SQ_ShadowmapSize = (float)WorldShadowmap1->GetSizeX();
-
-	// Get rain matrix
-	//scb.SQ_RainViewProj = Effects->GetRainShadowmapCameraRepl().ViewReplacement * Effects->GetRainShadowmapCameraRepl().ProjectionReplacement;
-	scb.SQ_RainView = Effects->GetRainShadowmapCameraRepl().ViewReplacement;
-	scb.SQ_RainProj = Effects->GetRainShadowmapCameraRepl().ProjectionReplacement;
-
-	//scb.SQ_ProjAB.x = Engine::GAPI->GetFarPlane() / (Engine::GAPI->GetFarPlane() - Engine::GAPI->GetNearPlane());
-	//scb.SQ_ProjAB.y = (-Engine::GAPI->GetFarPlane() * Engine::GAPI->GetNearPlane()) / (Engine::GAPI->GetFarPlane() - Engine::GAPI->GetNearPlane());
-	
-	scb.SQ_ShadowStrength = Engine::GAPI->GetRendererState()->RendererSettings.ShadowStrength;
-	scb.SQ_ShadowAOStrength = Engine::GAPI->GetRendererState()->RendererSettings.ShadowAOStrength;
-	scb.SQ_WorldAOStrength = Engine::GAPI->GetRendererState()->RendererSettings.WorldAOStrength;
-
-	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&scb);
-	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
-
-	PFXVS_ConstantBuffer vscb;
-	vscb.PFXVS_InvProj = scb.SQ_InvProj;
-	ActiveVS->GetConstantBuffer()[0]->UpdateBuffer(&vscb);
-	ActiveVS->GetConstantBuffer()[0]->BindToVertexShader(0);
-
-	WorldShadowmap1->BindToPixelShader(Context, 3);
-
-
-	if(Effects->GetRainShadowmap())
-		Effects->GetRainShadowmap()->BindToPixelShader(Context, 4);
-
-	Context->PSSetSamplers(2,1, &ShadowmapSamplerState);
-
-	Context->PSSetShaderResources(5, 1, &ReflectionCube2);
-
-	DistortionTexture->BindToPixelShader(6);
-
-	PfxRenderer->DrawFullScreenQuad();
-
-
 
 	// Reset state
 	ID3D11ShaderResourceView* srv = NULL;
@@ -5659,7 +5671,7 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 	
 	state.DepthState.DepthWriteEnabled = false;
 	state.DepthState.SetDirty();
-	state.DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS_EQUAL;
+	state.DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::DEFAULT_DEPTH_COMP_STATE;
 	
 	state.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
 	state.RasterizerState.SetDirty();
@@ -5886,7 +5898,7 @@ void D3D11GraphicsEngine::DrawParticleEffects()
 	
 	state.DepthState.DepthWriteEnabled = false;
 	state.DepthState.SetDirty();
-	state.DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS_EQUAL;
+	state.DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::DEFAULT_DEPTH_COMP_STATE;
 	
 	state.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
 	state.RasterizerState.SetDirty();

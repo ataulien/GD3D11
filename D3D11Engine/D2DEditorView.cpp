@@ -807,8 +807,11 @@ void D2DEditorView::OnMouseClick(int button)
 			{
 				Selection.SelectedVobInfo = TracedVobInfo;
 				Selection.SelectedMaterial = TracedMaterial;
+
+#ifndef BUILD_SPACER
 				VobSettingsDialog->SetHidden(false);
 				VobSettingsDialog->SetVobInfo(TracedVobInfo);
+#endif
 
 				UpdateSelectionPanel();
 
@@ -818,8 +821,11 @@ void D2DEditorView::OnMouseClick(int button)
 			}else if(TracedSkeletalVobInfo)
 			{
 				Selection.SelectedSkeletalVob = TracedSkeletalVobInfo;
+
+#ifndef BUILD_SPACER
 				VobSettingsDialog->SetHidden(false);
 				VobSettingsDialog->SetVobInfo(TracedSkeletalVobInfo);
+#endif
 
 				Selection.SelectedMaterial = TracedMaterial;
 				UpdateSelectionPanel();
@@ -1073,7 +1079,7 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 	bool t = zCOption::GetOptions()->IsParameter("XNoDevMenu");
 
 	// Always allow opening/closing the editor
-#ifndef BUILD_SPACER
+#ifdef BUILD_SPACER
 	if(msg == WM_KEYDOWN && (wParam == VK_F1 || wParam == 'O') && !zCOption::GetOptions()->IsParameter("XNoDevMenu"))
 #else
 	if(msg == WM_KEYDOWN && (wParam == VK_F1))

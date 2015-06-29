@@ -9,7 +9,7 @@
 
 namespace Engine
 {
-	const std::string DLL_FILES[] = { "d3dcompiler_46.dll", "FW1FontWrapper.dll", "Assimp32.dll", "AntTweakBar.dll" };
+	const char* DLL_FILES[] = { "d3dcompiler_46.dll", "FW1FontWrapper.dll", "Assimp32.dll", "AntTweakBar.dll" };
 	const int NUM_DLL_FILES = 4;
 
 	/** Creates main graphics engine */
@@ -63,10 +63,10 @@ namespace Engine
 		i = 0;
 
 		// Load dll files from subdir
-		for(int i=0;i<NUM_DLL_FILES;i++)
+		/*for(int i=0;i<NUM_DLL_FILES;i++)
 		{
 			LoadLibrary((ENGINE_BASE_DIR + DLL_FILES[i]).c_str());
-		}
+		}*/
 	}
 
 	/** Called when the game is about to close */

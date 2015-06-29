@@ -4,9 +4,9 @@
 #pragma comment(lib, "urlmon.lib")
 
 // TODO: Make a config file for this!
-const std::string UPDATE_URL = "http://www.gothic-dx11.de/download/updates/g2d3d11.txt";
-const std::string UPDATER_EXE = "G2D3D11Updater.exe";
-const std::string UPDATER_PATH = "system\\GD3D11\\Data\\" + UPDATER_EXE;
+const char* UPDATE_URL = "http://www.gothic-dx11.de/download/updates/g2d3d11.txt";
+const char* UPDATER_EXE = "G2D3D11Updater.exe";
+const char* UPDATER_PATH = "system\\GD3D11\\Data\\G2D3D11Updater.exe";
 
 /*class DownloadProgress : public IBindStatusCallback {
 public:
@@ -171,12 +171,12 @@ void UpdateCheck::RunUpdater()
 	memset(&processInfo, 0, sizeof(processInfo));
     startupInfo.cb = sizeof(startupInfo);          
 
-	std::string cmdline = UPDATER_EXE + " " + std::string(VERSION_NUMBER) + " " + std::to_string(GetCurrentProcessId());
+	std::string cmdline = std::string(UPDATER_EXE) + " " + std::string(VERSION_NUMBER) + " " + std::to_string(GetCurrentProcessId());
 	char c[64];
 	strcpy_s(c, cmdline.c_str());
 
 	/* Create the process */
-	if (!CreateProcess(UPDATER_PATH.c_str(),
+	if (!CreateProcess(UPDATER_PATH,
 					   c, NULL, NULL,
 					   NULL, CREATE_DEFAULT_ERROR_MODE, NULL, NULL,
 					   &startupInfo,

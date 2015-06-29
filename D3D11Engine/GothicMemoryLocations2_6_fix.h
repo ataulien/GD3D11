@@ -80,6 +80,7 @@ struct GothicMemoryLocations
 		static const unsigned int TestKeys = 0x006FD560;
 		static const unsigned int Var_Player = 0x00AB2684;
 		static const unsigned int Offset_GameView = 0x30;
+		static const unsigned int Offset_SingleStep = 0x11C;
 	};
 
 	struct oCNPC
@@ -124,7 +125,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_InitDone = 0x7C;
 		static const unsigned int Init = 0x005E6A00;
 		static const unsigned int GetUnderwaterFX = 0x005E0050;
-
+		static const unsigned int Offset_WeatherType = 0x30;
 		static const unsigned int SetCameraLocationHint = 0x005E6790;
 
 		static const unsigned int LOC_ProcessRainFXNOPStart = 0x005EB149;
