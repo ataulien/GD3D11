@@ -3,8 +3,7 @@
 
 
 
-
-__declspec( align( 16 ) )struct VobInstanceInfo
+struct VobInstanceInfo
 {
 	D3DXMATRIX world;
 	DWORD color;

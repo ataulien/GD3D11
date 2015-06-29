@@ -132,6 +132,18 @@ public:
 
 	/** Returns the matching GSkeletalMeshVisual from the given zCModelPrototype */
 	GSkeletalMeshVisual* GetModelProtoFrom(zCModelMeshLib* sourceProto);
+
+	/** Registers a vob instance at the given slot.
+		Enter -1 for a new slot. If you do so, also fill instanceTypeOffset.
+		Returns the used slot. */
+	int RegisterVobInstance(int slot, const VobInstanceInfo& instance, int* instanceTypeOffset = NULL);
+
+	/** Builds the vob instancebuffer */
+	void BuildVobInstanceBuffer();
+
+	/** Returns a pointer to the current instancing buffer */
+	BaseVertexBuffer* GetVobInstanceBuffer(){return VobInstanceBuffer;}
+
 protected:
 	/** Begins the frame on visuals */
 	void BeginVisualFrame();
@@ -193,5 +205,12 @@ protected:
 
 	/** List of vobs drawn from the last BuildBspTree-Call */
 	std::vector<GVobObject *> BspDrawnVobs;
+
+	/** List of registered vob instances for faster rendering */
+	std::vector<std::pair<int*,std::vector<VobInstanceInfo>>> RegisteredVobInstances;
+	unsigned int NumRegisteredVobInstances;
+	unsigned int CurrentVobInstanceSlot;
+	BaseVertexBuffer* VobInstanceBuffer;
+	byte* MappedInstanceData;
 };
 

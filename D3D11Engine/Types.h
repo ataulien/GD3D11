@@ -141,7 +141,7 @@ struct float3
 };
 
 struct float4
-{
+{ 
 	float4(const DWORD& color)
 	{
 		BYTE a = color >> 24;

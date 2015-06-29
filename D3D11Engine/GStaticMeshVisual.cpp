@@ -8,6 +8,8 @@
 #include "zCVob.h"
 #include "zCMaterial.h"
 #include <stdio.h>
+#include "GGame.h"
+#include "GWorld.h"
 
 const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceInfo) * 64; // TODO: This is too small! But higher values are too memory intensive!
 
@@ -179,7 +181,10 @@ void GStaticMeshVisual::RegisterInstance(const RenderInfo& info)
 /** Draws the visual for the given vob */
 void GStaticMeshVisual::DrawVisual(const RenderInfo& info)
 {
-	RegisterInstance(info);
+	//RegisterInstance(info);
+	Instancing.InstanceTypeIndex = Engine::Game->GetWorld()->RegisterVobInstance(Instancing.InstanceTypeIndex, info.CallingVob->GetInstanceInfo(), &Instancing.InstanceBufferOffset);
+	Instancing.NumRegisteredInstances++;
+
 	return;
 
 	// Make sure the vob has enought slots for pipeline states
@@ -256,6 +261,7 @@ void GStaticMeshVisual::DrawVisual(const RenderInfo& info)
 void GStaticMeshVisual::OnBeginDraw()
 {
 	Instancing.NumRegisteredInstances = 0;
+	Instancing.InstanceTypeIndex = -1;
 	Instancing.FrameInstanceData.clear();
 }
 
@@ -328,15 +334,17 @@ XRESULT GStaticMeshVisual::IncreaseInstancingBufferSize()
 If the buffer is too small use .*/
 void GStaticMeshVisual::BeginDrawInstanced()
 {
+	Instancing.InstanceTypeIndex = -1;
+
 	// Already mapped?
-	if(Instancing.InstancingBufferData)
+	/*if(Instancing.InstancingBufferData)
 	{
 		return;
 	}
 
 	// Map the buffer now and save the datapointer
 	UINT size;
-	XLE(Instancing.InstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&Instancing.InstancingBufferData, &size));
+	XLE(Instancing.InstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&Instancing.InstancingBufferData, &size));*/
 }
 
 /** Can be called before you add instances to the buffer, so the visual can increase the size of the instancing buffer if needed */
@@ -363,8 +371,54 @@ bool GStaticMeshVisual::OnAddInstances(int numInstances, VobInstanceInfo* instan
 /** Finishes the instanced-draw-call */
 void GStaticMeshVisual::EndDrawInstanced()
 {
+	if(Instancing.InstanceTypeIndex != -1)
+	{
+		int s = 0;
+		for(auto it = VisualInfo.Meshes.begin();it != VisualInfo.Meshes.end(); it++)
+		{
+			std::vector<MeshInfo*>& meshes = (*it).second;
+			for(int i=0;i<meshes.size();i++)
+			{
+
+				// Huge safety-check to see if gothic didn't mess this up
+				if(PipelineStates[s]->BaseState.TextureIDs[0] == 0xFFFF)
+				{
+
+					// Only draw if the texture is loaded
+					if((*it).first->GetTexture() && (*it).first->GetTexture()->CacheIn(0.6f) != zRES_CACHED_IN)
+					{
+						//s++;
+						//continue;
+						PipelineStates[s]->BaseState.TextureIDs[0] = 0;
+					}
+
+					// Get texture ID if everything is allright
+					if((*it).first &&
+						(*it).first->GetTexture() &&
+						(*it).first->GetTexture()->GetSurface() &&
+						(*it).first->GetTexture()->GetSurface()->GetEngineTexture())
+						PipelineStates[s]->BaseState.TextureIDs[0] = (*it).first->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
+				}
+
+				// Give our instancingbuffer to the state
+				if(PipelineStates[s]->BaseState.VertexBuffers[1] != Engine::Game->GetWorld()->GetVobInstanceBuffer())
+				{
+					PipelineStates[s]->BaseState.VertexBuffers[1] = Engine::Game->GetWorld()->GetVobInstanceBuffer();
+					PipelineStates[s]->BaseState.VertexStride[1] = sizeof(VobInstanceInfo);
+					Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates[s]);
+				}
+				PipelineStates[s]->BaseState.NumInstances = Instancing.NumRegisteredInstances;
+				PipelineStates[s]->BaseState.InstanceOffset = Instancing.InstanceBufferOffset;
+
+				// Register this state
+				Engine::GraphicsEngine->PushPipelineState(PipelineStates[s]);
+				s++;
+			}
+		}
+	}
+
 	// Check if we actually had something to do this frame
-	if(Instancing.InstancingBufferData != NULL)
+	/*if(Instancing.InstancingBufferData != NULL)
 	{
 		// Yes! This means that the instancing-buffer currently is mapped.
 		// Unmap it now.
@@ -424,5 +478,5 @@ void GStaticMeshVisual::EndDrawInstanced()
 		}
 	}
 
-	Instancing.NumRegisteredInstances = 0;
+	Instancing.NumRegisteredInstances = 0;*/
 }

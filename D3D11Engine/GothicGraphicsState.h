@@ -199,12 +199,14 @@ struct GothicDepthBufferStateInfo : public GothicPipelineState
 		CF_COMPARISON_ALWAYS	= 8
 	};
 
+	static const ECompareFunc DEFAULT_DEPTH_COMP_STATE = CF_COMPARISON_LESS_EQUAL;
+
 	/** Sets the default values for this struct */
 	void SetDefault()
 	{
 		DepthBufferEnabled = true;
 		DepthWriteEnabled = true;
-		DepthBufferCompareFunc = CF_COMPARISON_LESS_EQUAL;
+		DepthBufferCompareFunc = DEFAULT_DEPTH_COMP_STATE;
 	}
 
 	/** Depthbuffer settings */

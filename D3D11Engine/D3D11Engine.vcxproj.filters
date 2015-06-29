@@ -720,6 +720,9 @@
     <ClInclude Include="Widget_TransRot.h">
       <Filter>Engine\D2D\Views\Editor</Filter>
     </ClInclude>
+    <ClInclude Include="WorldObjects.h">
+      <Filter>Engine\GAPI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1055,6 +1058,9 @@
     </ClCompile>
     <ClCompile Include="Widget_TransRot.cpp">
       <Filter>Engine\D2D\Views\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldObjects.cpp">
+      <Filter>Engine\GAPI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

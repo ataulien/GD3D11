@@ -61,13 +61,13 @@ public:
 		return *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_VisIsQuadPoly);
 	}
 
-
-
-#ifndef BUILD_GOTHIC_1_08k
 	int GetVisAlignment()
 	{
 		return *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCParticleEmitter::Offset_VisAlignment); 
 	}
+
+#ifndef BUILD_GOTHIC_1_08k
+
 
 	int GetVisTexAniIsLooping()
 	{
@@ -87,11 +87,6 @@ public:
 	
 
 #else
-	int GetVisAlignment()
-	{
-		return 0; 
-	}
-
 	int GetVisTexAniIsLooping()
 	{
 		return 0;

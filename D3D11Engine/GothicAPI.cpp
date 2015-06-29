@@ -365,6 +365,9 @@ void GothicAPI::OnWorldUpdate()
 	// Do rain-effects
 	if(oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
 			oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->ProcessRainFX();
+
+	// Clean futures so we don't have an ever growing array of them
+	CleanFutures();
 }
 
 /** Returns gothics fps-counter */
@@ -1183,6 +1186,15 @@ void GothicAPI::OnVobMoved(zCVob* vob)
 
 	if(it != VobMap.end())
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		// Check if the transform changed, since G1 calls this function over and over again
+		if(*vob->GetWorldMatrixPtr() == (*it).second->WorldMatrix)
+		{
+			// No actual change
+			return;
+		}
+#endif
+
 		if(!(*it).second->ParentBSPNodes.empty())
 		{
 			// Move vob into the dynamic list, if not already done
@@ -1193,7 +1205,28 @@ void GothicAPI::OnVobMoved(zCVob* vob)
 		(*it).second->UpdateVobConstantBuffer();
 
 		Engine::GAPI->GetRendererState()->RendererInfo.FrameVobUpdates++;
-	}	
+	}else
+	{
+		auto sit = SkeletalVobMap.find(vob);
+
+		if(sit != SkeletalVobMap.end())
+		{
+	//#ifdef BUILD_GOTHIC_1_08k
+			// Check if the transform changed, since G1 calls this function over and over again
+			if(!(*sit).second || *vob->GetWorldMatrixPtr() == (*sit).second->WorldMatrix)
+			{
+				// No actual change
+				return;
+			}
+	//#endif
+
+			// This is a mob, remove it from the bsp-cache and add to dynamic list
+			if(!(*sit).second->ParentBSPNodes.empty())
+			{
+				MoveVobFromBspToDynamic((*sit).second);
+			}
+		}
+	}
 }
 
 /** Called when a visual got removed */
@@ -1422,6 +1455,8 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 		nodes = &vi->ParentBSPNodes;
 	else if(li)
 		nodes = &li->ParentBSPNodes;
+	else if(svi)
+		nodes = &svi->ParentBSPNodes;
 
 	if(nodes)
 	{
@@ -1474,6 +1509,22 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 					if((*bit)->Vob == (zCVobLight *)vob)
 					{
 						node->IndoorLights.erase(bit);
+						break;
+					}
+				}
+
+				//(*it).second.IndoorVobs.remove(vi);
+				//(*it).second.SmallVobs.remove(vi);
+				//(*it).second.Vobs.remove(vi);
+			}
+
+			if(svi && nodes)
+			{
+				for(std::vector<SkeletalVobInfo *>::iterator bit = node->Mobs.begin(); bit != node->Mobs.end(); bit++)
+				{
+					if((*bit)->Vob == (zCVobLight *)vob)
+					{
+						node->Mobs.erase(bit);
 						break;
 					}
 				}
@@ -1773,6 +1824,9 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 				}
 			}*/
 
+			// Save worldmatrix to see if this vob changed positions later
+			vi->WorldMatrix = *vob->GetWorldMatrixPtr();
+
 			// Check for mainworld
 			if(world == oCGame::GetGame()->_zCSession_world)
 			{
@@ -1780,7 +1834,8 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 				SkeletalVobMap[vob] = vi;
 
 				// If this can be animated, put it into another map as well
-				if(!((SkeletalMeshVisualInfo *)vi->VisualInfo)->SkeletalMeshes.empty())
+				if(!BspLeafVobLists.empty()) // Check if this is the initial loading
+				//if(!((SkeletalMeshVisualInfo *)vi->VisualInfo)->SkeletalMeshes.empty())
 				{
 					AnimatedSkeletalVobs.push_back(vi);
 				}
@@ -1875,9 +1930,12 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	zCModel* model = (zCModel *)vi->Vob->GetVisual();
 	SkeletalMeshVisualInfo* visual = ((SkeletalMeshVisualInfo *)vi->VisualInfo);
 	
+	//Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(vi->Vob->GetPositionWorld(), 50.0f);
 
-	if(!model)// || vi->VisualInfo)
+	if(!model || !vi->VisualInfo)
 		return; // Gothic fortunately sets this to 0 when it throws the model out of the cache
+
+	
 
 	//std::string name = model->GetModelName().ToChar();
 	//if(name.empty())
@@ -1897,6 +1955,11 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	D3DXMATRIX world;
 	vi->Vob->GetWorldMatrix(&world);
 
+	/*if(g->GetRenderingStage() == DES_MAIN)
+	{
+		g->SetDefaultStates(); // Fixes some cases of invisible models
+	}*/
+
 	D3DXMATRIX scale;
 	D3DXVECTOR3 modelScale = model->GetModelScale();
 	D3DXMatrixScaling(&scale, modelScale.x, modelScale.y, modelScale.z);
@@ -1909,13 +1972,12 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	SetWorldViewTransform(world, view);
 
 	float fatness = model->GetModelFatness();
+	
+	// Get the bone transforms
+	model->GetBoneTransforms(&transforms, vi->Vob);
 
-	if(!visual->SkeletalMeshes.empty())
+	//if(!visual->SkeletalMeshes.empty())
 	{
-		// Get the bone transforms
-		model->GetBoneTransforms(&transforms, vi->Vob);
-
-
 		// Update attachments
 		model->UpdateAttachedVobs();
 		model->UpdateMeshLibTexAniState();
@@ -1951,14 +2013,18 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 				}
 			}
 	
-			static void CatchDraw(SkeletalVobInfo* vi, std::string* visName, std::string* vobName, D3DXVECTOR3* pos, std::vector<D3DXMATRIX>& transforms, float fatness)
+			static bool CatchDraw(SkeletalVobInfo* vi, std::string* visName, std::string* vobName, D3DXVECTOR3* pos, std::vector<D3DXMATRIX>& transforms, float fatness)
 			{
+				bool success = true;
 				__try {
 					Draw(vi, transforms, fatness);
 				}__except(EXCEPTION_EXECUTE_HANDLER)
 				{
 					Except(vi, visName, vobName, pos);
+					success = false;
 				}
+
+				return success;
 			}
 
 			static void Except(SkeletalVobInfo* vi, std::string* visName, std::string* vobName, D3DXVECTOR3* pos)
@@ -1974,8 +2040,18 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 			}
 		};
 
-		fns::CatchDraw(vi, &visname, &vobname, &vobPos, transforms, fatness);
-
+		if(!((SkeletalMeshVisualInfo *)vi->VisualInfo)->SkeletalMeshes.empty())
+		{
+			if(!fns::CatchDraw(vi, &visname, &vobname, &vobPos, transforms, fatness))
+			{
+				// This vob is broken, quickly remove its stuff
+				// This will probably cause a memoryleak, but it will keep the game running until this is fixed
+				// Better than nothing...
+				// TODO: Fix thes!
+				vi->VisualInfo = NULL;
+				LogInfo() << "Failed to draw a skeletal-mesh. Removing its visual to (hopefully) keep the game running.";
+			}
+		}
 	}
 
 	if(g->GetRenderingStage() == DES_SHADOWMAP_CUBE)
@@ -1984,13 +2060,18 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 	{
 		g->SetActiveVertexShader("VS_Ex");
 
+		/*if(g->GetRenderingStage() == DES_MAIN)
+		{
+			g->SetDefaultStates(); // Fixes some cases of invisible models
+		}*/
+
 		RendererState.RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
 		RendererState.RasterizerState.SetDirty();
 		g->UpdateRenderStates();
 	}
 
 	// Bind constantbuffer, if mob, update otherwise
-	if(visual->SkeletalMeshes.empty())
+	/*if(visual->SkeletalMeshes.empty())
 	{
 		if(!vi->VobConstantBuffer)
 		{
@@ -1999,7 +2080,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		}
 
 		vi->VobConstantBuffer->BindToVertexShader(1);
-	}else
+	}else*/
 	{
 		g->SetupVS_ExPerInstanceConstantBuffer();
 	}
@@ -2115,8 +2196,8 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 					mm->GetTexAniState()->UpdateTexList();
 				}
 
-				if(!visual->SkeletalMeshes.empty())
-					g->SetupVS_ExPerInstanceConstantBuffer();
+				//if(!visual->SkeletalMeshes.empty())
+				g->SetupVS_ExPerInstanceConstantBuffer();
 
 				// Go through all materials registered here
 				for(std::map<zCMaterial *, std::vector<MeshInfo*>>::iterator itm = nodeAttachments[i][n]->Meshes.begin(); 
@@ -2369,11 +2450,11 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 	// Create new particles?
 	fx->CreateParticlesUpdateDependencies();
 
-	// This causes an infinite loop on G1. TODO: Investigate!
-#ifndef BUILD_GOTHIC_1_08k
+	// This causes an infinite loop on G1. TODO: Investigate! // Fixed?
+//#ifndef BUILD_GOTHIC_1_08k
 	// Do something I dont exactly know what it does :)
 	fx->GetStaticPFXList()->TouchPfx(fx);
-#endif
+//#endif
 }
 
 /** Debugging */
@@ -2829,6 +2910,15 @@ D3DXVECTOR3 GothicAPI::GetFogColor()
 	return color;
 }
 
+/** Returns true, if the game was paused */
+bool GothicAPI::IsGamePaused()
+{
+	if(!oCGame::GetGame())
+		return true;
+
+	return oCGame::GetGame()->GetSingleStep();
+}
+
 /** Returns true if the game is overwriting the fog color with a fog-zone */
 float GothicAPI::GetFogOverride()
 {
@@ -3137,6 +3227,29 @@ void GothicAPI::CollectVisibleSections(std::list<WorldMeshSectionInfo*>& section
 			}			
 		}
 	}
+}
+
+/** Moves the given vob from a BSP-Node to the dynamic vob list */
+void GothicAPI::MoveVobFromBspToDynamic(SkeletalVobInfo* vob)
+{
+	for(int i=0;i<vob->ParentBSPNodes.size();i++)
+	{
+		BspInfo* node = vob->ParentBSPNodes[i];
+
+		// Remove from possible lists
+		for(std::vector<SkeletalVobInfo *>::iterator it = node->Mobs.begin(); it != node->Mobs.end(); it++)
+		{
+			if((*it) == vob)
+			{
+				node->Mobs.erase(it);
+				break;
+			}
+		}
+	}
+
+	vob->ParentBSPNodes.clear();
+
+	AnimatedSkeletalVobs.push_back(vob);
 }
 
 /** Moves the given vob from a BSP-Node to the dynamic vob list */
@@ -3608,13 +3721,11 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 
 				if(v)
 				{				
-					if(((SkeletalMeshVisualInfo *)v->VisualInfo)->SkeletalMeshes.empty()) // Only take mobs
+					// Only add once
+					if(std::find(bvi.Mobs.begin(), bvi.Mobs.end(), v) == bvi.Mobs.end())
 					{
-						// Only add once
-						if(std::find(bvi.Mobs.begin(), bvi.Mobs.end(), v) == bvi.Mobs.end())
-						{
-							bvi.Mobs.push_back(v);
-						}
+						v->ParentBSPNodes.push_back(&bvi);
+						bvi.Mobs.push_back(v);
 					}
 				}
 			}
@@ -4809,11 +4920,14 @@ float GothicAPI::GetRainFXWeight()
 	float myRainFxWeight = RendererState.RendererSettings.RainSceneWettness;
 	float gRainFxWeight = 0.0f;
 
-	if(oCGame::GetGame() && oCGame::GetGame()->_zCSession_world && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor())
-			gRainFxWeight = oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetRainFXWeight();
+	if(oCGame::GetGame() && oCGame::GetGame()->_zCSession_world 
+		&& oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()
+		&& oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetWeatherType() == zTWeather::zTWEATHER_RAIN)
+		gRainFxWeight = oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetRainFXWeight();
 
-	// This doesn't seem to go as high as 1, scale it so it does.
+	// This doesn't seem to go as high as 1 or just very slowly. Scale it so it does go up quicker.
 	gRainFxWeight = std::min(gRainFxWeight / 0.85f, 1.0f);
+
 
 	// Return the higher of the two, so we get the chance to overwrite it
 	return std::max(myRainFxWeight, gRainFxWeight);
@@ -4851,4 +4965,24 @@ float GothicAPI::GetSceneWetness()
 	}
 
 	return SceneWetness;
+}
+
+/** Adds a future to the internal buffer */
+void GothicAPI::AddFuture(std::future<void>& future)
+{
+	FutureList.push_back(std::move(future));
+}
+
+/** Checks which futures are ready and cleans them */
+void GothicAPI::CleanFutures()
+{
+	for(auto it = FutureList.begin();it!=FutureList.end();it++)
+	{
+		if((*it).valid())
+		{
+			// If the thread was completed, get it's "returnvalue" and delete it.
+			(*it).get();
+			it = FutureList.erase(it);
+		}
+	}
 }

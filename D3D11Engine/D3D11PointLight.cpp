@@ -8,6 +8,8 @@
 #include "BaseLineRenderer.h"
 #include "WorldConverter.h"
 
+const float LIGHT_COLORCHANGE_POS_MOD = 0.1f;
+
 D3D11LightCreatorThread::D3D11LightCreatorThread()
 {
 	EndThread = false;
@@ -35,7 +37,8 @@ void D3D11LightCreatorThread::Threadfunc(D3D11LightCreatorThread* t)
 
 	while(!t->EndThread)
 	{
-		while(t->Queue.empty());
+		while(t->Queue.empty())
+			Sleep(10);
 			//t->CV.wait(lk); // Wait when we don't have something to do
 
 		if(t->EndThread)
@@ -184,6 +187,14 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
 	//vEyePt += D3DXVECTOR3(0,1,0) * 20.0f; // Move lightsource out of the ground or other objects (torches!)
 	// TODO: Move the actual lightsource up too!
 
+	/*if(WantsUpdate())
+	{
+		// Move lights with colorchanges around a bit to make it look more light torches
+		vEyePt.y += (float4(LastUpdateColor).x - 0.5f) * LIGHT_COLORCHANGE_POS_MOD;
+		vEyePt.x += (float4(LastUpdateColor).y - 0.5f) * LIGHT_COLORCHANGE_POS_MOD;
+		vEyePt.z += (float4(LastUpdateColor).y - 0.5f) * LIGHT_COLORCHANGE_POS_MOD;
+	}*/
+
     D3DXVECTOR3 vLookDir;
     D3DXVECTOR3 vUpDir;
 
@@ -298,8 +309,8 @@ void D3D11PointLight::RenderFullCubemap()
 
 	float range = LightInfo->Vob->GetLightRange() * 1.1f;
 
-	// Draw no npcs if this is a static light
-	bool noNPCs = false;//!LightInfo->Vob->IsStatic();
+	// Draw no npcs if this is a static light. This is archived by simply not drawing them in the first update
+	bool noNPCs = !DrawnOnce;//!LightInfo->Vob->IsStatic();
 
 	// Draw cubemap
 	std::map<MeshKey, WorldMeshInfo*, cmpMeshKey>* wc = &WorldMeshCache;

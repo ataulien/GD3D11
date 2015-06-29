@@ -21,6 +21,7 @@
 #include <hash_map>
 #include <hash_set>
 #include <list>
+#include <future>
 
 #include <set>
 #include <signal.h>

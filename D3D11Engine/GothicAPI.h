@@ -4,15 +4,14 @@
 #include "WorldConverter.h"
 #include "zCTree.h"
 #include "zTypes.h"
-#include "zCArray.h"
-#include "zCMorphMesh.h"
 
 #define START_TIMING Engine::GAPI->GetRendererState()->RendererInfo.Timing.Start
 #define STOP_TIMING Engine::GAPI->GetRendererState()->RendererInfo.Timing.Stop
 
-const std::string MENU_SETTINGS_FILE = "system\\GD3D11\\UserSettings.bin";
+static const char* MENU_SETTINGS_FILE = "system\\GD3D11\\UserSettings.bin";
 const float INDOOR_LIGHT_DISTANCE_SCALE_FACTOR = 0.5f;
 
+class zCBspBase;
 class zCModelPrototype;
 struct BspInfo
 {
@@ -250,12 +249,17 @@ public:
 	/** Draws a morphmesh */
 	void DrawMorphMesh(zCMorphMesh* msh, float fatness);
 
-
 	/** Locks the resource CriticalSection */
 	void EnterResourceCriticalSection();
 
 	/** Unlocks the resource CriticalSection */
 	void LeaveResourceCriticalSection();
+
+	/** Adds a future to the internal buffer */
+	void AddFuture(std::future<void>& future);
+
+	/** Checks which futures are ready and cleans them */
+	void CleanFutures();
 
 	/** Draws a MeshInfo */
 	void DrawMeshInfo(zCMaterial* mat, MeshInfo* msh);
@@ -391,6 +395,9 @@ public:
 	/** Returns gothics fps-counter */
 	int GetFramesPerSecond();
 
+	/** Returns true, if the game was paused */
+	bool IsGamePaused();
+
 	/** Returns the current frame time */
 	float GetFrameTimeSec();
 
@@ -411,6 +418,8 @@ public:
 
 	/** Moves the given vob from a BSP-Node to the dynamic vob list */
 	void MoveVobFromBspToDynamic(VobInfo* vob);
+	void MoveVobFromBspToDynamic(SkeletalVobInfo* vob);
+
 	std::vector<VobInfo *>::iterator MoveVobFromBspToDynamic(VobInfo* vob, std::vector<VobInfo *>* source);
 
 	/** Collects vobs using gothics BSP-Tree */
@@ -774,5 +783,8 @@ private:
 
 	/** The overall wetness of the current scene */
 	float SceneWetness;
+
+	/** Internal list of futures, so they can run until they are finished */
+	std::vector<std::future<void>> FutureList;
 };
 

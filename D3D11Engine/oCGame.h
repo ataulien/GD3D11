@@ -69,6 +69,15 @@ public:
 		return *(zCView **)THISPTR_OFFSET(GothicMemoryLocations::oCGame::Offset_GameView);
 	}
 
+	bool GetSingleStep()
+	{
+#ifdef BUILD_SPACER
+		return false;
+#else
+		return (*(int *)THISPTR_OFFSET(GothicMemoryLocations::oCGame::Offset_SingleStep)) != 0;
+#endif
+	}
+
     int _vtbl;
     int _zCSession_csMan;        //zCCSManager*
     zCWorld* _zCSession_world;        //zCWorld*

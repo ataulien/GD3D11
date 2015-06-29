@@ -8,6 +8,7 @@
 #include "GothicGraphicsState.h"
 #include "ConstantBufferStructs.h"
 #include "GothicAPI.h"
+#include "Engine.h"
 
 const int NUM_MAX_BONES = 96;
 

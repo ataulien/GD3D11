@@ -162,6 +162,10 @@ void D2DVobSettingsDialog::SliderDragged(SV_Slider* sender, void* userdata)
 /** Sets the Vob to do settings on */
 void D2DVobSettingsDialog::SetVobInfo(BaseVobInfo* vob)
 {
+#ifdef BUILD_SPACER
+	return;
+#endif
+
 	Vob = NULL; // Reset the dialog first without messing with the vobs settings
 
 	std::map<zCTexture*, MeshInfo*> meshes;

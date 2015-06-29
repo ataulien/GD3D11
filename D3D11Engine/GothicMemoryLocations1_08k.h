@@ -100,6 +100,8 @@ struct GothicMemoryLocations
 	{
 		static const unsigned int Offset_VisIsQuadPoly = 0x190;
 		static const unsigned int Offset_VisTexture = 0x2DC;
+		static const unsigned int Offset_VisAlignment = 0x2E4;
+		
 		static const unsigned int Offset_VisAlphaBlendFunc = 0x308;
 	};
 
@@ -356,6 +358,7 @@ struct GothicMemoryLocations
 		static const unsigned int TestKeys = 0x00660000;
 		static const unsigned int Var_Player = 0x008DBBB0;		
 		static const unsigned int Offset_GameView = 0x30;
+		static const unsigned int Offset_SingleStep = 0x118;
 	};
 
 	struct zCView

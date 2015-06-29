@@ -16,15 +16,21 @@
 #include "GDecalVisual.h"
 #include "zCTexture.h"
 
+const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceInfo) * 1024;
+
 GWorld::GWorld(void)
 {
 	WorldMesh = NULL;
+	VobInstanceBuffer = NULL;
+	NumRegisteredVobInstances = 0;
+	CurrentVobInstanceSlot = 0;
 }
 
 
 GWorld::~GWorld(void)
 {
 	delete WorldMesh;
+	delete VobInstanceBuffer;
 
 	Toolbox::DeleteElements<GVobObject*>(StaticVobList);
 	Toolbox::DeleteElements<GVobObject*>(DynamicVobList);
@@ -58,13 +64,64 @@ void GWorld::DrawWorld()
 {
 	WorldMesh->DrawMesh();
 
+	
+
+	// Draw visible BSP-Nodes
+	BspDrawnVobs.clear();
+
+	
+	// Reset state on the drawn vobs
+	ResetBspDrawnVobs();
+
+	// Frustum-check-functions from gothic need this
+	if(zCCamera::GetCamera())
+		zCCamera::GetCamera()->Activate();
+
+	// ---
+
+
+	// Tell all visuals that the frame has ended
+	EndVisualFrame();
+	DWORD start = timeGetTime();
+	int x = 0;
+	
+
+	struct matrix
+	{
+		float f[16];
+	};
+
+	/*std::vector<VobInstanceInfo> vis;
+
+	while(true)
+	{
+		for(int i=0;i<StaticVobList.size();i++)
+		{
+			//StaticVobList[i]->DrawVob();
+			//int j;
+			//RegisterVobInstance(-1, StaticVobList[i]->GetInstanceInfo(), &j);
+			vis.push_back(VobInstanceInfo());
+		}
+
+		vis.resize(0);
+
+		x++;
+
+		if(timeGetTime() - start > 1000)
+		{
+			start = timeGetTime();
+			OutputDebugString((std::to_string(x) + std::string(" times per second (" + std::to_string(StaticVobList.size()) + "times)\n")).c_str());
+			x=0;
+		}
+	}*/
+
 	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs)
 	{
-		
+
 
 		// Tell all visuals that the frame has started
 		BeginVisualFrame();
-		
+
 		// Draw visible BSP-Nodes
 		BspDrawnVobs.clear();
 
@@ -76,6 +133,9 @@ void GWorld::DrawWorld()
 
 		// Reset state on the drawn vobs
 		ResetBspDrawnVobs();
+
+		// Build instancing buffer
+		BuildVobInstanceBuffer();
 
 		// Tell all visuals that the frame has ended
 		EndVisualFrame();
@@ -248,6 +308,19 @@ void GWorld::DrawBspTreeVobs(BspNodeInfo* base)
 {
 	if(!base) // Little shortcut for better readability later
 		return;
+
+	/*for each(std::pair<zCVob*, GVobObject*> obj in VobMap)
+	{
+		obj.second->DrawVob();
+		//BspDrawnVobs.push_back(obj.second);
+	}*/
+
+	//for each(GVobObject* obj in StaticVobList)
+	/*for(int i=0;i<StaticVobList.size();i++)
+	{
+		StaticVobList[i]->DrawVob();
+	}
+	return;*/
 
 	float dist = Toolbox::ComputePointAABBDistance(Engine::GAPI->GetCameraPosition(), base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max);
 	if(dist > Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE)
@@ -759,4 +832,83 @@ void GWorld::ResetBspDrawnVobs()
 	{
 		(*it)->ResetTreeSearchState();
 	}
+}
+
+/** Registers a vob instance at the given slot.
+		Enter -1 for a new slot.
+		Returns the used slot. */
+int GWorld::RegisterVobInstance(int slot, const VobInstanceInfo& instance, int* instanceTypeOffset)
+{
+	if(slot == -1)
+	{
+		slot = CurrentVobInstanceSlot;
+
+		if(CurrentVobInstanceSlot == RegisteredVobInstances.size())
+			RegisteredVobInstances.push_back(std::make_pair(instanceTypeOffset,std::vector<VobInstanceInfo>()));
+		else
+			RegisteredVobInstances[slot].first = instanceTypeOffset;
+
+		CurrentVobInstanceSlot++;
+	}
+
+	RegisteredVobInstances[slot].second.push_back(instance);
+	NumRegisteredVobInstances++;
+
+	return slot;
+}
+
+/** Builds the vob instancebuffer */
+void GWorld::BuildVobInstanceBuffer()
+{
+	UINT size = NumRegisteredVobInstances * sizeof(VobInstanceInfo);
+
+	if(!VobInstanceBuffer)
+	{
+		Engine::GraphicsEngine->CreateVertexBuffer(&VobInstanceBuffer);
+
+		// Init it
+		VobInstanceBuffer->Init(NULL, INSTANCING_BUFFER_SIZE, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	}
+
+	// Too small?
+	if(VobInstanceBuffer->GetSizeInBytes() < size)
+	{
+		// Recreate the buffer
+		delete VobInstanceBuffer;
+		Engine::GraphicsEngine->CreateVertexBuffer(&VobInstanceBuffer);
+
+		// Create a new buffer with the size doubled
+		XLE(VobInstanceBuffer->Init(NULL, size * 2, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE));
+	}
+
+	// Fill buffer
+	byte* mappedData;
+	UINT bsize;
+	if (XR_SUCCESS == VobInstanceBuffer->Map(BaseVertexBuffer::EMapFlags::M_WRITE_DISCARD, (void**)&mappedData, &bsize))
+	{
+		MappedInstanceData = mappedData;
+		// Copy data
+		int off = 0;
+		for(int i=0;i<RegisteredVobInstances.size();i++)
+		{
+			if(!RegisteredVobInstances[i].second.empty())
+			{
+				// Get the offset to the visual
+				*RegisteredVobInstances[i].first = off;
+				memcpy(mappedData + off * sizeof(VobInstanceInfo), &RegisteredVobInstances[i].second[0], RegisteredVobInstances[i].second.size() * sizeof(VobInstanceInfo));
+
+				// Increase offset
+				off += RegisteredVobInstances[i].second.size();
+
+				// Clear vector, but keep memory allocated
+				RegisteredVobInstances[i].second.resize(0);
+			}
+		}
+
+		VobInstanceBuffer->Unmap();
+	}
+
+	//RegisteredVobInstances.resize(0);
+	NumRegisteredVobInstances = 0;
+	CurrentVobInstanceSlot = 0;
 }
