@@ -23,6 +23,8 @@ void GParticleFXVisual::DrawVisual(const RenderInfo& info)
 	return;
 #endif
 
+	GVisual::DrawVisual(info);
+
 	// Get our view-matrix
 	D3DXMATRIX view;
 	Engine::GAPI->GetViewMatrix(&view);

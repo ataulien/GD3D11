@@ -11,7 +11,6 @@ static const float DIST_SMALL_SCALE = 0.3f;
 static const float DIST_BIG_SCALE = 0.1f;
 static const float DIST_BIG_SPEED = -0.005f;
 
-
 // Cleans the refraction borders
 #define CleanRefraction(uv, screen_uv, depthRef) (lerp(uv, screen_uv, saturate(Input.vTexcoord2.x-depthRef)))
 
@@ -46,8 +45,10 @@ struct PS_INPUT
 	float2 vTexcoord		: TEXCOORD0;
 	float2 vTexcoord2		: TEXCOORD1;
 	float4 vDiffuse			: TEXCOORD2;
-	float3 vNormalWS		: TEXCOORD4;
-	float3 vWorldPosition	: TEXCOORD5;
+	float3 vNormalWS		: TEXCOORD3;
+	float3 vNormalVS		: TEXCOORD4;
+	float3 vViewPosition	: TEXCOORD5;
+	float3 vWorldPosition	: TEXCOORD6;
 	float4 vPosition		: SV_POSITION;
 };
 
@@ -68,6 +69,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	//	discard;
 		
 	float shallowDepth = saturate((depth - Input.vTexcoord2.x) * 0.01f);
+	float underwaterFog = saturate((depth - Input.vTexcoord2.x) * 0.0007f);
 		
 	// Camera direction
 	float3 viewDirection = normalize(Input.vWorldPosition - RI_CameraPosition);
@@ -87,6 +89,9 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	// Distorted diffuse
 	float3 diffuse = TX_Diffuse.Sample(SS_Linear, Input.vTexcoord + distortionSmall.xy * DIST_SMALL_AMOUNT * 0.5f).rgb;
 	
+	// Sample a high mipmaplevel for the fog-color
+	float3 underwaterFogColor = TX_Diffuse.SampleLevel(SS_Linear, Input.vTexcoord, 8).rgb;
+	
 	// Refracted depth
 	float depthRefracted = TX_Depth.Sample(SS_Linear, distUV).r;
 	depthRefracted = RI_Projection._43 / (depthRefracted - RI_Projection._33);
@@ -101,6 +106,8 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	// Scene color
 	float3 scene = TX_Scene.Sample(SS_Linear, distUV).rgb;
 	float3 sceneClean = TX_Scene.Sample(SS_Linear, lerp(distUV, screenUV, pow(1-shallowDepth, 20.0f))).rgb;
+	scene = lerp(scene, underwaterFogColor, underwaterFog);
+	sceneClean = lerp(sceneClean, underwaterFogColor, underwaterFog);
 	
 	// Fresnel from waves
 	float fresnel = min(0.5f, saturate(pow(1.0f - saturate(dot(-viewDirection, wavesFres)), 10.0f)));
@@ -124,7 +131,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	float pxDistance = Input.vTexcoord2.y;
 	scene = lerp(scene, diffuse, 0.73f * max(pow(fresnel,8.0f), 0.5f));
 	scene.rgb += reflection * 1.0f * fresnel * lerp(1.0f, diffuse, 0.6f);
-	float3 color = lerp(scene, sceneClean, pow(saturate(pxDistance / 35000.0f), 4.0f));
+	float3 color = lerp(scene, sceneClean * float3(0.5f,1.0f,0.8f), pow(saturate(pxDistance / 35000.0f), 4.0f));
 	color = lerp(color, sceneWet, (1-shallowDepth));
 	
 	color.rgb = ApplyAtmosphericScatteringGround(Input.vWorldPosition, color.rgb);

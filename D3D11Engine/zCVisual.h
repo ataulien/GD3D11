@@ -79,6 +79,8 @@ public:
 			else if(ext == ".TGA")
 				return VT_DECAL;
 		}
+
+		return VT_OTHER;
 	}
 
 private:

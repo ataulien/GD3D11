@@ -1,6 +1,19 @@
 #pragma once
 #include "pch.h"
 
+enum zTCam_ClipType 
+{ 
+	ZTCAM_CLIPTYPE_IN, 
+	ZTCAM_CLIPTYPE_OUT, 
+	ZTCAM_CLIPTYPE_CROSSING 
+};
+
+enum zTCam_ClipFlags
+{ 
+	CLIP_FLAGS_FULL		= 63, 
+	CLIP_FLAGS_NO_FAR	= 15 
+};
+
 #pragma pack (push, 1)	
 struct zTBBox3D 
 {

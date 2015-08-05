@@ -9,6 +9,7 @@ struct MeshInfo;
 class GVisual;
 class zCBspBase;
 class GVobObject;
+class ThreadPool;
 struct BspNodeInfo
 {
 	BspNodeInfo()
@@ -24,6 +25,8 @@ struct BspNodeInfo
 		OcclusionInfo.LastCameraClipType = 0;
 
 		OcclusionInfo.NodeMesh = NULL;
+
+		FrustumFailCache = -1;
 	}
 
 	~BspNodeInfo()
@@ -52,6 +55,10 @@ struct BspNodeInfo
 		Toolbox::EraseByElement(SmallVobs, vob);
 		Toolbox::EraseByElement(Lights, vob);
 		Toolbox::EraseByElement(IndoorLights, vob);
+
+		Toolbox::EraseByElement(NonInstanceableVobs, vob);
+		Toolbox::EraseByElement(NonInstanceableIndoorVobs, vob);
+		Toolbox::EraseByElement(NonInstanceableSmallVobs, vob);
 	}
 
 	/** Calculates the level of this node and all subnodes */
@@ -64,6 +71,10 @@ struct BspNodeInfo
 	std::vector<GVobObject *> Lights;
 	std::vector<GVobObject *> IndoorLights;
 
+	std::vector<GVobObject *> NonInstanceableVobs;
+	std::vector<GVobObject *> NonInstanceableIndoorVobs;
+	std::vector<GVobObject *> NonInstanceableSmallVobs;
+
 	// This is filled in case we have loaded a custom worldmesh
 	std::vector<zCPolygon *> NodePolygons;
 
@@ -71,10 +82,16 @@ struct BspNodeInfo
 	std::vector<PipelineState::PipelineSortItem*> StaticObjectPipelineStates;
 
 	/** Cache for instancing-info, so we can copy it to the buffers in batches */
-	std::map<GVisual*, std::vector<VobInstanceInfo>> InstanceDataCache;
+	std::vector<std::pair<GVisual*, std::pair<int*,std::vector<VobInstanceRemapInfo>>>> InstanceDataCacheVobs;
+	std::vector<std::pair<GVisual*, std::pair<int*,std::vector<VobInstanceRemapInfo>>>> InstanceDataCacheSmallVobs;
+	std::vector<std::pair<GVisual*, std::pair<int*,std::vector<VobInstanceRemapInfo>>>> InstanceDataCacheIndoorVobs;
 
 	/** Num of sub-nodes this node has */
 	unsigned int NumLevels;
+
+	/** Index of the frustum-plane we failed at last time.
+		-1 if visible. */
+	int FrustumFailCache;
 
 	/** Occlusion info for this node */
 	struct OcclusionInfo_s
@@ -109,6 +126,9 @@ public:
 	/** Called on render */
 	virtual void DrawWorld();
 
+	/** Called on render */
+	virtual void DrawWorldThreaded();
+
 	/** (Re)loads the world mesh */
 	void ExtractWorldMesh(zCBspTree* bspTree);
 
@@ -120,6 +140,9 @@ public:
 
 	/** Removes a vob from the world, returns false if it wasn't registered */
 	bool RemoveVob(zCVob* vob, zCWorld* world);
+
+	/** Called when a vob moved */
+	void OnVobMoved(zCVob* vob);
 
 	/** Creates the right type of visual from the source */
 	GVisual* CreateVisualFrom(zCVisual* sourceVisual);
@@ -136,15 +159,25 @@ public:
 	/** Registers a vob instance at the given slot.
 		Enter -1 for a new slot. If you do so, also fill instanceTypeOffset.
 		Returns the used slot. */
-	int RegisterVobInstance(int slot, const VobInstanceInfo& instance, int* instanceTypeOffset = NULL);
+	int RegisterVobInstance(int slot, const VobInstanceRemapInfo& instance, int* instanceTypeOffset = NULL);
 
 	/** Builds the vob instancebuffer */
-	void BuildVobInstanceBuffer();
+	void BuildVobInstanceRemapBuffer();
 
 	/** Returns a pointer to the current instancing buffer */
 	BaseVertexBuffer* GetVobInstanceBuffer(){return VobInstanceBuffer;}
+	BaseVertexBuffer* GetVobInstanceRemapBuffer(){return VobInstanceRemapBuffer;}
 
 protected:
+	/** Renderproc for the worldmesh */
+	static void DrawWorldMeshProc();
+
+	/** Renderproc for the vobs */
+	static void DrawVobsProc();
+
+	/** Renderproc for the vobs */
+	static void DrawDynamicVobsProc();
+	
 	/** Begins the frame on visuals */
 	void BeginVisualFrame();
 
@@ -161,19 +194,19 @@ protected:
 	void BuildBspTreeHelper(zCBspBase* base);
 
 	/** Draws all visible vobs in the tree */
-	void DrawBspTreeVobs(BspNodeInfo* base);
+	void DrawBspTreeVobs(BspNodeInfo* base, zTBBox3D boxCell, int clipFlags = 63);
 
 	/** Draws all vobs in the given node */
 	void DrawBspNodeVobs(BspNodeInfo* node, float nodeDistance = 0.0f);
 
 	/** Draws all vobs in the given node */
-	void PrepareBspNodeVobPipelineStates(BspNodeInfo* node, std::set<GVisual*>& drawnVisuals, std::vector<GVobObject*>& drawnVobs);
+	void PrepareBspNodeVobPipelineStates(BspNodeInfo* node);
 
 	/** Draws all visible vobs in the tree */
-	void PrepareBspTreePipelineStates(BspNodeInfo* base, std::set<GVisual*>& drawnVisuals, std::vector<GVobObject*>& drawnVobs);
+	void PrepareBspTreePipelineStates(BspNodeInfo* base);
 
 	/** Draws the prepared pipelinestates of a BSP-Node */
-	void DrawPreparedPipelineStates(BspNodeInfo* node);
+	void DrawPreparedPipelineStates(BspNodeInfo* node, float nodeDistance);
 	void DrawPreparedPipelineStatesRec(BspNodeInfo* base, zTBBox3D boxCell, int clipFlags);
 
 	/** Prepares all visible vobs in the tree */
@@ -182,8 +215,11 @@ protected:
 	/** Resets all vobs in the BspDrawnVobs-Vector */
 	void ResetBspDrawnVobs();
 
+	/** Draws all dynamic vobs */
+	void DrawDynamicVobs();
+
 	/** Map of original vobs to our counterparts */
-	std::hash_map<zCVob*, GVobObject*> VobMap;
+	std::unordered_map<zCVob*, GVobObject*> VobMap;
 
 	/** List of static vobs. These are also registered in the BSP-Tree. */
 	std::vector<GVobObject*> StaticVobList;
@@ -195,22 +231,24 @@ protected:
 	GWorldMesh* WorldMesh;
 
 	/** Map of VobInfo-Lists for zCBspLeafs */
-	std::hash_map<zCBspBase *, BspNodeInfo*> BspMap;
+	std::unordered_map<zCBspBase *, BspNodeInfo*> BspMap;
 
 	/** Map of Visuals and our counterparts */
-	std::hash_map<zCVisual *, GVisual *> VisualMap;
+	std::unordered_map<zCVisual *, GVisual *> VisualMap;
 
 	/** Map of Model-Prototypes and our counterparts */
-	std::hash_map<zCModelMeshLib*, GSkeletalMeshVisual*> ModelProtoMap;
+	std::unordered_map<zCModelMeshLib*, GSkeletalMeshVisual*> ModelProtoMap;
 
 	/** List of vobs drawn from the last BuildBspTree-Call */
 	std::vector<GVobObject *> BspDrawnVobs;
+	std::vector<GVisual *> DrawnVisuals;
 
 	/** List of registered vob instances for faster rendering */
-	std::vector<std::pair<int*,std::vector<VobInstanceInfo>>> RegisteredVobInstances;
+	std::vector<std::pair<int*,std::vector<VobInstanceRemapInfo>>> RegisteredVobInstances;
 	unsigned int NumRegisteredVobInstances;
 	unsigned int CurrentVobInstanceSlot;
 	BaseVertexBuffer* VobInstanceBuffer;
+	BaseVertexBuffer* VobInstanceRemapBuffer;
 	byte* MappedInstanceData;
 };
 

@@ -67,7 +67,7 @@ typedef void (__thiscall* zCSkyControllerRenderSkyPost)(void*, int);
 class zCSkyController : public zCObject
 {
 public:
-	/*void RenderSkyPre()
+	void RenderSkyPre()
 	{
 		int* vtbl = (int*)((int*)this)[0];
 
@@ -81,7 +81,7 @@ public:
 
 		zCSkyControllerRenderSkyPost fn = (zCSkyControllerRenderSkyPost)vtbl[GothicMemoryLocations::zCSkyController::VTBL_RenderSkyPost];
 		fn(this, 1);
-	}*/
+	}
 
 	DWORD* PolyLightCLUTPtr;
 	float cloudShadowScale;
@@ -105,6 +105,14 @@ public:
 			PAGE_EXECUTE_READWRITE, &dwProtect);
 
 		REPLACE_RANGE(GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPStart, GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPEnd - 1, INST_NOP);
+
+		// Replace the check for the lensflare with nops
+		
+		VirtualProtect((void *)GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleStart, 
+			GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleEnd - GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleStart, 
+			PAGE_EXECUTE_READWRITE, &dwProtect);
+		
+		REPLACE_RANGE(GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleStart, GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleEnd-1, INST_NOP);
 	}
 
 	/** Updates the rain-weight and sound-effects */

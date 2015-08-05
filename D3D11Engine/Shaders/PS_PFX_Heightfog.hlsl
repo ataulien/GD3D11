@@ -99,7 +99,7 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	
 	
 	
-	float3 color = ApplyAtmosphericScatteringGround(position, HF_FogColorMod, false);
+	float3 color = ApplyAtmosphericScatteringGround(position, HF_FogColorMod, true);
 	
 	return float4(saturate(color), saturate(fog));
 	

@@ -109,6 +109,10 @@ XRESULT D3D11ShaderManager::Init()
 	Shaders.push_back(ShaderInfo("VS_ExInstancedObj", "VS_ExInstancedObj.hlsl", "v", 10));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
 
+	Shaders.push_back(ShaderInfo("VS_ExRemapInstancedObj", "VS_ExRemapInstancedObj.hlsl", "v", 12));
+	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
+	
+
 	Shaders.push_back(ShaderInfo("VS_ExInstanced", "VS_ExInstanced.hlsl", "v", 4));
 	Shaders.back().cBufferSizes.push_back(sizeof(VS_ExConstantBuffer_PerFrame));
 	Shaders.back().cBufferSizes.push_back(sizeof(GrassConstantBuffer));
@@ -125,6 +129,7 @@ XRESULT D3D11ShaderManager::Init()
 
 	//Shaders.push_back(ShaderInfo("FixedFunctionPipelineEmulationPS", "FixedFunctionPipelineEmulationPS.hlsl", "p", 1));
 	Shaders.push_back(ShaderInfo("PS_Simple", "PS_Simple.hlsl", "p"));
+	Shaders.push_back(ShaderInfo("PS_SimpleAlphaTest", "PS_SimpleAlphaTest.hlsl", "p"));
 
 	Shaders.push_back(ShaderInfo("PS_Rain", "PS_Rain.hlsl", "p"));
 
@@ -246,6 +251,9 @@ XRESULT D3D11ShaderManager::Init()
 	
 	Shaders.push_back(ShaderInfo("PNAEN_Tesselation", "PNAEN_Tesselation.hlsl", "hd"));
 	Shaders.back().cBufferSizes.push_back(sizeof(PNAENConstantBuffer));
+
+	Shaders.push_back(ShaderInfo("Water_Tesselation", "Water_Tesselation.hlsl", "hd"));
+	Shaders.back().cBufferSizes.push_back(sizeof(VisualTesselationSettings::Buffer));
 
 	Shaders.push_back(ShaderInfo("GS_Billboard", "GS_Billboard.hlsl", "g"));
 	Shaders.back().cBufferSizes.push_back(sizeof(ParticleGSInfoConstantBuffer));

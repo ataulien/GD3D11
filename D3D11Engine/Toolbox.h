@@ -3,14 +3,20 @@
 #include <D3DX10.h>
 #include <string>
 #include <map>
-#include <hash_map>
+#include <unordered_map>
 #include "Types.h"
 
-/** Misc. tools */
 
+/** Misc. tools */
+struct zTBBox3D;
+struct zTPlane;
+enum zTCam_ClipType;
 namespace Toolbox
 {
-		/** Erases an element by value from a vector */
+	/** Checks if one of a series of strings is found within the input-string */
+	bool StringContainsOneOf(const std::string& string, const std::string* checkStrings, int numStrings);
+
+	/** Erases an element by value from a vector */
 	template<typename T> void EraseByElement(std::vector<T>& vector, T value)
 	{
 		auto it = std::find(vector.begin(), vector.end(), value);
@@ -62,8 +68,8 @@ namespace Toolbox
 		map.clear();
 	}
 
-	/** Deletes all (second) elements of the given std::hash_map */
-	template<typename T, typename S> void DeleteElements(std::hash_map<T, S>& map)
+	/** Deletes all (second) elements of the given std::unordered_map */
+	template<typename T, typename S> void DeleteElements(std::unordered_map<T, S>& map)
 	{
 		for(auto it = map.begin(); it != map.end(); it++)
 		{
@@ -72,6 +78,16 @@ namespace Toolbox
 
 		map.clear();
 	}
+
+	/** Sorts the vector and removes all doubles */
+	template<typename T> void RemoveDoubles(std::vector<T>& vector)
+	{
+		std::sort(vector.begin(),vector.end());
+		std::unique(vector.begin(),vector.end());
+	}
+
+	/** Checks whether a given boundingbox is inside the given frustum. The index in "cache" is tested first, if it isn't set to -1 */
+	zTCam_ClipType BBox3DInFrustumCached(const zTBBox3D& bbox3D, zTPlane* frustumPlanes, byte* signbits, int& cache);
 
 	/** Checks if a folder exists */
 	bool FolderExists(const std::string& dirName_in);

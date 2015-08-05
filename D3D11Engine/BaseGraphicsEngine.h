@@ -18,7 +18,7 @@ struct DisplayModeInfo
 enum RenderStage
 {
 	STAGE_DRAW_WORLD = 0,
-
+	STAGE_DRAW_SKELETAL = 1,
 };
 
 struct ViewportInfo
@@ -57,7 +57,8 @@ struct PipelineState
 		ZeroMemory(BaseState.ConstantBuffersHDS, sizeof(BaseState.ConstantBuffersHDS));
 		ZeroMemory(BaseState.ConstantBuffersGS, sizeof(BaseState.ConstantBuffersGS));
 		ZeroMemory(BaseState.VertexBuffers, sizeof(BaseState.VertexBuffers));
-
+		ZeroMemory(BaseState.StructuredBuffersVS, sizeof(BaseState.StructuredBuffersVS));
+		
 		BaseState.GShaderID = 0xFF;
 		BaseState.HDShaderID = 0xFF;
 		BaseState.VShaderID = 0xFF;
@@ -83,6 +84,8 @@ struct PipelineState
 		BaseState.DrawCallType = DCT_DrawIndexed;
 
 		SortItem.AssociatedState = this;
+
+		TransientState = false;
 	}
 
 	PipelineState(const PipelineState& s)
@@ -90,15 +93,36 @@ struct PipelineState
 		BaseState = s.BaseState;
 		SortItem = s.SortItem;
 		SortItem.AssociatedState = this;
+
+		TransientState = s.TransientState;
 	}
+
+	virtual ~PipelineState(){}
 
 	enum EDrawCallType
 	{
-		DCT_Draw,
+		DCT_DrawTriangleList,
 		DCT_DrawIndexed,
 		DCT_DrawInstanced,
 		DCT_DrawIndexedInstanced
 	};
+
+	enum ETransparencyMode
+	{
+		TM_NONE = 0,
+		TM_MASKED = 1,
+		TM_BLEND = 2
+	};
+
+	/** Called after this state got drawn */
+	void StateWasDrawn()
+	{
+		BaseState.BSPSkipState = false;
+
+		// Free memory if wanted on draw
+		if(TransientState)
+			delete this;
+	}
 
 	struct BaseState_s
 	{
@@ -109,12 +133,6 @@ struct PipelineState
 			ConstantBuffersVS[slot] = cb;
 			ConstantBuffersHDS[slot] = cb;
 			ConstantBuffersGS[slot] = cb;
-		}
-
-		/** Called after this state got drawn */
-		void StateWasDrawn()
-		{
-			BSPSkipState = false;
 		}
 
 		/** If true, this won't be rendered
@@ -134,6 +152,7 @@ struct PipelineState
 
 		/** Vertex-buffers */
 		BaseVertexBuffer* VertexBuffers[2];
+		BaseVertexBuffer* StructuredBuffersVS[1];
 		UINT VertexStride[2];
 		UINT IndexOffset;
 		EDrawCallType DrawCallType;
@@ -223,6 +242,9 @@ struct PipelineState
 
 	/** Structure for sorting this using the state-key */
 	PipelineSortItem SortItem;
+
+	/** If true, memory will be freed after this state was drawn */
+	bool TransientState;
 };
 
 
@@ -286,6 +308,9 @@ public:
 
 	/** Returns the line renderer object */
 	virtual BaseLineRenderer* GetLineRenderer() = 0;
+
+	/** Returns the graphics-device this is running on */
+	virtual std::string GetGraphicsDeviceName() = 0;
 
 	/** Draws a vertexarray, used for rendering gothics UI */
 	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct)) = 0;

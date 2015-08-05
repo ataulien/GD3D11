@@ -55,6 +55,7 @@ struct D3D11PipelineState : public PipelineState
 		GeometryShader = d.GeometryShader;
 		DepthStencilView = d.DepthStencilView;
 		NumRenderTargetViews = d.NumRenderTargetViews;
+		StructuredBuffersVS = d.StructuredBuffersVS;
 
 		memcpy(RenderTargetViews, d.RenderTargetViews, sizeof(RenderTargetViews));
 		memcpy(Textures, d.Textures, sizeof(Textures));
@@ -74,6 +75,7 @@ struct D3D11PipelineState : public PipelineState
 
 	/** Vertex-buffers */
 	std::vector<ID3D11Buffer*> VertexBuffers;
+	std::vector<ID3D11ShaderResourceView*> StructuredBuffersVS;
 
 	/** Index-buffer */
 	ID3D11Buffer* IndexBuffer;
@@ -192,6 +194,9 @@ public:
 	/** Returns the line renderer object */
 	virtual BaseLineRenderer* GetLineRenderer();
 
+	/** Returns the graphics-device this is running on */
+	virtual std::string GetGraphicsDeviceName();
+
 	/** Creates a pipeline state */
 	virtual PipelineState* CreatePipelineState(const PipelineState* copy = NULL);
 
@@ -204,10 +209,20 @@ public:
 	/** Draws a vertexarray, used for rendering gothics UI */
 	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct));
 
+	/** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
+	virtual XRESULT DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct));
+
+	/** Binds viewport information to the given constantbuffer slot */
+	XRESULT D3D11GraphicsEngineBase::BindViewportInformation(const std::string& shader, int slot);
+
 	/** Returns the Device/Context */
 	ID3D11Device* GetDevice(){return Device;}
 	ID3D11DeviceContext* GetContext(){return Context;}
-	ID3D11DeviceContext* GetDeferredContext(){return DeferredContext;}
+	ID3D11DeviceContext* GetDeferredMediaContext(){return DeferredContext;}
+
+	/** Returns a deferred context for the calling thread ID. Creates a new one if there isn't one in cache.
+		Will be reset on present and called on ExecuteDeferredCommandLists. */
+	ID3D11DeviceContext* GetDeferredContextByThread();
 
 	/** Returns the current resolution */
 	virtual INT2 GetResolution(){return Resolution;};
@@ -240,14 +255,24 @@ public:
 
 	/** Updates the transformsCB with new values from the GAPI */
 	void UpdateTransformsCB();
+
+	/** Runs the deferred commandlists from the cached deferred contexts */
+	void ExecuteDeferredCommandLists();
 protected:
 	/** Device-objects */
 	IDXGIFactory* DXGIFactory;
 	IDXGIAdapter* DXGIAdapter;
+	std::string DeviceDescription;
 
 	ID3D11Device* Device;
 	ID3D11DeviceContext* Context;
 	ID3D11DeviceContext* DeferredContext;
+
+	/** Deferred contexts for threadpool */
+	std::map<int, ID3D11DeviceContext*> DeferredContextsByThread;
+	std::vector<ID3D11DeviceContext*> DeferredContextCache;
+	std::vector<ID3D11DeviceContext*> DeferredContextsAll;
+	std::mutex DeferredContextsByThreadMutex;
 
 	/** Swapchain and resources */
 	IDXGISwapChain* SwapChain;
@@ -281,9 +306,12 @@ protected:
 	D3D11PShader* PS_DiffuseNormalmappedAlphatestFxMap;
 	D3D11PShader* PS_DiffuseAlphatest;
 	D3D11PShader* PS_Simple;
+	D3D11PShader* PS_SimpleAlphaTest;
 	D3D11PShader* PS_LinDepth;
 	D3D11VShader* VS_Ex;
 	D3D11VShader* VS_ExInstancedObj;
+	D3D11VShader* VS_ExRemapInstancedObj;
+	D3D11VShader* VS_ExSkeletal;
 	D3D11GShader* GS_Billboard;
 
 	D3D11VShader* ActiveVS;

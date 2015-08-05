@@ -204,7 +204,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	SetupVS_ExConstantBuffer();
 
 	// Get reference to visual-map
-	const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
+	const std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
 
 	
 
@@ -220,7 +220,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	SetRenderingStage(DES_Z_PRE_PASS);
 
 	// Draw the instances of every visual, if available
-	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+	for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 	{
 		// Draw all submeshes of this in the world in one batch each
 		if(!(*it).second->Instances.empty())
@@ -264,7 +264,7 @@ void D3D11GraphicsEngineTest::DrawSceneLightPrePass()
 	
 
 	// Draw the instances of every visual, if available
-	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+	for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 	{
 		if(!(*it).second->Instances.empty())
 		{
@@ -404,6 +404,8 @@ bool D3D11GraphicsEngineTest::BindShaderForKey(const MeshKey& key)
 		// Bind info to pixel shader
 		info->Constantbuffer->BindToPixelShader(2);
 	}
+
+	return true;
 }
 
 /** Binds the right shader for the given texture */
@@ -517,13 +519,13 @@ XRESULT D3D11GraphicsEngineTest::FillInstancingBuffer(const std::vector<VobInfo 
 	UINT loc = 0;
 
 	// Get reference to visual-map
-	std::hash_map<zCProgMeshProto*, MeshVisualInfo*> vis = Engine::GAPI->GetStaticMeshVisuals();
+	std::unordered_map<zCProgMeshProto*, MeshVisualInfo*> vis = Engine::GAPI->GetStaticMeshVisuals();
 
 	// Map the buffer, don't care about its previous content
 	if(XR_SUCCESS == DynamicInstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&data, &size))
 	{
 		// Check every visual for instances and add the instances to the buffer
-		for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+		for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 		{
 			if(!(*it).second->Instances.empty())
 			{

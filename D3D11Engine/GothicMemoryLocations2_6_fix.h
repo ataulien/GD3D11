@@ -131,6 +131,9 @@ struct GothicMemoryLocations
 		static const unsigned int LOC_ProcessRainFXNOPStart = 0x005EB149;
 		static const unsigned int LOC_ProcessRainFXNOPEnd = 0x005EB216;
 
+		static const unsigned int LOC_SunVisibleStart = 0x005E7C8F;
+		static const unsigned int LOC_SunVisibleEnd = 0x005E7E7F;
+
 		static const unsigned int ProcessRainFX = 0x005EAF30;
 		static const unsigned int Offset_OutdoorRainFXWeight = 0x69C;
 	};
@@ -138,7 +141,7 @@ struct GothicMemoryLocations
 	struct zCSkyController
 	{
 		static const unsigned int VTBL_RenderSkyPre = 27; //0x6C / 4
-		static const unsigned int VTBL_RenderSkyPost = (0x78 / 4);
+		static const unsigned int VTBL_RenderSkyPost = 28;
 	};
 
 	struct zCParticleEmitter
@@ -307,7 +310,16 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_ModelScale = 0x12C;
 		static const unsigned int Offset_Flags = 0x1F8;
 		static const unsigned int Offset_DistanceModelToCamera = 0x120;
+		static const unsigned int Offset_NumActiveAnis = 0x34;
+		static const unsigned int Offset_AniChannels = 0x38;
 		static const unsigned int GetVisualName = 0x0057DF60;
+	};
+
+	struct zCModelAni
+	{
+		static const unsigned int Offset_NumFrames = 0xD8;
+		static const unsigned int Offset_Flags = 0xE0;
+		static const unsigned int Mask_FlagIdle = 0x10;
 	};
 
 	struct zCCamera

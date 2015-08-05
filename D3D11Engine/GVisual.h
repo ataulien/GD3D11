@@ -6,7 +6,7 @@
 
 class zCVisual;
 class GVobObject;
-
+struct PipelineState;
 class BaseConstantBuffer;
 struct RenderInfo
 {
@@ -35,10 +35,16 @@ public:
 	virtual void OnBeginDraw(){}
 
 	/** Called when we are done drawing */
-	virtual void OnEndDraw(){}
+	virtual void OnEndDraw();
 
 	/** Draws the visual for the given vob */
 	virtual void DrawVisual(const RenderInfo& info);
+
+	/** Fills the given pipeline state with it the visuals current settings */
+	virtual void FillPipelineState(PipelineState* state){}
+
+	/** Just adds a static instance */
+	virtual int* AddStaticInstance(const VobInstanceRemapInfo& remapInfo);
 
 	/** Draws a batch of instance-infos. Returns a pointer to the instance-buffer and it's size.
 		If the buffer is too small use .*/
@@ -63,6 +69,9 @@ public:
 	/** Returns the visual this is based on */
 	zCVisual* GetSourceVisual();
 
+	/** If this returns true, that vob will be cached in the bsp-tree using instancing */
+	virtual bool IsInstancingCapable(){return false;}
+
 	/** Returns the current instance-data, if there is any */
 	virtual std::vector<VobInstanceInfo>* GetInstanceData(){return NULL;}
 protected:
@@ -71,5 +80,8 @@ protected:
 
 	/** Size of this visual */
 	float VisualSize;
+
+	/** Whether this has been drawn this frame or not */
+	bool DrawnThisFrame;
 };
 

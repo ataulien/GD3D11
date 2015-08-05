@@ -486,6 +486,7 @@ struct GothicRendererSettings
 		DrawWorldMesh = true;
 		DrawSkeletalMeshes = true;	
 		DrawMobs = true;
+		DrawDynamicVOBs = true;
 
 		DrawParticleEffects = true;
 
@@ -537,6 +538,7 @@ struct GothicRendererSettings
 		FixViewFrustum = false;
 		DisableWatermark = true;
 		DisableRendering = false;
+		DisableDrawcalls = false;
 
 #ifdef BUILD_SPACER
 		EnableEditorPanel = true;
@@ -568,6 +570,7 @@ struct GothicRendererSettings
 		EnableVSync = false;
 		DoZPrepass = true;
 		SortRenderQueue = true;
+		DrawThreaded = true;
 
 		EnableTesselation = true;
 		AllowWorldMeshTesselation = false;
@@ -641,6 +644,7 @@ struct GothicRendererSettings
 
 	/** Rendering options */
 	bool DrawVOBs;
+	bool DrawDynamicVOBs;
 	bool DrawWorldMesh;
 	bool DrawSkeletalMeshes;
 	bool DrawMobs;
@@ -665,11 +669,13 @@ struct GothicRendererSettings
 	bool VegetationAlphaToCoverage;
 	bool DisableWatermark;
 	bool DisableRendering;
+	bool DisableDrawcalls;
 	bool EnableEditorPanel;
 	bool DoZPrepass;
 	bool EnableAutoupdates;
 	bool EnableOcclusionCulling;
 	bool SortRenderQueue;
+	bool DrawThreaded;
 	EPointLightShadowMode EnablePointlightShadows;
 	float MinLightShadowUpdateRange;
 	bool PartialDynamicShadowUpdates;
@@ -819,6 +825,7 @@ struct GothicRendererInfo
 		NearPlane = 0;	
 		FrameDrawnLights = 0;
 		WorldMeshDrawCalls = 0;
+		FramePipelineStates = 0;
 
 		StateChanges = 0;
 		memset(StateChangesByState, 0, sizeof(StateChangesByState));
@@ -837,6 +844,7 @@ struct GothicRendererInfo
 		SC_IB,
 		SC_VB,
 		SC_RS,
+		SC_CB,
 		SC_DSS,
 		SC_SMPL,
 		SC_BS,
@@ -845,6 +853,7 @@ struct GothicRendererInfo
 
 	unsigned int StateChanges;
 	unsigned int StateChangesByState[SC_NUM_STATES];
+	unsigned int FramePipelineStates;
 
 	int FrameDrawnTriangles;
 	int FrameDrawnVobs;

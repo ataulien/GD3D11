@@ -60,6 +60,28 @@ struct zTMeshLibEntry
 	zCModelMeshLib* MeshLibPtr;
 };
 
+class zCModelAni
+{
+public:
+	bool IsIdleAni()
+	{
+		DWORD value = *(DWORD *)THISPTR_OFFSET(GothicMemoryLocations::zCModelAni::Offset_Flags);
+		return (value & GothicMemoryLocations::zCModelAni::Mask_FlagIdle) != 0;
+	}
+
+	int GetNumAniFrames()
+	{
+		return *(uint16_t *)THISPTR_OFFSET(GothicMemoryLocations::zCModelAni::Offset_NumFrames);
+	}
+};
+
+class zCModelAniActive
+{
+public:
+	zCModelAni* protoAni;
+	zCModelAni* nextAni;
+};
+
 class zCModelMeshLib : public zCObject
 {
 public:
@@ -192,11 +214,27 @@ public:
 		XCALL(GothicMemoryLocations::zCModel::RenderNodeList);
 	}
 
+	/** Returns the current amount of active animations */
+	int GetNumActiveAnimations()
+	{
+		return *(int *)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_NumActiveAnis);
+	}
+
+	/** Returns true if only an idle-animation is running */
+	bool IdleAnimationRunning()
+	{
+		zCModelAniActive* activeAni = *(zCModelAniActive **)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_AniChannels);
+
+		return GetNumActiveAnimations() == 1 && (/*activeAni->protoAni->IsIdleAni() ||*/ activeAni->protoAni->GetNumAniFrames() <= 1);
+	}
+
+	/** This is needed for the animations to work at full framerate */
 	void SetDistanceToCamera(float dist)
 	{
 		*(float *)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_DistanceModelToCamera) = dist;
 	}
 
+	/** Updates stuff like blinking eyes, etc */
 	void zCModel::UpdateMeshLibTexAniState() 
 	{
 		for (int i=0; i<GetMeshLibList()->NumInArray; i++) 
@@ -290,7 +328,8 @@ public:
 		if(!GetNodeList())
 			return;
 
-		std::vector<D3DXMATRIX*> tptr;
+		// Make this static so we don't reallocate the memory every time
+		static std::vector<D3DXMATRIX*> tptr;
 		tptr.resize(GetNodeList()->NumInArray, NULL);
 		for (int i=0; i<GetNodeList()->NumInArray; i++) 
 		{

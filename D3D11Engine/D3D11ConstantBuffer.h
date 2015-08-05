@@ -10,6 +10,9 @@ public:
 	/** Updates the buffer */
 	virtual void UpdateBuffer(void* data);
 
+	/** Updates the buffer, threadsave */
+	virtual void UpdateBufferDeferred(void* data);
+
 	/** Binds the buffer */
 	void BindToVertexShader(int slot);
 	void BindToPixelShader(int slot);

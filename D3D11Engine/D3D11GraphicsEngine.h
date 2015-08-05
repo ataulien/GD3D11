@@ -358,10 +358,10 @@ protected:
 	D2DView* UIView;
 
 	/** Map of texture/index */
-	stdext::hash_map<zCTexture*, int> TexArrayIndexByTexture;
+	stdext::unordered_map<zCTexture*, int> TexArrayIndexByTexture;
 
 	/** List of water surfaces for this frame */
-	std::hash_map<zCTexture*, std::vector<WorldMeshInfo*>> FrameWaterSurfaces;
+	std::unordered_map<zCTexture*, std::vector<WorldMeshInfo*>> FrameWaterSurfaces;
 
 	/** List of worldmeshes we have to render using alphablending */
 	std::vector<std::pair<MeshKey, MeshInfo*>> FrameTransparencyMeshes;

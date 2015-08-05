@@ -121,7 +121,7 @@ XRESULT D3D11Texture::UpdateDataDeferred(void* data, int mip, bool noLock)
 	if(!noLock)
 		Engine::GAPI->EnterResourceCriticalSection();
 
-	engine->GetDeferredContext()->UpdateSubresource(Texture, mip, NULL, data, GetRowPitchBytes(mip), GetSizeInBytes(mip));
+	engine->GetDeferredMediaContext()->UpdateSubresource(Texture, mip, NULL, data, GetRowPitchBytes(mip), GetSizeInBytes(mip));
 
 	if(!noLock)
 		Engine::GAPI->LeaveResourceCriticalSection();
@@ -266,13 +266,13 @@ XRESULT D3D11Texture::GenerateMipMaps()
 
 	RenderToTextureBuffer* b = new RenderToTextureBuffer(engine->GetDevice(), TextureSize.x, TextureSize.y, DXGI_FORMAT_R8G8B8A8_UNORM, NULL, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN, MipMapCount);
 
-	engine->GetDeferredContext()->CopySubresourceRegion(b->GetTexture(), 0, 0, 0, 0, Texture, 0, NULL);
+	engine->GetDeferredMediaContext()->CopySubresourceRegion(b->GetTexture(), 0, 0, 0, 0, Texture, 0, NULL);
 
 	// Generate mips
-	engine->GetDeferredContext()->GenerateMips(b->GetShaderResView());
+	engine->GetDeferredMediaContext()->GenerateMips(b->GetShaderResView());
 
 	// Copy the full chain back
-	engine->GetDeferredContext()->CopyResource(Texture, b->GetTexture());
+	engine->GetDeferredMediaContext()->CopyResource(Texture, b->GetTexture());
 	delete b;
 
 	Engine::GAPI->LeaveResourceCriticalSection();

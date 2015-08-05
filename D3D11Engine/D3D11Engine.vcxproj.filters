@@ -723,6 +723,9 @@
     <ClInclude Include="WorldObjects.h">
       <Filter>Engine\GAPI</Filter>
     </ClInclude>
+    <ClInclude Include="ThreadPool.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />

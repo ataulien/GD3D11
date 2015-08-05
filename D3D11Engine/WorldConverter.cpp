@@ -1273,7 +1273,9 @@ void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisu
 	skeletalMeshInfo->LoadMeshVisualInfo(skeletalMeshInfo->VisualName);
 
 	// Create additional information
-	if(skeletalMeshInfo->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
+	if(skeletalMeshInfo->TesselationInfo.buffer.VT_TesselationFactor > 0.0f
+		&& Engine::GAPI->GetRendererState()->RendererSettings.AllowWorldMeshTesselation) // TODO: PNAEN for skeletals causes huge lags in the game and is barely
+																						 // noticable anyways. Disable for now.
 		skeletalMeshInfo->CreatePNAENInfo(skeletalMeshInfo->TesselationInfo.buffer.VT_DisplacementStrength > 0.0f);
 }
 
@@ -1341,7 +1343,7 @@ void WorldConverter::ExtractSkeletalMeshFromProto(zCModelMeshLib* model, Skeleta
 			// Get indices
 			for(int t=0;t<m->TriList.NumInArray;t++)
 			{				
-				for(int v=0;v<3;v++)
+				for(int v=2;v>=0;v--)
 				{
 					indices.push_back(m->TriList.Array[t].wedge[v]);
 				}
@@ -1744,27 +1746,31 @@ void WorldConverter::Extract3DSMeshFromVisual2(zCProgMeshProto* visual, MeshVisu
 	std::vector<unsigned int> wrappedIndices;
 	std::vector<unsigned int> offsets;
 
-	// Calculate fat vertexbuffer
-	WorldConverter::WrapVertexBuffers(vertexBuffers, indexBuffers, wrappedVertices, wrappedIndices, offsets);
+	if(visual->GetNumSubmeshes())
+	{
+		// Calculate fat vertexbuffer
+		WorldConverter::WrapVertexBuffers(vertexBuffers, indexBuffers, wrappedVertices, wrappedIndices, offsets);
 
-	// Propergate the offsets
-	int i=0;
-	for(std::list<MeshInfo*>::iterator it = meshInfos.begin(); it != meshInfos.end();it++)
-	{	
-		(*it)->BaseIndexLocation = offsets[i];
+		// Propergate the offsets
+		int i = 0;
+		for(std::list<MeshInfo*>::iterator it = meshInfos.begin(); it != meshInfos.end(); it++)
+		{
+			(*it)->BaseIndexLocation = offsets[i];
 
-		i++;
+			i++;
+		}
+
+		MeshInfo* wmi = new MeshInfo;
+		Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshVertexBuffer);
+		Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshIndexBuffer);
+
+		// Init and fill them
+		wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+		wmi->MeshIndexBuffer->Init(&wrappedIndices[0], wrappedIndices.size() * sizeof(unsigned int), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+
+		meshInfo->FullMesh = wmi;
 	}
 
-	MeshInfo* wmi = new MeshInfo;
-	Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshVertexBuffer);
-	Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshIndexBuffer);
-
-	// Init and fill them
-	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	wmi->MeshIndexBuffer->Init(&wrappedIndices[0], wrappedIndices.size() * sizeof(unsigned int), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-
-	meshInfo->FullMesh = wmi;
 
 
 	meshInfo->BBox.Min = bbmin;

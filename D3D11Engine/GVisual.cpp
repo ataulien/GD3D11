@@ -9,6 +9,8 @@ GVisual::GVisual(zCVisual* sourceVisual)
 {
 	SourceVisual = sourceVisual;
 	VisualSize = 0.0f;
+
+	DrawnThisFrame = false;
 }
 
 
@@ -16,9 +18,29 @@ GVisual::~GVisual(void)
 {
 }
 
+/** Just adds a static instance */
+int* GVisual::AddStaticInstance(const VobInstanceRemapInfo& remapInfo)
+{
+	// Check if this is the first time we are rendering this
+	if(!DrawnThisFrame)
+	{
+		OnBeginDraw();
+		DrawnThisFrame = true;
+	}
+
+	return NULL;
+}
+
 /** Draws the visual for the given vob */
 void GVisual::DrawVisual(const RenderInfo& info)
 {
+	// Check if this is the first time we are rendering this
+	if(!DrawnThisFrame)
+	{
+		OnBeginDraw();
+		DrawnThisFrame = true;
+	}
+
 	return;
 	Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(info.CallingVob->GetPosition());
 }
@@ -33,4 +55,10 @@ float GVisual::GetVisualSize()
 zCVisual* GVisual::GetSourceVisual()
 {
 	return SourceVisual;
+}
+
+/** Called when we are done drawing */
+void GVisual::OnEndDraw()
+{
+	DrawnThisFrame = false;
 }

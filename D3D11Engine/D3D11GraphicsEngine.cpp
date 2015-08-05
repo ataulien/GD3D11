@@ -222,6 +222,7 @@ XRESULT D3D11GraphicsEngine::Init()
 
 	std::wstring wDeviceDescription(adpDesc.Description);
 	std::string deviceDescription(wDeviceDescription.begin(), wDeviceDescription.end());
+	DeviceDescription = deviceDescription;
 	LogInfo() << "Rendering on: " << deviceDescription.c_str();
 
 	int flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -602,6 +603,7 @@ XRESULT D3D11GraphicsEngine::OnResize(INT2 newSize)
 
 	Engine::AntTweakBar->OnResize(newSize);
 	
+
 	return XR_SUCCESS;
 }
 
@@ -756,7 +758,7 @@ XRESULT D3D11GraphicsEngine::Clear(const float4& color)
 	//Context->ClearRenderTargetView(BackbufferRTV, (float *)&D3DXVECTOR4(1,0,0,0));
 	Context->ClearDepthStencilView(DepthStencilBuffer->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	
-	Context->ClearRenderTargetView(GBuffer0_Diffuse->GetRenderTargetView(), (float *)&D3DXVECTOR4(1,0,0,0));
+	Context->ClearRenderTargetView(GBuffer0_Diffuse->GetRenderTargetView(), (float *)&color);
 	Context->ClearRenderTargetView(GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetView(), (float *)&D3DXVECTOR4(0,0,0,0));
 	Context->ClearRenderTargetView(HDRBackBuffer->GetRenderTargetView(), (float *)&D3DXVECTOR4(0,0,0,0));
 	
@@ -922,6 +924,8 @@ XRESULT D3D11GraphicsEngine::Present()
 
 	//Engine::GAPI->EnterResourceCriticalSection();
 	bool vsync = Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync;
+
+	Engine::GAPI->EnterResourceCriticalSection();
 	if(SwapChain->Present(vsync ? 1 : 0, 0) == DXGI_ERROR_DEVICE_REMOVED)
 	{
 		switch(Device->GetDeviceRemovedReason())
@@ -959,7 +963,7 @@ XRESULT D3D11GraphicsEngine::Present()
 			LogWarnBox() << "Device Removed! (Unknown reason)";
 		}
 	}
-	//Engine::GAPI->LeaveResourceCriticalSection();	
+	Engine::GAPI->LeaveResourceCriticalSection();	
 
 	PresentPending = false;
 
@@ -1614,7 +1618,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering()
 	Engine::GAPI->GetRendererState()->RasterizerState.FrontCounterClockwise = false;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
-	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawSky && Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR)
+	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawSky)
 	{
 		// Draw back of the sky if outdoor
 		DrawSky();
@@ -1836,7 +1840,7 @@ void D3D11GraphicsEngine::TestDrawWorldMesh()
 	}
 
 	/*int x=0;
-	for(stdext::hash_map<zCTexture*, std::vector<MeshInfo *>>::iterator it = meshesByTexture.begin();it != meshesByTexture.end(); it++)
+	for(stdext::unordered_map<zCTexture*, std::vector<MeshInfo *>>::iterator it = meshesByTexture.begin();it != meshesByTexture.end(); it++)
 	{
 			
 	}*/
@@ -2173,12 +2177,12 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 			BindShaderForTexture((*it).first.Material->GetAniTexture(), false, (*it).first.Material->GetAlphaFunc());
 			
 			// No backfaceculling for alphatested materials, fixes forests looking stupid in G1
-			if((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_TEST || (*it).first.Texture->HasAlphaChannel())
+			/*if((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_TEST || (*it).first.Texture->HasAlphaChannel())
 			{
 				Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
 				Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
-				Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS;
+				Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS_EQUAL;
 				Engine::GAPI->GetRendererState()->DepthState.SetDirty();
 
 				UpdateRenderStates();
@@ -2191,7 +2195,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 				Engine::GAPI->GetRendererState()->DepthState.SetDirty();
 
 				UpdateRenderStates();
-			}
+			}*/
 
 			// Check for alphablending on world mesh
 			if(((*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_BLEND || (*it).first.Material->GetAlphaFunc() == zMAT_ALPHA_FUNC_ADD) && !Engine::GAPI->GetRendererState()->BlendState.BlendEnabled)
@@ -2411,7 +2415,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMeshW(bool noTextures)
 	//noTextures = true;
 
 	// Static, so we can clear the lists but leave the hashmap intact
-	static std::hash_map<zCTexture*, std::pair<MaterialInfo*, std::vector<WorldMeshInfo*>>> meshesByMaterial;
+	static std::unordered_map<zCTexture*, std::pair<MaterialInfo*, std::vector<WorldMeshInfo*>>> meshesByMaterial;
 	static zCMesh* startMesh = Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetMesh();
 
 	if(startMesh != Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetMesh())
@@ -2458,7 +2462,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMeshW(bool noTextures)
 	// Bind wrapped mesh vertex buffers
 	DrawVertexBufferIndexedUINT(Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer, Engine::GAPI->GetWrappedWorldMesh()->MeshIndexBuffer, 0, 0);
 
-	for(std::hash_map<zCTexture*, std::pair<MaterialInfo*, std::vector<WorldMeshInfo*>>>::iterator it = meshesByMaterial.begin(); it != meshesByMaterial.end();it++)
+	for(std::unordered_map<zCTexture*, std::pair<MaterialInfo*, std::vector<WorldMeshInfo*>>>::iterator it = meshesByMaterial.begin(); it != meshesByMaterial.end();it++)
 	{
 		if((*it).second.second.empty())
 			continue;
@@ -2648,16 +2652,9 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 
 	// Pre-Draw the surfaces to fix overlaying polygons causing a huge performance drop
 	// Unbind pixelshader
-	Context->PSSetShader(NULL, NULL, NULL);
-	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
-	for(std::hash_map<zCTexture*, std::vector<WorldMeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
-	{
-		// Draw surfaces
-		for(unsigned int i=0;i<(*it).second.size();i++)
-		{
-			DrawVertexBufferIndexed((*it).second[i]->MeshVertexBuffer, (*it).second[i]->MeshIndexBuffer, (*it).second[i]->Indices.size());
-		}
-	}
+
+	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+
 
 	// Setup depth state so we can't have multiple layers of water
 	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS;
@@ -2669,11 +2666,38 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 
 	// Bind water shader
 	SetActiveVertexShader("VS_ExWater");
-	SetActivePixelShader("PS_Water");
+	SetActiveHDShader("Water_Tesselation");
+
+	ActiveHDS->Apply();
+	
+
+	// Push tesselation information
+	VisualTesselationSettings::Buffer b;
+	b.VT_DisplacementStrength = 10.0f;
+	b.VT_TesselationFactor = 10.0f;
+	b.VT_Time = Engine::GAPI->GetTimeSeconds();
+	ActiveHDS->GetConstantBuffer()[0]->UpdateBuffer(&b);
+	ActiveHDS->GetConstantBuffer()[0]->BindToDomainShader(1);
+	ActiveHDS->GetConstantBuffer()[0]->BindToHullShader(1);
+	((D3D11Texture*)DistortionTexture)->BindToDomainShader(3);
+
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
 
+	Context->PSSetShader(NULL, NULL, NULL);
+	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
+	for(std::unordered_map<zCTexture*, std::vector<WorldMeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
+	{
+		// Draw surfaces
+		for(unsigned int i=0;i<(*it).second.size();i++)
+		{
+			DrawVertexBufferIndexed((*it).second[i]->MeshVertexBuffer, (*it).second[i]->MeshIndexBuffer, (*it).second[i]->Indices.size());
+		}
+	}
 
+	SetActivePixelShader("PS_Water");
+	SetupVS_ExMeshDrawCall();
+	SetupVS_ExConstantBuffer();
 
 	D3DXMATRIX id;
 	D3DXMatrixIdentity(&id);
@@ -2705,11 +2729,11 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 	// Bind reflection cube
 	Context->PSSetShaderResources(3,1, &ReflectionCube);
 
-
+	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 
 	for(int i=0;i<1;i++) // Draw twice, but second time only to depth buffer to fix the fog
 	{
-		for(std::hash_map<zCTexture*, std::vector<WorldMeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
+		for(std::unordered_map<zCTexture*, std::vector<WorldMeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
 		{
 			if((*it).first)
 			{
@@ -2734,6 +2758,9 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 
 	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::DEFAULT_DEPTH_COMP_STATE;
 	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
+
+	Context->DSSetShader(NULL, NULL, NULL);
+	Context->HSSetShader(NULL, NULL, NULL);
 }
 
 /** Draws everything around the given position */
@@ -3298,8 +3325,8 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 		UpdateRenderStates();
 
 		// Reset instances
-		const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
-		/*for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+		const std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
+		/*for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 		{
 		(*it).second->StartNewFrame();
 		}*/
@@ -3348,7 +3375,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 		UINT loc = 0;
 		DynamicInstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&data, &size);
 		static std::vector<VobInstanceInfo, AlignmentAllocator<VobInstanceInfo, 16> > s_InstanceData;
-		for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+		for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 		{
 			if((*it).second->Instances.empty())
 				continue;
@@ -3366,7 +3393,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 
 
 			// Draw all vobs the player currently sees
-			for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+			for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 			{
 				if((*it).second->Instances.empty())
 					continue;
@@ -3461,7 +3488,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 {
 	START_TIMING();
 
-	const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
+	const std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>& vis = Engine::GAPI->GetStaticMeshVisuals();
 
 	SetDefaultStates();
 
@@ -3524,7 +3551,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs)
 	{
 		static std::vector<VobInstanceInfo, AlignmentAllocator<VobInstanceInfo, 16> > s_InstanceData;
-		/*for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+		/*for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 		{
 #ifdef BUILD_GOTHIC_1_08k // G1 has this sometimes?
 			if(!(*it).second->Visual)
@@ -3574,7 +3601,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 			UINT loc = 0;
 			DynamicInstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&data, &size);
 				static std::vector<VobInstanceInfo, AlignmentAllocator<VobInstanceInfo, 16> > s_InstanceData;
-				for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+				for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 				{
 					(*it).second->StartInstanceNum = loc;
 					memcpy(data + loc * sizeof(VobInstanceInfo), &(*it).second->Instances[0], sizeof(VobInstanceInfo) * (*it).second->Instances.size());
@@ -3591,7 +3618,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 			// Reset buffer
 			s_InstanceData.resize(0);
 
-			for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
+			for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 			{
 				if((*it).second->Instances.empty())
 					continue;
@@ -4004,8 +4031,11 @@ XRESULT D3D11GraphicsEngine::DrawSky()
 	//Context->OMSetRenderTargets(1, &BackbufferRTV, NULL);
 
 	if(!Engine::GAPI->GetRendererState()->RendererSettings.AtmosphericScattering)
+	{
+		Engine::GAPI->GetLoadedWorldInfo()->MainWorld->GetSkyControllerOutdoor()->RenderSkyPre();
+		Engine::GAPI->SetFarPlane(Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE);
 		return XR_SUCCESS;
-
+	}
 	// Create a rotaion only view-matrix
 	D3DXMATRIX invView;
 	Engine::GAPI->GetInverseViewMatrix(&invView);
@@ -4405,7 +4435,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 
 	if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR) // Indoor worlds don't need shadowmaps for the world
 	{
-			RenderShadowmaps(WorldShadowCP);
+			RenderShadowmaps(WorldShadowCP, NULL, false);
 	}
 
 	SetDefaultStates();
@@ -4524,9 +4554,11 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		}
 
 		// Make the lights a little bit brighter
-		plcb.PL_Color.x *= 1.5f;
-		plcb.PL_Color.y *= 1.5f;
-		plcb.PL_Color.z *= 1.5f;
+		float lightFactor = 1.2f;
+
+		plcb.PL_Color.x *= lightFactor;
+		plcb.PL_Color.y *= lightFactor;
+		plcb.PL_Color.z *= lightFactor;
 
 		//if(plcb.PL_Range > 10000.0f)
 		//	continue;
@@ -4582,13 +4614,12 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnLights++;
 	}
 
-	if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() != zBSP_MODE_INDOOR)
+
 	{
-#ifdef BUILD_GOTHIC_1_08k
 		// *cough cough* somehow this makes the worldmesh disappear in indoor locations
 		// TODO: Fixme
-		Engine::GAPI->GetRendererState()->RendererSettings.EnableSMAA = false;
-#endif
+		//Engine::GAPI->GetRendererState()->RendererSettings.EnableSMAA = false;
+
 
 		Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
 		Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
@@ -4630,6 +4661,8 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 			Engine::GAPI->GetRendererState()->RendererSettings.RainSunLightStrength, 
 			std::min(1.0f, rain * 2.0f)); // Scale the darkening-factor faster here, so it matches more with the increasing fog-density
 
+
+
 		scb.SQ_LightColor = float4(sunColor.x, sunColor.y, sunColor.z, sunStrength);
 
 		scb.SQ_ShadowView = cr.ViewReplacement;
@@ -4647,6 +4680,19 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		scb.SQ_ShadowStrength = Engine::GAPI->GetRendererState()->RendererSettings.ShadowStrength;
 		scb.SQ_ShadowAOStrength = Engine::GAPI->GetRendererState()->RendererSettings.ShadowAOStrength;
 		scb.SQ_WorldAOStrength = Engine::GAPI->GetRendererState()->RendererSettings.WorldAOStrength;
+
+		// Modify lightsettings when indoor
+		if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_INDOOR)
+		{
+			// Turn off shadows
+			scb.SQ_ShadowStrength = 0.0f;
+
+			// Only use world AO
+			scb.SQ_WorldAOStrength = 1.0f;
+
+			// Darken the lights
+			scb.SQ_LightColor = float4(1,1,1,DEFAULT_INDOOR_VOB_AMBIENT.x);
+		}
 
 		ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&scb);
 		ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
@@ -4924,6 +4970,7 @@ void D3D11GraphicsEngine::DrawVobSingle(VobInfo* vob)
 
 	SetDefaultStates();
 	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_NONE;
+	Engine::GAPI->GetRendererState()->RasterizerState.DepthClipEnable = false;
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
 
 	SetupVS_ExMeshDrawCall();
@@ -5472,7 +5519,7 @@ void D3D11GraphicsEngine::DrawDecalList(const std::vector<zCVob *>& decals, bool
 void D3D11GraphicsEngine::DrawQuadMarks()
 {
 	D3DXVECTOR3 camPos = Engine::GAPI->GetCameraPosition();
-	const stdext::hash_map<zCQuadMark*, QuadMarkInfo>& quadMarks = Engine::GAPI->GetQuadMarks();
+	const stdext::unordered_map<zCQuadMark*, QuadMarkInfo>& quadMarks = Engine::GAPI->GetQuadMarks();
 
 	SetActiveVertexShader("VS_Ex");
 	SetActivePixelShader("PS_World");
@@ -5496,7 +5543,7 @@ void D3D11GraphicsEngine::DrawQuadMarks()
 	SetupVS_ExConstantBuffer();
 
 	int alphaFunc = 0;
-	for(stdext::hash_map<zCQuadMark*, QuadMarkInfo>::const_iterator it = quadMarks.begin(); it != quadMarks.end(); it++)
+	for(stdext::unordered_map<zCQuadMark*, QuadMarkInfo>::const_iterator it = quadMarks.begin(); it != quadMarks.end(); it++)
 	{
 		if(!(*it).first->GetConnectedVob())
 			continue;

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "MeshModifier.h"
-#include "include\OpenMesh\Tools\Subdivider\Uniform\CatmullClarkT.hh"
+/*#include "include\OpenMesh\Tools\Subdivider\Uniform\CatmullClarkT.hh"
 #include "include\OpenMesh\Tools\Subdivider\Uniform\LoopT.hh"
 #include "include\OpenMesh\Tools\Decimater\DecimaterT.hh"
 #include "include\OpenMesh\Tools\Decimater\ModQuadricT.hh"
@@ -12,10 +12,10 @@
 #include "include\OpenMesh\Core\Mesh\PolyConnectivity.hh"
 
 #pragma comment(lib, "OpenMeshCore.lib")
-#pragma comment(lib, "OpenMeshTools.lib")
+#pragma comment(lib, "OpenMeshTools.lib")*/
 
 
-
+/**
 struct ExTraits : public OpenMesh::DefaultTraits
 {
 	typedef OpenMesh::Vec3f Point;
@@ -44,7 +44,7 @@ typedef OpenMesh::Decimater::DecimaterT<MyMesh> Decimater;
 typedef OpenMesh::Decimater::ModQuadricT<MyMesh>::Handle HModQuadric;
 typedef OpenMesh::Decimater::ModRoundnessT<MyMesh>::Handle HModRoundnessT;
 
-
+*/
 
 
 MeshModifier::MeshModifier(void)
@@ -56,7 +56,7 @@ MeshModifier::~MeshModifier(void)
 {
 }
 
-/** Puts vertext data into a MyMesh */
+/** Puts vertext data into a MyMesh *//*
 static void PutVertexData(MyMesh& mesh, const std::vector<ExVertexStruct>& inVertices, const std::vector<unsigned short>& inIndices)
 {
 	mesh.request_vertex_normals();
@@ -87,9 +87,9 @@ static void PutVertexData(MyMesh& mesh, const std::vector<ExVertexStruct>& inVer
 		mesh.add_face(vxs[inIndices[i]], vxs[inIndices[i+1]], vxs[inIndices[i+2]]);
 	}
 
-}
+}*/
 
-/** Extracts the vertexdata from a MyMesh */
+/** Extracts the vertexdata from a MyMesh *//*
 static void PullVertexData(MyMesh& mesh, std::vector<ExVertexStruct>& outVertices, std::vector<unsigned short>& outIndices)
 {
 	// Get data back out
@@ -122,11 +122,12 @@ static void PullVertexData(MyMesh& mesh, std::vector<ExVertexStruct>& outVertice
 		++fvIt;
 		outIndices.push_back(fvIt->idx());
 	}
-}
+}*/
 
 /** Performs catmul-clark smoothing on the mesh */
 void MeshModifier::DoCatmulClark(const std::vector<ExVertexStruct>& inVertices, const std::vector<unsigned short>& inIndices, std::vector<ExVertexStruct>& outVertices, std::vector<unsigned short>& outIndices, int iterations)
 {
+	/*
 	MyMesh mesh;
 
 	PutVertexData(mesh, inVertices, inIndices);
@@ -140,11 +141,13 @@ void MeshModifier::DoCatmulClark(const std::vector<ExVertexStruct>& inVertices, 
 	mesh.triangulate();
 
 	PullVertexData(mesh, outVertices, outIndices);
+	*/
 }
 
 /** Detects borders on the mesh */
 void MeshModifier::DetectBorders(const std::vector<ExVertexStruct>& inVertices, const std::vector<unsigned short>& inIndices, std::vector<ExVertexStruct>& outVertices, std::vector<unsigned short>& outIndices)
 {
+	/*
 	MyMesh mesh;
 
 	PutVertexData(mesh, inVertices, inIndices);
@@ -152,13 +155,13 @@ void MeshModifier::DetectBorders(const std::vector<ExVertexStruct>& inVertices, 
 	mesh.update_normals();
 
 	// Boundry gets set in here
-	PullVertexData(mesh, outVertices, outIndices);
+	PullVertexData(mesh, outVertices, outIndices);*/
 }
 
 /** Drops texcoords on the given mesh, making it appear crackless */
 void MeshModifier::DropTexcoords(const std::vector<ExVertexStruct>& inVertices, const std::vector<unsigned short>& inIndices, std::vector<ExVertexStruct>& outVertices, std::vector<VERTEX_INDEX>& outIndices)
 {
-	struct CmpClass // class comparing vertices in the set
+	/*struct CmpClass // class comparing vertices in the set
 	{
 		bool operator() (const std::pair<ExVertexStruct, int>& p1, const std::pair<ExVertexStruct, int>& p2) const
 		{
@@ -177,7 +180,7 @@ void MeshModifier::DropTexcoords(const std::vector<ExVertexStruct>& inVertices, 
 
 	for(unsigned int i=0;i<inIndices.size();i++)
 	{
-        std::set<std::pair<ExVertexStruct, int>>::iterator it = vertices.find(std::make_pair(inVertices[inIndices[i]], 0/*this value doesn't matter*/));
+        std::set<std::pair<ExVertexStruct, int>>::iterator it = vertices.find(std::make_pair(inVertices[inIndices[i]], 0));
         if (it!=vertices.end()) outIndices.push_back(it->second);
         else
         {
@@ -190,13 +193,13 @@ void MeshModifier::DropTexcoords(const std::vector<ExVertexStruct>& inVertices, 
     // so you'll have to rearrange them like this:
     outVertices.resize(vertices.size());
     for (std::set<std::pair<ExVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
-        outVertices[it->second] = it->first;
+        outVertices[it->second] = it->first;*/
 }
 
 /** Decimates the mesh, reducing its complexity */
 void MeshModifier::Decimate(const std::vector<ExVertexStruct>& inVertices, const std::vector<unsigned short>& inIndices, std::vector<ExVertexStruct>& outVertices, std::vector<VERTEX_INDEX>& outIndices)
 {
-	MyMesh mesh;
+	/*MyMesh mesh;
 
 	PutVertexData(mesh, inVertices, inIndices);
 
@@ -207,11 +210,11 @@ void MeshModifier::Decimate(const std::vector<ExVertexStruct>& inVertices, const
 
 	decimater.add( hModRoundness ); // register module at the decimater
 
-	/*
-	* since we need exactly one priority module (non-binary)
-	* we have to call set_binary(false) for our priority module
-	* in the case of HModQuadric, unset_max_err() calls set_binary(false) internally
-	*/
+	//
+	//since we need exactly one priority module (non-binary)
+	//we have to call set_binary(false) for our priority module
+	//in the case of HModQuadric, unset_max_err() calls set_binary(false) internally
+	//
 	//decimater.module( hModRoundness ).set_binary(false);//.unset_max_err();
 	decimater.module( hModRoundness ).set_min_roundness(0.05f);
 	//decimater.module( hModRoundness ).set_min_angle(
@@ -224,7 +227,7 @@ void MeshModifier::Decimate(const std::vector<ExVertexStruct>& inVertices, const
 	mesh.triangulate();
 
 	// Get data out of the openmesh
-	PullVertexData(mesh, outVertices, outIndices);
+	PullVertexData(mesh, outVertices, outIndices);*/
 }
 
 struct PNAENEdge
@@ -326,7 +329,7 @@ void MeshModifier::ComputePNAENIndices(const std::vector<ExVertexStruct>& inVert
 	// PNAEN algorithm from NVIDIA (http://developer.download.nvidia.com/whitepapers/2010/PN-AEN-Triangles-Whitepaper.pdf)
 	
 	// "For each edge, store the reverse of that edge in an easily searchable data structure for the next step. 
-	//  The reference implementation uses an stdext::hash_map<Edge,Edge> for this purpose"
+	//  The reference implementation uses an stdext::unordered_map<Edge,Edge> for this purpose"
 	std::unordered_map<PNAENEdge,PNAENEdge,PNAENKeyHasher> EdgeReverseMap;
 
 	// "Create an output IB that is 3 times the size of input IB"
@@ -521,7 +524,7 @@ void MeshModifier::ComputePNAEN18Indices(std::vector<ExVertexStruct>& inVertices
 	// PNAEN algorithm from NVIDIA (http://developer.download.nvidia.com/whitepapers/2010/PN-AEN-Triangles-Whitepaper.pdf)
 	
 	// "For each edge, store the reverse of that edge in an easily searchable data structure for the next step. 
-	//  The reference implementation uses an stdext::hash_map<Edge,Edge> for this purpose"
+	//  The reference implementation uses an stdext::unordered_map<Edge,Edge> for this purpose"
 	std::unordered_map<PNAENEdge,PNAENEdge,PNAENKeyHasher> EdgeReverseMap;
 
 	// "Create an output IB that is 3 times the size of input IB"
