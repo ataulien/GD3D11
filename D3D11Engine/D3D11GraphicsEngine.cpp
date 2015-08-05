@@ -4435,7 +4435,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 
 	if(Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR) // Indoor worlds don't need shadowmaps for the world
 	{
-			RenderShadowmaps(WorldShadowCP, NULL, false);
+			RenderShadowmaps(WorldShadowCP, NULL, true);
 	}
 
 	SetDefaultStates();
