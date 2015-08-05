@@ -36,6 +36,9 @@ public:
 	virtual std::vector<PipelineState::PipelineSortItem*>& GetRenderQueue();
 protected:
 
+	/** Threadproc for a rendertask */
+	static void RenderTask(unsigned int startState, unsigned int numStates);
+
 	/** Binds a pipeline-state without checking the former state*/
 	void BindPipelineStateForced(const PipelineState* state);
 
@@ -44,6 +47,7 @@ protected:
 
 	/** Currently bound pipeline state */
 	PipelineState* BoundPipelineState;
+	std::unordered_map<unsigned int, PipelineState*> BoundPipelineStateByThread;
 	PipelineState* DefaultPipelineState;
 };
 

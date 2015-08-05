@@ -39,7 +39,10 @@ public:
 	/** Returns the currently active world */
 	GWorld* GetWorld();
 protected:
+
 	/** The currently active world */
 	GWorld* ActiveWorld;
+
+	std::future<void> RenderFuture;
 };
 

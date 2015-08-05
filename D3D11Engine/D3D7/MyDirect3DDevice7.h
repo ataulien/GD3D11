@@ -573,7 +573,7 @@ public:
 		vp.MaxZ = lpViewport->dvMaxZ;
 
 		// Viewport is sometimes off by a few pixels when using scaling
-		if(abs((int)vp.Height - Engine::GraphicsEngine->GetResolution().y) < 10)
+		/*if(abs((int)vp.Height - Engine::GraphicsEngine->GetResolution().y) < 10)
 		{
 			vp.Height = Engine::GraphicsEngine->GetResolution().y;
 		}
@@ -581,7 +581,7 @@ public:
 		if(abs((int)vp.Width - Engine::GraphicsEngine->GetResolution().x) < 10)
 		{
 			vp.Width = Engine::GraphicsEngine->GetResolution().x;
-		}
+		}*/
 
 		Engine::GraphicsEngine->SetViewport(vp);
 

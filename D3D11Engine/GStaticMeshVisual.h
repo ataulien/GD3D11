@@ -24,6 +24,9 @@ public:
 	/** Draws the visual for the given vob */
 	virtual void DrawVisual(const RenderInfo& info);
 
+	/** Just adds a static instance */
+	virtual int* AddStaticInstance(const VobInstanceRemapInfo& remapInfo);
+
 	/** Draws a batch of instance-infos. Returns a pointer to the instance-buffer and it's size.
 		If the buffer is too small use .*/
 	virtual void BeginDrawInstanced();
@@ -39,6 +42,9 @@ public:
 		The BSP-Tree needs to grab the instancing-buffers for this for example,
 		and every node needs its own version */
 	virtual void SwitchInstanceSpecificResources();
+
+	/** If this returns true, that vob will be cached in the bsp-tree using instancing */
+	virtual bool IsInstancingCapable(){return true;}
 protected:
 
 	/** Registers an instance */
@@ -55,6 +61,7 @@ protected:
 
 	/** Pipelinestate to render this with */
 	std::vector<PipelineState*> PipelineStates;
+	std::vector<PipelineState*> ImmediatePipelineStates;
 
 	struct {
 		/** Instancingbuffer of this visual */

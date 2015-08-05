@@ -100,13 +100,14 @@ XRESULT BaseAntTweakBar::Init()
 
 	TwAddVarRW(Bar_General, "DisableRendering", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DisableRendering, NULL);
 	TwAddVarRW(Bar_General, "Draw VOBs", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs, NULL);
-
+	TwAddVarRW(Bar_General, "Draw Dynamic Vobs", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawDynamicVOBs, NULL);
 	TwAddVarRW(Bar_General, "Draw WorldMesh", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawWorldMesh, NULL);
 	TwAddVarRW(Bar_General, "Draw Skeletal Meshes", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes, NULL);
 	TwAddVarRW(Bar_General, "Draw Mobs", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawMobs, NULL);
 	TwAddVarRW(Bar_General, "Draw ParticleEffects", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawParticleEffects, NULL);
 	//TwAddVarRW(Bar_General, "Draw Sky", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawSky, NULL);
 	TwAddVarRW(Bar_General, "Draw Fog", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawFog, NULL);	
+	
 	
 #ifndef PUBLIC_RELEASE
 	TwAddVarRW(Bar_General, "HDR (Broken!)", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR, NULL);	
@@ -131,10 +132,11 @@ XRESULT BaseAntTweakBar::Init()
 	
 	TwAddVarRW(Bar_General, "OcclusionCulling", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableOcclusionCulling, NULL);
 	TwAddVarRW(Bar_General, "Sort RenderQueue", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.SortRenderQueue, NULL);
+	TwAddVarRW(Bar_General, "Draw Threaded", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawThreaded, NULL);
 	
 	TwAddVarRW(Bar_General, "AllowWorldMeshTesselation", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.AllowWorldMeshTesselation, NULL);
 	TwAddVarRW(Bar_General, "TesselationFrustumCulling", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.TesselationFrustumCulling, NULL);
-
+	TwAddVarRW(Bar_General, "AtmosphericScattering", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.AtmosphericScattering, NULL);
 	
 
 	TwType t = TwDefineEnumFromString("ShadowmapSizeEnum", "512, 1024, 2048, 4096");
@@ -242,6 +244,7 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "DisableWatermark", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DisableWatermark, NULL);
 	
 	TwAddVarRW(Bar_General, "GothicUIScale", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.GothicUIScale, NULL);
+	TwDefine(" General/GothicUIScale  step=0.01");
 	TwAddVarRW(Bar_General, "FOVHoriz", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.FOVHoriz, NULL);
 	TwAddVarRW(Bar_General, "FOVVert", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererSettings.FOVVert, NULL);
 	//TwAddVarRW(Bar_General, "Max Num Indices", TW_TYPE_INT32, &Engine::GAPI->GetRendererState()->RendererSettings.MaxNumFaces, NULL);
@@ -272,7 +275,9 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRO(Bar_Info, "LightingMS", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererInfo.Timing.LightingMS, NULL);
 	TwAddVarRO(Bar_Info, "TotalMS", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState()->RendererInfo.Timing.TotalMS, NULL);
 
+	TwAddVarRO(Bar_Info, "SC_PipelineStates,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.FramePipelineStates, NULL);
 	TwAddVarRO(Bar_Info, "SC_Textures,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_TX], NULL);
+	TwAddVarRO(Bar_Info, "SC_ConstantBuffer,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_CB], NULL);
 	TwAddVarRO(Bar_Info, "SC_GeometryShader,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_GS], NULL);
 	TwAddVarRO(Bar_Info, "SC_RTVDSV,", TW_TYPE_UINT32,	&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_RTVDSV], NULL);
 	TwAddVarRO(Bar_Info, "SC_DomainShader,", TW_TYPE_UINT32,		&Engine::GAPI->GetRendererState()->RendererInfo.StateChangesByState[GothicRendererInfo::SC_DS], NULL);

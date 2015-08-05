@@ -2,11 +2,30 @@
 #include "pch.h"
 
 
-
+/** Actual instance data for a vob */
 struct VobInstanceInfo
 {
 	D3DXMATRIX world;
 	DWORD color;
+
+	// General purpose slots
+	DWORD GP_Slot[3];
+};
+
+/** Remap-index for the static vobs */
+struct VobInstanceRemapInfo
+{
+	bool operator < (const VobInstanceRemapInfo& b) const
+	{
+		return InstanceRemapIndex < b.InstanceRemapIndex;
+	}
+
+	bool operator == (const VobInstanceRemapInfo& o) const
+	{
+		return InstanceRemapIndex == o.InstanceRemapIndex;
+	}
+
+	DWORD InstanceRemapIndex;
 };
 
 
@@ -230,6 +249,7 @@ struct ParticlePointShadingConstantBuffer
 struct VS_ExConstantBuffer_PerInstance
 {
 	D3DXMATRIX World;
+	float4 Color;
 };
 
 struct VS_ExConstantBuffer_PerInstanceSkeletal

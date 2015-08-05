@@ -15,13 +15,16 @@
 #include "GParticleFXVisual.h"
 #include "GDecalVisual.h"
 #include "zCTexture.h"
+#include "ThreadPool.h"
+#include "BasicTimer.h"
 
-const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceInfo) * 1024;
+const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceRemapInfo) * 1024;
 
 GWorld::GWorld(void)
 {
 	WorldMesh = NULL;
 	VobInstanceBuffer = NULL;
+	VobInstanceRemapBuffer = NULL;
 	NumRegisteredVobInstances = 0;
 	CurrentVobInstanceSlot = 0;
 }
@@ -31,12 +34,14 @@ GWorld::~GWorld(void)
 {
 	delete WorldMesh;
 	delete VobInstanceBuffer;
+	delete VobInstanceRemapBuffer;
 
 	Toolbox::DeleteElements<GVobObject*>(StaticVobList);
 	Toolbox::DeleteElements<GVobObject*>(DynamicVobList);
 	Toolbox::DeleteElements<zCVob*, GVobObject*>(VobMap);
 	Toolbox::DeleteElements<zCBspBase*, BspNodeInfo*>(BspMap);
 }
+
 
 /** Calculates the level of this node and all subnodes */
 int BspNodeInfo::CalculateLevels()
@@ -59,65 +64,108 @@ int BspNodeInfo::CalculateLevels()
 	return NumLevels;		
 }
 
+
+/** Renderproc for the worldmesh */
+void GWorld::DrawWorldMeshProc()
+{
+	GWorld* world = Engine::Game->GetWorld();
+	BasicTimer t;
+
+	t.Update();
+	world->WorldMesh->DrawMesh();
+	t.Update();
+	Engine::GAPI->GetRendererState()->RendererInfo.Timing.WorldMeshMS = t.GetDelta();
+}
+
+/** Renderproc for the vobs */
+void GWorld::DrawVobsProc()
+{
+	GWorld* world = Engine::Game->GetWorld();
+	BasicTimer t;
+	t.Update();
+
+	// Draw visible BSP-Nodes
+	world->BspDrawnVobs.clear();
+
+	// Traverse BSP-Tree and push states
+	world->DrawBspTreeVobs(world->BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()], 
+		Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()->BBox3D, CLIP_FLAGS_NO_FAR);
+
+	// Reset state on the drawn vobs
+	world->ResetBspDrawnVobs();
+
+	// Build instancing buffer
+	world->BuildVobInstanceRemapBuffer();
+	t.Update();
+	Engine::GAPI->GetRendererState()->RendererInfo.Timing.VobsMS = t.GetDelta();
+}
+
+/** Renderproc for the vobs */
+void GWorld::DrawDynamicVobsProc()
+{
+	GWorld* world = Engine::Game->GetWorld();
+	BasicTimer t;
+	t.Update();
+
+	// Draw dynamic vobs
+	world->DrawDynamicVobs();
+
+	t.Update();
+	Engine::GAPI->GetRendererState()->RendererInfo.Timing.SkeletalMeshesMS = t.GetDelta();
+}
+
+/** Called on render */
+void GWorld::DrawWorldThreaded()
+{
+	// Frustum-check-functions from gothic need this
+	if(zCCamera::GetCamera())
+		zCCamera::GetCamera()->Activate();
+
+	// Tell all visuals that the frame has started
+	BeginVisualFrame();
+		
+	// Push rendertasks
+	std::vector<std::future<void>> futures;
+	futures.push_back(Engine::RenderingThreadPool->enqueue(GWorld::DrawWorldMeshProc));
+	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs)
+		futures.push_back(Engine::RenderingThreadPool->enqueue(GWorld::DrawVobsProc));
+
+	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawDynamicVOBs)
+		futures.push_back(Engine::RenderingThreadPool->enqueue(GWorld::DrawDynamicVobsProc));
+
+	// Wait for all of them to finish
+	for each (auto && x in futures)
+	{
+		x.wait();
+	}
+
+	// Tell all visuals that the frame has ended
+	EndVisualFrame();
+
+	// Draw sky
+	Engine::GAPI->GetLoadedWorldInfo()->MainWorld->GetSkyControllerOutdoor()->RenderSkyPre();
+
+	// Draw main world
+	Engine::GraphicsEngine->FlushRenderQueue();
+
+	// Draw sun-effects
+	Engine::GAPI->GetLoadedWorldInfo()->MainWorld->GetSkyControllerOutdoor()->RenderSkyPost();
+}
+
 /** Called on render */
 void GWorld::DrawWorld()
 {
-	WorldMesh->DrawMesh();
-
-	
-
-	// Draw visible BSP-Nodes
-	BspDrawnVobs.clear();
-
-	
-	// Reset state on the drawn vobs
-	ResetBspDrawnVobs();
+	DrawWorldThreaded();
+	return;
 
 	// Frustum-check-functions from gothic need this
 	if(zCCamera::GetCamera())
 		zCCamera::GetCamera()->Activate();
 
-	// ---
-
-
-	// Tell all visuals that the frame has ended
-	EndVisualFrame();
-	DWORD start = timeGetTime();
-	int x = 0;
-	
-
-	struct matrix
-	{
-		float f[16];
-	};
-
-	/*std::vector<VobInstanceInfo> vis;
-
-	while(true)
-	{
-		for(int i=0;i<StaticVobList.size();i++)
-		{
-			//StaticVobList[i]->DrawVob();
-			//int j;
-			//RegisterVobInstance(-1, StaticVobList[i]->GetInstanceInfo(), &j);
-			vis.push_back(VobInstanceInfo());
-		}
-
-		vis.resize(0);
-
-		x++;
-
-		if(timeGetTime() - start > 1000)
-		{
-			start = timeGetTime();
-			OutputDebugString((std::to_string(x) + std::string(" times per second (" + std::to_string(StaticVobList.size()) + "times)\n")).c_str());
-			x=0;
-		}
-	}*/
+	WorldMesh->DrawMesh();
 
 	if(Engine::GAPI->GetRendererState()->RendererSettings.DrawVOBs)
 	{
-
 
 		// Tell all visuals that the frame has started
 		BeginVisualFrame();
@@ -129,52 +177,88 @@ void GWorld::DrawWorld()
 		if(zCCamera::GetCamera())
 			zCCamera::GetCamera()->Activate();
 
-		DrawBspTreeVobs(BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]);
+		DrawBspTreeVobs(BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()], 
+			Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()->BBox3D, 63);
 
 		// Reset state on the drawn vobs
 		ResetBspDrawnVobs();
 
 		// Build instancing buffer
-		BuildVobInstanceBuffer();
+		BuildVobInstanceRemapBuffer();
+
+		// Draw dynamic vobs
+		DrawDynamicVobs();
 
 		// Tell all visuals that the frame has ended
 		EndVisualFrame();
 	}
 
+	Engine::GAPI->GetLoadedWorldInfo()->MainWorld->GetSkyControllerOutdoor()->RenderSkyPre();
+
 	Engine::GraphicsEngine->FlushRenderQueue();
+
+	Engine::GAPI->GetLoadedWorldInfo()->MainWorld->GetSkyControllerOutdoor()->RenderSkyPost();
+}
+
+/** Draws all dynamic vobs */
+void GWorld::DrawDynamicVobs()
+{
+	for(int i=0;i<DynamicVobList.size();i++)
+	{
+		DynamicVobList[i]->DrawVob();
+	}
 }
 
 /** Begins the frame on visuals */
 void GWorld::BeginVisualFrame()
 {
-	for(auto it = VisualMap.begin();it!= VisualMap.end();it++)
-		(*it).second->OnBeginDraw();
+	DrawnVisuals.resize(0);
 }
 
 /** Ends the frame on visuals */
 void GWorld::EndVisualFrame()
 {
 	for(auto it = VisualMap.begin();it!= VisualMap.end();it++)
-		(*it).second->OnEndDraw();
+		if((*it).second)(*it).second->OnEndDraw();
 }
 
 /** Draws all vobs in the given node */
-void GWorld::PrepareBspNodeVobPipelineStates(BspNodeInfo* node, std::set<GVisual*>& drawnVisuals, std::vector<GVobObject*>& drawnVobs)
+void GWorld::PrepareBspNodeVobPipelineStates(BspNodeInfo* node)
 {
-
+	VobInstanceRemapInfo nullInstance;
+	nullInstance.InstanceRemapIndex = -1;
 
 	// Draw normal vobs
 	for(auto it = node->Vobs.begin(); it != node->Vobs.end(); it++)
 	{
 		GVobObject* vob = (*it);	
 
-		if(!vob->IsAlreadyCollectedFromTree())
+		if(!(*it)->GetVisual()->IsInstancingCapable())
+			continue;
+
+		// Get the indexpointer of this visual
+		int* idx = (*it)->GetVisual()->AddStaticInstance(nullInstance);
+		if(idx)
 		{
-			node->InstanceDataCache[vob->GetVisual()].push_back(vob->GetInstanceInfo());
-			//vob->DrawVob();	
-			vob->SetCollectedFromTreeSearch();
-			drawnVisuals.insert(vob->GetVisual());
-			drawnVobs.push_back(vob);
+			std::pair<int*,std::vector<VobInstanceRemapInfo>>* inst = NULL;
+			for(int i=0;i<node->InstanceDataCacheVobs.size();i++)
+			{
+				if(node->InstanceDataCacheVobs[i].first == vob->GetVisual())
+				{
+					inst = &node->InstanceDataCacheVobs[i].second;
+					break;
+				}
+			}
+
+			if(!inst)
+			{
+				node->InstanceDataCacheVobs.resize(node->InstanceDataCacheVobs.size()+1);
+				node->InstanceDataCacheVobs.back().first = vob->GetVisual();
+				inst = &node->InstanceDataCacheVobs.back().second;
+			}
+			
+			inst->first = idx;
+			inst->second.push_back(vob->GetInstanceRemapInfo());		
 		}
 	}
 
@@ -183,13 +267,32 @@ void GWorld::PrepareBspNodeVobPipelineStates(BspNodeInfo* node, std::set<GVisual
 	{
 		GVobObject* vob = (*it);
 
-		if(!vob->IsAlreadyCollectedFromTree())
+		if(!(*it)->GetVisual()->IsInstancingCapable())
+			continue;
+
+		// Get the indexpointer of this visual
+		int* idx = (*it)->GetVisual()->AddStaticInstance(nullInstance);
+		if(idx)
 		{
-			node->InstanceDataCache[vob->GetVisual()].push_back(vob->GetInstanceInfo());
-			//vob->DrawVob();	
-			vob->SetCollectedFromTreeSearch();
-			drawnVisuals.insert(vob->GetVisual());
-			drawnVobs.push_back(vob);
+			std::pair<int*,std::vector<VobInstanceRemapInfo>>* inst = NULL;
+			for(int i=0;i<node->InstanceDataCacheVobs.size();i++)
+			{
+				if(node->InstanceDataCacheVobs[i].first == vob->GetVisual())
+				{
+					inst = &node->InstanceDataCacheVobs[i].second;
+					break;
+				}
+			}
+
+			if(!inst)
+			{
+				node->InstanceDataCacheVobs.resize(node->InstanceDataCacheVobs.size()+1);
+				node->InstanceDataCacheVobs.back().first = vob->GetVisual();
+				inst = &node->InstanceDataCacheVobs.back().second;
+			}
+			
+			inst->first = idx;
+			inst->second.push_back(vob->GetInstanceRemapInfo());			
 		}
 	}
 
@@ -198,13 +301,32 @@ void GWorld::PrepareBspNodeVobPipelineStates(BspNodeInfo* node, std::set<GVisual
 	{
 		GVobObject* vob = (*it);
 
-		if(!vob->IsAlreadyCollectedFromTree())
+		if(!(*it)->GetVisual()->IsInstancingCapable())
+			continue;
+
+		// Get the indexpointer of this visual
+		int* idx = (*it)->GetVisual()->AddStaticInstance(nullInstance);
+		if(idx)
 		{
-			node->InstanceDataCache[vob->GetVisual()].push_back(vob->GetInstanceInfo());
-			//vob->DrawVob();	
-			vob->SetCollectedFromTreeSearch();
-			drawnVisuals.insert(vob->GetVisual());
-			drawnVobs.push_back(vob);
+			std::pair<int*,std::vector<VobInstanceRemapInfo>>* inst = NULL;
+			for(int i=0;i<node->InstanceDataCacheVobs.size();i++)
+			{
+				if(node->InstanceDataCacheVobs[i].first == vob->GetVisual())
+				{
+					inst = &node->InstanceDataCacheVobs[i].second;
+					break;
+				}
+			}
+
+			if(!inst)
+			{
+				node->InstanceDataCacheVobs.resize(node->InstanceDataCacheVobs.size()+1);
+				node->InstanceDataCacheVobs.back().first = vob->GetVisual();
+				inst = &node->InstanceDataCacheVobs.back().second;
+			}
+			
+			inst->first = idx;
+			inst->second.push_back(vob->GetInstanceRemapInfo());		
 		}
 	}
 
@@ -228,20 +350,33 @@ void GWorld::PrepareBspNodeVobPipelineStates(BspNodeInfo* node, std::set<GVisual
 }
 
 /** Draws all visible vobs in the tree */
-void GWorld::PrepareBspTreePipelineStates(BspNodeInfo* base, std::set<GVisual*>& drawnVisuals, std::vector<GVobObject*>& drawnVobs)
+void GWorld::PrepareBspTreePipelineStates(BspNodeInfo* base)
 {
 	if(!base)
 		return;
 
+	// Get prepare vobs for this node
+	PrepareBspNodeVobPipelineStates(base);
+
+	// Fix up the IDs so they don't contain any doubles
+	for(auto it = base->InstanceDataCacheVobs.begin();it != base->InstanceDataCacheVobs.end(); it++)
+		Toolbox::RemoveDoubles((*it).second.second);
+
+	for(auto it = base->InstanceDataCacheSmallVobs.begin();it != base->InstanceDataCacheSmallVobs.end(); it++)
+		Toolbox::RemoveDoubles((*it).second.second);
+
+	for(auto it = base->InstanceDataCacheIndoorVobs.begin();it != base->InstanceDataCacheIndoorVobs.end(); it++)
+		Toolbox::RemoveDoubles((*it).second.second);
+
 	if(base->OriginalNode->IsLeaf())
 	{
 		// Just draw everything here
-		PrepareBspNodeVobPipelineStates(base, drawnVisuals, drawnVobs);
+		//PrepareBspNodeVobPipelineStates(base);
 	}else
 	{
 		// We are just a node, continue with the tree
-		PrepareBspTreePipelineStates(base->Front, drawnVisuals, drawnVobs);
-		PrepareBspTreePipelineStates(base->Back, drawnVisuals, drawnVobs);
+		PrepareBspTreePipelineStates(base->Front);
+		PrepareBspTreePipelineStates(base->Back);
 	}
 }
 
@@ -251,96 +386,164 @@ void GWorld::PrepareBspTreeVobs(BspNodeInfo* base)
 	if(!base) // Little shortcut for better readability later
 		return;
 
-	// Clear queue, because we only want the states of this particular node
-	Engine::GraphicsEngine->ClearRenderingQueue();
-
-	// Force cachein of textures
-	// TODO: This might be bad, because it would load every single texture in the world
-	//		 Probably only precompute the nodes if they get visible for the first time
-	//		 Also make sure the textures won't be cached out, or if they are, take the state with them!
-	//		 Another option would be to give the zCTexture-Pointer into the states to make sure their textures are loaded
-	zCTextureCacheHack::ForceCacheIn = true;
-
-	std::set<GVisual*> drawnVisuals;
-	std::vector<GVobObject*> drawnVobs;
-
-	// Init instancing-buffers
-	//BeginVisualFrame();
-
-	// Create the pipeline states
-	PrepareBspTreePipelineStates(base, drawnVisuals, drawnVobs);
-
-	// Unmap instancingbuffers again
-	//EndVisualFrame();
-
-	// Switch buffers for all drawn visuals, because we need to keep them now
-	// Leaving them would cause them to be overwritten by other nodes drawing these visuals
-	// Therefore we also need to delete all the states ourselfs
-	/*for(auto it = drawnVisuals.begin(); it != drawnVisuals.end(); it++)
+	// Fill instancingbuffer with everything that is loaded now
+	std::vector<VobInstanceInfo> instances;
+	for(auto it = StaticVobList.begin();it!=StaticVobList.end();it++)
 	{
-		(*it)->SwitchInstanceSpecificResources();
-	}*/
+		if(!(*it)->GetVisual()->IsInstancingCapable())
+			continue;
 
-	for(auto it = drawnVobs.begin(); it != drawnVobs.end(); it++)
-	{
-		(*it)->ResetTreeSearchState();
+		// Set the vobs instance index, so we can remap it to it's actual data later
+		(*it)->SetInstanceIndex(instances.size());
+
+		instances.push_back((*it)->GetInstanceInfo());
 	}
 
-	// Save the statelist we have in this node
-	// TODO: Recreate if one object was moved to dynamic list!
-	base->StaticObjectPipelineStates = Engine::GraphicsEngine->GetRenderQueue();
+	// Create and initialize global static instance buffer
+	Engine::GraphicsEngine->CreateVertexBuffer(&VobInstanceBuffer);
 
-	// Clear again, so we don't mess up further frames
-	Engine::GraphicsEngine->ClearRenderingQueue();
-
-	// Disable hack to not mess up further drawing
-	zCTextureCacheHack::ForceCacheIn = false;
-
+	// Init it as structured buffer for shader access
+	VobInstanceBuffer->Init(&instances[0], 
+		instances.size() * sizeof(VobInstanceInfo), 
+		BaseVertexBuffer::B_SHADER_RESOURCE, 
+		BaseVertexBuffer::U_IMMUTABLE, 
+		BaseVertexBuffer::CA_NONE, 
+		"GlobalVobInstanceBuffer",
+		sizeof(VobInstanceInfo));
 
 	// Continue with the tree, if possible
-	PrepareBspTreeVobs(base->Front);
-	PrepareBspTreeVobs(base->Back);
+	//PrepareBspTreeVobs(base->Front);
+	//PrepareBspTreeVobs(base->Back);
 }
 
 
 /** Draws all visible vobs in the tree */
-void GWorld::DrawBspTreeVobs(BspNodeInfo* base)
+void GWorld::DrawBspTreeVobs(BspNodeInfo* base, zTBBox3D boxCell, int clipFlags)
 {
+	if(!base)
+		return;
+
+	/*D3DXVECTOR3 camPos = Engine::GAPI->GetCameraPosition();
+	float vobOutdoorDist = Engine::GAPI->GetRendererState()->RendererSettings.OutdoorVobDrawRadius;
+	zTCam_ClipType nodeClip = ZTCAM_CLIPTYPE_OUT;
+	float dist = Toolbox::ComputePointAABBDistance(camPos, base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max);
+
+	while(base && base->OriginalNode)
+	{
+		//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, D3DXVECTOR4(1,1,0,1));
+
+		if (clipFlags>0) 
+		{
+			float yMaxWorld = Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode() ?
+				Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()->BBox3D.Max.y :
+				10000.0f; // FIXME: Why does this even happen?
+
+			zTBBox3D nodeBox = base->OriginalNode->BBox3D;
+
+			
+			if(dist < vobOutdoorDist)
+			{
+				// Test this node agains the camera frustum. Store the plane it failed against, because it's likely to fail on that in the next frame again
+				if(dist > 0)
+				{
+					nodeClip = Toolbox::BBox3DInFrustumCached(nodeBox, zCCamera::GetCamera()->GetFrustumPlanes(), zCCamera::GetCamera()->GetFrustumSignBits(), base->FrustumFailCache);
+					//nodeClip = zCCamera::GetCamera()->BBox3DInFrustum(nodeBox, clipFlags);
+				
+					if (nodeClip==ZTCAM_CLIPTYPE_OUT) 
+						return; // Nothig to see here. Discard this node and the subtree}
+				}else
+				{
+					// If dist is 0.0f, we are inside the box. No need to do a frustumtest for that
+					nodeClip = ZTCAM_CLIPTYPE_CROSSING;
+				}
+			}else
+			{
+				// Too far
+				return;
+			}
+		}
+
+		// Is the whole node visible? If so, draw everything inside it
+		// Also draw it if this is a crossing leaf, or the node isn't too huge
+		// Gothics BSP-Trees can get really stupid and huge sometimes, we don't need all the 
+		// precision here, it hurts instancing.
+		if(base->OriginalNode->IsLeaf() || base->NumLevels < 6 || nodeClip == ZTCAM_CLIPTYPE_IN)
+		{
+			//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, D3DXVECTOR4(0,1,0,1));
+
+			// Draw non instanceable stuff
+			DrawBspNodeVobs(base, dist);
+
+			// Draw instanced stuff
+			DrawPreparedPipelineStates(base, dist);
+			return;
+		}else
+		{
+			//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, D3DXVECTOR4(1,1,0,1));
+
+			zCBspNode* node = (zCBspNode *)base->OriginalNode;
+
+			int	planeAxis = node->PlaneSignbits;
+
+			boxCell.Min.y	= node->BBox3D.Min.y;
+			boxCell.Max.y	= node->BBox3D.Min.y;
+
+			zTBBox3D tmpbox = boxCell;
+			if (D3DXVec3Dot(&node->Plane.Normal, &camPos) > node->Plane.Distance)
+			{ 
+				if(node->Front) 
+				{
+					((float *)&tmpbox.Min)[planeAxis] = node->Plane.Distance;
+
+					// Continue the tree
+					DrawBspTreeVobs(base->Front, tmpbox, clipFlags);
+				}
+
+				((float *)&boxCell.Max)[planeAxis] = node->Plane.Distance;
+
+				// Try back-node
+				base = base->Back;
+
+			} else 
+			{
+				if (node->Back ) 
+				{
+					((float *)&tmpbox.Max)[planeAxis] = node->Plane.Distance;
+					
+					// Continue the tree
+					DrawBspTreeVobs(base->Back, tmpbox, clipFlags);
+				}
+
+				((float *)&boxCell.Min)[planeAxis] = node->Plane.Distance;
+
+				// Try front-node
+				base = base->Front;
+			}
+		}
+	}*/
+
 	if(!base) // Little shortcut for better readability later
 		return;
 
-	/*for each(std::pair<zCVob*, GVobObject*> obj in VobMap)
-	{
-		obj.second->DrawVob();
-		//BspDrawnVobs.push_back(obj.second);
-	}*/
-
-	//for each(GVobObject* obj in StaticVobList)
-	/*for(int i=0;i<StaticVobList.size();i++)
-	{
-		StaticVobList[i]->DrawVob();
-	}
-	return;*/
+	const float vobOutdoorDist = Engine::GAPI->GetRendererState()->RendererSettings.OutdoorVobDrawRadius;
 
 	float dist = Toolbox::ComputePointAABBDistance(Engine::GAPI->GetCameraPosition(), base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max);
-	if(dist > Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE)
+	if(dist > Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE
+		|| dist > vobOutdoorDist)
 		return;
 
-	// Draw everything visible in the bsp-tree
-	//DrawPreparedPipelineStatesRec(base, base->OriginalNode->BBox3D, 63);
-	//return;
-
-	if(base->OriginalNode->IsLeaf())
+	if(base->OriginalNode->IsLeaf() || base->NumLevels < 5)
 	{
 		// Just draw everything here
-		DrawBspNodeVobs(base, dist);
+		DrawPreparedPipelineStates(base, dist);
 
-		//DrawPreparedPipelineStates(base);
+		//if(base->NumLevels < 5)
+		//	Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, D3DXVECTOR4(0,0,1,1));
 	}else
 	{
 		// We are just a node, continue with the tree
-		DrawBspTreeVobs(base->Front);
-		DrawBspTreeVobs(base->Back);
+		DrawBspTreeVobs(base->Front, boxCell, clipFlags);
+		DrawBspTreeVobs(base->Back, boxCell, clipFlags);
 	}
 }
 
@@ -388,7 +591,7 @@ void GWorld::DrawPreparedPipelineStatesRec(BspNodeInfo* base, zTBBox3D boxCell, 
 		{
 			//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, D3DXVECTOR4(0,1,0,1));
 
-			DrawPreparedPipelineStates(base);
+			DrawPreparedPipelineStates(base, 0.0f);
 			return;
 		}else
 		{
@@ -437,38 +640,58 @@ void GWorld::DrawPreparedPipelineStatesRec(BspNodeInfo* base, zTBBox3D boxCell, 
 }
 
 /** Draws the prepared pipelinestates of a BSP-Node */
-void GWorld::DrawPreparedPipelineStates(BspNodeInfo* node)
+void GWorld::DrawPreparedPipelineStates(BspNodeInfo* node, float nodeDistance)
 {
-	// Draw all instances
-	for(auto it = node->InstanceDataCache.begin();it != node->InstanceDataCache.end();it++)
+	const float vobIndoorDist = Engine::GAPI->GetRendererState()->RendererSettings.IndoorVobDrawRadius;
+	const float vobOutdoorDist = Engine::GAPI->GetRendererState()->RendererSettings.OutdoorVobDrawRadius;
+	const float vobOutdoorSmallDist = Engine::GAPI->GetRendererState()->RendererSettings.OutdoorSmallVobDrawRadius;
+
+	// Array of our nodes renderlists
+	std::vector<std::pair<GVisual*, std::pair<int*,std::vector<VobInstanceRemapInfo>>>>* lists[] = {&node->InstanceDataCacheVobs,&node->InstanceDataCacheSmallVobs, &node->InstanceDataCacheIndoorVobs};
+
+	// Max renderdistance for the elements in the array above
+	float distances[] = {vobOutdoorDist, vobOutdoorSmallDist, vobIndoorDist};
+
+	for(int i=0;i<3;i++)
 	{
-		byte* data;
-		int size;
+		// Don't render this part if it's too far away
+		if(nodeDistance > distances[i])
+			continue;
 
-		// Map the internal buffer
-		(*it).first->BeginDrawInstanced();
+		auto map = lists[i];
 
-
-		// Make sure the visual has time to increase the buffersize if needed and add our instances
-		(*it).first->OnAddInstances((*it).second.size(), &(*it).second[0]);
-	}
-
-
-	/*for(auto it = node->StaticObjectPipelineStates.begin(); it != node->StaticObjectPipelineStates.end(); it++)
-	{
-		PipelineState* s = (*it)->AssociatedState;
-
-		if(!s->BaseState.BSPSkipState)
+		for(auto it = map->begin();it !=map->end(); it++)
 		{
-			if(s->BaseState.TextureIDs[0] != 0xFFFF)
-			{
-				// Add state to renderqueue
-				Engine::GraphicsEngine->PushPipelineState(s);
-			}
+			std::vector<VobInstanceRemapInfo>& instances = (*it).second.second;
+			GVisual* visual = (*it).first;
+			int* idx = (*it).second.first;
 
-			s->BaseState.BSPSkipState = true;
+			if(!instances.empty())
+			{
+				int numLeft = instances.size();
+
+				// Add once so we get an updated instance-index
+				if(*idx == -1)
+				{
+					visual->AddStaticInstance(instances[0]);
+					numLeft--;
+				}
+
+				// Batch the rest			
+				if(numLeft)
+				{
+					int start = RegisteredVobInstances[*idx].second.size();
+					RegisteredVobInstances[*idx].second.insert(RegisteredVobInstances[*idx].second.end(),
+						&instances[instances.size() - numLeft], &instances[instances.size()]);
+					//RegisteredVobInstances[*idx].second.resize(RegisteredVobInstances[*idx].second.size() + numLeft);
+					//memcpy(&RegisteredVobInstances[*idx].second[start], &instances[instances.size() - numLeft], numLeft * sizeof(VobInstanceRemapInfo));
+					NumRegisteredVobInstances += numLeft;
+
+					(*it).first->OnAddInstances(numLeft, NULL);
+				}
+			}
 		}
-	}*/
+	}
 }
 
 /** Draws all vobs in the given node */
@@ -484,7 +707,7 @@ void GWorld::DrawBspNodeVobs(BspNodeInfo* node, float nodeDistance)
 	// Draw normal vobs
 	if(nodeDistance < vobOutdoorDist)
 	{
-		for(auto it = node->Vobs.begin(); it != node->Vobs.end(); it++)
+		for(auto it = node->NonInstanceableVobs.begin(); it != node->NonInstanceableVobs.end(); it++)
 		{
 			GVobObject* vob = (*it);
 
@@ -501,7 +724,7 @@ void GWorld::DrawBspNodeVobs(BspNodeInfo* node, float nodeDistance)
 	// Draw small vobs
 	if(nodeDistance < vobOutdoorSmallDist)
 	{
-		for(auto it = node->SmallVobs.begin(); it != node->SmallVobs.end(); it++)
+		for(auto it = node->NonInstanceableSmallVobs.begin(); it != node->NonInstanceableSmallVobs.end(); it++)
 		{
 			GVobObject* vob = (*it);
 
@@ -518,7 +741,7 @@ void GWorld::DrawBspNodeVobs(BspNodeInfo* node, float nodeDistance)
 	// Draw indoor vobs
 	if(nodeDistance < vobIndoorDist)
 	{
-		for(auto it = node->IndoorVobs.begin(); it != node->IndoorVobs.end(); it++)
+		for(auto it = node->NonInstanceableIndoorVobs.begin(); it != node->NonInstanceableIndoorVobs.end(); it++)
 		{
 			GVobObject* vob = (*it);
 
@@ -533,13 +756,13 @@ void GWorld::DrawBspNodeVobs(BspNodeInfo* node, float nodeDistance)
 	}
 
 	// Draw indoor lights
-	if(nodeDistance < visualFXDrawRadius / 2.0f)
+	/*if(nodeDistance < visualFXDrawRadius / 2.0f)
 	{
 		for(auto it = node->IndoorLights.begin(); it != node->IndoorLights.end(); it++)
 		{
 			GVobObject* vob = (*it);
 
-			if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+			if(!vob->IsAlreadyCollectedFromTree())
 			{
 				// Just draw // TODO: Implement culling
 				vob->DrawVob();
@@ -556,7 +779,7 @@ void GWorld::DrawBspNodeVobs(BspNodeInfo* node, float nodeDistance)
 		{
 			GVobObject* vob = (*it);
 
-			if(!vob->IsAlreadyCollectedFromTree() /*&& D3DXVec3Length(&(vob->GetSourceVob()->GetPositionWorld() - Engine::GAPI->GetCameraPosition())) < dist*/)
+			if(!vob->IsAlreadyCollectedFromTree())
 			{
 				// Just draw // TODO: Implement culling
 				vob->DrawVob();
@@ -564,7 +787,7 @@ void GWorld::DrawBspNodeVobs(BspNodeInfo* node, float nodeDistance)
 				BspDrawnVobs.push_back(vob);
 			}
 		}
-	}
+	}*/
 }
 
 /** Extracts all vobs from the bsp-tree, resets old tree */
@@ -577,7 +800,9 @@ void GWorld::BuildBSPTree(zCBspTree* bspTree)
 	BuildBspTreeHelper(bspTree->GetRootNode());
 
 	// Prepare rendering
-	// PrepareBspTreeVobs(BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]);
+	PrepareBspTreeVobs(BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]);
+
+	PrepareBspTreePipelineStates(BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]);
 
 	// Calculate levels of the tree
 	BspMap[Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetRootNode()]->CalculateLevels();
@@ -639,6 +864,11 @@ void GWorld::BuildBspTreeHelper(zCBspBase* base)
 
 							bvi->IndoorVobs.push_back(v);	
 						}
+
+						// Add to non instancing-list if wanted
+						if(!v->GetVisual()->IsInstancingCapable())
+							bvi->NonInstanceableIndoorVobs.push_back(v);	
+
 					}
 					else if(v->GetVisual()->GetVisualSize() < vobSmallSize)
 					{
@@ -649,6 +879,10 @@ void GWorld::BuildBspTreeHelper(zCBspBase* base)
 
 							bvi->SmallVobs.push_back(v);
 						}
+
+						// Add to non instancing-list if wanted
+						if(!v->GetVisual()->IsInstancingCapable())
+							bvi->NonInstanceableSmallVobs.push_back(v);
 					}
 					else
 					{
@@ -659,6 +893,10 @@ void GWorld::BuildBspTreeHelper(zCBspBase* base)
 
 							bvi->Vobs.push_back(v);
 						}
+
+						// Add to non instancing-list if wanted
+						if(!v->GetVisual()->IsInstancingCapable())
+							bvi->NonInstanceableVobs.push_back(v);
 					}
 				}
 			}
@@ -671,6 +909,25 @@ void GWorld::BuildBspTreeHelper(zCBspBase* base)
 
 		BuildBspTreeHelper(node->Front);
 		BuildBspTreeHelper(node->Back);
+
+		// Get all child vobs
+		zCBspBase* chd[2] = {node->Front, node->Back};
+		for(int i=0;i<2;i++)
+		{
+			if(!chd[i])
+				continue;
+
+			BspNodeInfo* cn = BspMap[chd[i]];
+			bvi->Vobs.insert(bvi->Vobs.end(), cn->Vobs.begin(), cn->Vobs.end());
+			bvi->IndoorVobs.insert(bvi->IndoorVobs.end(), cn->IndoorVobs.begin(), cn->IndoorVobs.end());
+			bvi->SmallVobs.insert(bvi->SmallVobs.end(), cn->SmallVobs.begin(), cn->SmallVobs.end());
+			bvi->IndoorLights.insert(bvi->IndoorLights.end(), cn->IndoorLights.begin(), cn->IndoorLights.end());
+			bvi->Lights.insert(bvi->Lights.end(), cn->Lights.begin(), cn->Lights.end());
+
+			bvi->NonInstanceableVobs.insert(bvi->NonInstanceableVobs.end(), cn->NonInstanceableVobs.begin(), cn->NonInstanceableVobs.end());
+			bvi->NonInstanceableIndoorVobs.insert(bvi->NonInstanceableIndoorVobs.end(), cn->NonInstanceableIndoorVobs.begin(), cn->NonInstanceableIndoorVobs.end());
+			bvi->NonInstanceableSmallVobs.insert(bvi->NonInstanceableSmallVobs.end(), cn->NonInstanceableSmallVobs.begin(), cn->NonInstanceableSmallVobs.end());
+		}
 
 		// Save front and back to this
 		bvi->Front = BspMap[node->Front];
@@ -703,9 +960,6 @@ void GWorld::AddVob(zCVob* vob, zCWorld* world, bool forceDynamic)
 			LogError() << "Failed to load visual: " << vob->GetVisual()->GetObjectName();
 			return; 
 		}
-
-		// Register it in our map
-		VisualMap[vob->GetVisual()] = visual;
 	}
 
 
@@ -713,45 +967,72 @@ void GWorld::AddVob(zCVob* vob, zCWorld* world, bool forceDynamic)
 	// If we got here, v must be NULL.
 	v = new GVobObject(vob, visual);
 
+	if(!visual->IsInstancingCapable())
+		forceDynamic = true; // FIXME: That's not optimal for all vobs! (Mobs like benches for example)
+
 	// Insert into vob-map
 	VobMap[vob] = v;
-	RegisterSingleVob(v, forceDynamic);
+	RegisterSingleVob(v, forceDynamic || !BspMap.empty());
 }
 
 /** Creates the right type of visual from the source */
 GVisual* GWorld::CreateVisualFrom(zCVisual* sourceVisual)
 {
+	GVisual* visual;
 	switch(sourceVisual->GetVisualType())
 	{
 	case zCVisual::VT_PROGMESHPROTO:
-		return new GStaticMeshVisual(sourceVisual);
+		visual = new GStaticMeshVisual(sourceVisual);
 		break;
 
 	case zCVisual::VT_MODEL:
-		return new GModelVisual(sourceVisual);
+		visual =  new GModelVisual(sourceVisual);
 		break;
 
 	case zCVisual::VT_MORPHMESH:
-		return new GMorphMeshVisual(sourceVisual);
+		visual =  new GMorphMeshVisual(sourceVisual);
 		break;
 
 	case zCVisual::VT_PARTICLE_FX:
-		return new GParticleFXVisual(sourceVisual);
+		visual =  new GParticleFXVisual(sourceVisual);
 		break;
 
 	case zCVisual::VT_DECAL:
-		return new GDecalVisual(sourceVisual);
+		visual =  new GDecalVisual(sourceVisual);
 		break;
 
 	default:
-		return NULL;
+		visual =  NULL;
+	}
+
+	// Register in visualmap straight away
+	VisualMap[sourceVisual] = visual;
+
+	return visual;
+}
+
+/** Called when a vob moved */
+void GWorld::OnVobMoved(zCVob* vob)
+{
+	// Get GVobObject for this vob
+	auto gv = VobMap.find(vob);
+
+	if(gv != VobMap.end() && gv->second)
+	{
+		// Send data to the GPU
+		gv->second->UpdateVobConstantBuffer();
 	}
 }
 
 /** Returns the matching GVisual from the given zCVisual */
 GVisual* GWorld::GetVisualFrom(zCVisual* sourceVisual)
 {
-	return VisualMap[sourceVisual];
+	auto it = VisualMap.find(sourceVisual);
+	
+	if(it != VisualMap.end())
+		return (*it).second;
+
+	return NULL;
 }
 
 /** Creates a model-proto form the given object */
@@ -837,14 +1118,14 @@ void GWorld::ResetBspDrawnVobs()
 /** Registers a vob instance at the given slot.
 		Enter -1 for a new slot.
 		Returns the used slot. */
-int GWorld::RegisterVobInstance(int slot, const VobInstanceInfo& instance, int* instanceTypeOffset)
+int GWorld::RegisterVobInstance(int slot, const VobInstanceRemapInfo& instance, int* instanceTypeOffset)
 {
 	if(slot == -1)
 	{
 		slot = CurrentVobInstanceSlot;
 
 		if(CurrentVobInstanceSlot == RegisteredVobInstances.size())
-			RegisteredVobInstances.push_back(std::make_pair(instanceTypeOffset,std::vector<VobInstanceInfo>()));
+			RegisteredVobInstances.push_back(std::make_pair(instanceTypeOffset,std::vector<VobInstanceRemapInfo>()));
 		else
 			RegisteredVobInstances[slot].first = instanceTypeOffset;
 
@@ -858,33 +1139,33 @@ int GWorld::RegisterVobInstance(int slot, const VobInstanceInfo& instance, int* 
 }
 
 /** Builds the vob instancebuffer */
-void GWorld::BuildVobInstanceBuffer()
+void GWorld::BuildVobInstanceRemapBuffer()
 {
-	UINT size = NumRegisteredVobInstances * sizeof(VobInstanceInfo);
+	UINT size = NumRegisteredVobInstances * sizeof(VobInstanceRemapInfo);
 
-	if(!VobInstanceBuffer)
+	if(!VobInstanceRemapBuffer)
 	{
-		Engine::GraphicsEngine->CreateVertexBuffer(&VobInstanceBuffer);
+		Engine::GraphicsEngine->CreateVertexBuffer(&VobInstanceRemapBuffer);
 
 		// Init it
-		VobInstanceBuffer->Init(NULL, INSTANCING_BUFFER_SIZE, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		VobInstanceRemapBuffer->Init(NULL, StaticVobList.size() * sizeof(VobInstanceRemapInfo), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
 	}
 
 	// Too small?
-	if(VobInstanceBuffer->GetSizeInBytes() < size)
+	if(VobInstanceRemapBuffer->GetSizeInBytes() < size)
 	{
 		// Recreate the buffer
-		delete VobInstanceBuffer;
-		Engine::GraphicsEngine->CreateVertexBuffer(&VobInstanceBuffer);
+		delete VobInstanceRemapBuffer;
+		Engine::GraphicsEngine->CreateVertexBuffer(&VobInstanceRemapBuffer);
 
 		// Create a new buffer with the size doubled
-		XLE(VobInstanceBuffer->Init(NULL, size * 2, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE));
+		XLE(VobInstanceRemapBuffer->Init(NULL, size * 2, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE));
 	}
 
 	// Fill buffer
 	byte* mappedData;
 	UINT bsize;
-	if (XR_SUCCESS == VobInstanceBuffer->Map(BaseVertexBuffer::EMapFlags::M_WRITE_DISCARD, (void**)&mappedData, &bsize))
+	if (XR_SUCCESS == VobInstanceRemapBuffer->MapDeferred(BaseVertexBuffer::EMapFlags::M_WRITE_DISCARD, (void**)&mappedData, &bsize))
 	{
 		MappedInstanceData = mappedData;
 		// Copy data
@@ -893,9 +1174,11 @@ void GWorld::BuildVobInstanceBuffer()
 		{
 			if(!RegisteredVobInstances[i].second.empty())
 			{
+				//Toolbox::RemoveDoubles(RegisteredVobInstances[i].second);
+
 				// Get the offset to the visual
 				*RegisteredVobInstances[i].first = off;
-				memcpy(mappedData + off * sizeof(VobInstanceInfo), &RegisteredVobInstances[i].second[0], RegisteredVobInstances[i].second.size() * sizeof(VobInstanceInfo));
+				memcpy(mappedData + off * sizeof(VobInstanceRemapInfo), &RegisteredVobInstances[i].second[0], RegisteredVobInstances[i].second.size() * sizeof(VobInstanceRemapInfo));
 
 				// Increase offset
 				off += RegisteredVobInstances[i].second.size();
@@ -905,7 +1188,7 @@ void GWorld::BuildVobInstanceBuffer()
 			}
 		}
 
-		VobInstanceBuffer->Unmap();
+		VobInstanceRemapBuffer->UnmapDeferred();
 	}
 
 	//RegisteredVobInstances.resize(0);

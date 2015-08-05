@@ -8,6 +8,13 @@
 #include <ddraw.h>
 #include <d3d11.h>
 
+enum ETextureType
+{
+	TX_UNDEF,
+	TX_LEAF,
+	TX_WOOD,
+};
+
 class zCTexture;
 class BaseTexture;
 class MyDirectDrawSurface7 : public IDirectDrawSurface7
@@ -104,6 +111,9 @@ public:
 
 	/** Returns whether the mip-maps were put into the command queue or not */
 	bool MipMapsInQueue();
+
+	/** Returns the type of this texture */
+	ETextureType GetTextureType(){ return TextureType;};
 private:
 	
 	/** Faked attached surfaces for the mipmaps */
@@ -122,6 +132,7 @@ private:
 
 	/** Associated Name */
 	std::string TextureName;
+	ETextureType TextureType;
 
 	/** Additional maps */
 	BaseTexture* Normalmap;

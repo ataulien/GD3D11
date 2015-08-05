@@ -94,7 +94,7 @@ XRESULT D3D11GShader::LoadShader(const char* geometryShader, std::vector<D3D10_S
 
 	ID3DBlob* gsBlob;
 
-	LogInfo() << "Compilling geometry shader: " << geometryShader;
+	LogInfo() << "Compiling geometry shader: " << geometryShader;
 	File = geometryShader;
 
 	if(!createStreamOutFromVS)

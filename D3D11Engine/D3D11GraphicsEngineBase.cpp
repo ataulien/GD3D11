@@ -52,6 +52,9 @@ D3D11GraphicsEngineBase::~D3D11GraphicsEngineBase(void)
 	GothicBlendStateInfo::DeleteCachedObjects();
 	GothicRasterizerStateInfo::DeleteCachedObjects();
 
+	for(int i=0;i<DeferredContextsAll.size();i++)
+		DeferredContextsAll[i]->Release();
+
 	delete TempVertexBuffer;
 	delete ShaderManager;
 	delete Backbuffer;
@@ -85,6 +88,7 @@ XRESULT D3D11GraphicsEngineBase::Init()
 
 	std::wstring wDeviceDescription(adpDesc.Description);
 	std::string deviceDescription(wDeviceDescription.begin(), wDeviceDescription.end());
+	DeviceDescription = deviceDescription;
 	LogInfo() << "Rendering on: " << deviceDescription.c_str();
 
 	int flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -121,8 +125,11 @@ XRESULT D3D11GraphicsEngineBase::Init()
 	PS_DiffuseNormalmappedAlphatest = ShaderManager->GetPShader("PS_DiffuseNormalmappedAlphaTest");
 	PS_DiffuseAlphatest = ShaderManager->GetPShader("PS_DiffuseAlphaTest");
 	PS_Simple = ShaderManager->GetPShader("PS_Simple");
+	PS_SimpleAlphaTest = ShaderManager->GetPShader("PS_SimpleAlphaTest");
 	VS_Ex = ShaderManager->GetVShader("VS_Ex");
 	VS_ExInstancedObj = ShaderManager->GetVShader("VS_ExInstancedObj");
+	VS_ExRemapInstancedObj = ShaderManager->GetVShader("VS_ExRemapInstancedObj");
+	VS_ExSkeletal = ShaderManager->GetVShader("VS_ExSkeletal");
 
 	// Create default sampler state
 	D3D11_SAMPLER_DESC samplerDesc;
@@ -285,6 +292,27 @@ XRESULT D3D11GraphicsEngineBase::OnResize(INT2 newSize)
 	return XR_SUCCESS;
 }
 
+/** Runs the deferred commandlists from the cached deferred contexts */
+void D3D11GraphicsEngineBase::ExecuteDeferredCommandLists()
+{
+	for(auto it=DeferredContextsByThread.begin();it != DeferredContextsByThread.end();it++)
+	{
+		ID3D11DeviceContext* ctx = (*it).second;
+		ID3D11CommandList* dc_cl = NULL;
+		ctx->FinishCommandList(true, &dc_cl);
+
+		if (dc_cl)
+		{
+			Context->ExecuteCommandList(dc_cl, true);
+			dc_cl->Release();
+		}
+	}
+
+	// Empty the current thread-pool contexts and restore the cache
+	DeferredContextsByThread.clear();
+	DeferredContextCache = DeferredContextsAll;
+}
+
 /** Called when the game wants to render a new frame */
 XRESULT D3D11GraphicsEngineBase::OnBeginFrame()
 {
@@ -356,8 +384,8 @@ D3D11ShaderManager* D3D11GraphicsEngineBase::GetShaderManager()
 XRESULT D3D11GraphicsEngineBase::Clear(const float4& color)
 {
 	Context->ClearDepthStencilView(DepthStencilBuffer->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	Context->ClearRenderTargetView(HDRBackBuffer->GetRenderTargetView(), (float *)&D3DXVECTOR4(0,0,0,0));
-	Context->ClearRenderTargetView(Backbuffer->GetRenderTargetView(), (float *)&D3DXVECTOR4(0,0,0,0));
+	Context->ClearRenderTargetView(HDRBackBuffer->GetRenderTargetView(), (float *)&color);
+	Context->ClearRenderTargetView(Backbuffer->GetRenderTargetView(), (float *)&color);
 
 	return XR_SUCCESS;
 }
@@ -524,9 +552,6 @@ XRESULT D3D11GraphicsEngineBase::OnStartWorldRendering()
 		return XR_FAILED;
 
 	PresentPending = true;
-
-	// Initial clear
-	Clear(float4(0,0,0,0));
 
 	// Update transforms
 	UpdateTransformsCB();
@@ -829,4 +854,108 @@ XRESULT D3D11GraphicsEngineBase::CreateShadowedPointLight(ShadowedPointLight** o
 		*outPL = NULL;
 
 	return XR_SUCCESS;
+}
+
+/** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
+XRESULT D3D11GraphicsEngineBase::DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride)
+{
+	SetupVS_ExMeshDrawCall();
+
+	// Bind the FF-Info to the first PS slot
+	ActivePS->GetConstantBuffer()[0]->UpdateBuffer(&Engine::GAPI->GetRendererState()->GraphicsState);
+	ActivePS->GetConstantBuffer()[0]->BindToPixelShader(0);
+
+	UINT offset = 0;
+	UINT uStride = stride;
+	ID3D11Buffer* buffer = ((D3D11VertexBuffer *)vb)->GetVertexBuffer();
+	Context->IASetVertexBuffers(0, 1, &buffer, &uStride, &offset);
+
+	//Draw the mesh
+	Context->Draw(numVertices, startVertex);
+
+	Engine::GAPI->GetRendererState()->RendererInfo.FrameDrawnTriangles += numVertices;
+
+	return XR_SUCCESS;
+}
+
+
+/** Binds viewport information to the given constantbuffer slot */
+XRESULT D3D11GraphicsEngineBase::BindViewportInformation(const std::string& shader, int slot) 
+{
+	D3D11_VIEWPORT vp;
+	UINT num = 1;
+	Context->RSGetViewports(&num, &vp);
+
+	// Update viewport information
+	float scale = Engine::GAPI->GetRendererState()->RendererSettings.GothicUIScale;
+	float2 f2[2];
+	f2[0].x = vp.TopLeftX / scale;
+	f2[0].y = vp.TopLeftY / scale;
+	f2[1].x = vp.Width / scale;
+	f2[1].y = vp.Height / scale;
+
+	D3D11PShader* ps = ShaderManager->GetPShader(shader);
+	D3D11VShader* vs = ShaderManager->GetVShader(shader);
+
+	if(vs)
+	{
+		vs->GetConstantBuffer()[slot]->UpdateBuffer(f2);
+		vs->GetConstantBuffer()[slot]->BindToVertexShader(slot);
+	}
+
+	if(ps)
+	{
+		ps->GetConstantBuffer()[slot]->UpdateBuffer(f2);
+		ps->GetConstantBuffer()[slot]->BindToVertexShader(slot);
+	}
+
+	return XR_SUCCESS;
+}
+
+/** Returns a deferred context for the calling thread ID. Creates a new one if there isn't one in cache.
+		Will be reset on present. */
+ID3D11DeviceContext* D3D11GraphicsEngineBase::GetDeferredContextByThread()
+{
+	int threadID = GetCurrentThreadId();
+	
+	if(threadID == Engine::GAPI->GetMainThreadID())
+		return Context;
+
+	DeferredContextsByThreadMutex.lock();
+
+	// Check if this already exists
+	auto it = DeferredContextsByThread.find(threadID);
+	if(it != DeferredContextsByThread.end())
+	{
+		DeferredContextsByThreadMutex.unlock();
+		return (*it).second;
+	}
+
+	// Check for exhausted cache
+	if(DeferredContextCache.empty())
+	{
+		// Cache exhausted, create a new context
+		HRESULT hr;
+		ID3D11DeviceContext* context;
+		LE(Device->CreateDeferredContext(0, &context));
+
+		// Add to total list
+		DeferredContextsAll.push_back(context);
+		DeferredContextCache.push_back(context);
+	}
+
+	// Get one from cache
+	ID3D11DeviceContext* context = DeferredContextCache.back();
+	DeferredContextsByThread[threadID] = context;
+	DeferredContextCache.pop_back();
+
+	DeferredContextsByThreadMutex.unlock();
+
+	return context;
+}
+
+/** Returns the graphics-device this is running on */
+std::string D3D11GraphicsEngineBase::GetGraphicsDeviceName()
+{
+	return DeviceDescription;
 }

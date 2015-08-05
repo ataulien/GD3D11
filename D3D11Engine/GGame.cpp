@@ -50,7 +50,8 @@ void GGame::OnVobMoved(zCVob* vob)
 	if(!ActiveWorld)
 		SwitchActiveWorld();
 
-	ActiveWorld->AddVob(vob, vob->GetHomeWorld(), true);
+	ActiveWorld->OnVobMoved(vob);
+	//ActiveWorld->AddVob(vob, vob->GetHomeWorld(), true);
 }
 
 /** Called on a SetVisual-Call of a vob */
@@ -79,10 +80,11 @@ void GGame::SwitchActiveWorld()
 	ActiveWorld = new GWorld;
 }
 
+
 /** Called on render */
 void GGame::DrawWorld()
 {
-	if(ActiveWorld && !Engine::GAPI->GetRendererState()->RendererSettings.DisableRendering)
+	if(ActiveWorld/* && !Engine::GAPI->GetRendererState()->RendererSettings.DisableRendering*/)
 	{
 		ActiveWorld->DrawWorld();
 	}

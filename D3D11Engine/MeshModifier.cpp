@@ -329,7 +329,7 @@ void MeshModifier::ComputePNAENIndices(const std::vector<ExVertexStruct>& inVert
 	// PNAEN algorithm from NVIDIA (http://developer.download.nvidia.com/whitepapers/2010/PN-AEN-Triangles-Whitepaper.pdf)
 	
 	// "For each edge, store the reverse of that edge in an easily searchable data structure for the next step. 
-	//  The reference implementation uses an stdext::hash_map<Edge,Edge> for this purpose"
+	//  The reference implementation uses an stdext::unordered_map<Edge,Edge> for this purpose"
 	std::unordered_map<PNAENEdge,PNAENEdge,PNAENKeyHasher> EdgeReverseMap;
 
 	// "Create an output IB that is 3 times the size of input IB"
@@ -524,7 +524,7 @@ void MeshModifier::ComputePNAEN18Indices(std::vector<ExVertexStruct>& inVertices
 	// PNAEN algorithm from NVIDIA (http://developer.download.nvidia.com/whitepapers/2010/PN-AEN-Triangles-Whitepaper.pdf)
 	
 	// "For each edge, store the reverse of that edge in an easily searchable data structure for the next step. 
-	//  The reference implementation uses an stdext::hash_map<Edge,Edge> for this purpose"
+	//  The reference implementation uses an stdext::unordered_map<Edge,Edge> for this purpose"
 	std::unordered_map<PNAENEdge,PNAENEdge,PNAENKeyHasher> EdgeReverseMap;
 
 	// "Create an output IB that is 3 times the size of input IB"

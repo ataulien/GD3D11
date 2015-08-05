@@ -38,14 +38,18 @@ public:
 	{
 		B_VERTEXBUFFER = D3D11_BIND_VERTEX_BUFFER,
 		B_INDEXBUFFER = D3D11_BIND_INDEX_BUFFER,
-		B_STREAM_OUT = D3D11_BIND_STREAM_OUTPUT
+		B_STREAM_OUT = D3D11_BIND_STREAM_OUTPUT,
+		B_SHADER_RESOURCE = D3D11_BIND_SHADER_RESOURCE,
 	};
 
 	/** Creates the vertexbuffer with the given arguments */
-	virtual XRESULT Init(void* initData, unsigned int sizeInBytes, EBindFlags EBindFlags = B_VERTEXBUFFER, EUsageFlags usage = EUsageFlags::U_DEFAULT, ECPUAccessFlags cpuAccess = ECPUAccessFlags::CA_NONE, const std::string& fileName = "") = 0;
+	virtual XRESULT Init(void* initData, unsigned int sizeInBytes, EBindFlags EBindFlags = B_VERTEXBUFFER, EUsageFlags usage = EUsageFlags::U_DEFAULT, ECPUAccessFlags cpuAccess = ECPUAccessFlags::CA_NONE, const std::string& fileName = "", unsigned int structuredByteSize = 0) = 0;
 
 	/** Updates the vertexbuffer with the given data */
 	virtual XRESULT UpdateBuffer(void* data, UINT size = 0) = 0;
+
+	/** Updates the vertexbuffer with the given data */
+	virtual XRESULT UpdateBufferDeferred(void* data, UINT size = 0) = 0;
 
 	/** Updates the vertexbuffer with the given data */
 	virtual XRESULT UpdateBufferAligned16(void* data, UINT size = 0) = 0;
@@ -55,6 +59,12 @@ public:
 
 	/** Unmaps the buffer */
 	virtual XRESULT Unmap() = 0;
+
+	/** Maps the buffer */
+	virtual XRESULT MapDeferred(int flags, void** dataPtr, UINT* size) = 0;
+
+	/** Unmaps the buffer */
+	virtual XRESULT UnmapDeferred() = 0;
 
 	/** Optimizes the given set of vertices */
 	virtual XRESULT OptimizeVertices(VERTEX_INDEX* indices, byte* vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride) = 0;

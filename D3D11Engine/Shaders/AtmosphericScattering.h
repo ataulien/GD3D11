@@ -2,7 +2,7 @@
 #ifndef ATMOSPHERIC_SCATTERING_H_
 #define ATMOSPHERIC_SCATTERING_H_
 
-static const float NIGHT_BRIGHTNESS = 1.5f;
+static const float NIGHT_BRIGHTNESS = 1.0f;
 
 cbuffer Atmosphere : register( b1 )
 {
@@ -136,7 +136,7 @@ float3 ApplyAtmosphericScatteringGround(float3 worldPosition, float3 in_color, b
 	
 	float3 dayColor = c0 + in_color * c1;
 	float3 nightColor = float3(0.20,0.20,0.4) * NIGHT_BRIGHTNESS;
-	nightColor = lerp(nightColor, float3(0.24,0.24,0.24) * NIGHT_BRIGHTNESS * 0.8f, AC_SceneWettness); // Grey fog when raining
+	nightColor = lerp(nightColor, float3(0.24,0.24,0.24) * NIGHT_BRIGHTNESS * 0.6f, AC_SceneWettness); // Grey fog when raining
 	float3 outColor;
 
 	if(applyNightshade)

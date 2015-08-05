@@ -36,13 +36,27 @@ GWorldMesh::GWorldMesh(zCBspTree* bspTree)
 			{
 				// Enter a new state for this submesh-part
 				PipelineStates.push_back(Engine::GraphicsEngine->CreatePipelineState());
+
+				// Check for alphatest
+				if((*it).first.Material->GetAlphaFunc() > 1 || 
+					((*it).first.Material->GetTexture() && (*it).first.Material->GetTexture()->HasAlphaChannel()))
+					PipelineStates.back()->BaseState.TranspacenyMode = PipelineState::ETransparencyMode::TM_MASKED;
+
 				Engine::GraphicsEngine->SetupPipelineForStage(STAGE_DRAW_WORLD, PipelineStates.back());
 
-				PipelineStates.back()->BaseState.DrawCallType = PipelineState::DCT_DrawIndexed;
+				/*PipelineStates.back()->BaseState.DrawCallType = PipelineState::DCT_DrawIndexed;
 				PipelineStates.back()->BaseState.VertexBuffers[0] = (*it).second->MeshVertexBuffer;
 				PipelineStates.back()->BaseState.IndexBuffer = (*it).second->MeshIndexBuffer;
 				PipelineStates.back()->BaseState.NumIndices = (*it).second->Indices.size();
+				PipelineStates.back()->BaseState.NumVertices = (*it).second->Vertices.size();*/
+				
+				PipelineStates.back()->BaseState.DrawCallType = PipelineState::DCT_DrawIndexed;
+				PipelineStates.back()->BaseState.VertexBuffers[0] = WrappedWorldMesh->MeshVertexBuffer;
+				PipelineStates.back()->BaseState.IndexBuffer = WrappedWorldMesh->MeshIndexBuffer;
+				PipelineStates.back()->BaseState.NumIndices = (*it).second->Indices.size();
 				PipelineStates.back()->BaseState.NumVertices = (*it).second->Vertices.size();
+				PipelineStates.back()->BaseState.IndexOffset = (*it).second->BaseIndexLocation;
+				PipelineStates.back()->BaseState.IndexStride = sizeof(UINT);
 
 				PipelineStates.back()->BaseState.SetCB(1, TransformsCB);
 
@@ -103,6 +117,24 @@ void GWorldMesh::DrawMesh()
 						(*it).first.Material->GetTexture()->GetSurface() &&
 						(*it).first.Material->GetTexture()->GetSurface()->GetEngineTexture())
 						PipelineStates[p]->BaseState.TextureIDs[0] = (*it).first.Material->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
+
+									// Check for alphatest
+					if((*it).first.Material->GetAlphaFunc() > 1 || 
+						((*it).first.Material->GetTexture() && (*it).first.Material->GetTexture()->HasAlphaChannel()))
+						PipelineStates[p]->BaseState.TranspacenyMode = PipelineState::ETransparencyMode::TM_MASKED;
+
+					Engine::GraphicsEngine->SetupPipelineForStage(STAGE_DRAW_WORLD, PipelineStates[p]);
+
+					// Need to set up that again, because SetupPipelineForStage overwrites some of it
+					PipelineStates[p]->BaseState.DrawCallType = PipelineState::DCT_DrawIndexed;
+					PipelineStates[p]->BaseState.VertexBuffers[0] = WrappedWorldMesh->MeshVertexBuffer;
+					PipelineStates[p]->BaseState.IndexBuffer = WrappedWorldMesh->MeshIndexBuffer;
+					PipelineStates[p]->BaseState.NumIndices = (*it).second->Indices.size();
+					PipelineStates[p]->BaseState.NumVertices = (*it).second->Vertices.size();
+					PipelineStates[p]->BaseState.IndexOffset = (*it).second->BaseIndexLocation;
+					PipelineStates[p]->BaseState.IndexStride = sizeof(UINT);
+
+					PipelineStates[p]->BaseState.SetCB(1, TransformsCB);
 
 					Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates[p]);
 				}

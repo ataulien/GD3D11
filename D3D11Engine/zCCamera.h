@@ -4,13 +4,8 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "BaseGraphicsEngine.h"
+#include "zTypes.h"
 
-enum zTCam_ClipType 
-{ 
-	ZTCAM_CLIPTYPE_IN, 
-	ZTCAM_CLIPTYPE_OUT, 
-	ZTCAM_CLIPTYPE_CROSSING 
-};
 
 class zCCamera
 {
@@ -119,10 +114,23 @@ public:
 		*f = freeLook;
 	}*/
 
+	/** Returns the frustumplanes */
+	zTPlane* GetFrustumPlanes()
+	{
+		return FrustumPlanes;
+	}
+
+	/** Returns the signbits for the frustumplanes */
+	byte* GetFrustumSignBits()
+	{
+		return SignBits;
+	}
+
 	static zCCamera* GetCamera(){return *(zCCamera**)GothicMemoryLocations::GlobalObjects::zCCamera;}
 
 	/** Frustum Planes in world space */
 	zTPlane FrustumPlanes[6];
+	byte SignBits[6];
 
 private:
 };

@@ -20,6 +20,8 @@ GVobObject::GVobObject(zCVob* sourceVob, GVisual* visual)
 
 	Engine::GraphicsEngine->CreateConstantBuffer(&VobConstantBuffer, NULL, sizeof(VS_ExConstantBuffer_PerInstance));
 	UpdateVobConstantBuffer();
+
+	State.InstanceRemapInfo.InstanceRemapIndex = 0;
 }
 
 
@@ -62,7 +64,7 @@ void GVobObject::UpdateVobConstantBuffer()
 {
 	VS_ExConstantBuffer_PerInstance cb;
 	cb.World = *SourceVob->GetWorldMatrixPtr();
-	VobConstantBuffer->UpdateBuffer(&cb);
+	VobConstantBuffer->UpdateBufferDeferred(&cb);
 
 	// Colorize the vob according to the underlaying polygon
 	if(State.IsIndoorVob)
@@ -131,4 +133,22 @@ GVisual* GVobObject::GetVisual()
 const D3DXVECTOR3& GVobObject::GetPosition()
 {
 	return SourceVob->GetPositionWorld();
+}
+
+/** Sets the instance-index */
+void GVobObject::SetInstanceIndex(unsigned short idx)
+{
+	State.InstanceRemapInfo.InstanceRemapIndex = idx;
+}
+
+/** Returns the current instance-index */
+const VobInstanceRemapInfo& GVobObject::GetInstanceRemapInfo()
+{
+	return State.InstanceRemapInfo;
+}
+
+/** Sets a general-purpose value for the vob-constantbuffer */
+void GVobObject::SetVobInstanceGPSlot(UINT slot, DWORD value)
+{
+	InstanceInfo.GP_Slot[slot] = value;
 }

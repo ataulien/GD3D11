@@ -2,10 +2,14 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "D3D11GraphicsEngine.h"
+#include "D3D11GraphicsEngineQueued.h"
 //#include "ReferenceD3D11GraphicsEngine.h"
 #include "D3D11AntTweakBar.h"
 #include "HookExceptionFilter.h"
 #include "GGame.h"
+#include "ThreadPool.h"
+
+//#define TESTING
 
 namespace Engine
 {
@@ -16,7 +20,11 @@ namespace Engine
 	void CreateGraphicsEngine()
 	{
 		LogInfo() << "Creating Main graphics engine";
+#ifdef TESTING
+		GraphicsEngine = new D3D11GraphicsEngineQueued;
+#else
 		GraphicsEngine = new D3D11GraphicsEngine;
+#endif
 
 		if(!GraphicsEngine)
 		{
@@ -28,6 +36,10 @@ namespace Engine
 
 		// Create ant tweak bar with it
 		AntTweakBar = new D3D11AntTweakBar;
+
+		// Create threadpool
+		RenderingThreadPool = new ThreadPool;
+		WorkerThreadPool = new ThreadPool;
 	}
 
 	/** Creates the Global GAPI-Object */
@@ -48,19 +60,22 @@ namespace Engine
 		}
 
 		Game = NULL;
-		/*Game = new GGame;
+	
+#ifdef TESTING
+		Game = new GGame;
 		if(!Game)
 		{
 			LogErrorBox() << "Failed to create GGame!";
 			exit(0);
-		}*/
+		}
+#endif
 	}
 
 	/** Loads the needed dll files from subdir */
 	void LoadDLLFiles()
 	{
-		volatile int* i = new int;
-		i = 0;
+		//volatile int* i = new int;
+		//*i = 0;
 
 		// Load dll files from subdir
 		/*for(int i=0;i<NUM_DLL_FILES;i++)
@@ -74,9 +89,11 @@ namespace Engine
 	{
 		LogInfo() << "Shutting down...";
 
+		delete Engine::RenderingThreadPool; Engine::RenderingThreadPool = NULL;
 		delete Engine::AntTweakBar;	Engine::AntTweakBar = NULL;
 		delete Engine::GAPI; Engine::GAPI = NULL;
 		delete Engine::GraphicsEngine; Engine::GraphicsEngine = NULL;
+		delete Engine::WorkerThreadPool; Engine::WorkerThreadPool = NULL;
 	}
 
 };

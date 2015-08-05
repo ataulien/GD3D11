@@ -11,6 +11,8 @@
 
 #define DebugWriteTex(x)  DebugWrite(x)
 
+const std::string LEAF_SUBSTR[] = {"Treetop","Bush", "Leaf"};
+
 MyDirectDrawSurface7::MyDirectDrawSurface7()
 {
 	refCount = 1;
@@ -20,6 +22,7 @@ MyDirectDrawSurface7::MyDirectDrawSurface7()
 	LockedData = NULL;
 	GothicTexture = NULL;
 	IsReady = false;
+	TextureType = ETextureType::TX_UNDEF;
 
 	QueuedMipMaps = 0;
 	LockType = 0;
@@ -101,6 +104,10 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 	{
 		GothicTexture = ownedTexture;
 		TextureName = GothicTexture->GetNameWithoutExt();	
+
+		// Find texture type
+		if(Toolbox::StringContainsOneOf(TextureName, LEAF_SUBSTR, ARRAYSIZE(LEAF_SUBSTR)))
+			TextureType = ETextureType::TX_LEAF;
 
 		Engine::GAPI->AddSurface(TextureName, this);
 	}

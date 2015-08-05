@@ -1,9 +1,105 @@
 #pragma once
 #include "pch.h"
 #include "Toolbox.h"
+#include "zTypes.h"
 
 namespace Toolbox
 {
+	/** Checks if one of a series of strings is found within the input-string */
+	bool StringContainsOneOf(const std::string& string, const std::string* checkStrings, int numStrings)
+	{
+		std::string us = string;
+
+		// Make them uppercase
+		std::transform(us.begin(), us.end(),us.begin(), ::toupper);
+		
+
+		for(int i = 0; i < numStrings; i++)
+		{
+			std::string cu = checkStrings[i];
+			std::transform(cu.begin(), cu.end(),cu.begin(), ::toupper);
+
+			if(us.find(cu[i]) != std::string::npos)
+				return true;
+		}
+
+		return false;
+	}
+
+	/** Checks whether a given boundingbox is inside the given frustum. The index in "cache" is tested first, if it isn't set to -1 */
+	zTCam_ClipType BBox3DInFrustumCached(const zTBBox3D& bbox3D, zTPlane* frustumPlanes, byte* signbits, int& cache)
+	{
+		// This resembles gothics method for checking the frustum, but with enancements
+
+		// Use cache first, if possible
+		int tmpCache = cache;
+		int	i = (cache != -1) ? cache : 5;
+		int skip = -1;
+		int clipFlags = CLIP_FLAGS_NO_FAR;
+
+		// Check all planes
+		do {
+			// Don't test the cached plane twice
+			if(i == skip)
+				continue;
+
+			// Still not sure how these clipflags work
+			if (!(clipFlags & (1<<i)) ) 
+				continue;
+
+			float dist;
+			const zTPlane& plane = frustumPlanes[i];
+			switch (signbits[i]) 
+			{
+			case 0:	// 000, ZYX
+				dist = bbox3D.Min.x*plane.Normal.x + bbox3D.Min.y*plane.Normal.y + bbox3D.Min.z*plane.Normal.z;	if (dist<plane.Distance) { cache = i; return ZTCAM_CLIPTYPE_OUT;}
+				dist = bbox3D.Max.x*plane.Normal.x + bbox3D.Max.y*plane.Normal.y + bbox3D.Max.z*plane.Normal.z;	if (dist>=plane.Distance) clipFlags &= ~(1<<i);
+				break;
+			case 1:	// 001
+				dist = bbox3D.Max.x*plane.Normal.x + bbox3D.Min.y*plane.Normal.y + bbox3D.Min.z*plane.Normal.z;	if (dist<plane.Distance) { cache = i; return ZTCAM_CLIPTYPE_OUT;}
+				dist = bbox3D.Min.x*plane.Normal.x + bbox3D.Max.y*plane.Normal.y + bbox3D.Max.z*plane.Normal.z;	if (dist>=plane.Distance) clipFlags &= ~(1<<i);
+				break;
+			case 2:	// 010
+				dist = bbox3D.Min.x*plane.Normal.x + bbox3D.Max.y*plane.Normal.y + bbox3D.Min.z*plane.Normal.z;	if (dist<plane.Distance) { cache = i; return ZTCAM_CLIPTYPE_OUT;}
+				dist = bbox3D.Max.x*plane.Normal.x + bbox3D.Min.y*plane.Normal.y + bbox3D.Max.z*plane.Normal.z;	if (dist>=plane.Distance) clipFlags &= ~(1<<i);
+				break;
+			case 3:	// 011
+				dist = bbox3D.Max.x*plane.Normal.x + bbox3D.Max.y*plane.Normal.y + bbox3D.Min.z*plane.Normal.z;	if (dist<plane.Distance) { cache = i; return ZTCAM_CLIPTYPE_OUT;}
+				dist = bbox3D.Min.x*plane.Normal.x + bbox3D.Min.y*plane.Normal.y + bbox3D.Max.z*plane.Normal.z;	if (dist>=plane.Distance) clipFlags &= ~(1<<i);
+				break;
+			case 4:	// 100
+				dist = bbox3D.Min.x*plane.Normal.x + bbox3D.Min.y*plane.Normal.y + bbox3D.Max.z*plane.Normal.z;	if (dist<plane.Distance) { cache = i; return ZTCAM_CLIPTYPE_OUT;}
+				dist = bbox3D.Max.x*plane.Normal.x + bbox3D.Max.y*plane.Normal.y + bbox3D.Min.z*plane.Normal.z;	if (dist>=plane.Distance) clipFlags &= ~(1<<i);
+				break;
+			case 5:	// 101
+				dist = bbox3D.Max.x*plane.Normal.x + bbox3D.Min.y*plane.Normal.y + bbox3D.Max.z*plane.Normal.z;	if (dist<plane.Distance) { cache = i; return ZTCAM_CLIPTYPE_OUT;}
+				dist = bbox3D.Min.x*plane.Normal.x + bbox3D.Max.y*plane.Normal.y + bbox3D.Min.z*plane.Normal.z;	if (dist>=plane.Distance) clipFlags &= ~(1<<i);
+				break;
+			case 6:	// 110
+				dist = bbox3D.Min.x*plane.Normal.x + bbox3D.Max.y*plane.Normal.y + bbox3D.Max.z*plane.Normal.z;	if (dist<plane.Distance) { cache = i; return ZTCAM_CLIPTYPE_OUT;}
+				dist = bbox3D.Max.x*plane.Normal.x + bbox3D.Min.y*plane.Normal.y + bbox3D.Min.z*plane.Normal.z;	if (dist>=plane.Distance) clipFlags &= ~(1<<i);
+				break;
+			case 7:	// 111
+				dist = bbox3D.Max.x*plane.Normal.x + bbox3D.Max.y*plane.Normal.y + bbox3D.Max.z*plane.Normal.z;	if (dist<plane.Distance) { cache = i; return ZTCAM_CLIPTYPE_OUT;}
+				dist = bbox3D.Min.x*plane.Normal.x + bbox3D.Min.y*plane.Normal.y + bbox3D.Min.z*plane.Normal.z;	if (dist>=plane.Distance) clipFlags &= ~(1<<i);
+				break;
+			};
+
+			// If this was a cached check, return to normal
+			if(tmpCache != -1)
+			{
+				skip = tmpCache;
+				tmpCache = -1;
+				i = 6; // Would be 5, but we are decrementing it right after this
+			}
+		} while( i-- ); 
+	
+		// If we got this far, the box is visible and we can reset the cache
+		cache = -1;
+
+		return ( clipFlags> 0 ) ? ZTCAM_CLIPTYPE_CROSSING : ZTCAM_CLIPTYPE_IN;
+	}
+
 	bool FolderExists(const std::string& dirName_in)
 	{
 	  DWORD ftyp = GetFileAttributesA(dirName_in.c_str());
@@ -53,7 +149,7 @@ namespace Toolbox
 		return false;
 	}
 
-	/** Computes the distance of a point to an AABB */
+	/** Computes the Distance of a point to an AABB */
 	float ComputePointAABBDistance(const D3DXVECTOR3& p, const D3DXVECTOR3& min, const D3DXVECTOR3& max)
 	{
 		float dx = std::max(std::max(min.x - p.x, 0.0f), p.x - max.x);
@@ -62,14 +158,14 @@ namespace Toolbox
 		return sqrtf(dx*dx + dy*dy);
 	}
 
-	/** Computes the normal of a triangle */
+	/** Computes the Normal of a triangle */
 	D3DXVECTOR3 ComputeNormal(const D3DXVECTOR3& v0, const D3DXVECTOR3& v1, const D3DXVECTOR3& v2)
 	{
-		D3DXVECTOR3 normal;
-		D3DXVec3Cross(&normal, &(v1 - v0), &(v2 - v0));
-		D3DXVec3Normalize(&normal, &normal);
+		D3DXVECTOR3 Normal;
+		D3DXVec3Cross(&Normal, &(v1 - v0), &(v2 - v0));
+		D3DXVec3Normalize(&Normal, &Normal);
 
-		return normal;
+		return Normal;
 	}
 
 	/** Does a ray vs aabb test */

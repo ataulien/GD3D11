@@ -322,7 +322,7 @@ public:
 	QuadMarkInfo* GetQuadMarkInfo(zCQuadMark* mark);
 
 	/** Returns all quad marks */
-	const stdext::hash_map<zCQuadMark*, QuadMarkInfo>& GetQuadMarks();
+	const stdext::unordered_map<zCQuadMark*, QuadMarkInfo>& GetQuadMarks();
 
 	/** Returns the loaded sections */
 	std::map<int, std::map<int, WorldMeshSectionInfo>>& GetWorldSections();
@@ -534,7 +534,7 @@ public:
 	zCVob* GetPlayerVob();
 
 	/** Returns the map of static mesh visuals */
-	const std::hash_map<zCProgMeshProto*, MeshVisualInfo*>& GetStaticMeshVisuals(){return StaticMeshVisuals;}
+	const std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>& GetStaticMeshVisuals(){return StaticMeshVisuals;}
 
 	/** Removes the given texture from the given section and stores the supression, so we can load it next time */
 	void SupressTexture(WorldMeshSectionInfo* section, const std::string& texture);
@@ -627,6 +627,9 @@ public:
 	/** Prints a message to the screen for the given amount of time */
 	void PrintMessageTimed(const INT2& position, const std::string& strMessage, float time = 3000.0f, DWORD color = 0xFFFFFFFF);
 
+	/** Prints information about the mod to the screen for a couple of seconds */
+	void PrintModInfo();
+
 private:
 	/** Collects polygons in the given AABB */
 	void CollectPolygonsInAABBRec(BspInfo* base, const zTBBox3D& bbox, std::vector<zCPolygon *>& list);
@@ -686,7 +689,7 @@ private:
 	/** List of Vobs having a zCParticleFX-Visual */
 	std::list<zCVob *> ParticleEffectVobs;
 	std::list<zCVob *> DecalVobs;
-	std::hash_map<zCVob *, std::string> tempParticleNames;
+	std::unordered_map<zCVob *, std::string> tempParticleNames;
 
 	/** Set of Materials */
 	std::set<zCMaterial *> LoadedMaterials;
@@ -695,10 +698,10 @@ private:
 	std::set<MeshVisualInfo *> FrameMeshInstances;
 
 	/** Map for static mesh visuals */
-	std::hash_map<zCProgMeshProto*, MeshVisualInfo*> StaticMeshVisuals;
+	std::unordered_map<zCProgMeshProto*, MeshVisualInfo*> StaticMeshVisuals;
 
 	/** Map for skeletal mesh visuals */
-	std::hash_map<std::string, SkeletalMeshVisualInfo*> SkeletalMeshVisuals;
+	std::unordered_map<std::string, SkeletalMeshVisualInfo*> SkeletalMeshVisuals;
 
 	/** Set of all vobs we registered by now */
 	std::set<zCVob*> RegisteredVobs;
@@ -707,22 +710,22 @@ private:
 	std::list<VobInfo*> DynamicallyAddedVobs;
 
 	/** Map of vobs and VobIndfos */
-	std::hash_map<zCVob*, VobInfo*> VobMap;
-	std::hash_map<zCVobLight*, VobLightInfo*> VobLightMap;
-	std::hash_map<zCVob*, SkeletalVobInfo*> SkeletalVobMap;
+	std::unordered_map<zCVob*, VobInfo*> VobMap;
+	std::unordered_map<zCVobLight*, VobLightInfo*> VobLightMap;
+	std::unordered_map<zCVob*, SkeletalVobInfo*> SkeletalVobMap;
 
 
 	/** Map of VobInfo-Lists for zCBspLeafs */
-	std::hash_map<zCBspBase *, BspInfo> BspLeafVobLists;
+	std::unordered_map<zCBspBase *, BspInfo> BspLeafVobLists;
 
 	/** Map for the material infos */
-	std::hash_map<zCTexture*, MaterialInfo> MaterialInfos;
+	std::unordered_map<zCTexture*, MaterialInfo> MaterialInfos;
 
 	/** Maps visuals to vobs */
-	std::hash_map<zCVisual*, std::list<BaseVobInfo *>> VobsByVisual;
+	std::unordered_map<zCVisual*, std::list<BaseVobInfo *>> VobsByVisual;
 
 	/** Map of textures */
-	std::hash_map<std::string, MyDirectDrawSurface7*> SurfacesByName;
+	std::unordered_map<std::string, MyDirectDrawSurface7*> SurfacesByName;
 
 	/** Directory we started in */
 	std::string StartDirectory;
@@ -776,7 +779,7 @@ private:
 	std::vector<MyDirectDrawSurface7 *> FrameProcessedTextures;
 
 	/** Quad marks loaded in the world */
-	stdext::hash_map<zCQuadMark*, QuadMarkInfo> QuadMarks;
+	stdext::unordered_map<zCQuadMark*, QuadMarkInfo> QuadMarks;
 
 	/** Map of parameters from the .ini */
 	std::map<std::string, int> ConfigIntValues;

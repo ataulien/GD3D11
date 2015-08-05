@@ -12,6 +12,7 @@
 #include "D3D11HDShader.h"
 #include <algorithm>
 #include "GothicAPI.h"
+#include "ThreadPool.h"
 
 // If this is defined, the BindPipelineState-Method will count statechanges
 #define DEBUG_STATECHANGES
@@ -41,14 +42,23 @@ D3D11GraphicsEngineQueued::~D3D11GraphicsEngineQueued(void)
 /** Draws a single pipeline-state */
 void D3D11GraphicsEngineQueued::DrawPipelineState(const PipelineState* state)
 {
+	if (Engine::GAPI->GetRendererState()->RendererSettings.DisableDrawcalls)
+		return;
+
+	ID3D11DeviceContext* context = GetDeferredContextByThread();
+
 	switch(state->BaseState.DrawCallType)
 	{
+	case PipelineState::DCT_DrawTriangleList:
+		context->Draw(state->BaseState.NumVertices, 0);
+		break;
+
 	case PipelineState::DCT_DrawIndexed:
-		Context->DrawIndexed(state->BaseState.NumIndices, state->BaseState.IndexOffset, 0);
+		context->DrawIndexed(state->BaseState.NumIndices, state->BaseState.IndexOffset, 0);
 		break;
 
 	case PipelineState::DCT_DrawIndexedInstanced:
-		Context->DrawIndexedInstanced(state->BaseState.NumIndices, state->BaseState.NumInstances, 0, 0, state->BaseState.InstanceOffset);
+		context->DrawIndexedInstanced(state->BaseState.NumIndices, state->BaseState.NumInstances, 0, 0, state->BaseState.InstanceOffset);
 		break;
 	}
 }
@@ -102,69 +112,76 @@ void D3D11GraphicsEngineQueued::BindPipelineStateForced(const PipelineState* sta
 void D3D11GraphicsEngineQueued::BindPipelineState(const PipelineState* state)
 {
 	D3D11PipelineState* s = (D3D11PipelineState*)state;
-	D3D11PipelineState* b = (D3D11PipelineState*)BoundPipelineState;
+	D3D11PipelineState* b = (D3D11PipelineState*)BoundPipelineStateByThread[GetCurrentThreadId()];
+	ID3D11DeviceContext* context = GetDeferredContextByThread();
+
+	if(!b) b = (D3D11PipelineState*)&DefaultPipelineState;
 
 	// Bind state
 	if(b->BlendState != s->BlendState)
-		SC_DBG(Context->OMSetBlendState(s->BlendState,  (float *)&D3DXVECTOR4(0, 0, 0, 0), 0xFFFFFFFF), GothicRendererInfo::SC_BS);
+		SC_DBG(context->OMSetBlendState(s->BlendState,  (float *)&D3DXVECTOR4(0, 0, 0, 0), 0xFFFFFFFF), GothicRendererInfo::SC_BS);
 
 	if(b->SamplerState != s->SamplerState)
-		SC_DBG(Context->PSSetSamplers(0, 1, &s->SamplerState), GothicRendererInfo::SC_SMPL);
+		SC_DBG(context->PSSetSamplers(0, 1, &s->SamplerState), GothicRendererInfo::SC_SMPL);
 
 	if(b->DepthStencilState != s->DepthStencilState)
-		SC_DBG(Context->OMSetDepthStencilState(s->DepthStencilState, 0), GothicRendererInfo::SC_DSS);
+		SC_DBG(context->OMSetDepthStencilState(s->DepthStencilState, 0), GothicRendererInfo::SC_DSS);
 
 	if(b->RasterizerState != s->RasterizerState)
-		SC_DBG(Context->RSSetState(s->RasterizerState), GothicRendererInfo::SC_RS);
+		SC_DBG(context->RSSetState(s->RasterizerState), GothicRendererInfo::SC_RS);
 
 	// Bind constantbuffers (They are likely to change for every object)
-	if(!s->ConstantBuffersVS.empty())(Context->VSSetConstantBuffers(0, s->ConstantBuffersVS.size(), &s->ConstantBuffersVS[0]));
-	if(!s->ConstantBuffersPS.empty())(Context->PSSetConstantBuffers(0, s->ConstantBuffersPS.size(), &s->ConstantBuffersPS[0]));
-	if(!s->ConstantBuffersHDS.empty())(Context->HSSetConstantBuffers(0, s->ConstantBuffersHDS.size(), &s->ConstantBuffersHDS[0]));
-	if(!s->ConstantBuffersHDS.empty())(Context->DSSetConstantBuffers(0, s->ConstantBuffersHDS.size(), &s->ConstantBuffersHDS[0]));
-	if(!s->ConstantBuffersGS.empty())(Context->GSSetConstantBuffers(0, s->ConstantBuffersGS.size(), &s->ConstantBuffersGS[0]));
+	if(!s->ConstantBuffersVS.empty() && s->ConstantBuffersVS != b->ConstantBuffersVS)SC_DBG(context->VSSetConstantBuffers(0, s->ConstantBuffersVS.size(), &s->ConstantBuffersVS[0]),GothicRendererInfo::SC_CB);
+	if(!s->ConstantBuffersPS.empty() && s->ConstantBuffersPS != b->ConstantBuffersPS)SC_DBG(context->PSSetConstantBuffers(0, s->ConstantBuffersPS.size(), &s->ConstantBuffersPS[0]),GothicRendererInfo::SC_CB);
+	if(!s->ConstantBuffersHDS.empty() && s->ConstantBuffersHDS != b->ConstantBuffersHDS)SC_DBG(context->HSSetConstantBuffers(0, s->ConstantBuffersHDS.size(), &s->ConstantBuffersHDS[0]),GothicRendererInfo::SC_CB);
+	if(!s->ConstantBuffersHDS.empty() && s->ConstantBuffersHDS != b->ConstantBuffersHDS)SC_DBG(context->DSSetConstantBuffers(0, s->ConstantBuffersHDS.size(), &s->ConstantBuffersHDS[0]),GothicRendererInfo::SC_CB);
+	if(!s->ConstantBuffersGS.empty() && s->ConstantBuffersGS != b->ConstantBuffersGS)SC_DBG(context->GSSetConstantBuffers(0, s->ConstantBuffersGS.size(), &s->ConstantBuffersGS[0]),GothicRendererInfo::SC_CB);
 
 	// Vertexbuffers
 	UINT off[] = {0,0};
 	if(memcmp(s->BaseState.VertexBuffers, b->BaseState.VertexBuffers, sizeof(b->BaseState.VertexBuffers)) != 0)
-		SC_DBG(Context->IASetVertexBuffers(0, s->VertexBuffers.size(), &s->VertexBuffers[0], s->BaseState.VertexStride, off), GothicRendererInfo::SC_VB);
+		SC_DBG(context->IASetVertexBuffers(0, s->VertexBuffers.size(), &s->VertexBuffers[0], s->BaseState.VertexStride, off), GothicRendererInfo::SC_VB);
+
+	if(!s->StructuredBuffersVS.empty() && memcmp(s->BaseState.StructuredBuffersVS, b->BaseState.StructuredBuffersVS, sizeof(b->BaseState.StructuredBuffersVS)) != 0)
+		SC_DBG(context->VSSetShaderResources(0, 1, &s->StructuredBuffersVS[0]), GothicRendererInfo::SC_VB);
 
 	if(s->IndexBuffer != b->IndexBuffer)
-		SC_DBG(Context->IASetIndexBuffer(s->IndexBuffer, s->BaseState.IndexStride == 32 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT, s->BaseState.IndexOffset), GothicRendererInfo::SC_IB);
+		SC_DBG(context->IASetIndexBuffer(s->IndexBuffer, s->BaseState.IndexStride == 4 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT, 0), GothicRendererInfo::SC_IB);
 
 	// Shaders
 	if(s->VertexShader != b->VertexShader)
-		SC_DBG(Context->VSSetShader(s->VertexShader, NULL, NULL), GothicRendererInfo::SC_VS);
+		SC_DBG(context->VSSetShader(s->VertexShader, NULL, NULL), GothicRendererInfo::SC_VS);
 	
 	if(s->InputLayout != b->InputLayout)
-		SC_DBG(Context->IASetInputLayout(s->InputLayout), GothicRendererInfo::SC_IL);
+		SC_DBG(context->IASetInputLayout(s->InputLayout), GothicRendererInfo::SC_IL);
 	
 	if(s->PixelShader != b->PixelShader)
-		SC_DBG(Context->PSSetShader(s->PixelShader, NULL, NULL), GothicRendererInfo::SC_PS);
+		SC_DBG(context->PSSetShader(s->PixelShader, NULL, NULL), GothicRendererInfo::SC_PS);
 	
 	if(s->HullShader != b->HullShader)
-		SC_DBG(Context->HSSetShader(s->HullShader, NULL, NULL), GothicRendererInfo::SC_HS);
+		SC_DBG(context->HSSetShader(s->HullShader, NULL, NULL), GothicRendererInfo::SC_HS);
 	
 	if(s->DomainShader != b->DomainShader)
-		SC_DBG(Context->DSSetShader(s->DomainShader, NULL, NULL), GothicRendererInfo::SC_DS);
+		SC_DBG(context->DSSetShader(s->DomainShader, NULL, NULL), GothicRendererInfo::SC_DS);
 	
 	if(s->GeometryShader != b->GeometryShader)
-		SC_DBG(Context->GSSetShader(s->GeometryShader, NULL, NULL), GothicRendererInfo::SC_GS);
+		SC_DBG(context->GSSetShader(s->GeometryShader, NULL, NULL), GothicRendererInfo::SC_GS);
 
 	// Rendertargets
 	if(memcmp(s->RenderTargetViews, b->RenderTargetViews, sizeof(void*) * s->NumRenderTargetViews) != 0 ||
 		s->DepthStencilView != b->DepthStencilView)
-		SC_DBG(Context->OMSetRenderTargets(s->NumRenderTargetViews, s->RenderTargetViews, s->DepthStencilView), GothicRendererInfo::SC_RTVDSV);
+		SC_DBG(context->OMSetRenderTargets(s->NumRenderTargetViews, s->RenderTargetViews, s->DepthStencilView), GothicRendererInfo::SC_RTVDSV);
 
 	// Textures
 	if(memcmp(s->Textures, b->Textures, sizeof(void*) * s->BaseState.NumTextures) != 0)
-		SC_DBG(Context->PSSetShaderResources(0, s->BaseState.NumTextures, s->Textures), GothicRendererInfo::SC_TX);
+		SC_DBG(context->PSSetShaderResources(0, s->BaseState.NumTextures, s->Textures), GothicRendererInfo::SC_TX);
 
 	// Primitive topology
-	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Replace old state
-	BoundPipelineState = s;
+	// FIXME: Might not threadsave
+	BoundPipelineStateByThread[GetCurrentThreadId()] = s;
 }
 /** Fills the associated state object using the given IDs */
 void D3D11GraphicsEngineQueued::FillPipelineStateObject(PipelineState* state)
@@ -254,6 +271,14 @@ void D3D11GraphicsEngineQueued::FillPipelineStateObject(PipelineState* state)
 			s->VertexBuffers.push_back(buf->GetVertexBuffer());
 	}
 
+	s->StructuredBuffersVS.clear();
+	for(int i=0;i<ARRAYSIZE(s->BaseState.StructuredBuffersVS);i++)
+	{
+		D3D11VertexBuffer* buf = (D3D11VertexBuffer *)s->BaseState.StructuredBuffersVS[i];
+		if(buf)
+			s->StructuredBuffersVS.push_back(buf->GetShaderResourceView());
+	}
+
 	if(s->BaseState.IndexBuffer)
 		s->IndexBuffer = ((D3D11VertexBuffer *)s->BaseState.IndexBuffer)->GetVertexBuffer();
 
@@ -280,19 +305,51 @@ void D3D11GraphicsEngineQueued::SetupPipelineForStage(int stage, PipelineState* 
 	state->BaseState.ConstantBuffersVS[0] = TransformsCB;
 	state->BaseState.VertexStride[0] = sizeof(ExVertexStruct);
 	state->BaseState.IndexStride = sizeof(VERTEX_INDEX);
-	state->BaseState.PShaderID = PS_Simple->GetID();
 
-	if(state->BaseState.DrawCallType != PipelineState::DCT_DrawIndexedInstanced)
-		state->BaseState.VShaderID = VS_Ex->GetID();
+	// Handle alpha-mask
+	if(state->BaseState.TranspacenyMode == PipelineState::ETransparencyMode::TM_MASKED)
+		state->BaseState.PShaderID = PS_SimpleAlphaTest->GetID();
 	else
-		state->BaseState.VShaderID = VS_ExInstancedObj->GetID();
-	//state->BaseState.BlendStateID = 
+		state->BaseState.PShaderID = PS_Simple->GetID();
+
+	if(stage == STAGE_DRAW_WORLD)
+	{
+		if(state->BaseState.DrawCallType != PipelineState::DCT_DrawIndexedInstanced)
+			state->BaseState.VShaderID = VS_Ex->GetID();
+		else
+			state->BaseState.VShaderID = VS_ExRemapInstancedObj->GetID();
+	}else if(stage == STAGE_DRAW_SKELETAL)
+	{
+		state->BaseState.VertexStride[0] = sizeof(ExSkelVertexStruct);
+		state->BaseState.VShaderID = VS_ExSkeletal->GetID();
+	}
 }
 
 /** Pushes a single pipeline-state into the renderqueue */
 void D3D11GraphicsEngineQueued::PushPipelineState(PipelineState* state)
 {
+	static std::mutex m;
+
+	m.lock();
 	RenderQueue.push_back(&state->SortItem);
+	m.unlock();
+}
+
+/** Threadproc for a rendertask */
+void D3D11GraphicsEngineQueued::RenderTask(unsigned int startState, unsigned int numStates)
+{
+	D3D11GraphicsEngineQueued* engine = (D3D11GraphicsEngineQueued *)Engine::GraphicsEngine;
+
+	for(int i = startState; i < startState + numStates; i++)
+	{
+		engine->BindPipelineState(engine->RenderQueue[i]->AssociatedState);
+		engine->DrawPipelineState(engine->RenderQueue[i]->AssociatedState);
+	}
+
+	for(int i = startState; i < startState + numStates; i++)
+	{
+		engine->RenderQueue[i]->AssociatedState->StateWasDrawn();
+	}
 }
 
 /** Flushes the renderqueue */
@@ -300,39 +357,111 @@ void D3D11GraphicsEngineQueued::FlushRenderQueue(bool sortQueue)
 {
 	BoundPipelineState = DefaultPipelineState;
 
-	if(Engine::GAPI->GetRendererState()->RendererSettings.SortRenderQueue)
+	// Execute the commandlists from our worker-threads
+	ExecuteDeferredCommandLists();
+
+	// Initial clear
+	Clear(Engine::GAPI->GetRendererState()->GraphicsState.FF_FogColor);
+
+	// Force farplane
+	Engine::GAPI->SetFarPlane(Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE);
+
+	// Primitive topology
+	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	if(!Engine::GAPI->GetRendererState()->RendererSettings.DisableRendering)
 	{
-		// Sort the queue, if wanted
-		if(sortQueue)
-			std::sort(RenderQueue.begin(), RenderQueue.end(), PipelineState::PipelineSortItem::cmp);
+		Engine::GAPI->GetRendererState()->RendererInfo.FramePipelineStates = RenderQueue.size();
 
-		//std::set<PipelineState::PipelineSortItem*> testset;
-
-		// Draw all states
-		for(auto it = RenderQueue.begin(); it != RenderQueue.end(); it++)
+		if(Engine::GAPI->GetRendererState()->RendererSettings.SortRenderQueue)
 		{
-			BindPipelineState((*it)->AssociatedState);
-			DrawPipelineState((*it)->AssociatedState);
+			// Sort the queue, if wanted
+			if(sortQueue)
+				std::sort(RenderQueue.begin(), RenderQueue.end(), PipelineState::PipelineSortItem::cmp);
 
-			(*it)->AssociatedState->BaseState.StateWasDrawn();
-			//testset.insert((*it));
-		}
+			if(Engine::GAPI->GetRendererState()->RendererSettings.DrawThreaded)
+			{
+				// Figure out how much work there is to do for each thread
+				int n = RenderQueue.size() / Engine::RenderingThreadPool->getNumThreads();
+				int rest = RenderQueue.size() - n * Engine::RenderingThreadPool->getNumThreads();
 
-		//if(testset.size() != RenderQueue.size())
-		//	LogWarn() << "Renderer: Submitted one pipelinestate more than once!";
+				// If there are less states than threads, just draw them
+				if(n == 0)
+				{
+					// Draw all states
+					for(auto it = RenderQueue.begin(); it != RenderQueue.end(); it++)
+					{
+						BindPipelineState((*it)->AssociatedState);
+						DrawPipelineState((*it)->AssociatedState);
 
-	}else
-	{
-		// Draw all states
-		for(auto it = RenderQueue.begin(); it != RenderQueue.end(); it++)
+						(*it)->AssociatedState->StateWasDrawn();
+						//testset.insert((*it));
+					}
+				}
+				else
+				{
+					std::vector<std::future<void>> futures;
+					for(int i = 0; i < Engine::RenderingThreadPool->getNumThreads(); i++)
+					{
+						std::future<void> future;
+						// Enqueue threads
+						if(i == Engine::RenderingThreadPool->getNumThreads() - 1)
+							futures.push_back(Engine::RenderingThreadPool->enqueue(D3D11GraphicsEngineQueued::RenderTask, i*n, n + rest)); // last thread simply gets the remainder
+						else
+							futures.push_back(Engine::RenderingThreadPool->enqueue(D3D11GraphicsEngineQueued::RenderTask, i*n, n));
+					}
+
+					// Now wait for all of them
+					for(int i = 0; i < futures.size(); i++)
+					{
+						futures[i].wait();
+						// TODO: Could already execute that contexts commandlist here!
+					}
+
+					ExecuteDeferredCommandLists();
+				}
+			}
+			else
+			{
+				// Draw all states
+				for(auto it = RenderQueue.begin(); it != RenderQueue.end(); it++)
+				{
+					BindPipelineState((*it)->AssociatedState);
+					DrawPipelineState((*it)->AssociatedState);
+
+					(*it)->AssociatedState->StateWasDrawn();
+					//testset.insert((*it));
+				}
+			}
+			
+			//std::set<PipelineState::PipelineSortItem*> testset;
+
+			// Draw all states
+			/*for(auto it = RenderQueue.begin(); it != RenderQueue.end(); it++)
+			{
+				BindPipelineState((*it)->AssociatedState);
+				DrawPipelineState((*it)->AssociatedState);
+
+				(*it)->AssociatedState->StateWasDrawn();
+				//testset.insert((*it));
+			}*/
+
+			//if(testset.size() != RenderQueue.size())
+			//	LogWarn() << "Renderer: Submitted one pipelinestate more than once!";
+
+		}else
 		{
-			BindPipelineStateForced((*it)->AssociatedState);
-			DrawPipelineState((*it)->AssociatedState);
+			// Draw all states
+			for(auto it = RenderQueue.begin(); it != RenderQueue.end(); it++)
+			{
+				BindPipelineStateForced((*it)->AssociatedState);
+				DrawPipelineState((*it)->AssociatedState);
 
-			(*it)->AssociatedState->BaseState.StateWasDrawn();
-		}
+				(*it)->AssociatedState->StateWasDrawn();
+			}
 
 		
+		}
 	}
 
 	// Clear the renderqueue for next stage

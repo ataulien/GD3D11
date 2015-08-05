@@ -45,8 +45,17 @@ public:
 	/** Returns the visual of this object */
 	GVisual* GetVisual();
 
+	/** Sets a general-purpose value for the vob-constantbuffer */
+	void SetVobInstanceGPSlot(UINT slot, DWORD value);
+
 	/** Returns the current instance data */
 	const VobInstanceInfo& GetInstanceInfo();
+
+	/** Sets the instance-index */
+	void SetInstanceIndex(unsigned short idx);
+
+	/** Returns the current instance-index */
+	const VobInstanceRemapInfo& GetInstanceRemapInfo();
 
 	/** Returns whether this vob is dynamic or not */
 	bool IsDynamic();
@@ -90,6 +99,9 @@ private:
 
 		/** If true, this vob is seen as a moving vob and is save to move out if it's bsp-node */
 		bool IsDynamicVob;
+
+		/** Instance index for this vob */
+		VobInstanceRemapInfo InstanceRemapInfo;
 	} State;
 };
 

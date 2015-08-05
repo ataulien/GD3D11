@@ -8,6 +8,9 @@ public:
 	/** Updates the buffer */
 	virtual void UpdateBuffer(void* data) = 0;
 
+	/** Updates the buffer, threadsave */
+	virtual void UpdateBufferDeferred(void* data) = 0;
+
 	/** Binds the buffer */
 	virtual void BindToVertexShader(int slot) = 0;
 	virtual void BindToPixelShader(int slot) = 0;

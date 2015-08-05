@@ -18,8 +18,7 @@
 #include "VertexTypes.h"
 #include <map>
 #include <unordered_map>
-#include <hash_map>
-#include <hash_set>
+#include <unordered_set>
 #include <list>
 #include <algorithm>
 #include <future>
@@ -27,7 +26,13 @@
 #include <set>
 #include <signal.h>
 
-#define VERSION_NUMBER "17"
+#if _MSC_VER < 1900
+;
+#else
+#define stdext std
+#endif
+
+#define VERSION_NUMBER "17.1"
 __declspec(selectany) const char* VERSION_NUMBER_STR = VERSION_NUMBER;
 
 /** D3D7-Call logging */

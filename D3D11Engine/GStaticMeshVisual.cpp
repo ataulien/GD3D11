@@ -26,12 +26,14 @@ GStaticMeshVisual::GStaticMeshVisual(zCVisual* sourceVisual) : GVisual(sourceVis
 	SwitchInstanceSpecificResources();
 
 	Instancing.InstancingBufferData = NULL;
+	Instancing.InstanceTypeIndex = -1;
 }
 
 
 GStaticMeshVisual::~GStaticMeshVisual(void)
 {
 	Toolbox::DeleteElements(PipelineStates);
+	Toolbox::DeleteElements(ImmediatePipelineStates);
 
 	delete Instancing.InstancingBuffer;
 }
@@ -67,6 +69,9 @@ void GStaticMeshVisual::SwitchInstanceSpecificResources()
 
 			PipelineStates.back()->BaseState.DrawCallType = PipelineState::DCT_DrawIndexedInstanced;
 
+			if((*it).first->GetAlphaFunc() > 1)
+				PipelineStates.back()->BaseState.TranspacenyMode = PipelineState::ETransparencyMode::TM_MASKED;
+
 			Engine::GraphicsEngine->SetupPipelineForStage(STAGE_DRAW_WORLD, PipelineStates.back());
 				
 			PipelineStates.back()->BaseState.VertexBuffers[0] = (*it).second[i]->MeshVertexBuffer;
@@ -82,8 +87,45 @@ void GStaticMeshVisual::SwitchInstanceSpecificResources()
 				(*it).first->GetTexture()->GetSurface()->GetEngineTexture())
 				PipelineStates.back()->BaseState.TextureIDs[0] = (*it).first->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
 
+			
+
 			// Enter API-Specific values into the state-object
 			Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates.back());
+		}
+	}
+
+	// Now for the immediate states
+	for(auto it = VisualInfo.Meshes.begin();it != VisualInfo.Meshes.end(); it++)
+	{
+		for(int i = 0;i<(*it).second.size();i++)
+		{
+			// Enter a new state for this submesh-part
+			ImmediatePipelineStates.push_back(Engine::GraphicsEngine->CreatePipelineState());
+
+			ImmediatePipelineStates.back()->BaseState.DrawCallType = PipelineState::DCT_DrawIndexed;
+
+			if((*it).first->GetAlphaFunc() > 1)
+				ImmediatePipelineStates.back()->BaseState.TranspacenyMode = PipelineState::ETransparencyMode::TM_MASKED;
+
+			Engine::GraphicsEngine->SetupPipelineForStage(STAGE_DRAW_WORLD, ImmediatePipelineStates.back());
+				
+			ImmediatePipelineStates.back()->BaseState.VertexBuffers[0] = (*it).second[i]->MeshVertexBuffer;
+			ImmediatePipelineStates.back()->BaseState.IndexBuffer = (*it).second[i]->MeshIndexBuffer;
+			ImmediatePipelineStates.back()->BaseState.NumIndices = (*it).second[i]->Indices.size();
+			ImmediatePipelineStates.back()->BaseState.NumVertices = (*it).second[i]->Vertices.size();
+
+
+			// Huge safety-check to see if gothic didn't mess this up
+			if((*it).first &&
+				(*it).first->GetTexture() &&
+				(*it).first->GetTexture()->GetSurface() &&
+				(*it).first->GetTexture()->GetSurface()->GetEngineTexture())
+				ImmediatePipelineStates.back()->BaseState.TextureIDs[0] = (*it).first->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
+
+			
+
+			// Enter API-Specific values into the state-object
+			Engine::GraphicsEngine->FillPipelineStateObject(ImmediatePipelineStates.back());
 		}
 	}
 }
@@ -134,15 +176,21 @@ void GStaticMeshVisual::RegisterInstance(const RenderInfo& info)
 						PipelineStates[s]->BaseState.TextureIDs[0] = (*it).first->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
 				}
 
-				// Give our instancingbuffer to the state
-				if(PipelineStates[s]->BaseState.VertexBuffers[1] != Instancing.InstancingBuffer)
+				// Give our instancingbuffer to the state if it changed
+				if(PipelineStates[s]->BaseState.VertexBuffers[1] != Engine::Game->GetWorld()->GetVobInstanceRemapBuffer()
+					|| PipelineStates[s]->BaseState.StructuredBuffersVS[0] != Engine::Game->GetWorld()->GetVobInstanceBuffer())
 				{
-					PipelineStates[s]->BaseState.VertexBuffers[1] = Instancing.InstancingBuffer;
-					PipelineStates[s]->BaseState.VertexStride[1] = sizeof(VobInstanceInfo);
-					Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates[s]);
+					PipelineStates[s]->BaseState.VertexBuffers[1] = Engine::Game->GetWorld()->GetVobInstanceRemapBuffer();
+					PipelineStates[s]->BaseState.VertexStride[1] = sizeof(VobInstanceRemapInfo);
 
+					PipelineStates[s]->BaseState.StructuredBuffersVS[0] = Engine::Game->GetWorld()->GetVobInstanceBuffer();
+
+					// Reinit the state
+					Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates[s]);
+				
 					PipelineStates[s]->BaseState.NumInstances = 0;
-					}
+				}
+
 				// Register this state, instances are added afterwards
 				//Engine::GraphicsEngine->PushPipelineState(PipelineStates[s]);
 				s++;
@@ -177,31 +225,44 @@ void GStaticMeshVisual::RegisterInstance(const RenderInfo& info)
 	}*/
 }
 
+/** Just adds a static instance */
+int* GStaticMeshVisual::AddStaticInstance(const VobInstanceRemapInfo& remapInfo)
+{
+	if(remapInfo.InstanceRemapIndex != -1)
+	{
+		GVisual::AddStaticInstance(remapInfo);
+
+		Instancing.InstanceTypeIndex = Engine::Game->GetWorld()->RegisterVobInstance(Instancing.InstanceTypeIndex, remapInfo, &Instancing.InstanceBufferOffset);
+		Instancing.NumRegisteredInstances++;
+	}
+
+	return &Instancing.InstanceTypeIndex;
+}
 
 /** Draws the visual for the given vob */
 void GStaticMeshVisual::DrawVisual(const RenderInfo& info)
 {
+	GVisual::DrawVisual(info);
+
 	//RegisterInstance(info);
-	Instancing.InstanceTypeIndex = Engine::Game->GetWorld()->RegisterVobInstance(Instancing.InstanceTypeIndex, info.CallingVob->GetInstanceInfo(), &Instancing.InstanceBufferOffset);
+	/*Instancing.InstanceTypeIndex = Engine::Game->GetWorld()->RegisterVobInstance(Instancing.InstanceTypeIndex, info.CallingVob->GetInstanceRemapInfo(), &Instancing.InstanceBufferOffset);
 	Instancing.NumRegisteredInstances++;
 
-	return;
+	return;*/
 
 	// Make sure the vob has enought slots for pipeline states
-	if(info.CallingVob->GetPipelineStates().size() < PipelineStates.size())
-		info.CallingVob->GetPipelineStates().resize(PipelineStates.size());
+	if(ImmediatePipelineStates.size() < ImmediatePipelineStates.size())
+		ImmediatePipelineStates.resize(PipelineStates.size());
 
 	// Set up states and draw mesh
 	int s=0;
 	for(auto it = VisualInfo.Meshes.begin();it != VisualInfo.Meshes.end(); it++)
 	{
-		D3DXMATRIX world; D3DXMatrixTranspose(&world, info.WorldMatrix);
-
 		std::vector<MeshInfo*>& meshes = (*it).second;
 		for(int i=0;i<meshes.size();i++)
 		{
 #ifndef PUBLIC_RELEASE
-			if(s >= PipelineStates.size())
+			if(s >= ImmediatePipelineStates.size())
 			{
 				LogError() << "GStaticMeshVisual needs more pipeline-states than available!";
 				break;
@@ -209,8 +270,8 @@ void GStaticMeshVisual::DrawVisual(const RenderInfo& info)
 #endif
 
 			// Huge safety-check to see if gothic didn't mess this up
-			if(PipelineStates[s]->BaseState.TextureIDs[0] == 0xFFFF ||
-				PipelineStates[s]->BaseState.ConstantBuffersVS[1] == NULL)
+			if(ImmediatePipelineStates[s]->BaseState.TextureIDs[0] == 0xFFFF ||
+				ImmediatePipelineStates[s]->BaseState.ConstantBuffersVS[1] == NULL)
 			{
 
 				// Only draw if the texture is loaded
@@ -225,27 +286,21 @@ void GStaticMeshVisual::DrawVisual(const RenderInfo& info)
 					(*it).first->GetTexture() &&
 					(*it).first->GetTexture()->GetSurface() &&
 					(*it).first->GetTexture()->GetSurface()->GetEngineTexture())
-					PipelineStates[s]->BaseState.TextureIDs[0] = (*it).first->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
+					ImmediatePipelineStates[s]->BaseState.TextureIDs[0] = (*it).first->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
 			}
 
-			// Check if we need to add the current state to the vobs state-cache
-			if(!info.CallingVob->GetPipelineStates()[s])
-			{
-				// Clone pipeline state to the vob
-				info.CallingVob->GetPipelineStates()[s] = Engine::GraphicsEngine->CreatePipelineState(PipelineStates[s]);
-
-				// Insert the vobs constantbuffer
-				info.CallingVob->GetPipelineStates()[s]->BaseState.ConstantBuffersVS[1] = info.InstanceCB;
-				Engine::GraphicsEngine->FillPipelineStateObject(info.CallingVob->GetPipelineStates()[s]);
-			}
-			
+			ImmediatePipelineStates[s]->BaseState.ConstantBuffersVS[1] = info.InstanceCB;
+			Engine::GraphicsEngine->FillPipelineStateObject(ImmediatePipelineStates[s]);
 
 			// Put distance into the state
 			//info.CallingVob->GetPipelineStates()[s]->SortItem.state.Depth = info.Distance > 0 ? std::min((UINT)info.Distance, (UINT)0xFFFFFF) : 0xFFFFFF;
 			//info.CallingVob->GetPipelineStates()[s]->SortItem.state.Build(info.CallingVob->GetPipelineStates()[s]->BaseState);
 
+			PipelineState* transientState = Engine::GraphicsEngine->CreatePipelineState(ImmediatePipelineStates[s]);
+			transientState->TransientState = true;
+
 			// Push state to render-queue
-			Engine::GraphicsEngine->PushPipelineState(info.CallingVob->GetPipelineStates()[s]);
+			Engine::GraphicsEngine->PushPipelineState(transientState);
 
 			//Engine::GraphicsEngine->BindPipelineState(PipelineStates[s]);
 			//Engine::GraphicsEngine->DrawPipelineState(PipelineStates[s]);
@@ -268,6 +323,8 @@ void GStaticMeshVisual::OnBeginDraw()
 /** Called when we are done drawing */
 void GStaticMeshVisual::OnEndDraw()
 {
+	GVisual::OnEndDraw();
+
 	EndDrawInstanced();
 	/*// Check if we actually had something to do this frame
 	if(Instancing.NumRegisteredInstances != 0)
@@ -350,22 +407,9 @@ void GStaticMeshVisual::BeginDrawInstanced()
 /** Can be called before you add instances to the buffer, so the visual can increase the size of the instancing buffer if needed */
 bool GStaticMeshVisual::OnAddInstances(int numInstances, VobInstanceInfo* instances)
 {
-	// Add the world-matrix of this vob to the instancing buffer
-	unsigned int arrayPos = (Instancing.NumRegisteredInstances) * sizeof(VobInstanceInfo);
 	Instancing.NumRegisteredInstances += numInstances;
 
-	// If the buffer is too small, resize it
-	bool recreate = arrayPos + numInstances * sizeof(VobInstanceInfo) >= Instancing.InstancingBuffer->GetSizeInBytes();
-	if(recreate)
-	{
-		
-		IncreaseInstancingBufferSize();
-		BeginDrawInstanced(); // Map again
-	}
-
-	memcpy(Instancing.InstancingBufferData + arrayPos, instances, numInstances * sizeof(VobInstanceInfo));
-
-	return !recreate;
+	return true;
 }
 
 /** Finishes the instanced-draw-call */
@@ -397,16 +441,34 @@ void GStaticMeshVisual::EndDrawInstanced()
 						(*it).first->GetTexture() &&
 						(*it).first->GetTexture()->GetSurface() &&
 						(*it).first->GetTexture()->GetSurface()->GetEngineTexture())
+					{
 						PipelineStates[s]->BaseState.TextureIDs[0] = (*it).first->GetTexture()->GetSurface()->GetEngineTexture()->GetID();
+
+						// Get Alphatest
+						if((*it).first->GetAlphaFunc() > 1 || (*it).first->GetTexture()->HasAlphaChannel())
+							PipelineStates[s]->BaseState.TranspacenyMode = PipelineState::ETransparencyMode::TM_MASKED;
+
+						Engine::GraphicsEngine->SetupPipelineForStage(STAGE_DRAW_WORLD, PipelineStates[s]);
+					}
 				}
 
-				// Give our instancingbuffer to the state
-				if(PipelineStates[s]->BaseState.VertexBuffers[1] != Engine::Game->GetWorld()->GetVobInstanceBuffer())
+				// Give our instancingbuffer to the state if it changed
+				if(PipelineStates[s]->BaseState.VertexBuffers[1] != Engine::Game->GetWorld()->GetVobInstanceRemapBuffer()
+					|| PipelineStates[s]->BaseState.StructuredBuffersVS[0] != Engine::Game->GetWorld()->GetVobInstanceBuffer())
 				{
-					PipelineStates[s]->BaseState.VertexBuffers[1] = Engine::Game->GetWorld()->GetVobInstanceBuffer();
-					PipelineStates[s]->BaseState.VertexStride[1] = sizeof(VobInstanceInfo);
+					PipelineStates[s]->BaseState.VertexBuffers[1] = Engine::Game->GetWorld()->GetVobInstanceRemapBuffer();
+					PipelineStates[s]->BaseState.VertexStride[1] = sizeof(VobInstanceRemapInfo);
+
+					PipelineStates[s]->BaseState.StructuredBuffersVS[0] = Engine::Game->GetWorld()->GetVobInstanceBuffer();
+
+					// Reinit the state
 					Engine::GraphicsEngine->FillPipelineStateObject(PipelineStates[s]);
 				}
+
+				// Unbind any transforms-buffer set here so we don't have useless state-changes
+				PipelineStates.back()->BaseState.ConstantBuffersVS[0] = NULL;
+
+				// Set instancing info
 				PipelineStates[s]->BaseState.NumInstances = Instancing.NumRegisteredInstances;
 				PipelineStates[s]->BaseState.InstanceOffset = Instancing.InstanceBufferOffset;
 
@@ -416,6 +478,8 @@ void GStaticMeshVisual::EndDrawInstanced()
 			}
 		}
 	}
+
+	Instancing.InstanceTypeIndex = -1;
 
 	// Check if we actually had something to do this frame
 	/*if(Instancing.InstancingBufferData != NULL)

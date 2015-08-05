@@ -618,8 +618,9 @@ void GothicAPI::ResetVobs()
 	AnimatedSkeletalVobs.clear();
 
 	// Delete light vobs
-	for(std::hash_map<zCVobLight*, VobLightInfo*>::iterator it = VobLightMap.begin(); it != VobLightMap.end(); it++)
+	for(std::unordered_map<zCVobLight*, VobLightInfo*>::iterator it = VobLightMap.begin(); it != VobLightMap.end(); it++)
 	{
+		Engine::GraphicsEngine->OnVobRemovedFromWorld((*it).first);
 		delete (*it).second;
 	}
 	VobLightMap.clear();
@@ -718,7 +719,15 @@ void GothicAPI::OnLoadWorld(const std::string& levelName, int loadMode)
 void GothicAPI::OnWorldLoaded()
 {
 	LogInfo() << "Collecting vobs...";
-	
+
+	static bool s_firstLoad = true;
+	if (s_firstLoad)
+	{
+		// Print information about the mod here. //TODO: Menu would be better, but that view doesn't exist then
+		PrintModInfo();
+		s_firstLoad = false;
+	}
+
 	LoadedWorldInfo->BspTree = oCGame::GetGame()->_zCSession_world->GetBspTree();
 
 	if(Engine::Game)
@@ -825,7 +834,7 @@ const std::string& GothicAPI::GetStartDirectory()
 /** Builds the static mesh instancing cache */
 void GothicAPI::BuildStaticMeshInstancingCache()
 {
-	for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
+	for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
 	{
 		(*it).second->StartNewFrame();
 	}
@@ -977,7 +986,7 @@ void GothicAPI::DrawWorldMeshNaive()
 	RendererState.RasterizerState.SetDirty();
 
 	// Reset vob-state
-	/*for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
+	/*for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
 	{
 		(*it).second->StartNewFrame();
 	}*/
@@ -1131,7 +1140,7 @@ void GothicAPI::OnMaterialDeleted(zCMaterial* mat)
 		return;
 
 	/** Map for static mesh visuals */
-	/*for(std::hash_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
+	/*for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::iterator it = StaticMeshVisuals.begin(); it != StaticMeshVisuals.end(); it++)
 	{
 		for(std::map<zCMaterial *, std::vector<MeshInfo*>>::iterator itm = (*it).second->Meshes.begin(); itm != (*it).second->Meshes.end(); itm++)
 		{
@@ -1143,7 +1152,7 @@ void GothicAPI::OnMaterialDeleted(zCMaterial* mat)
 	}*/
 	
 	
-	for(std::hash_map<std::string, SkeletalMeshVisualInfo*>::iterator it = SkeletalMeshVisuals.begin(); it != SkeletalMeshVisuals.end(); it++)
+	for(std::unordered_map<std::string, SkeletalMeshVisualInfo*>::iterator it = SkeletalMeshVisuals.begin(); it != SkeletalMeshVisuals.end(); it++)
 	{
 		(*it).second->Meshes.erase(mat);
 		(*it).second->SkeletalMeshes.erase(mat);
@@ -1180,8 +1189,11 @@ bool GothicAPI::IsMaterialActive(zCMaterial* mat)
 
 
 /** Called when a vob moved */
-void GothicAPI::OnVobMoved(zCVob* vob)
+void GothicAPI::OnVobMoved(zCVob* vob)						
 {
+	if(Engine::Game)
+		Engine::Game->OnVobMoved(vob);
+
 	auto it = VobMap.find(vob);
 
 	if(it != VobMap.end())
@@ -1251,7 +1263,7 @@ void GothicAPI::OnVisualDeleted(zCVisual* visual)
 		if(ext == ".3DS")
 		{
 			// Clear the visual from all vobs (FIXME: This may be slow!)
-			for(std::hash_map<zCVob*, VobInfo*>::iterator it = VobMap.begin();it != VobMap.end();it++)
+			for(std::unordered_map<zCVob*, VobInfo*>::iterator it = VobMap.begin();it != VobMap.end();it++)
 			{
 				if(!(*it).second->VisualInfo) // This happens sometimes, so get rid of it
 				{
@@ -1393,6 +1405,8 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 		Engine::Game->OnRemoveVob(vob, world);
 		return;
 	}
+
+	Engine::GraphicsEngine->OnVobRemovedFromWorld(vob);
 
 	std::set<zCVob *>::iterator it = RegisteredVobs.find(vob);
 	if(it == RegisteredVobs.end())
@@ -1580,7 +1594,7 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 	}
 	
 	// Erase it from vob-map
-	std::hash_map<zCVob*, VobInfo*>::iterator vit = VobMap.find(vob);
+	std::unordered_map<zCVob*, VobInfo*>::iterator vit = VobMap.find(vob);
 	if(vit != VobMap.end())
 	{
 		delete (*vit).second;
@@ -2082,8 +2096,24 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		vi->VobConstantBuffer->BindToVertexShader(1);
 	}else*/
 	{
-		g->SetupVS_ExPerInstanceConstantBuffer();
+		//g->SetupVS_ExPerInstanceConstantBuffer();
 	}
+
+	// Set up instance info
+	VS_ExConstantBuffer_PerInstance instanceInfo;
+	if(vi->Vob->IsIndoorVob())
+	{
+		// All lightmapped polys have this color, so just use it
+		instanceInfo.Color = DEFAULT_LIGHTMAP_POLY_COLOR;
+	}else
+	{
+		// Get the color of the first found feature of the ground poly
+		instanceInfo.Color = vi->Vob->GetGroundPoly() ? vi->Vob->GetGroundPoly()->getFeatures()[0]->lightStatic : 0xFFFFFFFF;
+	}
+
+	// Init the constantbuffer if not already done
+	if(!vi->VobConstantBuffer)
+		vi->UpdateVobConstantBuffer();
 
 	g->SetupVS_ExMeshDrawCall();
 	g->SetupVS_ExConstantBuffer();
@@ -2180,7 +2210,11 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 						SetWorldViewTransform(w * transforms[i], view);
 
 						// Update constantbuffer
-						g->SetupVS_ExPerInstanceConstantBuffer();
+						instanceInfo.World = RendererState.TransformState.TransformWorld;
+						vi->VobConstantBuffer->UpdateBuffer(&instanceInfo);
+
+						//g->SetupVS_ExPerInstanceConstantBuffer();
+						vi->VobConstantBuffer->BindToVertexShader(1);
 
 						// Only 0.35f of the fatness wanted by gothic. 
 						// They seem to compensate for that with the scaling.
@@ -2197,7 +2231,10 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 				}
 
 				//if(!visual->SkeletalMeshes.empty())
-				g->SetupVS_ExPerInstanceConstantBuffer();
+				//g->SetupVS_ExPerInstanceConstantBuffer();
+				instanceInfo.World = RendererState.TransformState.TransformWorld;
+				vi->VobConstantBuffer->UpdateBuffer(&instanceInfo);
+				vi->VobConstantBuffer->BindToVertexShader(1);
 
 				// Go through all materials registered here
 				for(std::map<zCMaterial *, std::vector<MeshInfo*>>::iterator itm = nodeAttachments[i][n]->Meshes.begin(); 
@@ -3733,7 +3770,7 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 			for(int i=0;i<leaf->LightVobList.NumInArray;i++)
 			{
 				// Add the light to the map if not already done
-				std::hash_map<zCVobLight*, VobLightInfo*>::iterator vit = VobLightMap.find(leaf->LightVobList.Array[i]);
+				std::unordered_map<zCVobLight*, VobLightInfo*>::iterator vit = VobLightMap.find(leaf->LightVobList.Array[i]);
 
 				if(vit == VobLightMap.end())
 				{
@@ -3819,7 +3856,7 @@ void GothicAPI::BuildBspVobMapCache()
 /** Cleans empty BSPNodes */
 void GothicAPI::CleanBSPNodes()
 {
-	for(std::hash_map<zCBspBase *, BspInfo>::iterator it = BspLeafVobLists.begin(); it != BspLeafVobLists.end(); it++)
+	for(std::unordered_map<zCBspBase *, BspInfo>::iterator it = BspLeafVobLists.begin(); it != BspLeafVobLists.end(); it++)
 	{
 		if((*it).second.IsEmpty())
 			it = BspLeafVobLists.erase(it);
@@ -3939,7 +3976,7 @@ void GothicAPI::DrawSkyGothicOriginal()
 /** Returns the material info associated with the given material */
 MaterialInfo* GothicAPI::GetMaterialInfoFrom(zCTexture* tex)
 {
-	std::hash_map<zCTexture*, MaterialInfo>::iterator f = MaterialInfos.find(tex);
+	std::unordered_map<zCTexture*, MaterialInfo>::iterator f = MaterialInfos.find(tex);
 	if(f == MaterialInfos.end() && tex)
 	{
 		// Make a new one and try to load it
@@ -4570,7 +4607,7 @@ QuadMarkInfo* GothicAPI::GetQuadMarkInfo(zCQuadMark* mark)
 
 
 /** Returns all quad marks */
-const stdext::hash_map<zCQuadMark*, QuadMarkInfo>& GothicAPI::GetQuadMarks()
+const stdext::unordered_map<zCQuadMark*, QuadMarkInfo>& GothicAPI::GetQuadMarks()
 {
 	return QuadMarks;
 }
@@ -4890,6 +4927,15 @@ void GothicAPI::PrintMessageTimed(const INT2& position, const std::string& strMe
 	zCView* view = oCGame::GetGame()->GetGameView();
 	if(view)
 		view->PrintTimed(position.x, position.y, zSTRING(strMessage.c_str()), time, &color);
+}
+
+/** Prints information about the mod to the screen for a couple of seconds */
+void GothicAPI::PrintModInfo()
+{
+	std::string version = std::string(VERSION_STRING);
+	std::string gpu = Engine::GraphicsEngine->GetGraphicsDeviceName();
+	PrintMessageTimed(INT2(5, 5), "GD3D11 - Version " + version);
+	PrintMessageTimed(INT2(5, 180), "Device: " + gpu);
 }
 
 /** Applies tesselation-settings for all mesh-parts using the given info */

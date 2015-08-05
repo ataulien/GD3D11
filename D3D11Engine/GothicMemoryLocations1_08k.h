@@ -424,6 +424,7 @@ struct GothicMemoryLocations
 		static const unsigned int Offset_ModelFatness = 0x118;
 		static const unsigned int Offset_ModelScale = 0x11C;
 		static const unsigned int Offset_DistanceModelToCamera = 0x114;
+		static const unsigned int Offset_NumActiveAnis = 0x34;
 		static const unsigned int GetVisualName = 0x00563EF0;
 	};
 };
