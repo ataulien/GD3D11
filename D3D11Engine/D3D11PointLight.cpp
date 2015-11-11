@@ -7,53 +7,10 @@
 #include "zCVobLight.h"
 #include "BaseLineRenderer.h"
 #include "WorldConverter.h"
+#include "ThreadPool.h"
 
 const float LIGHT_COLORCHANGE_POS_MOD = 0.1f;
 
-D3D11LightCreatorThread::D3D11LightCreatorThread()
-{
-	EndThread = false;
-	IsRunning = false;
-}
-
-void D3D11LightCreatorThread::RunThread()
-{
-	IsRunning = true;
-	Thread = new std::thread(Threadfunc, this);
-}
-
-D3D11LightCreatorThread::~D3D11LightCreatorThread()
-{
-	EndThread = true;
-	CV.notify_all();
-
-	Thread->join();
-	delete Thread;
-}
-
-void D3D11LightCreatorThread::Threadfunc(D3D11LightCreatorThread* t)
-{
-	//std::unique_lock<std::mutex> lk(t->EmptyMutex);
-
-	while(!t->EndThread)
-	{
-		while(t->Queue.empty())
-			Sleep(10);
-			//t->CV.wait(lk); // Wait when we don't have something to do
-
-		if(t->EndThread)
-			break; // check again, if EndThread was set to true while we were waiting
-
-		// Get piece of work
-		t->QueueMutex.lock();
-		D3D11PointLight* p = t->Queue.back();
-		t->Queue.pop_back();
-		t->QueueMutex.unlock();
-
-		// Init light
-		p->InitResources();
-	}
-}
 
 D3D11PointLight::D3D11PointLight(VobLightInfo* info, bool dynamicLight)
 {
@@ -70,19 +27,9 @@ D3D11PointLight::D3D11PointLight(VobLightInfo* info, bool dynamicLight)
 	{
 		InitDone = false;
 
-		// Init thread when wanted
-		if(!D3D11PointlightCreatorNS::CreatorThread.IsRunning)
-		{
-			D3D11PointlightCreatorNS::CreatorThread.RunThread();
-		}
-
 		// Add to queue
-		D3D11PointlightCreatorNS::CreatorThread.QueueMutex.lock();
-		D3D11PointlightCreatorNS::CreatorThread.Queue.push_back(this);
-		D3D11PointlightCreatorNS::CreatorThread.QueueMutex.unlock();
+		Engine::WorkerThreadPool->enqueue( [this]{ InitResources(); });
 
-		// Notify the thread
-		D3D11PointlightCreatorNS::CreatorThread.CV.notify_all();
 	}else
 	{
 		InitResources();
@@ -114,6 +61,8 @@ bool D3D11PointLight::NotYetDrawn()
 void D3D11PointLight::InitResources()
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
+
+	InitMutex.lock();
 
 	// Create texture-cube for this light
 	DepthCubemap = new RenderToDepthStencilBuffer(engine->GetDevice(), 
@@ -151,6 +100,8 @@ void D3D11PointLight::InitResources()
 	//RenderCubemap(true);
 
 	InitDone = true;
+
+	InitMutex.unlock();
 }
 
 /** Returns if this light needs an update */
@@ -422,7 +373,7 @@ void D3D11PointLight::DebugDrawCubeMap()
 void D3D11PointLight::OnVobRemovedFromWorld(BaseVobInfo* vob)
 {
 	// Wait for cache initialization to finish first
-	while(!InitDone);
+	InitMutex.lock();
 
 	// See if we have this vob registered
 	if(std::find(VobCache.begin(), VobCache.end(), vob) != VobCache.end()
@@ -432,4 +383,6 @@ void D3D11PointLight::OnVobRemovedFromWorld(BaseVobInfo* vob)
 		VobCache.clear();
 		SkeletalVobCache.clear();
 	}
+
+	InitMutex.unlock();
 }

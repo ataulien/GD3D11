@@ -2841,19 +2841,23 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position,
 		D3DXMatrixIdentity(&id);
 		ActiveVS->GetConstantBuffer()[1]->UpdateBuffer(&id);
 		ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(1);
-		if(worldMeshCache)
+
+		// Only use cache if we haven't already collected the vobs
+		// TODO: Collect vobs in a different way than using the drawn sections!
+		//		 The current solution won't use the cache at all when there are no vobs near!
+		if(worldMeshCache && renderedVobs && !renderedVobs->empty())
 		{
 			for(std::map<MeshKey, WorldMeshInfo*>::iterator it = worldMeshCache->begin(); it != worldMeshCache->end();it++)
 			{
-				// Check surface type
-				if((*it).first.Info->MaterialType == MaterialInfo::MT_Water)
-				{
-					continue;
-				}
-
 				// Bind texture			
 				if((*it).first.Material && (*it).first.Material->GetTexture())
 				{
+					// Check surface type
+					if((*it).first.Info->MaterialType == MaterialInfo::MT_Water)
+					{
+						continue;
+					}
+
 					if((*it).first.Material->GetTexture()->HasAlphaChannel() || colorWritesEnabled)
 					{
 						if(alphaRef > 0.0f && (*it).first.Material->GetTexture()->CacheIn(0.6f) == zRES_CACHED_IN)

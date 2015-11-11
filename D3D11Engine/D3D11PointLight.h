@@ -5,28 +5,6 @@
 #include <condition_variable>
 
 class D3D11PointLight;
-struct D3D11LightCreatorThread
-{
-	D3D11LightCreatorThread();
-	~D3D11LightCreatorThread();
-
-	void RunThread();
-
-	static void Threadfunc(D3D11LightCreatorThread* t);
-
-	std::thread* Thread;
-	std::mutex QueueMutex;
-	std::mutex EmptyMutex;
-	std::condition_variable CV;
-	std::vector<D3D11PointLight*> Queue;
-	bool EndThread;
-	bool IsRunning;
-};
-
-namespace D3D11PointlightCreatorNS
-{
-	__declspec(selectany) D3D11LightCreatorThread CreatorThread;
-};
 
 struct VobLightInfo;
 struct RenderToDepthStencilBuffer;
@@ -85,6 +63,6 @@ protected:
 	bool DynamicLight;
 	bool InitDone;
 	bool DrawnOnce;
-
+	std::mutex InitMutex;
 };
 
