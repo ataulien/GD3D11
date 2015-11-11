@@ -315,7 +315,7 @@ void D3D11PointLight::RenderFullCubemap()
 	// Draw cubemap
 	std::map<MeshKey, WorldMeshInfo*, cmpMeshKey>* wc = &WorldMeshCache;
 
-
+	// Don't use the cache if we have moved
 	if(WorldCacheInvalid)
 		wc = NULL;
 
@@ -421,6 +421,9 @@ void D3D11PointLight::DebugDrawCubeMap()
 /** Called when a vob got removed from the world */
 void D3D11PointLight::OnVobRemovedFromWorld(BaseVobInfo* vob)
 {
+	// Wait for cache initialization to finish first
+	while(!InitDone);
+
 	// See if we have this vob registered
 	if(std::find(VobCache.begin(), VobCache.end(), vob) != VobCache.end()
 		|| std::find(SkeletalVobCache.begin(), SkeletalVobCache.end(), vob) != SkeletalVobCache.end())
