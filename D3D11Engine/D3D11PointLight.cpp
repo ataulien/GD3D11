@@ -314,7 +314,9 @@ void D3D11PointLight::RenderFullCubemap()
 
 	// Draw cubemap
 	std::map<MeshKey, WorldMeshInfo*, cmpMeshKey>* wc = &WorldMeshCache;
-	if(&WorldCacheInvalid)
+
+
+	if(WorldCacheInvalid)
 		wc = NULL;
 
 	engine->RenderShadowCube(LightInfo->Vob->GetPositionWorld(), range, DepthCubemap, NULL, NULL, false, LightInfo->IsIndoorVob, noNPCs, &VobCache, &SkeletalVobCache, wc);
