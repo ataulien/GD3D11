@@ -65,13 +65,21 @@ class zCModelAni
 public:
 	bool IsIdleAni()
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		return false;
+#else
 		DWORD value = *(DWORD *)THISPTR_OFFSET(GothicMemoryLocations::zCModelAni::Offset_Flags);
 		return (value & GothicMemoryLocations::zCModelAni::Mask_FlagIdle) != 0;
+#endif
 	}
 
 	int GetNumAniFrames()
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		return 0;
+#else
 		return *(uint16_t *)THISPTR_OFFSET(GothicMemoryLocations::zCModelAni::Offset_NumFrames);
+#endif
 	}
 };
 
@@ -223,9 +231,13 @@ public:
 	/** Returns true if only an idle-animation is running */
 	bool IdleAnimationRunning()
 	{
+#ifdef BUILD_GOTHIC_1_08k
+		return false;
+#else
 		zCModelAniActive* activeAni = *(zCModelAniActive **)THISPTR_OFFSET(GothicMemoryLocations::zCModel::Offset_AniChannels);
 
 		return GetNumActiveAnimations() == 1 && (/*activeAni->protoAni->IsIdleAni() ||*/ activeAni->protoAni->GetNumAniFrames() <= 1);
+#endif
 	}
 
 	/** This is needed for the animations to work at full framerate */
