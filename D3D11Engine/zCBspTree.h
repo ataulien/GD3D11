@@ -263,6 +263,9 @@ public:
 	int LastTimeLighted;
 	zCArray<zCVob*>	LeafVobList;
 	zCArray<zCVobLight*> LightVobList;
+
+	UINT				lastTimeActivated;		// last time activated by portal
+	short					sectorIndex;			// sector this leaf was activated by
 };
 
 /** BspTree-Object which holds the world */

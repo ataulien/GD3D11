@@ -645,7 +645,7 @@ struct GothicRendererSettings
 	/** Rendering options */
 	bool DrawVOBs;
 	bool DrawDynamicVOBs;
-	bool DrawWorldMesh;
+	int DrawWorldMesh;
 	bool DrawSkeletalMeshes;
 	bool DrawMobs;
 	bool DrawParticleEffects;

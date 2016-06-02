@@ -61,6 +61,42 @@ const int NUM_MIN_FRAME_SHADOW_UPDATES = 4; // Minimum lights to update per fram
 const int MAX_IMPORTANT_LIGHT_UPDATES = 1;
 //#define DEBUG_D3D11
 
+#define RECORD_LAST_DRAWCALL
+#ifdef RECORD_LAST_DRAWCALL
+struct DrawcallInfo
+{
+	enum DrawCallType
+	{
+		VB=0,
+		VB_IX=1,
+		VB_IX_UINT=2,
+	};
+
+	DrawCallType Type;
+	unsigned int NumElements;
+	unsigned int BaseVertexLocation;
+	unsigned int BaseIndexLocation;
+
+	void Print()
+	{
+		LogInfo() << "Last Drawcall: " << Type << " NumElements: " << NumElements << " BaseVertexLocation: " << BaseVertexLocation << " BaseIndexLocation: " << BaseIndexLocation;
+	}
+
+	bool Check()
+	{
+		if(NumElements > 0xFFFF * 4)
+		{
+			LogWarn() << "Invalid amount of NumElements supplied to drawcall!";
+			Print();
+			return false;
+		}
+
+		return true;
+	}
+};
+DrawcallInfo g_LastDrawCall;
+#endif
+
 D3D11GraphicsEngine::D3D11GraphicsEngine(void)
 {
 	Resolution = DEFAULT_RESOLUTION;
@@ -992,6 +1028,15 @@ XRESULT D3D11GraphicsEngine::SetViewport(const ViewportInfo& viewportInfo)
 /** Draws a vertexbuffer, non-indexed (World)*/
 XRESULT D3D11GraphicsEngine::DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int stride)
 {
+#ifdef RECORD_LAST_DRAWCALL
+	g_LastDrawCall.Type = DrawcallInfo::VB;
+	g_LastDrawCall.NumElements = numVertices;
+	g_LastDrawCall.BaseVertexLocation = 0;
+	g_LastDrawCall.BaseIndexLocation = 0;
+	if(!g_LastDrawCall.Check())
+		return XR_SUCCESS;
+#endif
+
 	UINT offset = 0;
 	UINT uStride = stride;
 	ID3D11Buffer* buffer = ((D3D11VertexBuffer *)vb)->GetVertexBuffer();
@@ -1008,6 +1053,15 @@ XRESULT D3D11GraphicsEngine::DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int
 /** Draws a vertexbuffer, non-indexed (VOBs)*/
 XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexed(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset)
 {
+#ifdef RECORD_LAST_DRAWCALL
+	g_LastDrawCall.Type = DrawcallInfo::VB_IX;
+	g_LastDrawCall.NumElements = numIndices;
+	g_LastDrawCall.BaseVertexLocation = 0;
+	g_LastDrawCall.BaseIndexLocation = indexOffset;
+	if(!g_LastDrawCall.Check())
+		return XR_SUCCESS;
+#endif
+
 	if(vb)
 	{
 		UINT offset = 0;
@@ -1036,6 +1090,15 @@ XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexed(BaseVertexBuffer* vb, BaseV
 
 XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexedUINT(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset)
 {
+#ifdef RECORD_LAST_DRAWCALL
+	g_LastDrawCall.Type = DrawcallInfo::VB_IX_UINT;
+	g_LastDrawCall.NumElements = numIndices;
+	g_LastDrawCall.BaseVertexLocation = 0;
+	g_LastDrawCall.BaseIndexLocation = indexOffset;
+	if(!g_LastDrawCall.Check())
+		return XR_SUCCESS;
+#endif
+
 	if(vb)
 	{
 		UINT offset = 0;
@@ -2144,7 +2207,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 	for(std::list<std::pair<MeshKey, WorldMeshInfo *>>::iterator it = meshList.begin(); it != meshList.end(); it++)
 	{
 		int indicesNumMod = 1;
-		if((*it).first.Texture != bound)
+		if((*it).first.Texture != bound && Engine::GAPI->GetRendererState()->RendererSettings.DrawWorldMesh > 1)
 		{
 			MyDirectDrawSurface7* surface = (*it).first.Texture->GetSurface();
 			ID3D11ShaderResourceView* srv[3];
@@ -2273,7 +2336,7 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 		}
 
 		// Bind infos for this mesh
-		if(boundInfo->TextureTesselationSettings.buffer.VT_TesselationFactor > 0.0f 
+		if(boundInfo && boundInfo->TextureTesselationSettings.buffer.VT_TesselationFactor > 0.0f 
 			&& !(*it).second->IndicesPNAEN.empty() 
 			&& (*it).first.Material->GetAlphaFunc() <= zMAT_ALPHA_FUNC_FUNC_NONE && !bound->HasAlphaChannel()) // Only allow tesselation for materials without alphablending
 		{
@@ -2296,24 +2359,28 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 				Engine::GAPI->GetWrappedWorldMesh()->MeshIndexBuffer, 0, 0);
 		}
 
-		if(!ActiveHDS)
+		if(Engine::GAPI->GetRendererState()->RendererSettings.DrawWorldMesh > 2)
 		{
-			// Draw the section-part
-			/*static bool test = false;
+			if(!ActiveHDS)
+			{
+				// Draw the section-part
+				/*static bool test = false;
 
-			if(!test)
-			{
-				DrawVertexBufferIndexedUINT(NULL, NULL, 
-					(*it).second->Indices.size(),
-					(*it).second->BaseIndexLocation);
-			}else*/ // TODO: FIXME!!
-			{
-				DrawVertexBufferIndexed((*it).second->MeshVertexBuffer, (*it).second->MeshIndexBuffer, (*it).second->Indices.size());
+				if(!test)
+				{
+					DrawVertexBufferIndexedUINT(NULL, NULL,
+						(*it).second->Indices.size(),
+						(*it).second->BaseIndexLocation);
+				}else*/ // TODO: FIXME!!
+				{
+					DrawVertexBufferIndexed((*it).second->MeshVertexBuffer, (*it).second->MeshIndexBuffer, (*it).second->Indices.size());
+				}
 			}
-		}else
-		{
-			// Draw from mesh info
-			DrawVertexBufferIndexed((*it).second->MeshVertexBuffer, (*it).second->MeshIndexBufferPNAEN, (*it).second->IndicesPNAEN.size());
+			else
+			{
+				// Draw from mesh info
+				DrawVertexBufferIndexed((*it).second->MeshVertexBuffer, (*it).second->MeshIndexBufferPNAEN, (*it).second->IndicesPNAEN.size());
+			}
 		}
 
 	}

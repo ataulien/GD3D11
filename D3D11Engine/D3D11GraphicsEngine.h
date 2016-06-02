@@ -19,7 +19,7 @@ const int DRAWVERTEXARRAY_BUFFER_SIZE = 2048 * sizeof(ExVertexStruct);
 const int NUM_MAX_BONES = 96;
 const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceInfo) * 2048;
 
-const int POINTLIGHT_SHADOWMAP_SIZE = 128;
+const int POINTLIGHT_SHADOWMAP_SIZE = 64;
 
 class D3D11PointLight;
 class D3D11VShader;

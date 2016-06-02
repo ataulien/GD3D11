@@ -999,7 +999,7 @@ void GothicAPI::DrawWorldMeshNaive()
 	//if(Ocean)
 	//	Ocean->Draw();
 
-	//DebugDrawBSPTree();
+	DebugDrawBSPTree();
 
 	ResetWorldTransform();
 	ResetViewTransform();
@@ -3101,7 +3101,12 @@ void GothicAPI::DebugDrawTreeNode(zCBspBase* base, zTBBox3D boxCell, int clipFla
 					return;
 			}
 
-			//Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->BBox3D.Min, base->BBox3D.Max);
+
+			zCBspLeaf* leaf = (zCBspLeaf*)base;
+			if(!leaf->sectorIndex)
+				return;
+
+			Engine::GraphicsEngine->GetLineRenderer()->AddAABBMinMax(base->BBox3D.Min, base->BBox3D.Max);
 			return;
 		}else
 		{
