@@ -1,27 +1,55 @@
-//////////////////////////////////////////////////////////////////////////////
+//--------------------------------------------------------------------------------------
+// File: D3DXGlobal.h
 //
-//  Copyright (C) 2009 Microsoft Corporation.  All Rights Reserved.
+// Direct3D 11 Effects helper defines and data structures
 //
-//  File:       D3DXGlobal.h
-//  Content:    D3DX11 Effects helper defines and data structures
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
 //
-//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) Microsoft Corporation. All rights reserved.
+//
+// http://go.microsoft.com/fwlink/p/?LinkId=271568
+//--------------------------------------------------------------------------------------
 
 #pragma once
 
+#include <assert.h>
+#include <string.h>
+
 namespace D3DX11Debug
 {
+    // Helper sets a D3D resource name string (used by PIX and debug layer leak reporting).
+    inline void SetDebugObjectName(_In_ ID3D11DeviceChild* resource, _In_z_ const char *name )
+    {
+        #if !defined(NO_D3D11_DEBUG_NAME) && ( defined(_DEBUG) || defined(PROFILE) )
+            resource->SetPrivateData( WKPDID_D3DDebugObjectName, static_cast<UINT>(strlen(name)), name );
+        #else
+            UNREFERENCED_PARAMETER(resource);
+            UNREFERENCED_PARAMETER(name);
+        #endif
+    }
+
+    template<UINT TNameLength>
+    inline void SetDebugObjectName(_In_ ID3D11DeviceChild* resource, _In_z_ const char (&name)[TNameLength])
+    {
+        #if !defined(NO_D3D11_DEBUG_NAME) && ( defined(_DEBUG) || defined(PROFILE) )
+            resource->SetPrivateData(WKPDID_D3DDebugObjectName, TNameLength - 1, name);
+        #else
+            UNREFERENCED_PARAMETER(resource);
+            UNREFERENCED_PARAMETER(name);
+        #endif
+    }
 }
 
 using namespace D3DX11Debug;
 
-#include "d3dx11dbg.h"
+#define SAFE_RELEASE(p)       { if (p) { (p)->Release();  (p) = nullptr; } }
+#define SAFE_ADDREF(p)        { if (p) { (p)->AddRef(); } }
 
-#define SAFE_RELEASE(p)       { if (p) { (p)->Release();  (p) = NULL; } }
-#define SAFE_ADDREF(p)        { if (p) { (p)->AddRef();               } }
-
-#define SAFE_DELETE_ARRAY(p)  { delete [](p); p = NULL; }
-#define SAFE_DELETE(p)        { delete (p); p = NULL;  }
+#define SAFE_DELETE_ARRAY(p)  { delete [](p); p = nullptr; }
+#define SAFE_DELETE(p)        { delete (p); p = nullptr;  }
 
 #if FXDEBUG
 #define __BREAK_ON_FAIL       { __debugbreak(); }
@@ -42,84 +70,28 @@ using namespace D3DX11Debug;
 #define VBD(x,str)         { VBA(x, DPF(1,str)) }
 #define VHD(x,str)         { VHA(x, DPF(1,str)) }
 
-#define VEASSERT(x)   { hr = (x); if (FAILED(hr)) { __BREAK_ON_FAIL; D3DXASSERT(!#x);                     goto lExit; } }
-#define VNASSERT(x)   {           if (!(x))       { __BREAK_ON_FAIL; D3DXASSERT(!#x); hr = E_OUTOFMEMORY; goto lExit; } }
-
-#define ANALYSIS_ASSUME(x)      { D3DXASSERT(x); __analysis_assume(x); __assume(x); }
+#define VEASSERT(x)   { hr = (x); if (FAILED(hr)) { __BREAK_ON_FAIL; assert(!#x);                     goto lExit; } }
+#define VNASSERT(x)   {           if (!(x))       { __BREAK_ON_FAIL; assert(!#x); hr = E_OUTOFMEMORY; goto lExit; } }
 
 #define D3DX11FLTASSIGN(a,b)    { *reinterpret_cast< UINT32* >(&(a)) = *reinterpret_cast< UINT32* >(&(b)); }
 
 // Preferred data alignment -- must be a power of 2!
-static const UINT c_DataAlignment = sizeof(UINT_PTR);
+static const uint32_t c_DataAlignment = sizeof(UINT_PTR);
 
-D3DX11INLINE UINT AlignToPowerOf2(UINT Value, UINT Alignment)
+inline uint32_t AlignToPowerOf2(uint32_t Value, uint32_t Alignment)
 {
-    D3DXASSERT((Alignment & (Alignment - 1)) == 0);
+    assert((Alignment & (Alignment - 1)) == 0);
     // to align to 2^N, add 2^N - 1 and AND with all but lowest N bits set
-    ANALYSIS_ASSUME(Alignment > 0 && Value < MAXDWORD - Alignment);
+    _Analysis_assume_(Alignment > 0 && Value < MAXDWORD - Alignment);
     return (Value + Alignment - 1) & (~(Alignment - 1));
 }
 
-D3DX11INLINE void * AlignToPowerOf2(void *pValue, UINT_PTR Alignment)
+inline void * AlignToPowerOf2(void *pValue, UINT_PTR Alignment)
 {
-    D3DXASSERT((Alignment & (Alignment - 1)) == 0);
+    assert((Alignment & (Alignment - 1)) == 0);
     // to align to 2^N, add 2^N - 1 and AND with all but lowest N bits set
     return (void *)(((UINT_PTR)pValue + Alignment - 1) & (~((UINT_PTR)Alignment - 1)));
 }
-
-
-// Fast memcpy
-D3DX11INLINE void dwordMemcpy( __out_bcount(uByteCount) void * __restrict pDest, __in_bcount(uByteCount) void * __restrict pSource, UINT uByteCount)
-{
-    UINT i;
-    D3DXASSERT(uByteCount % 4 == 0);
-#ifdef _AMD64_
-    const UINT qwordCount = uByteCount >> 3;
-
-    __int64* src64 = (__int64*) pSource;
-    __int64* dst64 = (__int64*) pDest;
-
-    for (i=0; i<(qwordCount & 0x3); i++)
-    {
-        *(dst64) = *(src64);
-        dst64++;
-        src64++;
-    }
-
-    for (; i<qwordCount; i+= 4)
-    {
-        *(dst64     ) = *(src64     );
-        *(dst64 + 1 ) = *(src64 + 1 );
-        *(dst64 + 2 ) = *(src64 + 2 );
-        *(dst64 + 3 ) = *(src64 + 3 );
-        dst64 += 4;
-        src64 += 4;
-    }
-
-    ANALYSIS_ASSUME( dst64 - static_cast< __int64* >(pDest) <= uByteCount - 4 );
-    ANALYSIS_ASSUME( src64 - static_cast< __int64* >(pSource) <= uByteCount - 4 );
-    if( uByteCount & 0x4 )
-    {
-        *((UINT*)dst64) = *((UINT*)src64);
-    }
-#else
-    const UINT dwordCount = uByteCount >> 2;
-
-    for (i=0; i<(dwordCount & 0x3); i++)
-    {
-#pragma prefast(suppress: __WARNING_UNRELATED_LOOP_TERMINATION, "(dwordCount & 03) < dwordCount")
-        ((UINT*)pDest)[i  ] = ((UINT*)pSource)[i  ];
-    }
-    for (; i<dwordCount; i+= 4)
-    {
-        ((UINT*)pDest)[i  ] = ((UINT*)pSource)[i  ];
-        ((UINT*)pDest)[i+1] = ((UINT*)pSource)[i+1];
-        ((UINT*)pDest)[i+2] = ((UINT*)pSource)[i+2];
-        ((UINT*)pDest)[i+3] = ((UINT*)pSource)[i+3];
-    }
-#endif
-}
-
 
 namespace D3DX11Core
 {
@@ -129,22 +101,22 @@ namespace D3DX11Core
 //////////////////////////////////////////////////////////////////////////
 class CMemoryStream
 {
-    BYTE    *m_pData;
-    SIZE_T  m_cbData;
-    SIZE_T  m_readPtr;
+    uint8_t *m_pData;
+    size_t  m_cbData;
+    size_t  m_readPtr;
 
 public:
-    HRESULT SetData(const void *pData, SIZE_T size);
+    HRESULT SetData(_In_reads_bytes_(size) const void *pData, _In_ size_t size);
 
-    HRESULT Read(UINT *pUint);
-    HRESULT Read(void **ppData, SIZE_T size);
-    HRESULT Read(LPCSTR *ppString);
+    HRESULT Read(_Out_ uint32_t *pUint);
+    HRESULT Read(_Outptr_result_buffer_(size) void **ppData, _In_ size_t size);
+    HRESULT Read(_Outptr_ LPCSTR *ppString);
 
-    HRESULT ReadAtOffset(SIZE_T offset, SIZE_T size, void **ppData);
-    HRESULT ReadAtOffset(SIZE_T offset, LPCSTR *ppString);
+    HRESULT ReadAtOffset(_In_ size_t offset, _In_ size_t size, _Outptr_result_buffer_(size) void **ppData);
+    HRESULT ReadAtOffset(_In_ size_t offset, _Outptr_result_z_ LPCSTR *ppString);
 
-    SIZE_T  GetPosition();
-    HRESULT Seek(SIZE_T offset);
+    size_t  GetPosition();
+    HRESULT Seek(_In_ size_t offset);
 
     CMemoryStream();
     ~CMemoryStream();
@@ -152,7 +124,7 @@ public:
 
 }
 
-#if FXDEBUG
+#if defined(_DEBUG) && !defined(_M_X64)
 
 namespace D3DX11Debug
 {
@@ -164,7 +136,7 @@ namespace D3DX11Debug
 _declspec(selectany) unsigned int g_TimerRolloverCount = 0x80000000;
 }
 
-#endif // FXDEBUG
+#endif // _DEBUG && !_M_X64
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -178,21 +150,21 @@ protected:
     T       *m_pCastData; // makes debugging easier to have a casted version of the data
 #endif // _DEBUG
 
-    BYTE    *m_pData;
-    UINT    m_MaxSize;
-    UINT    m_CurSize;
+    uint8_t    *m_pData;
+    uint32_t    m_MaxSize;
+    uint32_t    m_CurSize;
 
     HRESULT Grow()
     {
         return Reserve(m_CurSize + 1);
     }
 
-    HRESULT Reserve(UINT DesiredSize)
+    HRESULT Reserve(_In_ uint32_t DesiredSize)
     {
         if (DesiredSize > m_MaxSize)
         {
-            BYTE *pNewData;
-            UINT newSize = max(m_MaxSize * 2, DesiredSize);
+            uint8_t *pNewData;
+            uint32_t newSize = std::max(m_MaxSize * 2, DesiredSize);
 
             if (newSize < 16)
                 newSize = 16;
@@ -203,8 +175,8 @@ protected:
                 return m_hLastError;
             }
 
-            pNewData = NEW BYTE[newSize * sizeof(T)];
-            if (pNewData == NULL)
+            pNewData = new uint8_t[newSize * sizeof(T)];
+            if (pNewData == nullptr)
             {
                 m_hLastError = E_OUTOFMEMORY;
                 return m_hLastError;
@@ -228,14 +200,11 @@ protected:
 public:
     HRESULT m_hLastError;
 
-    CEffectVector<T>()
+    CEffectVector<T>() : m_hLastError(S_OK), m_pData(nullptr), m_CurSize(0), m_MaxSize(0)
     {
-        m_hLastError = S_OK;
 #if _DEBUG
-        m_pCastData = NULL;
+        m_pCastData = nullptr;
 #endif // _DEBUG
-        m_pData = NULL;
-        m_CurSize = m_MaxSize = 0;
     }
 
     ~CEffectVector<T>()
@@ -245,27 +214,26 @@ public:
 
     // cleanly swaps two vectors -- useful for when you want
     // to reallocate a vector and copy data over, then swap them back
-    void SwapVector(CEffectVector<T> &vOther)
+    void SwapVector(_Out_ CEffectVector<T> &vOther)
     {
-        BYTE tempData[sizeof(*this)];
+        uint8_t tempData[sizeof(*this)];
 
         memcpy(tempData, this, sizeof(*this));
         memcpy(this, &vOther, sizeof(*this));
         memcpy(&vOther, tempData, sizeof(*this));
     }
 
-    HRESULT CopyFrom(CEffectVector<T> &vOther)
+    HRESULT CopyFrom(_In_ const CEffectVector<T> &vOther)
     {
         HRESULT hr = S_OK;
         Clear();
-        VN( m_pData = NEW BYTE[vOther.m_MaxSize * sizeof(T)] );
+        VN( m_pData = new uint8_t[vOther.m_MaxSize * sizeof(T)] );
         
         m_CurSize = vOther.m_CurSize;
         m_MaxSize = vOther.m_MaxSize;
         m_hLastError = vOther.m_hLastError;
 
-        UINT i;
-        for (i = 0; i < m_CurSize; ++ i)
+        for (size_t i = 0; i < m_CurSize; ++ i)
         {
             ((T*)m_pData)[i] = ((T*)vOther.m_pData)[i];
         }
@@ -285,7 +253,7 @@ lExit:
         SAFE_DELETE_ARRAY(m_pData);
         m_MaxSize = 0;
 #if _DEBUG
-        m_pCastData = NULL;
+        m_pCastData = nullptr;
 #endif // _DEBUG
     }
 
@@ -297,16 +265,15 @@ lExit:
         m_MaxSize = 0;
 
 #if _DEBUG
-        m_pCastData = NULL;
+        m_pCastData = nullptr;
 #endif // _DEBUG
     }
 
     void Empty()
     {
-        UINT i;
-        
+       
         // manually invoke destructor on all elements
-        for (i = 0; i < m_CurSize; ++ i)
+        for (size_t i = 0; i < m_CurSize; ++ i)
         {   
             ((T*)m_pData + i)->~T();
         }
@@ -317,26 +284,25 @@ lExit:
     T* Add()
     {
         if (FAILED(Grow()))
-            return NULL;
+            return nullptr;
 
         // placement new
         return new((T*)m_pData + (m_CurSize ++)) T;
     }
 
-    T* AddRange(UINT count)
+    T* AddRange(_In_ uint32_t count)
     {
         if (m_CurSize + count < m_CurSize)
         {
             m_hLastError = E_OUTOFMEMORY;
-            return NULL;
+            return nullptr;
         }
 
         if (FAILED(Reserve(m_CurSize + count)))
-            return NULL;
+            return nullptr;
 
         T *pData = (T*)m_pData + m_CurSize;
-        UINT i;
-        for (i = 0; i < count; ++ i)
+        for (size_t i = 0; i < count; ++ i)
         {
             new(pData + i) T;
         }
@@ -344,7 +310,7 @@ lExit:
         return pData;
     }
 
-    HRESULT Add(const T& var)
+    HRESULT Add(_In_ const T& var)
     {
         if (FAILED(Grow()))
             return m_hLastError;
@@ -355,7 +321,7 @@ lExit:
         return S_OK;
     }
 
-    HRESULT AddRange(const T *pVar, UINT count)
+    HRESULT AddRange(_In_reads_(count) const T *pVar, _In_ uint32_t count)
     {
         if (m_CurSize + count < m_CurSize)
         {
@@ -372,9 +338,9 @@ lExit:
         return S_OK;
     }
 
-    HRESULT Insert(const T& var, UINT index)
+    HRESULT Insert(_In_ const T& var, _In_ uint32_t index)
     {
-        D3DXASSERT(index < m_CurSize);
+        assert(index < m_CurSize);
         
         if (FAILED(Grow()))
             return m_hLastError;
@@ -386,9 +352,9 @@ lExit:
         return S_OK;
     }
 
-    HRESULT InsertRange(const T *pVar, UINT index, UINT count)
+    HRESULT InsertRange(_In_reads_(count) const T *pVar, _In_ uint32_t index, _In_ uint32_t count)
     {
-        D3DXASSERT(index < m_CurSize);
+        assert(index < m_CurSize);
         
         if (m_CurSize + count < m_CurSize)
         {
@@ -406,31 +372,31 @@ lExit:
         return S_OK;
     }
 
-    inline T& operator[](UINT index)
+    inline T& operator[](_In_ size_t index)
     {
-        D3DXASSERT(index < m_CurSize);
+        assert(index < m_CurSize);
         return ((T*)m_pData)[index];
     }
 
     // Deletes element at index and shifts all other values down
-    void Delete(UINT index)
+    void Delete(_In_ uint32_t index)
     {
-        D3DXASSERT(index < m_CurSize);
+        assert(index < m_CurSize);
 
         -- m_CurSize;
         memmove((T*)m_pData + index, (T*)m_pData + index + 1, (m_CurSize - index) * sizeof(T));
     }
 
     // Deletes element at index and moves the last element into its place
-    void QuickDelete(UINT index)
+    void QuickDelete(_In_ uint32_t index)
     {
-        D3DXASSERT(index < m_CurSize);
+        assert(index < m_CurSize);
 
         -- m_CurSize;
         memcpy((T*)m_pData + index, (T*)m_pData + m_CurSize, sizeof(T));
     }
 
-    inline UINT GetSize() const
+    inline uint32_t GetSize() const
     {
         return m_CurSize;
     }
@@ -440,11 +406,9 @@ lExit:
         return (T*)m_pData;
     }
 
-    UINT FindIndexOf(void *pEntry) const
+    uint32_t FindIndexOf(_In_ const void *pEntry) const
     {
-        UINT i;
-
-        for (i = 0; i < m_CurSize; ++ i)
+        for (size_t i = 0; i < m_CurSize; ++ i)
         {   
             if (((T*)m_pData + i) == pEntry)
                 return i;
@@ -468,9 +432,8 @@ public:
     ~CEffectVectorOwner<T>()
     {
         Clear();
-        UINT i;
 
-        for (i=0; i<m_CurSize; i++)
+        for (size_t i=0; i<m_CurSize; i++)
             SAFE_DELETE(((T**)m_pData)[i]);
 
         SAFE_DELETE_ARRAY(m_pData);
@@ -485,10 +448,8 @@ public:
 
     void Empty()
     {
-        UINT i;
-
         // manually invoke destructor on all elements
-        for (i = 0; i < m_CurSize; ++ i)
+        for (size_t i = 0; i < m_CurSize; ++ i)
         {
             SAFE_DELETE(((T**)m_pData)[i]);
         }
@@ -496,9 +457,9 @@ public:
         m_hLastError = S_OK;
     }
 
-    void Delete(UINT index)
+    void Delete(_In_ uint32_t index)
     {
-        D3DXASSERT(index < m_CurSize);
+        assert(index < m_CurSize);
 
         SAFE_DELETE(((T**)m_pData)[index]);
 
@@ -506,33 +467,26 @@ public:
     }
 };
 
-
 //////////////////////////////////////////////////////////////////////////
-// Checked UINT, DWORD64
-// Use CheckedNumber only with UINT and DWORD64
+// Checked uint32_t, uint64_t
+// Use CheckedNumber only with uint32_t and uint64_t
 //////////////////////////////////////////////////////////////////////////
 template <class T, T MaxValue> class CheckedNumber
 {
     T       m_Value;
-    BOOL    m_bValid;
+    bool    m_bValid;
 
 public:
-    CheckedNumber<T, MaxValue>()
+    CheckedNumber<T, MaxValue>() : m_Value(0), m_bValid(true)
     {
-        m_Value = 0;
-        m_bValid = TRUE;
     }
 
-    CheckedNumber<T, MaxValue>(const T &value)
+    CheckedNumber<T, MaxValue>(const T &value) : m_Value(value), m_bValid(true)
     {
-        m_Value = value;
-        m_bValid = TRUE;
     }
 
-    CheckedNumber<T, MaxValue>(const CheckedNumber<T, MaxValue> &value)
+    CheckedNumber<T, MaxValue>(const CheckedNumber<T, MaxValue> &value) : m_bValid(value.m_bValid), m_Value(value.m_Value)
     {
-        m_bValid = value.m_bValid;
-        m_Value = value.m_Value;
     }
 
     CheckedNumber<T, MaxValue> &operator+(const CheckedNumber<T, MaxValue> &other)
@@ -545,14 +499,14 @@ public:
     {
         if (!other.m_bValid)
         {
-            m_bValid = FALSE;
+            m_bValid = false;
         }
         else
         {
             m_Value += other.m_Value;
 
             if (m_Value < other.m_Value)
-                m_bValid = FALSE;
+                m_bValid = false;
         }
 
         return *this;
@@ -568,7 +522,7 @@ public:
     {
         if (!other.m_bValid)
         {
-            m_bValid = FALSE;
+            m_bValid = false;
         }
         else
         {
@@ -576,7 +530,7 @@ public:
             {
                 if (m_Value > MaxValue / other.m_Value)
                 {
-                    m_bValid = FALSE;
+                    m_bValid = false;
                 }
             }
             m_Value *= other.m_Value;
@@ -585,11 +539,11 @@ public:
         return *this;
     }
 
-    HRESULT GetValue(T *pValue)
+    HRESULT GetValue(_Out_ T *pValue)
     {
         if (!m_bValid)
         {
-            *pValue = -1;
+            *pValue = uint32_t(-1);
             return E_FAIL;
         }
 
@@ -598,8 +552,8 @@ public:
     }
 };
 
-typedef CheckedNumber<UINT, _UI32_MAX> CCheckedDword;
-typedef CheckedNumber<DWORD64, _UI64_MAX> CCheckedDword64;
+typedef CheckedNumber<uint32_t, _UI32_MAX> CCheckedDword;
+typedef CheckedNumber<uint64_t, _UI64_MAX> CCheckedDword64;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -609,19 +563,20 @@ typedef CheckedNumber<DWORD64, _UI64_MAX> CCheckedDword64;
 class CDataBlock
 {
 protected:
-    UINT        m_size;
-    UINT        m_maxSize;
-    BYTE        *m_pData;
+    uint32_t    m_size;
+    uint32_t    m_maxSize;
+    uint8_t     *m_pData;
     CDataBlock  *m_pNext;
 
-    BOOL        m_IsAligned;        // Whether or not to align the data to c_DataAlignment
+    bool        m_IsAligned;        // Whether or not to align the data to c_DataAlignment
 
 public:
     // AddData appends an existing use buffer to the data block
-    HRESULT AddData(const void *pNewData, UINT bufferSize, CDataBlock **ppBlock);
+    HRESULT AddData(_In_reads_bytes_(bufferSize) const void *pNewData, _In_ uint32_t bufferSize, _Outptr_ CDataBlock **ppBlock);
 
     // Allocate reserves bufferSize bytes of contiguous memory and returns a pointer to the user
-    void*   Allocate(UINT bufferSize, CDataBlock **ppBlock);
+    _Success_(return != nullptr)
+    void*   Allocate(_In_ uint32_t bufferSize, _Outptr_ CDataBlock **ppBlock);
 
     void    EnableAlignment();
 
@@ -637,21 +592,25 @@ class CDataBlockStore
 protected:
     CDataBlock  *m_pFirst;
     CDataBlock  *m_pLast;
-    UINT        m_Size;
-    UINT        m_Offset;           // m_Offset gets added to offsets returned from AddData & AddString. Use this to set a global for the entire string block
-    BOOL        m_IsAligned;        // Whether or not to align the data to c_DataAlignment
+    uint32_t    m_Size;
+    uint32_t    m_Offset;           // m_Offset gets added to offsets returned from AddData & AddString. Use this to set a global for the entire string block
+    bool        m_IsAligned;        // Whether or not to align the data to c_DataAlignment
 
 public:
 #if _DEBUG
-    UINT		m_cAllocations;
+    uint32_t    m_cAllocations;
 #endif
 
 public:
-    HRESULT AddString(LPCSTR pString, UINT *pOffset);                          // Writes a null-terminated string to buffer
-    HRESULT AddData(const void *pNewData, UINT bufferSize, UINT *pOffset);     // Writes data block to buffer
+    HRESULT AddString(_In_z_ LPCSTR pString, _Inout_ uint32_t *pOffset);
+        // Writes a null-terminated string to buffer
 
-    void*   Allocate(UINT buffferSize);                                        // Memory allocator support
-    UINT    GetSize();
+    HRESULT AddData(_In_reads_bytes_(bufferSize) const void *pNewData, _In_ uint32_t bufferSize, _Inout_ uint32_t *pOffset);
+        // Writes data block to buffer
+
+    // Memory allocator support
+    void*   Allocate(_In_ uint32_t bufferSize);
+    uint32_t GetSize();
     void    EnableAlignment();
 
     CDataBlockStore();
@@ -662,14 +621,18 @@ public:
 // The trick is that we never free, so we don't have to keep as much state around
 // Use PRIVATENEW in CEffectLoader
 
-static void* __cdecl operator new(size_t s, CDataBlockStore &pAllocator)
+inline void* __cdecl operator new(_In_ size_t s, _In_ CDataBlockStore &pAllocator)
 {
-    D3DXASSERT( s <= 0xffffffff );
-    return pAllocator.Allocate( (UINT)s );
+#ifdef _M_X64
+    assert( s <= 0xffffffff );
+#endif
+    return pAllocator.Allocate( (uint32_t)s );
 }
 
-static void __cdecl operator delete(void* p, CDataBlockStore &pAllocator)
+inline void __cdecl operator delete(_In_opt_ void* p, _In_ CDataBlockStore &pAllocator)
 {
+    UNREFERENCED_PARAMETER(p);
+    UNREFERENCED_PARAMETER(pAllocator);
 }
 
 
@@ -690,21 +653,19 @@ static void __cdecl operator delete(void* p, CDataBlockStore &pAllocator)
     c -= a; c -= b; c ^= (b>>15); \
 }
 
-static UINT ComputeHash(BYTE *pb, UINT cbToHash)
+static uint32_t ComputeHash(_In_reads_bytes_(cbToHash) const uint8_t *pb, _In_ uint32_t cbToHash)
 {
-    UINT a;
-    UINT b;
-    UINT c;
-    UINT cbLeft;
+    uint32_t cbLeft = cbToHash;
 
-    cbLeft = cbToHash;
-
+    uint32_t a;
+    uint32_t b;
     a = b = 0x9e3779b9; // the golden ratio; an arbitrary value
-    c = 0;
+
+    uint32_t c = 0;
 
     while (cbLeft >= 12)
     {
-        UINT *pdw = reinterpret_cast<UINT *>(pb);
+        const uint32_t *pdw = reinterpret_cast<const uint32_t *>(pb);
 
         a += pdw[0];
         b += pdw[1];
@@ -719,17 +680,17 @@ static UINT ComputeHash(BYTE *pb, UINT cbToHash)
 
     switch(cbLeft) // all the case statements fall through
     {
-    case 11: c+=((UINT) pb[10] << 24);
-    case 10: c+=((UINT) pb[9]  << 16);
-    case 9 : c+=((UINT) pb[8]  <<  8);
+    case 11: c+=((uint32_t) pb[10] << 24);
+    case 10: c+=((uint32_t) pb[9]  << 16);
+    case 9 : c+=((uint32_t) pb[8]  <<  8);
         // the first byte of c is reserved for the length
-    case 8 : b+=((UINT) pb[7]  << 24);
-    case 7 : b+=((UINT) pb[6]  << 16);
-    case 6 : b+=((UINT) pb[5]  <<  8);
+    case 8 : b+=((uint32_t) pb[7]  << 24);
+    case 7 : b+=((uint32_t) pb[6]  << 16);
+    case 6 : b+=((uint32_t) pb[5]  <<  8);
     case 5 : b+=pb[4];
-    case 4 : a+=((UINT) pb[3]  << 24);
-    case 3 : a+=((UINT) pb[2]  << 16);
-    case 2 : a+=((UINT) pb[1]  <<  8);
+    case 4 : a+=((uint32_t) pb[3]  << 24);
+    case 3 : a+=((uint32_t) pb[2]  << 16);
+    case 2 : a+=((uint32_t) pb[1]  <<  8);
     case 1 : a+=pb[0];
     }
 
@@ -738,25 +699,22 @@ static UINT ComputeHash(BYTE *pb, UINT cbToHash)
     return c;
 }
 
-static UINT ComputeHashLower(BYTE *pb, UINT cbToHash)
+static uint32_t ComputeHashLower(_In_reads_bytes_(cbToHash) const uint8_t *pb, _In_ uint32_t cbToHash)
 {
-    UINT a;
-    UINT b;
-    UINT c;
-    UINT cbLeft;
+    uint32_t cbLeft = cbToHash;
 
-    cbLeft = cbToHash;
-
+    uint32_t a;
+    uint32_t b;
     a = b = 0x9e3779b9; // the golden ratio; an arbitrary value
-    c = 0;
+    uint32_t c = 0;
 
     while (cbLeft >= 12)
     {
-        BYTE pbT[12];
-        for( UINT i = 0; i < 12; i++ )
-            pbT[i] = (BYTE)tolower(pb[i]);
+        uint8_t pbT[12];
+        for( size_t i = 0; i < 12; i++ )
+            pbT[i] = (uint8_t)tolower(pb[i]);
 
-        UINT *pdw = reinterpret_cast<UINT *>(pbT);
+        uint32_t *pdw = reinterpret_cast<uint32_t *>(pbT);
 
         a += pdw[0];
         b += pdw[1];
@@ -769,23 +727,23 @@ static UINT ComputeHashLower(BYTE *pb, UINT cbToHash)
 
     c += cbToHash;
 
-    BYTE pbT[12];
-    for( UINT i = 0; i < cbLeft; i++ )
-        pbT[i] = (BYTE)tolower(pb[i]);
+    uint8_t pbT[12];
+    for( size_t i = 0; i < cbLeft; i++ )
+        pbT[i] = (uint8_t)tolower(pb[i]);
 
     switch(cbLeft) // all the case statements fall through
     {
-    case 11: c+=((UINT) pbT[10] << 24);
-    case 10: c+=((UINT) pbT[9]  << 16);
-    case 9 : c+=((UINT) pbT[8]  <<  8);
+    case 11: c+=((uint32_t) pbT[10] << 24);
+    case 10: c+=((uint32_t) pbT[9]  << 16);
+    case 9 : c+=((uint32_t) pbT[8]  <<  8);
         // the first byte of c is reserved for the length
-    case 8 : b+=((UINT) pbT[7]  << 24);
-    case 7 : b+=((UINT) pbT[6]  << 16);
-    case 6 : b+=((UINT) pbT[5]  <<  8);
+    case 8 : b+=((uint32_t) pbT[7]  << 24);
+    case 7 : b+=((uint32_t) pbT[6]  << 16);
+    case 6 : b+=((uint32_t) pbT[5]  <<  8);
     case 5 : b+=pbT[4];
-    case 4 : a+=((UINT) pbT[3]  << 24);
-    case 3 : a+=((UINT) pbT[2]  << 16);
-    case 2 : a+=((UINT) pbT[1]  <<  8);
+    case 4 : a+=((uint32_t) pbT[3]  << 24);
+    case 3 : a+=((uint32_t) pbT[2]  << 16);
+    case 2 : a+=((uint32_t) pbT[1]  <<  8);
     case 1 : a+=pbT[0];
     }
 
@@ -794,10 +752,9 @@ static UINT ComputeHashLower(BYTE *pb, UINT cbToHash)
     return c;
 }
 
-
-static UINT ComputeHash(LPCSTR pString)
+static uint32_t ComputeHash(_In_z_ LPCSTR pString)
 {
-    return ComputeHash((BYTE*) pString, (UINT)strlen(pString));
+    return ComputeHash(reinterpret_cast<const uint8_t*>(pString), (uint32_t)strlen(pString));
 }
 
 
@@ -806,7 +763,7 @@ static UINT ComputeHash(LPCSTR pString)
 // 4) each is roughly in between two powers of 2;
 //    (2^n hash table sizes are VERY BAD; they effectively truncate your
 //     precision down to the n least significant bits of the hash)
-static const UINT c_PrimeSizes[] = 
+static const uint32_t c_PrimeSizes[] = 
 {
     11,
     23,
@@ -838,24 +795,22 @@ static const UINT c_PrimeSizes[] =
     1610612741,
 };
 
-static const UINT c_NumPrimes = sizeof(c_PrimeSizes) / sizeof(UINT);
-
-template<typename T, BOOL (*pfnIsEqual)(const T &Data1, const T &Data2)>
+template<typename T, bool (*pfnIsEqual)(const T &Data1, const T &Data2)>
 class CEffectHashTable
 {
 protected:
 
     struct SHashEntry
     {
-        UINT        Hash;
+        uint32_t    Hash;
         T           Data;
         SHashEntry  *pNext;
     };
 
     // Array of hash entries
     SHashEntry  **m_rgpHashEntries;
-    UINT        m_NumHashSlots;
-    UINT        m_NumEntries;
+    uint32_t    m_NumHashSlots;
+    uint32_t    m_NumEntries;
     bool        m_bOwnHashEntryArray;
 
 public:
@@ -870,38 +825,34 @@ public:
     public:
         T GetData()
         {
-            D3DXASSERT(NULL != pHashEntry);
+            assert(pHashEntry != 0);
+            _Analysis_assume_(pHashEntry != 0);
             return pHashEntry->Data;
         }
 
-        UINT GetHash()
+        uint32_t GetHash()
         {
-            D3DXASSERT(NULL != pHashEntry);
+            assert(pHashEntry != 0);
+            _Analysis_assume_(pHashEntry != 0);
             return pHashEntry->Hash;
         }
     };
 
-    CEffectHashTable()
+    CEffectHashTable() : m_rgpHashEntries(nullptr), m_NumHashSlots(0), m_NumEntries(0), m_bOwnHashEntryArray(false)
     {
-        m_rgpHashEntries = NULL;
-        m_NumHashSlots = 0;
-        m_NumEntries = 0;
-        m_bOwnHashEntryArray = false;
     }
 
-    HRESULT Initialize(CEffectHashTable *pOther)
+    HRESULT Initialize(_In_ const CEffectHashTable *pOther)
     {
         HRESULT hr = S_OK;
-        SHashEntry **rgpNewHashEntries = NULL;
-        SHashEntry ***rgppListEnds = NULL;
-        UINT i;
-        UINT valuesMigrated = 0;
-        UINT actualSize;
+        SHashEntry **rgpNewHashEntries = nullptr;
+        uint32_t valuesMigrated = 0;
+        uint32_t actualSize;
 
         Cleanup();
 
         actualSize = pOther->m_NumHashSlots;
-        VN( rgpNewHashEntries = NEW SHashEntry*[actualSize] );
+        VN( rgpNewHashEntries = new SHashEntry*[actualSize] );
 
         ZeroMemory(rgpNewHashEntries, sizeof(SHashEntry*) * actualSize);
 
@@ -910,7 +861,7 @@ public:
         pOther->GetFirstEntry(&iter);
         while (!pOther->PastEnd(&iter))
         {
-            UINT index = iter.GetHash() % actualSize;
+            uint32_t index = iter.GetHash() % actualSize;
 
             // we need to advance to the next element
             // before we seize control of this element and move
@@ -920,7 +871,7 @@ public:
 
             // seize this hash entry, migrate it to the new table
             SHashEntry *pNewEntry;
-            VN( pNewEntry = NEW SHashEntry );
+            VN( pNewEntry = new SHashEntry );
             
             pNewEntry->pNext = rgpNewHashEntries[index];
             pNewEntry->Data = iter.pHashEntry->Data;
@@ -931,13 +882,13 @@ public:
             ++ valuesMigrated;
         }
 
-        D3DXASSERT(valuesMigrated == pOther->m_NumEntries);
+        assert(valuesMigrated == pOther->m_NumEntries);
 
         m_rgpHashEntries = rgpNewHashEntries;
         m_NumHashSlots = actualSize;
         m_NumEntries = pOther->m_NumEntries;
         m_bOwnHashEntryArray = true;
-        rgpNewHashEntries = NULL;
+        rgpNewHashEntries = nullptr;
 
 lExit:
         SAFE_DELETE_ARRAY( rgpNewHashEntries );
@@ -957,12 +908,11 @@ protected:
 public:
     void Cleanup()
     {
-        UINT i;
-        for (i = 0; i < m_NumHashSlots; ++ i)
+        for (size_t i = 0; i < m_NumHashSlots; ++ i)
         {
             SHashEntry *pCurrentEntry = m_rgpHashEntries[i];
             SHashEntry *pTempEntry;
-            while (NULL != pCurrentEntry)
+            while (nullptr != pCurrentEntry)
             {
                 pTempEntry = pCurrentEntry->pNext;
                 SAFE_DELETE(pCurrentEntry);
@@ -972,7 +922,7 @@ public:
         }
         CleanArray();
         m_NumHashSlots = 0;
-        D3DXASSERT(m_NumEntries == 0);
+        assert(m_NumEntries == 0);
     }
 
     ~CEffectHashTable()
@@ -980,10 +930,10 @@ public:
         Cleanup();
     }
 
-    static UINT GetNextHashTableSize(__in UINT DesiredSize)
+    static uint32_t GetNextHashTableSize(_In_ uint32_t DesiredSize)
     {
         // figure out the next logical size to use
-        for (UINT i = 0; i < c_NumPrimes; ++ i)
+        for (size_t i = 0; i < _countof(c_PrimeSizes); ++i )
         {
             if (c_PrimeSizes[i] >= DesiredSize)
             {
@@ -997,17 +947,15 @@ public:
     // O(n) function
     // Grows to the next suitable size (based off of the prime number table)
     // DesiredSize is merely a suggestion
-    HRESULT Grow(__in UINT DesiredSize,
-                 __in UINT ProvidedArraySize = 0,
-                 __in_ecount_opt(ProvidedArraySize)
-                 void** ProvidedArray = NULL,
-                 __in bool OwnProvidedArray = false)
+    HRESULT Grow(_In_ uint32_t DesiredSize,
+                 _In_ uint32_t ProvidedArraySize = 0,
+                 _In_reads_opt_(ProvidedArraySize) void** ProvidedArray = nullptr,
+                 _In_ bool OwnProvidedArray = false)
     {
         HRESULT hr = S_OK;
-        SHashEntry **rgpNewHashEntries = NULL;
-        SHashEntry ***rgppListEnds = NULL;
-        UINT valuesMigrated = 0;
-        UINT actualSize;
+        SHashEntry **rgpNewHashEntries = nullptr;
+        uint32_t valuesMigrated = 0;
+        uint32_t actualSize;
 
         VB( DesiredSize > m_NumHashSlots );
 
@@ -1022,7 +970,7 @@ public:
         {
             OwnProvidedArray = true;
             
-            VN( rgpNewHashEntries = NEW SHashEntry*[actualSize] );
+            VN( rgpNewHashEntries = new SHashEntry*[actualSize] );
         }
         
         ZeroMemory(rgpNewHashEntries, sizeof(SHashEntry*) * actualSize);
@@ -1032,7 +980,7 @@ public:
         GetFirstEntry(&iter);
         while (!PastEnd(&iter))
         {
-            UINT index = iter.GetHash() % actualSize;
+            uint32_t index = iter.GetHash() % actualSize;
 
             // we need to advance to the next element
             // before we seize control of this element and move
@@ -1048,7 +996,7 @@ public:
             ++ valuesMigrated;
         }
 
-        D3DXASSERT(valuesMigrated == m_NumEntries);
+        assert(valuesMigrated == m_NumEntries);
 
         CleanArray();
         m_rgpHashEntries = rgpNewHashEntries;
@@ -1079,19 +1027,18 @@ lExit:
             return;
         }
         
-        UINT i;
         float variance = 0.0f;
         float mean = (float)m_NumEntries / (float)m_NumHashSlots;
-        UINT unusedSlots = 0;
+        uint32_t unusedSlots = 0;
 
         DPF(0, "Hash table slots: %d, Entries in table: %d", m_NumHashSlots, m_NumEntries);
 
-        for (i = 0; i < m_NumHashSlots; ++ i)
+        for (size_t i = 0; i < m_NumHashSlots; ++ i)
         {
-            UINT entries = 0;
+            uint32_t entries = 0;
             SHashEntry *pCurrentEntry = m_rgpHashEntries[i];
 
-            while (NULL != pCurrentEntry)
+            while (nullptr != pCurrentEntry)
             {
                 SHashEntry *pCurrentEntry2 = m_rgpHashEntries[i];
                 
@@ -1102,7 +1049,7 @@ lExit:
                     {
                         if (pfnIsEqual(pCurrentEntry->Data, pCurrentEntry2->Data))
                         {
-                            D3DXASSERT(0);
+                            assert(0);
                             DPF(0, "Duplicate entry (identical hash, identical data) found!");
                         }
                         else
@@ -1126,7 +1073,7 @@ lExit:
             variance += (float)entries * (float)entries / mean;
         }
 
-        variance /= max(1.0f, (m_NumHashSlots - 1));
+        variance /= std::max(1.0f, (m_NumHashSlots - 1));
         variance -= (mean * mean);
 
         DPF(0, "Mean number of entries per slot: %f, Standard deviation: %f, Unused slots; %d", mean, variance, unusedSlots);
@@ -1134,13 +1081,13 @@ lExit:
 #endif // _DEBUG
 
     // S_OK if element is found, E_FAIL otherwise
-    HRESULT FindValueWithHash(T Data, UINT Hash, CIterator *pIterator)
+    HRESULT FindValueWithHash(_In_ T Data, _In_ uint32_t Hash, _Out_ CIterator *pIterator)
     {
-        D3DXASSERT(m_NumHashSlots > 0);
+        assert(m_NumHashSlots > 0);
 
-        UINT index = Hash % m_NumHashSlots;
+        uint32_t index = Hash % m_NumHashSlots;
         SHashEntry *pEntry = m_rgpHashEntries[index];
-        while (NULL != pEntry)
+        while (nullptr != pEntry)
         {
             if (Hash == pEntry->Hash && pfnIsEqual(pEntry->Data, Data))
             {
@@ -1154,13 +1101,13 @@ lExit:
     }
 
     // S_OK if element is found, E_FAIL otherwise
-    HRESULT FindFirstMatchingValue(UINT Hash, CIterator *pIterator)
+    HRESULT FindFirstMatchingValue(_In_ uint32_t Hash, _Out_ CIterator *pIterator)
     {
-        D3DXASSERT(m_NumHashSlots > 0);
+        assert(m_NumHashSlots > 0);
 
-        UINT index = Hash % m_NumHashSlots;
+        uint32_t index = Hash % m_NumHashSlots;
         SHashEntry *pEntry = m_rgpHashEntries[index];
-        while (NULL != pEntry)
+        while (nullptr != pEntry)
         {
             if (Hash == pEntry->Hash)
             {
@@ -1174,16 +1121,16 @@ lExit:
     }
 
     // Adds data at the specified hash slot without checking for existence
-    HRESULT AddValueWithHash(T Data, UINT Hash)
+    HRESULT AddValueWithHash(_In_ T Data, _In_ uint32_t Hash)
     {
         HRESULT hr = S_OK;
 
-        D3DXASSERT(m_NumHashSlots > 0);
+        assert(m_NumHashSlots > 0);
 
         SHashEntry *pHashEntry;
-        UINT index = Hash % m_NumHashSlots;
+        uint32_t index = Hash % m_NumHashSlots;
 
-        VN( pHashEntry = NEW SHashEntry );
+        VN( pHashEntry = new SHashEntry );
         pHashEntry->pNext = m_rgpHashEntries[index];
         pHashEntry->Data = Data;
         pHashEntry->Hash = Hash;
@@ -1200,13 +1147,13 @@ lExit:
     // CMyHashTable::CIterator myIt;
     // for (myTable.GetFirstEntry(&myIt); !myTable.PastEnd(&myIt); myTable.GetNextEntry(&myIt)
     // { myTable.GetData(&myIt); }
-    void GetFirstEntry(CIterator *pIterator)
+    void GetFirstEntry(_Out_ CIterator *pIterator)
     {
         SHashEntry **ppEnd = m_rgpHashEntries + m_NumHashSlots;
         pIterator->ppHashSlot = m_rgpHashEntries;
         while (pIterator->ppHashSlot < ppEnd)
         {
-            if (NULL != *(pIterator->ppHashSlot))
+            if (nullptr != *(pIterator->ppHashSlot))
             {
                 pIterator->pHashEntry = *(pIterator->ppHashSlot);
                 return;
@@ -1215,21 +1162,22 @@ lExit:
         }
     }
 
-    BOOL PastEnd(CIterator *pIterator)
+    bool PastEnd(_Inout_ CIterator *pIterator)
     {
         SHashEntry **ppEnd = m_rgpHashEntries + m_NumHashSlots;
-        D3DXASSERT(pIterator->ppHashSlot >= m_rgpHashEntries && pIterator->ppHashSlot <= ppEnd);
+        assert(pIterator->ppHashSlot >= m_rgpHashEntries && pIterator->ppHashSlot <= ppEnd);
         return (pIterator->ppHashSlot == ppEnd);
     }
 
-    void GetNextEntry(CIterator *pIterator)
+    void GetNextEntry(_Inout_ CIterator *pIterator)
     {
         SHashEntry **ppEnd = m_rgpHashEntries + m_NumHashSlots;
-        D3DXASSERT(pIterator->ppHashSlot >= m_rgpHashEntries && pIterator->ppHashSlot <= ppEnd);
-        D3DXASSERT(NULL != pIterator->pHashEntry);
+        assert(pIterator->ppHashSlot >= m_rgpHashEntries && pIterator->ppHashSlot <= ppEnd);
+        assert(pIterator->pHashEntry != 0);
+        _Analysis_assume_(pIterator->pHashEntry != 0);
 
         pIterator->pHashEntry = pIterator->pHashEntry->pNext;
-        if (NULL != pIterator->pHashEntry)
+        if (nullptr != pIterator->pHashEntry)
         {
             return;
         }
@@ -1238,7 +1186,7 @@ lExit:
         while (pIterator->ppHashSlot < ppEnd)
         {
             pIterator->pHashEntry = *(pIterator->ppHashSlot);
-            if (NULL != pIterator->pHashEntry)
+            if (nullptr != pIterator->pHashEntry)
             {
                 return;
             }
@@ -1247,13 +1195,13 @@ lExit:
         // hit the end of the list, ppHashSlot == ppEnd
     }
 
-    void RemoveEntry(CIterator *pIterator)
+    void RemoveEntry(_Inout_ CIterator *pIterator)
     {
         SHashEntry *pTemp;
         SHashEntry **ppPrev;
         SHashEntry **ppEnd = m_rgpHashEntries + m_NumHashSlots;
 
-        D3DXASSERT(pIterator && !PastEnd(pIterator));
+        assert(pIterator && !PastEnd(pIterator));
         ppPrev = pIterator->ppHashSlot;
         pTemp = *ppPrev;
         while (pTemp)
@@ -1270,7 +1218,7 @@ lExit:
         }
 
         // Should never get here
-        D3DXASSERT(0);
+        assert(0);
     }
 
 };
@@ -1279,7 +1227,7 @@ lExit:
 // hash table can grow), but all hash entries are allocated on
 // a private heap
 
-template<typename T, BOOL (*pfnIsEqual)(const T &Data1, const T &Data2)>
+template<typename T, bool (*pfnIsEqual)(const T &Data1, const T &Data2)>
 class CEffectHashTableWithPrivateHeap : public CEffectHashTable<T, pfnIsEqual>
 {
 protected:
@@ -1288,7 +1236,7 @@ protected:
 public:
     CEffectHashTableWithPrivateHeap()
     {
-        m_pPrivateHeap = NULL;
+        m_pPrivateHeap = nullptr;
     }
 
     void Cleanup()
@@ -1304,22 +1252,23 @@ public:
     }
 
     // Call this only once
-    void SetPrivateHeap(CDataBlockStore *pPrivateHeap)
+    void SetPrivateHeap(_In_ CDataBlockStore *pPrivateHeap)
     {
-        D3DXASSERT(NULL == m_pPrivateHeap);
+        assert(nullptr == m_pPrivateHeap);
         m_pPrivateHeap = pPrivateHeap;
     }
 
     // Adds data at the specified hash slot without checking for existence
-    HRESULT AddValueWithHash(T Data, UINT Hash)
+    HRESULT AddValueWithHash(_In_ T Data, _In_ uint32_t Hash)
     {
         HRESULT hr = S_OK;
 
-        D3DXASSERT(NULL != m_pPrivateHeap);
-        D3DXASSERT(m_NumHashSlots > 0);
+        assert(m_pPrivateHeap);
+        _Analysis_assume_(m_pPrivateHeap);
+        assert(m_NumHashSlots > 0);
 
         SHashEntry *pHashEntry;
-        UINT index = Hash % m_NumHashSlots;
+        uint32_t index = Hash % m_NumHashSlots;
 
         VN( pHashEntry = new(*m_pPrivateHeap) SHashEntry );
         pHashEntry->pNext = m_rgpHashEntries[index];
@@ -1333,6 +1282,3 @@ lExit:
         return hr;
     }
 };
-
-
-
