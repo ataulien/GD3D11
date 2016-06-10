@@ -2018,6 +2018,10 @@ XRESULT D3D11GraphicsEngine::DrawWorldMesh(bool noTextures)
 
 	std::list<std::pair<MeshKey, WorldMeshInfo *>> meshList;
 
+	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	Context->DSSetShader(NULL, NULL, NULL);
+	Context->HSSetShader(NULL, NULL, NULL);
+
 	int numUncachedTextures = 0;
 	for(int i=0;i<2;i++)
 	{
@@ -2652,9 +2656,16 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 
 	// Pre-Draw the surfaces to fix overlaying polygons causing a huge performance drop
 	// Unbind pixelshader
-
-	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-
+	Context->PSSetShader(NULL, NULL, NULL);
+	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
+	for (std::unordered_map<zCTexture*, std::vector<WorldMeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end(); it++)
+	{
+		// Draw surfaces
+		for (unsigned int i = 0; i<(*it).second.size(); i++)
+		{
+			DrawVertexBufferIndexed((*it).second[i]->MeshVertexBuffer, (*it).second[i]->MeshIndexBuffer, (*it).second[i]->Indices.size());
+		}
+	}
 
 	// Setup depth state so we can't have multiple layers of water
 	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS;
@@ -2666,38 +2677,11 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 
 	// Bind water shader
 	SetActiveVertexShader("VS_ExWater");
-	SetActiveHDShader("Water_Tesselation");
-
-	ActiveHDS->Apply();
-	
-
-	// Push tesselation information
-	VisualTesselationSettings::Buffer b;
-	b.VT_DisplacementStrength = 10.0f;
-	b.VT_TesselationFactor = 10.0f;
-	b.VT_Time = Engine::GAPI->GetTimeSeconds();
-	ActiveHDS->GetConstantBuffer()[0]->UpdateBuffer(&b);
-	ActiveHDS->GetConstantBuffer()[0]->BindToDomainShader(1);
-	ActiveHDS->GetConstantBuffer()[0]->BindToHullShader(1);
-	((D3D11Texture*)DistortionTexture)->BindToDomainShader(3);
-
-	SetupVS_ExMeshDrawCall();
-	SetupVS_ExConstantBuffer();
-
-	Context->PSSetShader(NULL, NULL, NULL);
-	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
-	for(std::unordered_map<zCTexture*, std::vector<WorldMeshInfo*>>::const_iterator it = FrameWaterSurfaces.begin(); it != FrameWaterSurfaces.end();it++)
-	{
-		// Draw surfaces
-		for(unsigned int i=0;i<(*it).second.size();i++)
-		{
-			DrawVertexBufferIndexed((*it).second[i]->MeshVertexBuffer, (*it).second[i]->MeshIndexBuffer, (*it).second[i]->Indices.size());
-		}
-	}
-
 	SetActivePixelShader("PS_Water");
 	SetupVS_ExMeshDrawCall();
 	SetupVS_ExConstantBuffer();
+
+
 
 	D3DXMATRIX id;
 	D3DXMatrixIdentity(&id);
@@ -2729,7 +2713,7 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 	// Bind reflection cube
 	Context->PSSetShaderResources(3,1, &ReflectionCube);
 
-	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+
 
 	for(int i=0;i<1;i++) // Draw twice, but second time only to depth buffer to fix the fog
 	{
@@ -2756,12 +2740,10 @@ void D3D11GraphicsEngine::DrawWaterSurfaces()
 
 	Context->OMSetRenderTargets(1, HDRBackBuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
 
-	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::DEFAULT_DEPTH_COMP_STATE;
+	Engine::GAPI->GetRendererState()->DepthState.DepthBufferCompareFunc = GothicDepthBufferStateInfo::CF_COMPARISON_LESS_EQUAL;
 	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
-
-	Context->DSSetShader(NULL, NULL, NULL);
-	Context->HSSetShader(NULL, NULL, NULL);
 }
+
 
 /** Draws everything around the given position */
 void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, 
