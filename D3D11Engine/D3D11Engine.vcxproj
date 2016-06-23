@@ -136,6 +136,7 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
+      <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);</AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
       <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
@@ -196,6 +197,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
+      <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);</AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
       <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
