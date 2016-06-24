@@ -483,7 +483,7 @@ struct GothicRendererSettings
 		SectionDrawRadius = 4;
 
 		DrawVOBs = true;
-		DrawWorldMesh = true;
+		DrawWorldMesh = 3;
 		DrawSkeletalMeshes = true;	
 		DrawMobs = true;
 		DrawDynamicVOBs = true;
@@ -572,7 +572,7 @@ struct GothicRendererSettings
 		SortRenderQueue = true;
 		DrawThreaded = true;
 
-		EnableTesselation = true;
+		EnableTesselation = false;
 		AllowWorldMeshTesselation = false;
 		TesselationFrustumCulling = true;
 		EnablePointlightShadows = PLS_UPDATE_DYNAMIC;
