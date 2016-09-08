@@ -166,7 +166,7 @@ public:
 	virtual XRESULT UnbindTexture(int slot);
 
 	/** Sets up the default rendering state */
-	void SetDefaultStates();
+	void SetDefaultStates(bool force = false);
 
 	/** Returns the current resolution (Maybe supersampled)*/
 	INT2 GetResolution();

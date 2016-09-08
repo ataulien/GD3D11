@@ -106,11 +106,11 @@ bool D3D11PFX_SMAA::Init()
 	D3DX11_IMAGE_LOAD_INFO img;
 	img.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	img.MipLevels = 1;
-	hr = D3DX11CreateShaderResourceViewFromFile(engine->GetDevice(), "system\\shaders\\SMAA_AreaTexDX10.dds", &img, NULL, &AreaTextureSRV, &hr);
+	hr = D3DX11CreateShaderResourceViewFromFile(engine->GetDevice(), "system\\shaders\\SMAA_AreaTexDX10.dds", &img, NULL, &AreaTextureSRV, NULL);
 	LE(hr);
 
 	img.Format = DXGI_FORMAT_R8_UNORM;
-	hr = D3DX11CreateShaderResourceViewFromFile(engine->GetDevice(), "system\\shaders\\SMAA_SearchTex.dds", &img, NULL, &SearchTextureSRV, &hr);
+	hr = D3DX11CreateShaderResourceViewFromFile(engine->GetDevice(), "system\\shaders\\SMAA_SearchTex.dds", &img, NULL, &SearchTextureSRV, NULL);
 	LE(hr);
 
 	SMAAShader->GetVariableByName("areaTex")->AsShaderResource()->SetResource(AreaTextureSRV);
@@ -154,6 +154,7 @@ void D3D11PFX_SMAA::RenderPostFX(ID3D11ShaderResourceView* renderTargetSRV)
 	ID3D11RenderTargetView* OldRTV=NULL;
 	ID3D11DepthStencilView* OldDSV=NULL;
 	ID3DX11EffectShaderResourceVariable* SRV=NULL;
+	ID3D11ShaderResourceView *const NoSRV[3] = { NULL,NULL, NULL };
 
 	engine->GetContext()->OMGetRenderTargets(1, &OldRTV, &OldDSV);
 	engine->GetContext()->ClearDepthStencilView(OldDSV, D3D11_CLEAR_STENCIL, 0, 0);
@@ -170,8 +171,7 @@ void D3D11PFX_SMAA::RenderPostFX(ID3D11ShaderResourceView* renderTargetSRV)
 	//FxRenderer->CopyTextureToRTV(renderTargetSRV, RTV, INT2(0,0), true);
 
 	SMAAShader->GetVariableByName("colorTexGamma")->AsShaderResource()->SetResource(NULL);
-	
-	ID3D11ShaderResourceView *const NoSRV[3] = {NULL,NULL, NULL};
+
 	engine->GetContext()->PSSetShaderResources(0, 3, NoSRV);
 
 	/** Second pass - BlendingWeightCalculation */
@@ -205,7 +205,7 @@ void D3D11PFX_SMAA::RenderPostFX(ID3D11ShaderResourceView* renderTargetSRV)
 	FxRenderer->DrawFullScreenQuad();
 
 	SMAAShader->GetVariableByName("colorTex")->AsShaderResource()->SetResource(NULL);
-	
+
 	/** Copy back to main RTV */
 	engine->GetContext()->OMSetRenderTargets(1, &OldRTV, NULL);
 	/*engine->GetContext()->OMSetRenderTargets(1, &OldRTV, NULL);
@@ -241,6 +241,8 @@ void D3D11PFX_SMAA::RenderPostFX(ID3D11ShaderResourceView* renderTargetSRV)
 	engine->GetContext()->OMSetRenderTargets(1, &OldRTV, OldDSV);
 	if(OldRTV)OldRTV->Release();
 	if(OldDSV)OldDSV->Release();
+
+	engine->SetDefaultStates(true);
 }
 
 /** Called on resize */

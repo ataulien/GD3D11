@@ -2,11 +2,6 @@
 // Simple vertex shader
 //--------------------------------------------------------------------------------------
 
-cbuffer PFXVS_ConstantBuffer : register(b0)
-{
-	matrix PFXVS_InvProj;
-};
-
 //--------------------------------------------------------------------------------------
 // Input / Output structures
 //--------------------------------------------------------------------------------------
@@ -34,8 +29,7 @@ VS_OUTPUT VSMain( VS_INPUT Input )
 	Output.vPosition = float4(Input.vPosition, 1);
 	Output.vTexcoord = Input.vTex1;
 	
-	float3 positionVS = mul(float4(Input.vPosition, 1), PFXVS_InvProj).xyz;
-	Output.vEyeRay = float3(positionVS.xy / positionVS.z, 1.0f);
+	Output.vEyeRay = 0;
 	
 	return Output;
 }

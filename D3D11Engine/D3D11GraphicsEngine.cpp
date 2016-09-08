@@ -4005,7 +4005,7 @@ INT2 D3D11GraphicsEngine::GetBackbufferResolution()
 }
 
 /** Sets up the default rendering state */
-void D3D11GraphicsEngine::SetDefaultStates()
+void D3D11GraphicsEngine::SetDefaultStates(bool force)
 {
 	Engine::GAPI->GetRendererState()->RasterizerState.SetDefault();
 	Engine::GAPI->GetRendererState()->BlendState.SetDefault();
@@ -4018,6 +4018,13 @@ void D3D11GraphicsEngine::SetDefaultStates()
 	Engine::GAPI->GetRendererState()->SamplerState.SetDirty();
 
 	Context->PSSetSamplers(0, 1, &DefaultSamplerState);
+
+	if (force)
+	{
+		FFRasterizerStateHash = 0;
+		FFBlendStateHash = 0;
+		FFDepthStencilStateHash = 0;
+	}
 
 	UpdateRenderStates();
 }
