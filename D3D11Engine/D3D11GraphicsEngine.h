@@ -273,12 +273,6 @@ public:
 	/** Draws the given list of decals */
 	void DrawDecalList(const std::vector<zCVob *>& decals, bool lighting);
 
-	/** Draws the particle-effects */
-	void DrawParticleEffects();
-
-	/** Draws the particle-effects using the geometry shader */
-	void DrawParticleEffectsGS();
-
 	/** Draws underwater effects */
 	void DrawUnderwaterEffects();
 

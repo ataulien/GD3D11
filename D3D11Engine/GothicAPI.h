@@ -660,9 +660,6 @@ private:
 		);
 
 
-	/** Debugging */
-	void DrawTestInstances();
-
 	/** Goes through the given zCTree and registeres all found vobs */
 	void TraverseVobTree(zCTree<zCVob>* tree);
 

@@ -203,86 +203,6 @@ void GothicAPI::OnGameStart()
 	Inventory = new GInventory; 
 }
 
-/** Caches the current world mesh */
-/*void GothicAPI::CacheWorldMesh(const std::string& file)
-{
-	FILE* f;
-	fopen_s(&f, file.c_str(), "wb");
-
-	if(!f)
-	{
-		LogError() << "Failed to write world-cache file!";
-		return;
-	}
-
-	// Cache file format:
-	//
-	//- int: FileVersion
-	//	- int: NumVertices
-	//	- List of ExVertexStruct
-	//	- int: NumIndices
-	//	- List of unsigned ints
-	//
-
-	int version = 1;
-	fwrite(&version, sizeof(version), 1, f);
-
-	std::vector<ExVertexStruct> vx;
-	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
-	{
-		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
-		{
-			WorldMeshSectionInfo& section = (*ity).second;
-
-			
-			for(std::map<MeshKey, MeshInfo*>::iterator it = section.WorldMeshes.begin(); it != section.WorldMeshes.end();it++)
-			{
-				if(!(*it).first.Material ||
-					(*it).first.Material->HasAlphaTest())
-					continue;
-
-				for(int i=0;i<(*it).second->Indices.size(); i+=3)
-				{
-					// Push all triangles
-					vx.push_back((*it).second->Vertices[(*it).second->Indices[i]]);
-					vx.push_back((*it).second->Vertices[(*it).second->Indices[i+1]]);
-					vx.push_back((*it).second->Vertices[(*it).second->Indices[i+2]]);
-				}
-			}
-		}
-	}
-
-	std::vector<ExVertexStruct> indexedVertices;
-	std::vector<unsigned int> indices;
-	WorldConverter::IndexVertices(&vx[0], vx.size(), indexedVertices, indices);
-
-	int numVertices = indexedVertices.size();
-	fwrite(&numVertices, sizeof(numVertices), 1, f);
-
-	struct AOVertex
-	{
-		float3 Position;
-		float3 Normal;
-		float3 Color;
-	};
-
-	for(int i=0;i<indexedVertices.size();i++)
-	{
-		AOVertex v;
-		v.Position = indexedVertices[i].Position;
-		v.Normal = indexedVertices[i].Normal;
-		v.Color = float3(1.0f, 1.0f, 1.0f);
-
-		fwrite(&v, sizeof(v), 1, f);
-	}
-
-	int numIndices = indices.size();
-	fwrite(&numIndices, sizeof(numIndices), 1, f);
-	fwrite(&indices[0], sizeof(unsigned int) * numIndices, 1, f);
-
-	fclose(f);
-}*/
-
 /** Called to update the world, before rendering */
 void GothicAPI::OnWorldUpdate()
 {
@@ -838,42 +758,6 @@ void GothicAPI::BuildStaticMeshInstancingCache()
 	{
 		(*it).second->StartNewFrame();
 	}
-
-	// Cache everything
-	/*for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
-	{
-		for(std::map<int, WorldMeshSectionInfo>::iterator ity = (*itx).second.begin(); ity != (*itx).second.end(); ity++)
-		{
-			WorldMeshSectionInfo& section = (*ity).second;
-
-			// Cache positions for the vobs
-			for(std::list<VobInfo*>::iterator itv = section.Vobs.begin(); itv != section.Vobs.end();itv++)
-			{
-				section.InstanceCache.ClearCacheForStatic((MeshVisualInfo *)(*itv)->VisualInfo);
-			}
-
-			// Cache positions for the vobs
-			for(std::list<VobInfo*>::iterator itv = section.Vobs.begin(); itv != section.Vobs.end();itv++)
-			{
-				VS_ExConstantBuffer_PerInstance cb;
-				cb.World = *(*itv)->Vob->GetWorldMatrixPtr();
-
-				section.InstanceCache.InstanceCacheData[(MeshVisualInfo *)(*itv)->VisualInfo].push_back(cb);
-			}
-
-			// Generate constantbuffers
-			for(std::map<MeshVisualInfo *, std::vector<VS_ExConstantBuffer_PerInstance>>::iterator it = section.InstanceCache.InstanceCacheData.begin(); it != section.InstanceCache.InstanceCacheData.end(); it++)
-			{				
-
-				Engine::GraphicsEngine->CreateVertexBuffer(&section.InstanceCache.InstanceCache[(*it).first]);
-				
-				section.InstanceCache.InstanceCache[(*it).first]->Init(&(*it).second[0], (*it).second.size() * sizeof(VS_ExConstantBuffer_PerInstance));
-			}
-
-			// Generate full section mesh for the current section
-			//WorldConverter::GenerateFullSectionMesh(section);
-		}
-	}*/
 }
 
 /** Draws the world-mesh */
@@ -1065,7 +949,7 @@ void GothicAPI::DrawParticlesSimple()
 			}
 		}		
 		
-		DrawTestInstances();
+		Engine::GraphicsEngine->DrawFrameParticles(FrameParticles, FrameParticleInfo);
 	}
 }
 
@@ -2003,13 +1887,6 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		D3DXVECTOR3 vobPos = vi->Vob->GetPositionWorld();
 		int numSoftSkins = model->GetMeshSoftSkinList()->NumInArray;
 
-	#ifndef PUBLIC_RELEASE
-		/*if(visname == "PAL_234_RITTER")
-		{
-			sinf(1.0f);
-		}*/
-	#endif
-
 		// Draw submeshes
 		//if(model->GetMeshSoftSkinList()->NumInArray)
 
@@ -2044,7 +1921,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 			static void Except(SkeletalVobInfo* vi, std::string* visName, std::string* vobName, D3DXVECTOR3* pos)
 			{
 				static bool done = false;
-
+				
 				if(!done)
 					LogErrorBox() << "FAULTY MODEL! PLEASE REPORT THIS TO DEGENERATED @ WOG!\nUseful info for him\n\nDraw Model: Visname: " << visName->c_str() << " Vobname: " << vobName->c_str() << "VobPos: " << float3(*pos).toString();
 		
@@ -2290,21 +2167,7 @@ void GothicAPI::OnParticleFXDeleted(zCParticleFX* pfx)
 
 /** Draws a zCParticleFX */
 void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameData& data)
-{
-	// Set the current vob
-	//fx->SetVisualUsedBy(source);
-
-
-	/*if(tempParticleNames.find(source) == tempParticleNames.end() || tempParticleNames[source].size() == 0)
-	{
-		LogInfo() << "Failed to find ParticleEffect at position " << float3(source->GetPositionWorld()).toString();
-
-		return;
-	}*/
-
-	//Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(source->GetPositionWorld());
-	
-
+{	
 	// Get our view-matrix
 	D3DXMATRIX view;
 	GetViewMatrix(&view);	
@@ -2526,14 +2389,6 @@ void GothicAPI::DrawTriangle()
 	Engine::GraphicsEngine->DrawVertexBuffer(vxb, 6);
 
 	delete vxb;
-}
-
-/** Debugging */
-void GothicAPI::DrawTestInstances()
-{
-	//((D3D11GraphicsEngine*)Engine::GraphicsEngine)->SetDefaultStates(); // TODO: This whole function belongs into the graphics engine!
-
-	Engine::GraphicsEngine->DrawFrameParticles(FrameParticles, FrameParticleInfo);
 }
 
 /** Sets the world matrix */
