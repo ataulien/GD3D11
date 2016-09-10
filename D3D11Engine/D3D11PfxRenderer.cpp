@@ -167,8 +167,8 @@ XRESULT D3D11PfxRenderer::CopyTextureToRTV(ID3D11ShaderResourceView* texture, ID
 
 	engine->GetShaderManager()->GetVShader("VS_PFX")->Apply();
 	
-	ID3D11ShaderResourceView* srv[] = { NULL, NULL, NULL ,NULL };
-	engine->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srv), srv);
+	ID3D11ShaderResourceView* srv = NULL;
+	engine->GetContext()->PSSetShaderResources(0,1,&srv);
 
 	engine->GetContext()->OMSetRenderTargets(1, &rtv, NULL);
 
@@ -177,7 +177,7 @@ XRESULT D3D11PfxRenderer::CopyTextureToRTV(ID3D11ShaderResourceView* texture, ID
 
 	DrawFullScreenQuad();
 
-	engine->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srv),srv);
+	engine->GetContext()->PSSetShaderResources(0,1,&srv);
 	engine->GetContext()->OMSetRenderTargets(1, &oldRTV, oldDSV);
 	if(oldRTV)oldRTV->Release();
 	if(oldDSV)oldDSV->Release();
