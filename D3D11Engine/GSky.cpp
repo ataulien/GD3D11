@@ -48,9 +48,6 @@ GSky::~GSky(void)
 
 	for(unsigned int i=0;i<SkyTextures.size();i++)
 		delete SkyTextures[i];
-
-	for(unsigned int i=0;i<CloudMeshes.size();i++)
-		delete CloudMeshes[i];
 }
 
 /** Creates needed resources by the sky */
@@ -107,12 +104,6 @@ XRESULT GSky::InitSky()
 	return XR_SUCCESS;
 }
 
-/** Returns the cloud meshes */
-std::vector<GMesh *>& GSky::GetCloudMeshes()
-{
-	return CloudMeshes;
-}
-
 /** Returns the skyplane */
 MeshInfo* GSky::GetSkyPlane()
 {
@@ -138,9 +129,6 @@ XRESULT GSky::LoadSkyResources()
 	SkyDome = new GMesh;
 	SkyDome->LoadMesh("system\\GD3D11\\meshes\\unitSphere.obj");
 	//SkyDome->LoadMesh("system\\GD3D11\\meshes\\skySphere.obj");
-
-	//AddCloudMesh("system\\GD3D11\\meshes\\cloud0.obj");
-	//AddCloudMesh("system\\GD3D11\\meshes\\cloud1.obj");
 
 	LogInfo() << "Loading sky textures...";
 	//AddSkyTexture("system\\GD3D11\\textures\\sky\\cgcookie_sky01.dds");
@@ -190,16 +178,6 @@ void GSky::SetSkyTexture(ESkyTexture texture)
 		Atmosphere.WaveLengths = float3(0.54f, 0.56f, 0.60f);
 		break;
 	}
-}
-
-/** Adds a cloud mesh */
-XRESULT GSky::AddCloudMesh(const std::string& file)
-{
-	GMesh* cm = new GMesh;
-	cm->LoadMesh(file);
-	CloudMeshes.push_back(cm);
-
-	return XR_SUCCESS;
 }
 
 /** Returns the sky-texture for the passed daytime (0..1) */
@@ -301,167 +279,6 @@ XRESULT GSky::RenderSky()
 GMesh* GSky::GetSkyDome()
 {
 	return SkyDome;
-}
-
-/** Renders the sky */
-/*XRESULT GSky::RenderSky()
-{
-zCSkyController_Outdoor* sky = oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor();
-
-if(!sky)
-return XR_SUCCESS; // Happens on levelstart
-
-// Do sky-logic
-if(!sky->GetInitDone())
-{
-sky->Init();
-}else
-{
-sky->Interpolate();
-}
-
-zCSkyPlanet* sun = sky->GetSun();
-
-zCSkyLayer* layers = sky->GetSkyLayers(0);
-zCSkyState** states = sky->GetSkyLayerStates();
-
-if(!states)
-return XR_SUCCESS; // Happens on levelstart
-
-zCSkyState* state1 = sky->GetSkyState(1);
-zCSkyState* state0 = sky->GetSkyState(0);
-
-if(state0)RenderSkyLayer(sky->GetSkyLayers(0), state0);
-if(state1)RenderSkyLayer(sky->GetSkyLayers(1), state1);
-
-return XR_SUCCESS;
-}*/
-
-/** Renders a sky layer */
-XRESULT GSky::RenderSkyLayer(zCSkyLayer* layer, zCSkyState* state)
-{
-	/*zCSkyController_Outdoor* sky = oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor();
-	float time = zCTimer::GetTimer()->totalTimeFloat;
-	float4 color = float4(layer->GetSkyColor());
-
-	// Get texture displacement for the current time
-	D3DXVECTOR2 displacement;
-	if(layer->IsNight())
-	displacement = D3DXVECTOR2(0.0f,0.0f);
-	else
-	displacement = state->Layer[layer->GetLayerChannel()].TexSpeed * time * 0.00001f;
-
-	// Gothic wants to place the texturecoords in 0..1 range
-	displacement.x -= floor(displacement.x);
-	displacement.y -= floor(displacement.y);
-
-	const float scale = 20.0f * state->Layer[layer->GetLayerChannel()].TexScale;
-
-	// Construct vertices
-	// 0
-	SkyPlaneVertices[0].TexCoord = float2(displacement);
-	SkyPlaneVertices[0].Color = color.ToDWORD();
-
-	// 1
-	SkyPlaneVertices[1].TexCoord = float2(D3DXVECTOR2(scale, 0) + displacement);
-	SkyPlaneVertices[1].Color = color.ToDWORD();
-
-	// 2
-	SkyPlaneVertices[2].TexCoord = float2(D3DXVECTOR2(scale, scale) + displacement);
-	SkyPlaneVertices[2].Color = color.ToDWORD();
-
-	// ---
-
-	// 1
-	SkyPlaneVertices[3].TexCoord = float2(D3DXVECTOR2(scale, 0) + displacement);
-	SkyPlaneVertices[3].Color = color.ToDWORD();
-
-	// 3
-	SkyPlaneVertices[4].TexCoord = float2(D3DXVECTOR2(0, scale) + displacement);
-	SkyPlaneVertices[4].Color = color.ToDWORD();
-
-	// 2
-	SkyPlaneVertices[5].TexCoord = float2(D3DXVECTOR2(scale, scale) + displacement);
-	SkyPlaneVertices[5].Color = color.ToDWORD();
-
-	// Create a rotaion only view-matrix
-	D3DXMATRIX invView;
-	oCGame::GetGame()->_zCSession_camVob->GetWorldMatrix(&invView);
-
-	// Remove translation
-	invView(0,3) = 0;
-	invView(1,3) = 0;
-	invView(2,3) = 0;
-
-	D3DXMatrixInverse(&invView, NULL, &invView);
-
-	// Set matrix
-	Engine::GAPI->SetWorldTransform(invView);
-
-	if(!layer->SkyPoly)
-	return XR_SUCCESS;
-
-	// Get the layers material
-	zCMaterial* material;
-	if(layer->SkyMode == 0) // Poly sky
-	{
-	material = layer->SkyPoly->GetMaterial();
-
-	if(material)
-	{
-	if(!material->GetTexture())
-	return XR_SUCCESS;
-
-	material->BindTexture(0);
-	}
-	}else // Dome sky
-	{
-	material = layer->SkyDomeMesh->GetPolygons()[0].GetMaterial();
-	if(material)
-	{
-	if(!material->GetTexture())
-	return XR_SUCCESS;
-
-	material->BindTexture(0);
-	}
-	}
-
-
-
-	//zSTRING* str = (zSTRING*)state->Layer[layer->GetLayerChannel()].zSTring_TexName;
-	//LogInfo() << str->ToChar();
-
-	Engine::GAPI->GetRendererState()->BlendState.SetDefault();
-	//Engine::GAPI->GetRendererState()->BlendState.BlendEnabled = true;
-
-	Engine::GAPI->GetRendererState()->DepthState.SetDefault();
-	Engine::GAPI->GetRendererState()->DepthState.DepthBufferEnabled = false;
-	Engine::GAPI->GetRendererState()->RasterizerState.SetDefault();
-	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
-	Engine::GAPI->GetRendererState()->BlendState.SetDirty();
-	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_BACK;
-	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
-
-	if(!SkyPlaneVertexBuffer)
-	{
-	Engine::GraphicsEngine->CreateVertexBuffer(&SkyPlaneVertexBuffer);
-	SkyPlaneVertexBuffer->Init(NULL, 6 * sizeof(ExVertexStruct), BaseVertexBuffer::EBindFlags::B_VERTEXBUFFER, BaseVertexBuffer::EUsageFlags::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
-	}
-
-	SkyPlaneVertexBuffer->UpdateBuffer(SkyPlaneVertices);
-	Engine::GraphicsEngine->DrawVertexBuffer(SkyPlaneVertexBuffer, 6);
-
-	Engine::GAPI->GetRendererState()->RasterizerState.CullMode = GothicRasterizerStateInfo::CM_CULL_FRONT;
-	Engine::GAPI->GetRendererState()->RasterizerState.SetDirty();
-
-	Engine::GAPI->GetRendererState()->DepthState.DepthBufferEnabled = true;
-	Engine::GAPI->GetRendererState()->DepthState.SetDirty();
-
-	//Engine::GAPI->DrawTriangle();
-	// Draw sky plane
-	//Engine::GraphicsEngine->DrawVertexArray(SkyPlaneVertices, 6);*/
-
-	return XR_SUCCESS;
 }
 
 /** Returns the current sky-light color */

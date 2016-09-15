@@ -1615,39 +1615,11 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 
 				// Load the new visual
 				MeshVisualInfo* mi = new MeshVisualInfo;
-
-				//LogInfo() << "Loading: " << vob->GetVisual()->GetObjectName();
-				/*if (strncmp(vob->GetVisual()->GetObjectName(), "ITAR_RANGER_ADDON.3DS", strlen("ITAR_RANGER_ADDON.3DS")) == 0)
-				{
-					LogInfo() << "OMG!";
-					//return;
-				}*/
-
 				WorldConverter::Extract3DSMeshFromVisual2(pm, mi);
-
 				StaticMeshVisuals[pm] = mi;
 			}
 
 			INT2 section = WorldConverter::GetSectionOfPos(vob->GetPositionWorld());
-			/*ID3D11Device* device = ((D3D11GraphicsEngine *)Engine::GraphicsEngine)->GetDevice();
-
-			for(int i=0;i<INT_MAX;i++)
-			{
-				VS_ExConstantBuffer_PerInstance dt; // Just some 64-byte sized struct
-
-				// Init cb
-				D3D11_SUBRESOURCE_DATA d;
-				d.pSysMem = &dt;
-				d.SysMemPitch = 0;
-				d.SysMemSlicePitch = 0;
-	
-				// Create constantbuffer
-				ID3D11Buffer* buffer;
-				device->CreateBuffer(&CD3D11_BUFFER_DESC(sizeof(VS_ExConstantBuffer_PerInstance), D3D11_BIND_CONSTANT_BUFFER), &d, &buffer);
-				
-				// Release it again
-				int r = buffer->Release();
-			}*/
 
 			VobInfo* vi = new VobInfo;
 			vi->Vob = vob;
@@ -1714,14 +1686,6 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 			// Add to map
 			VobsByVisual[vob->GetVisual()].push_back(vi);
 
-			/*for(std::list<SkeletalVobInfo *>::iterator it = SkeletalMeshVobs.begin(); it != SkeletalMeshVobs.end(); it++)
-			{
-				if((*it)->Vob == vob)
-				{
-					LogError() << "SKELETAL ALREADY IN LIST!";
-				}
-			}*/
-
 			// Save worldmatrix to see if this vob changed positions later
 			vi->WorldMatrix = *vob->GetWorldMatrixPtr();
 
@@ -1785,33 +1749,6 @@ SkeletalMeshVisualInfo* GothicAPI::LoadzCModelData(zCModel* model)
 	}
 
 	return mi;
-}
-
-SkeletalMeshVisualInfo* GothicAPI::LoadzCModelPrototypeData(zCModelPrototype* model)
-{
-	/*std::string str = model->GetVisualName();
-
-	if(str.empty()) // Happens when the model has no skeletal-mesh
-		return NULL; // Deal with that at a later time
-
-	SkeletalMeshVisualInfo* mi = SkeletalMeshVisuals[str];
-
-	if(!mi || mi->Meshes.empty())
-	{
-		// Load the new visual
-		if(!mi)
-			mi = new SkeletalMeshVisualInfo;
-
-		WorldConverter::ExtractSkeletalMeshFromProto(model, mi);
-
-		mi->Visual = model;
-
-		SkeletalMeshVisuals[str] = mi;
-	}
-
-	return mi;*/
-
-	return NULL;
 }
 
 // TODO: REMOVE THIS!
@@ -1890,8 +1827,10 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 		// Draw submeshes
 		//if(model->GetMeshSoftSkinList()->NumInArray)
 
+		
 		struct fns
 		{
+			// TODO: FIXME
 			// Ugly stuff to get the fucking corrupt visual in returning here
 			static void Draw(SkeletalVobInfo* vi, std::vector<D3DXMATRIX>& transforms, float fatness)
 			{
@@ -1938,7 +1877,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 				// This vob is broken, quickly remove its stuff
 				// This will probably cause a memoryleak, but it will keep the game running until this is fixed
 				// Better than nothing...
-				// TODO: Fix thes!
+				// TODO: FIXME
 				vi->VisualInfo = NULL;
 				LogInfo() << "Failed to draw a skeletal-mesh. Removing its visual to (hopefully) keep the game running.";
 			}

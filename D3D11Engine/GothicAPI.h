@@ -218,10 +218,6 @@ public:
 	/** Called when a vob moved */
 	void OnVobMoved(zCVob* vob);
 
-	/** Called when a zCModel was loaded */
-	void OnLoadzCModel(zCModelPrototype* model);
-	
-
 	/** Called when a material got removed */
 	void OnMaterialCreated(zCMaterial* mat);
 
@@ -620,9 +616,6 @@ public:
 
 	/** Loads the data out of a zCModel and stores it in the cache */
 	SkeletalMeshVisualInfo* LoadzCModelData(zCModel* model);
-
-	/** Loads the data out of a zCModelPrototype and stores it in the cache*/
-	SkeletalMeshVisualInfo* LoadzCModelPrototypeData(zCModelPrototype* model);
 
 	/** Prints a message to the screen for the given amount of time */
 	void PrintMessageTimed(const INT2& position, const std::string& strMessage, float time = 3000.0f, DWORD color = 0xFFFFFFFF);

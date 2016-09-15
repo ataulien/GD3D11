@@ -217,12 +217,6 @@ public:
 	/** Draws the sky using the GSky-Object */
 	virtual XRESULT DrawSky();
 
-	/** Draws the 3D-Cloud-Sky */
-	void Draw3DClouds();
-
-	/** Renders the cloudmeshes */
-	void DrawCloudMeshes();
-
 	/** Renders the shadowmaps for the sun */
 	void RenderShadowmaps(const D3DXVECTOR3& cameraPosition, RenderToDepthStencilBuffer* target = NULL, bool cullFront = true, bool dontCull = false, ID3D11DepthStencilView* dsvOverwrite = NULL, ID3D11RenderTargetView* debugRTV = NULL);
 

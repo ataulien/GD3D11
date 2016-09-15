@@ -82,22 +82,11 @@ protected:
 	/** Adds a sky texture. Sky textures must be in order to make the daytime work */
 	XRESULT AddSkyTexture(const std::string& file);
 
-	/** Adds a cloud mesh */
-	XRESULT AddCloudMesh(const std::string& file);
-
-	/** Renders a sky layer */
-	XRESULT RenderSkyLayer(zCSkyLayer* layer, zCSkyState* state);
-
-
-
 	/** Sky mesh */
 	GMesh* SkyDome;
 
 	/** Skyplane */
 	MeshInfo* SkyPlane;
-
-	/** Cloud meshes */
-	std::vector<GMesh *> CloudMeshes;
 
 	/** Sky textures by time:
 		1=0	0.25	0.5	  0.75	  1=0
