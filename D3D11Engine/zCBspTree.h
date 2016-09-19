@@ -12,7 +12,6 @@
 #include "Logger.h"
 #include "BaseGraphicsEngine.h"
 #include "BaseLineRenderer.h"
-#include "GGame.h"
 
 class zCFileBIN;
 class zCVob;
@@ -232,8 +231,7 @@ public:
 	static void __fastcall hooked_zCBspNodeRender(void* thisptr, void* unkwn)
 	{
 		// Start world rendering here
-		if(XR_SUCCESS == Engine::GraphicsEngine->OnStartWorldRendering() && Engine::Game)
-			Engine::Game->DrawWorld();
+		Engine::GraphicsEngine->OnStartWorldRendering();
 	}
 
 	static void __fastcall hooked_zCBspNodeRenderIndoor(void* thisptr, int clipFlags)

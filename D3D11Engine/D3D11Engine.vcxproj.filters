@@ -478,9 +478,6 @@
     <ClInclude Include="GVegetationBox.h">
       <Filter>Engine\GAPI\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="GMeshSimple.h">
-      <Filter>Engine\GAPI\Objects</Filter>
-    </ClInclude>
     <ClInclude Include="D2DView.h">
       <Filter>Engine\D2D</Filter>
     </ClInclude>
@@ -532,9 +529,6 @@
     <ClInclude Include="win32ClipboardWrapper.h">
       <Filter>Librarys</Filter>
     </ClInclude>
-    <ClInclude Include="GRenderThread.h">
-      <Filter>Engine\GAPI</Filter>
-    </ClInclude>
     <ClInclude Include="BaseVShader.h">
       <Filter>Engine</Filter>
     </ClInclude>
@@ -582,9 +576,6 @@
     </ClInclude>
     <ClInclude Include="zCQuadMark.h">
       <Filter>ZenGin\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="D3D11GraphicsEngineTest.h">
-      <Filter>Engine\D3D11</Filter>
     </ClInclude>
     <ClInclude Include="D3D11TextureArray.h">
       <Filter>Engine\D3D11</Filter>
@@ -643,20 +634,9 @@
       <Filter>Engine\D3D11</Filter>
     </ClInclude>
     <ClInclude Include="D3D11RenderPipe.h" />
-    <ClInclude Include="GVobObject.h" />
-    <ClInclude Include="GVisual.h" />
-    <ClInclude Include="GStaticMeshVisual.h" />
-    <ClInclude Include="GWorld.h" />
     <ClInclude Include="GWorldMesh.h" />
     <ClInclude Include="D3D11WorldMesh.h" />
-    <ClInclude Include="GGame.h" />
-    <ClInclude Include="GSkeletalMeshVisual.h" />
-    <ClInclude Include="GModelVisual.h" />
     <ClInclude Include="GMaterial.h" />
-    <ClInclude Include="GMorphMeshVisual.h" />
-    <ClInclude Include="GParticleFXVisual.h" />
-    <ClInclude Include="GDecalVisual.h" />
-    <ClInclude Include="D3D11GraphicsEngineQueued.h" />
     <ClInclude Include="D3D11GraphicsEngineBase.h" />
     <ClInclude Include="ModSpecific.h" />
     <ClInclude Include="D3D11GodRayEffect.h">
@@ -693,6 +673,7 @@
     <ClInclude Include="ThreadPool.h">
       <Filter>Tools</Filter>
     </ClInclude>
+    <ClInclude Include="GMeshSimple.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -834,9 +815,6 @@
     <ClCompile Include="GVegetationBox.cpp">
       <Filter>Engine\GAPI\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="GMeshSimple.cpp">
-      <Filter>Engine\GAPI\Objects</Filter>
-    </ClCompile>
     <ClCompile Include="D2DView.cpp">
       <Filter>Engine\D2D</Filter>
     </ClCompile>
@@ -882,9 +860,6 @@
     <ClCompile Include="win32ClipboardWrapper.cpp">
       <Filter>Librarys</Filter>
     </ClCompile>
-    <ClCompile Include="GRenderThread.cpp">
-      <Filter>Engine\GAPI</Filter>
-    </ClCompile>
     <ClCompile Include="BasePShader.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -911,9 +886,6 @@
     </ClCompile>
     <ClCompile Include="D3D11PFX_SMAA.cpp">
       <Filter>Engine\D3D11\PFX\Effects</Filter>
-    </ClCompile>
-    <ClCompile Include="D3D11GraphicsEngineTest.cpp">
-      <Filter>Engine\D3D11</Filter>
     </ClCompile>
     <ClCompile Include="D3D11TextureArray.cpp">
       <Filter>Engine\D3D11</Filter>
@@ -967,20 +939,9 @@
       <Filter>Engine\D3D11</Filter>
     </ClCompile>
     <ClCompile Include="D3D11RenderPipe.cpp" />
-    <ClCompile Include="GVobObject.cpp" />
-    <ClCompile Include="GVisual.cpp" />
-    <ClCompile Include="GStaticMeshVisual.cpp" />
-    <ClCompile Include="GWorld.cpp" />
     <ClCompile Include="GWorldMesh.cpp" />
     <ClCompile Include="D3D11WorldMesh.cpp" />
-    <ClCompile Include="GGame.cpp" />
-    <ClCompile Include="GSkeletalMeshVisual.cpp" />
-    <ClCompile Include="GModelVisual.cpp" />
     <ClCompile Include="GMaterial.cpp" />
-    <ClCompile Include="GMorphMeshVisual.cpp" />
-    <ClCompile Include="GParticleFXVisual.cpp" />
-    <ClCompile Include="GDecalVisual.cpp" />
-    <ClCompile Include="D3D11GraphicsEngineQueued.cpp" />
     <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
     <ClCompile Include="ModSpecific.cpp" />
     <ClCompile Include="D3D11GodRayEffect.cpp">
@@ -1011,6 +972,7 @@
     <ClCompile Include="WorldObjects.cpp">
       <Filter>Engine\GAPI</Filter>
     </ClCompile>
+    <ClCompile Include="GMeshSimple.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

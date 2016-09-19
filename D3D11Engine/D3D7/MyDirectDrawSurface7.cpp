@@ -127,7 +127,6 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 	if(!TextureName.size() || Normalmap || FxMap)
 		return;
 
-	FILE* f;
 	BaseTexture* fxMapTexture = NULL;
 	BaseTexture* nrmmapTexture = NULL;
 

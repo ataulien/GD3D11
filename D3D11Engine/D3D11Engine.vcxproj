@@ -330,14 +330,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="D3D11GodRayEffect.h" />
     <ClInclude Include="D3D11GraphicsEngine.h" />
     <ClInclude Include="D3D11GraphicsEngineBase.h" />
-    <ClInclude Include="D3D11GraphicsEngineQueued.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="D3D11GraphicsEngineTest.h" />
     <ClInclude Include="D3D11GShader.h" />
     <ClInclude Include="D3D11HDShader.h" />
     <ClInclude Include="D3D11LineRenderer.h" />
@@ -376,15 +368,11 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="Engine.h" />
     <ClInclude Include="FileDownloader.h" />
     <ClInclude Include="GCamera.h" />
-    <ClInclude Include="GDecalVisual.h" />
     <ClInclude Include="GFSDK_SSAO.h" />
-    <ClInclude Include="GGame.h" />
     <ClInclude Include="GInventory.h" />
     <ClInclude Include="GMaterial.h" />
     <ClInclude Include="GMesh.h" />
     <ClInclude Include="GMeshSimple.h" />
-    <ClInclude Include="GModelVisual.h" />
-    <ClInclude Include="GMorphMeshVisual.h" />
     <ClInclude Include="GOcean.h" />
     <ClInclude Include="GothicAPI.h" />
     <ClInclude Include="GothicGraphicsState.h" />
@@ -392,16 +380,9 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="BaseGraphicsEngine.h" />
     <ClInclude Include="GothicMemoryLocations1_08k.h" />
     <ClInclude Include="GothicMemoryLocations2_6_fix.h" />
-    <ClInclude Include="GParticleFXVisual.h" />
-    <ClInclude Include="GRenderThread.h" />
-    <ClInclude Include="GSkeletalMeshVisual.h" />
     <ClInclude Include="GSky.h" />
     <ClInclude Include="GSpriteCloud.h" />
-    <ClInclude Include="GStaticMeshVisual.h" />
     <ClInclude Include="GVegetationBox.h" />
-    <ClInclude Include="GVisual.h" />
-    <ClInclude Include="GVobObject.h" />
-    <ClInclude Include="GWorld.h" />
     <ClInclude Include="GWorldMesh.h" />
     <ClInclude Include="GothicMemoryLocations2_6_fix_Spacer.h" />
     <ClInclude Include="HookExceptionFilter.h" />
@@ -538,14 +519,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11GodRayEffect.cpp" />
     <ClCompile Include="D3D11GraphicsEngine.cpp" />
     <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
-    <ClCompile Include="D3D11GraphicsEngineQueued.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="D3D11GraphicsEngineTest.cpp" />
     <ClCompile Include="D3D11GShader.cpp" />
     <ClCompile Include="D3D11HDShader.cpp" />
     <ClCompile Include="D3D11LineRenderer.cpp" />
@@ -603,26 +576,15 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="FileDownloader.cpp" />
     <ClCompile Include="GCamera.cpp" />
-    <ClCompile Include="GDecalVisual.cpp" />
-    <ClCompile Include="GGame.cpp" />
     <ClCompile Include="GInventory.cpp" />
     <ClCompile Include="GMaterial.cpp" />
     <ClCompile Include="GMesh.cpp" />
     <ClCompile Include="GMeshSimple.cpp" />
-    <ClCompile Include="GModelVisual.cpp" />
-    <ClCompile Include="GMorphMeshVisual.cpp" />
     <ClCompile Include="GOcean.cpp" />
     <ClCompile Include="GothicAPI.cpp" />
-    <ClCompile Include="GParticleFXVisual.cpp" />
-    <ClCompile Include="GRenderThread.cpp" />
-    <ClCompile Include="GSkeletalMeshVisual.cpp" />
     <ClCompile Include="GSky.cpp" />
     <ClCompile Include="GSpriteCloud.cpp" />
-    <ClCompile Include="GStaticMeshVisual.cpp" />
     <ClCompile Include="GVegetationBox.cpp" />
-    <ClCompile Include="GVisual.cpp" />
-    <ClCompile Include="GVobObject.cpp" />
-    <ClCompile Include="GWorld.cpp" />
     <ClCompile Include="GWorldMesh.cpp" />
     <ClCompile Include="HookedFunctions.cpp" />
     <ClCompile Include="IkarusBindings.cpp" />

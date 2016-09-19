@@ -29,7 +29,6 @@
 #include "GVegetationBox.h"
 #include "oCNPC.h"
 #include "zCMeshSoftSkin.h"
-#include "GRenderThread.h"
 #include "GOcean.h"
 #include "zCVobLight.h"
 #include "UpdateCheck.h"
@@ -129,8 +128,6 @@ GothicAPI::GothicAPI(void)
 
 	CameraReplacementPtr = NULL;
 	WrappedWorldMesh = NULL;
-
-	RenderThread = NULL;
 	Ocean = NULL;
 	CurrentCamera = NULL;
 
@@ -152,7 +149,6 @@ GothicAPI::~GothicAPI(void)
 	delete Inventory;
 	delete LoadedWorldInfo;
 	delete WrappedWorldMesh;
-	delete RenderThread;
 }
 
 /** Called when the game starts */
@@ -225,13 +221,6 @@ void GothicAPI::OnWorldUpdate()
 
 		//zCCamera::GetCamera()->Activate();
 		SetViewTransform(zCCamera::GetCamera()->GetTransform(zCCamera::ETransformType::TT_VIEW));
-	}
-
-	// Update renderthread with information
-	if(RenderThread)
-	{
-		FrameInfo* pendingInfo = new FrameInfo;
-		RenderThread->SetPendingFrameInfo(pendingInfo);
 	}
 
 	// Apply the hints for the sound system to fix voices in indoor locations being quiet
@@ -550,18 +539,6 @@ void GothicAPI::ResetVobs()
 void GothicAPI::OnGeometryLoaded(zCPolygon** polys, unsigned int numPolygons)
 {
 	LogInfo() << "Extracting world";
-	 
-	if(Engine::Game)
-	{
-		// Start with a new world, geometry is the first that gets loaded // TODO: Make loading a savegame work!
-		Engine::Game->SwitchActiveWorld();
-
-		// Tell the game-API that the new world-geometry is ready
-		Engine::Game->OnGeometryLoaded(LoadedWorldInfo->BspTree);
-	}
-
-
-
 
 	ResetWorld();
 
@@ -620,13 +597,6 @@ void GothicAPI::OnLoadWorld(const std::string& levelName, int loadMode)
 		LoadedWorldInfo->WorldName = name;
 	}
 
-	if(!Engine::Game)
-	{
-		// Reset caches
-		BspLeafVobLists.clear();
-		ResetVobs();
-	}
-
 #ifndef PUBLIC_RELEASE
 	// Disable input here, so you can tab out
 	SetEnableGothicInput(false);
@@ -650,41 +620,24 @@ void GothicAPI::OnWorldLoaded()
 
 	LoadedWorldInfo->BspTree = oCGame::GetGame()->_zCSession_world->GetBspTree();
 
-	if(Engine::Game)
-		Engine::Game->OnWorldLoaded();
-	else
-	{
-		// Get all VOBs
-		zCTree<zCVob>* vobTree = oCGame::GetGame()->_zCSession_world->GetGlobalVobTree();
-		TraverseVobTree(vobTree);
-	 
-		// Build instancing cache for the static vobs for each section
-		BuildStaticMeshInstancingCache();
 
-		// Build vob info cache for the bsp-leafs
-		BuildBspVobMapCache();
+	// Get all VOBs
+	zCTree<zCVob>* vobTree = oCGame::GetGame()->_zCSession_world->GetGlobalVobTree();
+	TraverseVobTree(vobTree);
+	
+	// Build instancing cache for the static vobs for each section
+	BuildStaticMeshInstancingCache();
+
+	// Build vob info cache for the bsp-leafs
+	BuildBspVobMapCache();
 
 	#ifdef BUILD_GOTHIC_1_08k
-		if(LoadedWorldInfo->CustomWorldLoaded)
-		{
-			CreatezCPolygonsForSections();
-			PutCustomPolygonsIntoBspTree();
-		}
-	#endif
-
-		// Cache world
-		//CacheWorldMesh("WorldMesh.aom");
-
-
-		if(!Ocean)
-		{
-			//Ocean = new GOcean;
-			//Ocean->InitOcean();
-		}
-
-		// Load our stuff
-		//LoadCustomZENResources();
+	if(LoadedWorldInfo->CustomWorldLoaded)
+	{
+		CreatezCPolygonsForSections();
+		PutCustomPolygonsIntoBspTree();
 	}
+	#endif
 	
 	LogInfo() << "Done!";
 
@@ -1075,9 +1028,6 @@ bool GothicAPI::IsMaterialActive(zCMaterial* mat)
 /** Called when a vob moved */
 void GothicAPI::OnVobMoved(zCVob* vob)						
 {
-	if(Engine::Game)
-		Engine::Game->OnVobMoved(vob);
-
 	auto it = VobMap.find(vob);
 
 	if(it != VobMap.end())
@@ -1283,13 +1233,6 @@ void GothicAPI::LeaveResourceCriticalSection()
 void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 {
 	//LogInfo() << "Removing vob: " << vob;
-
-	if(Engine::Game)
-	{	
-		Engine::Game->OnRemoveVob(vob, world);
-		return;
-	}
-
 	Engine::GraphicsEngine->OnVobRemovedFromWorld(vob);
 
 	std::set<zCVob *>::iterator it = RegisteredVobs.find(vob);
@@ -1522,12 +1465,6 @@ void GothicAPI::OnSetVisual(zCVob* vob)
 	if(!oCGame::GetGame() || !oCGame::GetGame()->_zCSession_world || !vob->GetHomeWorld())
 		return;
 
-	if(Engine::Game)
-	{
-		Engine::Game->OnSetVisual(vob);
-		return;
-	}
-
 	// Check for skeletalmesh
 	/*if((zCModel*)vob->GetVisual() == NULL || std::string(vob->GetVisual()->GetFileExtension(0)) != ".PFX")
 	{
@@ -1558,13 +1495,6 @@ void GothicAPI::OnSetVisual(zCVob* vob)
 void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 {
 	//LogInfo() << "Adding vob: " << vob;
-
-	if(Engine::Game)
-	{
-		Engine::Game->OnAddVob(vob, world);
-		return;
-	}
-
 
 	if(!vob->GetVisual())
 		return; // Don't need it if we can't render it
@@ -3068,7 +2998,7 @@ void GothicAPI::CollectVisibleSections(std::list<WorldMeshSectionInfo*>& section
 /** Moves the given vob from a BSP-Node to the dynamic vob list */
 void GothicAPI::MoveVobFromBspToDynamic(SkeletalVobInfo* vob)
 {
-	for(int i=0;i<vob->ParentBSPNodes.size();i++)
+	for(size_t i=0;i<vob->ParentBSPNodes.size();i++)
 	{
 		BspInfo* node = vob->ParentBSPNodes[i];
 
@@ -3092,7 +3022,7 @@ void GothicAPI::MoveVobFromBspToDynamic(SkeletalVobInfo* vob)
 void GothicAPI::MoveVobFromBspToDynamic(VobInfo* vob)
 {
 	// Remove from all nodes
-	for(int i=0;i<vob->ParentBSPNodes.size();i++)
+	for(size_t i=0;i<vob->ParentBSPNodes.size();i++)
 	{
 		BspInfo* node = vob->ParentBSPNodes[i];
 
@@ -3137,7 +3067,7 @@ std::vector<VobInfo *>::iterator GothicAPI::MoveVobFromBspToDynamic(VobInfo* vob
 	std::vector<VobInfo *>::iterator itc;
 
 	// Remove from all nodes
-	for(int i=0;i<vob->ParentBSPNodes.size();i++)
+	for(size_t i=0;i<vob->ParentBSPNodes.size();i++)
 	{
 		BspInfo* node = vob->ParentBSPNodes[i];
 
@@ -4566,9 +4496,9 @@ void GothicAPI::PutCustomPolygonsIntoBspTreeRec(BspInfo* base)
 		std::vector<WorldMeshSectionInfo*> sections;
 		GetIntersectingSections(base->OriginalNode->BBox3D.Min, base->OriginalNode->BBox3D.Max, sections);
 
-		for(int i=0;i<sections.size();i++)
+		for(size_t i=0;i<sections.size();i++)
 		{
-			for(int p=0;p<sections[i]->SectionPolygons.size();p++)
+			for(size_t p=0;p<sections[i]->SectionPolygons.size();p++)
 			{
 				zCPolygon* poly = sections[i]->SectionPolygons[p];
 

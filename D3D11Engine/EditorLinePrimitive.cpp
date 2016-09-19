@@ -341,7 +341,7 @@ HRESULT EditorLinePrimitive::CreateFilledCirclePrimitive(float Radius, UINT Deta
 	float Step = (D3DX_PI*2)/((float)(Detail)-1);
 	float s = 0;
 
-	int i=0;
+	size_t i=0;
 	while(i < NumVerts)
 	{
 		switch(Axis)
@@ -922,15 +922,7 @@ void EditorLinePrimitive::SetSolidShader(D3D11PShader* SolidShader)
 /** Renders a vertexbuffer with the given shader */
 void EditorLinePrimitive::RenderVertexBuffer(ID3D11Buffer* VB, UINT NumVertices, D3D11PShader* Shader, D3D11_PRIMITIVE_TOPOLOGY Topology, int Pass)
 {
-	HRESULT hr;
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase*)Engine::GraphicsEngine;
-
-
-
-	switch(Topology)
-	{
-
-	}
 
 	D3DXMATRIX tr; D3DXMatrixTranspose(&tr, &WorldMatrix);
 	Engine::GAPI->SetWorldTransform(tr);

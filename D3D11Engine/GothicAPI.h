@@ -163,7 +163,6 @@ class GInventory;
 class zCVobLight;
 class MyDirectDrawSurface7;
 class GVegetationBox;
-class GRenderThread;
 class GOcean;
 class zCMorphMesh;
 class zCDecal;
@@ -745,9 +744,6 @@ private:
 
 	/** Gothics output window */
 	HWND OutputWindow;
-
-	/** Renderthread */
-	GRenderThread* RenderThread;
 
 	/** Ocean */
 	GOcean* Ocean;

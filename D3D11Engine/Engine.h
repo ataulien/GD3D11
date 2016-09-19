@@ -33,9 +33,6 @@ namespace Engine
 	/** Global GothicAPI object */
 	__declspec( selectany ) GothicAPI* GAPI;
 
-	/** Global Game object */
-	__declspec( selectany ) GGame* Game;
-
 	/** Global AntTweakBar object */
 	__declspec( selectany ) BaseAntTweakBar* AntTweakBar;
 

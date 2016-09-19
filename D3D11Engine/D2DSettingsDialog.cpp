@@ -101,21 +101,19 @@ XRESULT D2DSettingsDialog::InitControls()
 	smaaCheckbox->SetPosition(D2D1::Point2F(5, smaaCheckbox->GetPosition().y));
 	smaaCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableSMAA);
 
-	SV_Checkbox* tesselationCheckbox = new SV_Checkbox(MainView, MainPanel);
+	/*SV_Checkbox* tesselationCheckbox = new SV_Checkbox(MainView, MainPanel);
 	tesselationCheckbox->SetSize(D2D1::SizeF(160, 20));
 	tesselationCheckbox->SetCaption("Enable Tesselation");
 	tesselationCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation);
 	tesselationCheckbox->AlignUnder(smaaCheckbox, 5);
 	tesselationCheckbox->SetPosition(D2D1::Point2F(5, tesselationCheckbox->GetPosition().y));
-	tesselationCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation);
-
-	
+	tesselationCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation);*/
 
 	SV_Checkbox* shadowsCheckbox = new SV_Checkbox(MainView, MainPanel);
 	shadowsCheckbox->SetSize(D2D1::SizeF(160, 20));
 	shadowsCheckbox->SetCaption("Enable Shadows[*]");
 	shadowsCheckbox->SetDataToUpdate(&Engine::GAPI->GetRendererState()->RendererSettings.EnableShadows);
-	shadowsCheckbox->AlignUnder(tesselationCheckbox, 5);
+	shadowsCheckbox->AlignUnder(smaaCheckbox, 5);
 	shadowsCheckbox->SetPosition(D2D1::Point2F(5, shadowsCheckbox->GetPosition().y));
 	shadowsCheckbox->SetChecked(Engine::GAPI->GetRendererState()->RendererSettings.EnableShadows);
 

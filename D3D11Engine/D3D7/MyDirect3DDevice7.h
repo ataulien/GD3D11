@@ -7,7 +7,6 @@
 #include "../Logger.h"
 #include "MyDirectDrawSurface7.h"
 #include "../GothicAPI.h"
-#include "../ReferenceD3D11GraphicsEngine.h"
 #include "../HookExceptionFilter.h"
 
 

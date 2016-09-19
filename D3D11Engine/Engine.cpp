@@ -2,11 +2,8 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "D3D11GraphicsEngine.h"
-#include "D3D11GraphicsEngineQueued.h"
-//#include "ReferenceD3D11GraphicsEngine.h"
 #include "D3D11AntTweakBar.h"
 #include "HookExceptionFilter.h"
-#include "GGame.h"
 #include "ThreadPool.h"
 
 //#define TESTING
@@ -20,11 +17,8 @@ namespace Engine
 	void CreateGraphicsEngine()
 	{
 		LogInfo() << "Creating Main graphics engine";
-#ifdef TESTING
-		GraphicsEngine = new D3D11GraphicsEngineQueued;
-#else
+
 		GraphicsEngine = new D3D11GraphicsEngine;
-#endif
 
 		if(!GraphicsEngine)
 		{
@@ -59,16 +53,6 @@ namespace Engine
 			exit(0);
 		}
 
-		Game = NULL;
-	
-#ifdef TESTING
-		Game = new GGame;
-		if(!Game)
-		{
-			LogErrorBox() << "Failed to create GGame!";
-			exit(0);
-		}
-#endif
 	}
 
 	/** Loads the needed dll files from subdir */

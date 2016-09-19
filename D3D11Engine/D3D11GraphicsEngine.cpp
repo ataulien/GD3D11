@@ -2990,7 +2990,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position,
 		// construct new renderedvob list or fake one
 		if(!renderedVobs || renderedVobs->empty())
 		{
-			for(int i=0;i<drawnSections.size();i++)
+			for(size_t i=0;i<drawnSections.size();i++)
 			{
 				for(auto it = drawnSections[i]->Vobs.begin(); it != drawnSections[i]->Vobs.end(); it++)
 				{
@@ -3735,7 +3735,7 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 						else
 						{
 #ifndef PUBLIC_RELEASE
-							for(int s=0;s<(*it).second->Instances.size();s++)
+							for(size_t s=0;s<(*it).second->Instances.size();s++)
 							{
 								D3DXVECTOR3 pos = D3DXVECTOR3((*it).second->Instances[s].world._14, (*it).second->Instances[s].world._24, (*it).second->Instances[s].world._34); 
 								GetLineRenderer()->AddAABBMinMax(pos - (*it).second->BBox.Min, pos + (*it).second->BBox.Max, D3DXVECTOR4(1,0,0,1));

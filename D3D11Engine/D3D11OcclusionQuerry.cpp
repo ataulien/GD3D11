@@ -18,7 +18,7 @@ D3D11OcclusionQuerry::D3D11OcclusionQuerry(void)
 
 D3D11OcclusionQuerry::~D3D11OcclusionQuerry(void)
 {
-	for(int i=0;i<Predicates.size();i++)
+	for(size_t i=0;i<Predicates.size();i++)
 	{
 		Predicates[i]->Release();
 	}

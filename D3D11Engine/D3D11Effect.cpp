@@ -51,7 +51,7 @@ void D3D11Effect::FillRandomRaindropData(std::vector<ParticleInstanceInfo>& data
 	float radius = Engine::GAPI->GetRendererState()->RendererSettings.RainRadiusRange;
 	float height = Engine::GAPI->GetRendererState()->RendererSettings.RainHeightRange;
 
-	for(int i=0;i<data.size();i++)
+	for(size_t i=0;i<data.size();i++)
 	{
 		ParticleInstanceInfo raindrop;
 		//use rejection sampling to generate random points inside a circle of radius 1 centered at 0,0
@@ -358,7 +358,7 @@ HRESULT LoadTextureArray( ID3D11Device* pd3dDevice, ID3D11DeviceContext* context
 	D3D11_TEXTURE2D_DESC desc;
 	ZeroMemory( &desc, sizeof(D3D11_TEXTURE2D_DESC) );
 
-	CHAR szTextureName[MAX_PATH];
+//	CHAR szTextureName[MAX_PATH];
 	CHAR str[MAX_PATH];
 	for(int i=0; i<iNumTextures; i++)
 	{

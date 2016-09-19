@@ -494,7 +494,7 @@ struct GothicRendererSettings
 		DrawFog = true;
 		EnableHDR = false;
 		ReplaceSunDirection = false;
-		AtmosphericScattering = true;
+		AtmosphericScattering = false; // Use original sky
 		EnableDynamicLighting = true;
 
 #ifndef BUILD_GOTHIC_1_08k

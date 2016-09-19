@@ -52,7 +52,7 @@ D3D11GraphicsEngineBase::~D3D11GraphicsEngineBase(void)
 	GothicBlendStateInfo::DeleteCachedObjects();
 	GothicRasterizerStateInfo::DeleteCachedObjects();
 
-	for(int i=0;i<DeferredContextsAll.size();i++)
+	for(size_t i=0;i<DeferredContextsAll.size();i++)
 		DeferredContextsAll[i]->Release();
 
 	delete TempVertexBuffer;

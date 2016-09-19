@@ -207,7 +207,7 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
 	// Create the projection matrix
 	float zNear = 15.0f;
 	float zFar = LightInfo->Vob->GetLightRange() * 2.0f;
-    D3DXMatrixPerspectiveFovLH( &proj, D3DX_PI * 0.5f, 1.0f, zNear, zFar );
+    D3DXMatrixPerspectiveFovLH( &proj, ((float)D3DX_PI * 0.5f), 1.0f, zNear, zFar );
 	D3DXMatrixTranspose(&proj, &proj);
 
 	// Setup near/far-planes. We need linear viewspace depth for the cubic shadowmaps.

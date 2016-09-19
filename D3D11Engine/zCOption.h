@@ -68,7 +68,7 @@ public:
 		if(pos == std::string::npos)
 			return ""; // Not in commandline
 
-		int paramPos = pos + 1 + cmd.length() + 1; // Skip everything until the -, then 
+		unsigned int paramPos = pos + 1 + cmd.length() + 1; // Skip everything until the -, then 
 								     			   // the -, then the param-name and finally the :
 		// Safety-check
 		if(paramPos >= cmdLine.length())
@@ -97,11 +97,11 @@ public:
 		{
 			Engine::GAPI->SetIntParamFromConfig("scaleVideos", 0);
 			return 0;
-		}else if(stricmp(var, "zStartupWindowed") == 0)
+		}else if(_stricmp(var, "zStartupWindowed") == 0)
 		{
 			Engine::GAPI->SetIntParamFromConfig("zStartupWindowed", r);
 			return 1;
-		}else if(stricmp(var, "gameAbnormalExit") == 0)
+		}else if(_stricmp(var, "gameAbnormalExit") == 0)
 		{
 #ifndef PUBLIC_RELEASE
 			// No VDFS bullshit when testing
