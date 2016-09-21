@@ -2,9 +2,9 @@
 #include "pch.h"
 #include "WorldConverter.h"
 
-class BaseVertexBuffer;
-class BaseTexture;
-class BaseConstantBuffer;
+class D3D11VertexBuffer;
+class D3D11Texture;
+class D3D11ConstantBuffer;
 class BaseLineRenderer;
 struct VobInfo;
 
@@ -127,7 +127,7 @@ struct PipelineState
 	struct BaseState_s
 	{
 		/** Sets a constantbuffer to all shaders */
-		void SetCB(int slot, BaseConstantBuffer* cb)
+		void SetCB(int slot, D3D11ConstantBuffer* cb)
 		{
 			ConstantBuffersPS[slot] = cb;
 			ConstantBuffersVS[slot] = cb;
@@ -145,14 +145,14 @@ struct PipelineState
 		byte NumTextures;
 
 		/** Buffers */
-		BaseConstantBuffer* ConstantBuffersPS[8];
-		BaseConstantBuffer* ConstantBuffersVS[8];
-		BaseConstantBuffer* ConstantBuffersHDS[8];
-		BaseConstantBuffer* ConstantBuffersGS[8];
+		D3D11ConstantBuffer* ConstantBuffersPS[8];
+		D3D11ConstantBuffer* ConstantBuffersVS[8];
+		D3D11ConstantBuffer* ConstantBuffersHDS[8];
+		D3D11ConstantBuffer* ConstantBuffersGS[8];
 
 		/** Vertex-buffers */
-		BaseVertexBuffer* VertexBuffers[2];
-		BaseVertexBuffer* StructuredBuffersVS[1];
+		D3D11VertexBuffer* VertexBuffers[2];
+		D3D11VertexBuffer* StructuredBuffersVS[1];
 		UINT VertexStride[2];
 		UINT IndexOffset;
 		EDrawCallType DrawCallType;
@@ -164,7 +164,7 @@ struct PipelineState
 		UINT InstanceOffset;
 
 		/** Index-buffer */
-		BaseVertexBuffer* IndexBuffer;
+		D3D11VertexBuffer* IndexBuffer;
 
 		UINT8 PShaderID;
 		UINT8 VShaderID;
@@ -286,13 +286,13 @@ public:
 	virtual XRESULT Clear(const float4& color) = 0;
 
 	/** Creates a vertexbuffer object (Not registered inside) */
-	virtual XRESULT CreateVertexBuffer(BaseVertexBuffer** outBuffer) = 0;
+	virtual XRESULT CreateVertexBuffer(D3D11VertexBuffer** outBuffer) = 0;
 
 	/** Creates a texture object (Not registered inside) */
-	virtual XRESULT CreateTexture(BaseTexture** outTexture) = 0;
+	virtual XRESULT CreateTexture(D3D11Texture** outTexture) = 0;
 
 	/** Creates a constantbuffer object (Not registered inside) */
-	virtual XRESULT CreateConstantBuffer(BaseConstantBuffer** outCB, void* data, int size) = 0;
+	virtual XRESULT CreateConstantBuffer(D3D11ConstantBuffer** outCB, void* data, int size) = 0;
 
 	/** Creates a bufferobject for a shadowed point light */
 	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic = false){return XR_SUCCESS;}
@@ -343,26 +343,26 @@ public:
 	virtual void SetupPerInstanceConstantBuffer(int slot=1){};
 
 	/** Draws a vertexbuffer, non-indexed */
-	virtual XRESULT DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
+	virtual XRESULT DrawVertexBuffer(D3D11VertexBuffer* vb, unsigned int numVertices, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
 
 	/** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
-	virtual XRESULT DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
+	virtual XRESULT DrawVertexBufferFF(D3D11VertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
 
 	/** Draws a vertexbuffer, non-indexed */
-	virtual XRESULT DrawVertexBufferIndexed(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset = 0){return XR_SUCCESS;};
-	virtual XRESULT DrawVertexBufferIndexedUINT(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset){return XR_SUCCESS;};
+	virtual XRESULT DrawVertexBufferIndexed(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset = 0){return XR_SUCCESS;};
+	virtual XRESULT DrawVertexBufferIndexedUINT(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset){return XR_SUCCESS;};
 
 	/** Draws a skeletal mesh */
-	virtual XRESULT DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness = 1.0f, SkeletalMeshVisualInfo* msh = NULL){return XR_SUCCESS;};
+	virtual XRESULT DrawSkeletalMesh(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness = 1.0f, SkeletalMeshVisualInfo* msh = NULL){return XR_SUCCESS;};
 
 	
 
 	/** Draws a vertexarray, non-indexed */
-	virtual XRESULT DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
+	virtual XRESULT DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int stride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
 
 	/** Draws a batch of instanced geometry */
-	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
-	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, BaseVertexBuffer* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct), unsigned int startInstanceNum = 0, unsigned int indexOffset = 0){return XR_SUCCESS;};
+	virtual XRESULT DrawInstanced(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct)){return XR_SUCCESS;};
+	virtual XRESULT DrawInstanced(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, D3D11VertexBuffer* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct), unsigned int startInstanceNum = 0, unsigned int indexOffset = 0){return XR_SUCCESS;};
 
 	/** Sets the active pixel shader object */
 	virtual XRESULT SetActivePixelShader(const std::string& shader){return XR_SUCCESS;};

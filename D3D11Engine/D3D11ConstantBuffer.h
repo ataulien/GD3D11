@@ -1,17 +1,16 @@
 #pragma once
-#include "BaseConstantBuffer.h"
 
-class D3D11ConstantBuffer : public BaseConstantBuffer
+class D3D11ConstantBuffer
 {
 public:
 	D3D11ConstantBuffer(int size, void* data);
 	~D3D11ConstantBuffer(void);
 
 	/** Updates the buffer */
-	virtual void UpdateBuffer(void* data);
+	void UpdateBuffer(void* data);
 
 	/** Updates the buffer, threadsave */
-	virtual void UpdateBufferDeferred(void* data);
+	void UpdateBufferDeferred(void* data);
 
 	/** Binds the buffer */
 	void BindToVertexShader(int slot);

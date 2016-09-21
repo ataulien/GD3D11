@@ -5,7 +5,7 @@
 
 /** Wrapper-class for some generic effects */
 
-class BaseVertexBuffer;
+class D3D11VertexBuffer;
 struct RenderToDepthStencilBuffer;
 class D3D11Effect
 {
@@ -30,9 +30,9 @@ protected:
 	void FillRandomRaindropData(std::vector<ParticleInstanceInfo>& data);
 
 	/** Rain */
-	BaseVertexBuffer* RainBufferInitial;
-	BaseVertexBuffer* RainBufferDrawFrom;
-	BaseVertexBuffer* RainBufferStreamTo;
+	D3D11VertexBuffer* RainBufferInitial;
+	D3D11VertexBuffer* RainBufferDrawFrom;
+	D3D11VertexBuffer* RainBufferStreamTo;
 
 	ID3D11Texture2D* RainTextureArray;
 	ID3D11ShaderResourceView* RainTextureArraySRV;

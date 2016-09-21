@@ -8,7 +8,7 @@
 #include "zCWorld.h"
 #include "zCMesh.h"
 #include "GMesh.h"
-#include "BaseTexture.h"
+#include "D3D11Texture.h"
 #include "Engine.h"
 
 GSky::GSky(void)
@@ -114,7 +114,7 @@ MeshInfo* GSky::GetSkyPlane()
 /** Adds a sky texture. Sky textures must be in order to make the daytime work */
 XRESULT GSky::AddSkyTexture(const std::string& file)
 {
-	BaseTexture* t;
+	D3D11Texture* t;
 	XLE(Engine::GraphicsEngine->CreateTexture(&t));
 	XLE(t->Init(file));
 
@@ -181,7 +181,7 @@ void GSky::SetSkyTexture(ESkyTexture texture)
 }
 
 /** Returns the sky-texture for the passed daytime (0..1) */
-void GSky::GetTextureOfDaytime(float time, BaseTexture** t1, BaseTexture** t2, float* factor)
+void GSky::GetTextureOfDaytime(float time, D3D11Texture** t1, D3D11Texture** t2, float* factor)
 {
 	if(!SkyTextures.size())
 		return;
@@ -301,13 +301,13 @@ float4 GSky::GetSkylightColor()
 }
 
 /** Returns the cloud texture */
-BaseTexture* GSky::GetCloudTexture()
+D3D11Texture* GSky::GetCloudTexture()
 {
 	return CloudTexture;
 }
 
 /** Returns the cloud texture */
-BaseTexture* GSky::GetNightTexture()
+D3D11Texture* GSky::GetNightTexture()
 {
 	return NightTexture;
 }

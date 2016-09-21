@@ -1,11 +1,10 @@
 #pragma once
 #include "pch.h"
-#include "BaseVShader.h"
 
 class D3D11ConstantBuffer;
 class D3D11VertexBuffer;
 
-class D3D11VShader : public BaseVShader
+class D3D11VShader
 {
 public:
 	D3D11VShader(void);
@@ -18,7 +17,7 @@ public:
 	XRESULT Apply();
 
 	/** Returns a reference to the constantBuffer vector*/
-	std::vector<BaseConstantBuffer*>& GetConstantBuffer();
+	std::vector<D3D11ConstantBuffer*>& GetConstantBuffer();
 
 	/** Returns the shader */
 	ID3D11VertexShader* GetShader(){return VertexShader;}
@@ -35,7 +34,7 @@ private:
 
 	ID3D11VertexShader* VertexShader;
 	ID3D11InputLayout* InputLayout;
-	std::vector<BaseConstantBuffer*> ConstantBuffers;
+	std::vector<D3D11ConstantBuffer*> ConstantBuffers;
 
 	std::string File;
 

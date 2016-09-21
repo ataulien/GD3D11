@@ -56,7 +56,7 @@ public:
 
 		// Create DrawPrimIndexBuffer
 		Engine::GraphicsEngine->CreateVertexBuffer(&DrawPrimIndexBuffer);
-		DrawPrimIndexBuffer->Init(NULL, DRAW_PRIM_INDEX_BUFFER_SIZE, BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		DrawPrimIndexBuffer->Init(NULL, DRAW_PRIM_INDEX_BUFFER_SIZE, D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
     }
 
 	~MyDirect3DDevice7()
@@ -903,5 +903,5 @@ private:
 	D3DDEVICEDESC7 FakeDeviceDesc;
 	int RefCount;
 
-	BaseVertexBuffer* DrawPrimIndexBuffer;
+	D3D11VertexBuffer* DrawPrimIndexBuffer;
 };

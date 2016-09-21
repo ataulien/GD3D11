@@ -100,8 +100,8 @@ XRESULT GMeshSimple::LoadMesh(const std::string& file)
 		Engine::GraphicsEngine->CreateVertexBuffer(&IndexBuffer);
 
 		// Init and fill buffers
-		VertexBuffer->Init(vertices, s->mMeshes[i]->mNumVertices * sizeof(SimpleObjectVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-		IndexBuffer->Init(indices, s->mMeshes[i]->mNumFaces * 3 * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+		VertexBuffer->Init(vertices, s->mMeshes[i]->mNumVertices * sizeof(SimpleObjectVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+		IndexBuffer->Init(indices, s->mMeshes[i]->mNumFaces * 3 * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 		NumVertices = s->mMeshes[i]->mNumVertices;
 		NumIndices = s->mMeshes[i]->mNumFaces * 3;
@@ -128,7 +128,7 @@ void GMeshSimple::DrawMesh()
 }
 
 /** Draws a batch of instances */
-void GMeshSimple::DrawBatch(BaseVertexBuffer* instances, int numInstances, int instanceDataStride)
+void GMeshSimple::DrawBatch(D3D11VertexBuffer* instances, int numInstances, int instanceDataStride)
 {
 	Engine::GraphicsEngine->DrawInstanced(VertexBuffer, IndexBuffer, NumIndices, instances, instanceDataStride, numInstances, sizeof(SimpleObjectVertexStruct));
 }

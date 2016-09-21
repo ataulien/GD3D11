@@ -1,7 +1,7 @@
 #pragma once
 #include "baselinerenderer.h"
 
-class BaseVertexBuffer;
+class D3D11VertexBuffer;
 class D3D11LineRenderer :
 	public BaseLineRenderer
 {
@@ -24,7 +24,7 @@ private:
 	std::vector<LineVertex> LineCache;
 
 	/** Buffer to hold the lines on the GPU */
-	BaseVertexBuffer* LineBuffer;
+	D3D11VertexBuffer* LineBuffer;
 	unsigned int LineBufferSize; // Size in elements the line buffer can hold
 };
 

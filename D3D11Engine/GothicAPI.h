@@ -131,7 +131,7 @@ struct MaterialInfo
 	/** creates/updates the constantbuffer */
 	void UpdateConstantbuffer();
 
-	BaseConstantBuffer* Constantbuffer;
+	D3D11ConstantBuffer* Constantbuffer;
 
 	std::string VertexShader;
 	std::string TesselationShaderPair;
@@ -553,8 +553,8 @@ public:
 	XRESULT LoadVegetation(const std::string& file);
 
 	/** Sets/Gets the pending movie frame */
-	void SetPendingMovieFrame(BaseTexture* frame);
-	BaseTexture* GetPendingMovieFrame();
+	void SetPendingMovieFrame(D3D11Texture* frame);
+	D3D11Texture* GetPendingMovieFrame();
 
 	/** Returns the main-thread id */
 	DWORD GetMainThreadID();
@@ -755,7 +755,7 @@ private:
 	zCCamera* CurrentCamera;
 
 	/** Currently pending movie frame */
-	BaseTexture* PendingMovieFrame;
+	D3D11Texture* PendingMovieFrame;
 
 	/** The id of the main thread */
 	DWORD MainThreadID;

@@ -126,7 +126,7 @@ XRESULT D3D11PShader::Apply()
 }
 
 /** Returns a reference to the constantBuffer vector*/
-std::vector<BaseConstantBuffer*>& D3D11PShader::GetConstantBuffer()
+std::vector<D3D11ConstantBuffer*>& D3D11PShader::GetConstantBuffer()
 {
 	return ConstantBuffers;
 }

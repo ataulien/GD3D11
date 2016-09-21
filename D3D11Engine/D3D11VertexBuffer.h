@@ -1,46 +1,80 @@
 #pragma once
-#include "basevertexbuffer.h"
-class D3D11VertexBuffer : public BaseVertexBuffer
+
+class D3D11VertexBuffer
 {
 public:
 	D3D11VertexBuffer(void);
 	~D3D11VertexBuffer(void);
 
+	/** Layed out for D3D11*/
+	enum ECPUAccessFlags
+	{
+		CA_NONE = 0,
+		CA_WRITE = 0x10000L,
+		CA_READ = 0x20000L,
+	};
+
+	/** Layed out for D3D11*/
+	enum EUsageFlags
+	{
+		U_DEFAULT = 0,
+		U_DYNAMIC = 2,
+		U_IMMUTABLE = 1
+	};
+
+	/** Layed out for D3D11*/
+	enum EMapFlags
+	{
+		M_READ = 1,
+		M_WRITE = 2,
+		M_READ_WRITE = 3,
+		M_WRITE_DISCARD = 4,
+	};
+
+	/** Layed out for D3D11*/
+	enum EBindFlags
+	{
+		B_VERTEXBUFFER = D3D11_BIND_VERTEX_BUFFER,
+		B_INDEXBUFFER = D3D11_BIND_INDEX_BUFFER,
+		B_STREAM_OUT = D3D11_BIND_STREAM_OUTPUT,
+		B_SHADER_RESOURCE = D3D11_BIND_SHADER_RESOURCE,
+	};
+
 	/** Creates the vertexbuffer with the given arguments */
-	virtual XRESULT Init(void* initData, unsigned int sizeInBytes, EBindFlags EBindFlags = B_VERTEXBUFFER, EUsageFlags usage = EUsageFlags::U_DEFAULT, ECPUAccessFlags cpuAccess = ECPUAccessFlags::CA_NONE, const std::string& fileName = "", unsigned int structuredByteSize = 0);
+	XRESULT Init(void* initData, unsigned int sizeInBytes, EBindFlags EBindFlags = B_VERTEXBUFFER, EUsageFlags usage = EUsageFlags::U_DEFAULT, ECPUAccessFlags cpuAccess = ECPUAccessFlags::CA_NONE, const std::string& fileName = "", unsigned int structuredByteSize = 0);
 
 	/** Updates the vertexbuffer with the given data */
-	virtual XRESULT UpdateBuffer(void* data, UINT size = 0);
+	XRESULT UpdateBuffer(void* data, UINT size = 0);
 
 	/** Updates the vertexbuffer with the given data */
-	virtual XRESULT UpdateBufferDeferred(void* data, UINT size = 0);
+	XRESULT UpdateBufferDeferred(void* data, UINT size = 0);
 
 	/** Updates the vertexbuffer with the given data */
-	virtual XRESULT UpdateBufferAligned16(void* data, UINT size = 0);
+	XRESULT UpdateBufferAligned16(void* data, UINT size = 0);
 
 	/** Maps the buffer */
-	virtual XRESULT Map(int flags, void** dataPtr, UINT* size);
+	XRESULT Map(int flags, void** dataPtr, UINT* size);
 
 	/** Unmaps the buffer */
-	virtual XRESULT Unmap();
+	XRESULT Unmap();
 
 	/** Maps the buffer */
-	virtual XRESULT MapDeferred(int flags, void** dataPtr, UINT* size);
+	XRESULT MapDeferred(int flags, void** dataPtr, UINT* size);
 
 	/** Unmaps the buffer */
-	virtual XRESULT UnmapDeferred();
+	XRESULT UnmapDeferred();
 
 	/** Optimizes the given set of vertices */
-	virtual XRESULT OptimizeVertices(VERTEX_INDEX* indices, byte* vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride);
+	XRESULT OptimizeVertices(VERTEX_INDEX* indices, byte* vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride);
 
 	/** Optimizes the given set of vertices */
-	virtual XRESULT OptimizeFaces(VERTEX_INDEX* indices, byte* vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride);
+	XRESULT OptimizeFaces(VERTEX_INDEX* indices, byte* vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride);
 
 	/** Returns the D3D11-Buffer object */
 	ID3D11Buffer* GetVertexBuffer();
 
 	/** Returns the size in bytes of this buffer */
-	virtual unsigned int GetSizeInBytes();
+	unsigned int GetSizeInBytes();
 
 	/** Returns the SRV of this buffer, if it represents a structured buffer */
 	ID3D11ShaderResourceView* GetShaderResourceView();

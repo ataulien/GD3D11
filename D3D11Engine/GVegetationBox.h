@@ -3,9 +3,9 @@
 
 
 class GMeshSimple;
-class BaseTexture;
-class BaseConstantBuffer;
-class BaseVertexBuffer;
+class D3D11Texture;
+class D3D11ConstantBuffer;
+class D3D11VertexBuffer;
 class zCTexture;
 struct MeshInfo;
 
@@ -98,9 +98,9 @@ private:
 
 	D3DXVECTOR3 BoxMin;
 	D3DXVECTOR3 BoxMax;
-	BaseTexture* VegetationTexture;
-	BaseVertexBuffer* InstancingBuffer;
-	BaseConstantBuffer* GrassCB;
+	D3D11Texture* VegetationTexture;
+	D3D11VertexBuffer* InstancingBuffer;
+	D3D11ConstantBuffer* GrassCB;
 	bool DrawBoundingBox;
 	bool Modified;
 };

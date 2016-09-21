@@ -1,6 +1,6 @@
 #pragma once
 #include "pch.h"
-#include "BaseVertexBuffer.h"
+#include "D3D11VertexBuffer.h"
 
 class GMeshSimple
 {
@@ -15,11 +15,11 @@ public:
 	void DrawMesh();
 
 	/** Draws a batch of instances */
-	void DrawBatch(BaseVertexBuffer* instances, int numInstances, int instanceDataStride);
+	void DrawBatch(D3D11VertexBuffer* instances, int numInstances, int instanceDataStride);
 
 private:
-	BaseVertexBuffer* VertexBuffer;
-	BaseVertexBuffer* IndexBuffer;
+	D3D11VertexBuffer* VertexBuffer;
+	D3D11VertexBuffer* IndexBuffer;
 	unsigned int NumVertices;
 	unsigned int NumIndices;
 };

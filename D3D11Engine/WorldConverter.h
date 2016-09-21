@@ -1,10 +1,10 @@
 #pragma once
 #include "pch.h"
-#include "BaseVertexBuffer.h"
-#include "BaseConstantBuffer.h"
+#include "D3D11VertexBuffer.h"
+#include "D3D11ConstantBuffer.h"
 #include "ConstantBufferStructs.h"
 #include "zTypes.h"
-#include "BaseTexture.h"
+#include "D3D11Texture.h"
 #include "GothicGraphicsState.h"
 //#include "zCPolygon.h"
 #include "ShadowedPointLight.h"

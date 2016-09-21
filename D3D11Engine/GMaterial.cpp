@@ -13,7 +13,7 @@ GMaterial::~GMaterial(void)
 }
 
 /** Returns the currently active texture on this */
-BaseTexture* GMaterial::GetTexture()
+D3D11Texture* GMaterial::GetTexture()
 {
 	if(SourceMaterial->GetTexture() && SourceMaterial->GetTexture()->GetSurface())
 		return SourceMaterial->GetTexture()->GetSurface()->GetEngineTexture();

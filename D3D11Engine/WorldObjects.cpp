@@ -223,7 +223,7 @@ void BaseVisualInfo::LoadMeshVisualInfo(const std::string& name)
 
 SectionInstanceCache::~SectionInstanceCache()
 {
-	for(std::map<MeshVisualInfo *, BaseVertexBuffer*>::iterator it = InstanceCache.begin(); it != InstanceCache.end(); it++)
+	for(std::map<MeshVisualInfo *, D3D11VertexBuffer*>::iterator it = InstanceCache.begin(); it != InstanceCache.end(); it++)
 	{
 		delete (*it).second;
 	}
@@ -255,7 +255,7 @@ void SectionInstanceCache::ClearCacheForStatic(MeshVisualInfo* pm)
 {
 	if(InstanceCache.find(pm) != InstanceCache.end())
 	{
-		BaseVertexBuffer* vb = InstanceCache[pm];
+		D3D11VertexBuffer* vb = InstanceCache[pm];
 		delete vb;
 		InstanceCache[pm] = NULL;
 		InstanceCacheData[pm].clear();
@@ -323,7 +323,7 @@ XRESULT MeshInfo::Create(ExVertexStruct* vertices, unsigned int numVertices, VER
 
 	// Init and fill it
 	MeshVertexBuffer->Init(vertices, numVertices * sizeof(ExVertexStruct));
-	MeshIndexBuffer->Init(indices, numIndices * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER);
+	MeshIndexBuffer->Init(indices, numIndices * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER);
 
 	Engine::GAPI->GetRendererState()->RendererInfo.VOBVerticesDataSize += numVertices * sizeof(ExVertexStruct);
 	Engine::GAPI->GetRendererState()->RendererInfo.VOBVerticesDataSize += numIndices * sizeof(VERTEX_INDEX);

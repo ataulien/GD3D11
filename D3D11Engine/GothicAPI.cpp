@@ -2229,9 +2229,9 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 /** Debugging */
 void GothicAPI::DrawTriangle()
 {
-	BaseVertexBuffer* vxb;
+	D3D11VertexBuffer* vxb;
 	Engine::GraphicsEngine->CreateVertexBuffer(&vxb);
-	vxb->Init(NULL, 6 * sizeof(ExVertexStruct), BaseVertexBuffer::EBindFlags::B_VERTEXBUFFER, BaseVertexBuffer::EUsageFlags::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	vxb->Init(NULL, 6 * sizeof(ExVertexStruct), D3D11VertexBuffer::EBindFlags::B_VERTEXBUFFER, D3D11VertexBuffer::EUsageFlags::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 	
 	ExVertexStruct vx[6];
 	ZeroMemory(vx, sizeof(vx));
@@ -4178,12 +4178,12 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 	return XR_SUCCESS;
 }
 
-void GothicAPI::SetPendingMovieFrame(BaseTexture* frame)
+void GothicAPI::SetPendingMovieFrame(D3D11Texture* frame)
 {
 	PendingMovieFrame = frame;
 }
 
-BaseTexture* GothicAPI::GetPendingMovieFrame()
+D3D11Texture* GothicAPI::GetPendingMovieFrame()
 {
 	return PendingMovieFrame;
 }

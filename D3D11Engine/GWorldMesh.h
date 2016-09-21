@@ -26,7 +26,7 @@ protected:
 	MeshInfo* WrappedWorldMesh;
 
 	/** Transforms-Constantbuffer for the worldmesh */
-	BaseConstantBuffer* TransformsCB;
+	D3D11ConstantBuffer* TransformsCB;
 
 	/** Pipelinestate to render this with */
 	std::vector<PipelineState*> PipelineStates;

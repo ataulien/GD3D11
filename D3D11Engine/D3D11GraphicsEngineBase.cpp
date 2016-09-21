@@ -154,7 +154,7 @@ XRESULT D3D11GraphicsEngineBase::Init()
 	Context->HSSetSamplers(0, 1, &DefaultSamplerState);
 
 	TempVertexBuffer = new D3D11VertexBuffer();
-	TempVertexBuffer->Init(NULL, DRAWVERTEXARRAY_BUFFER_SIZE, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	TempVertexBuffer->Init(NULL, DRAWVERTEXARRAY_BUFFER_SIZE, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 
 	TransformsCB = new D3D11ConstantBuffer(sizeof(VS_ExConstantBuffer_PerFrame), NULL);
 
@@ -391,14 +391,14 @@ XRESULT D3D11GraphicsEngineBase::Clear(const float4& color)
 }
 
 /** Creates a vertexbuffer object (Not registered inside) */
-XRESULT D3D11GraphicsEngineBase::CreateVertexBuffer(BaseVertexBuffer** outBuffer)
+XRESULT D3D11GraphicsEngineBase::CreateVertexBuffer(D3D11VertexBuffer** outBuffer)
 {
 	*outBuffer = new D3D11VertexBuffer;
 	return XR_SUCCESS;
 }
 
 /** Creates a texture object (Not registered inside) */
-XRESULT D3D11GraphicsEngineBase::CreateTexture(BaseTexture** outTexture)
+XRESULT D3D11GraphicsEngineBase::CreateTexture(D3D11Texture** outTexture)
 {
 	*outTexture = new D3D11Texture;
 
@@ -406,7 +406,7 @@ XRESULT D3D11GraphicsEngineBase::CreateTexture(BaseTexture** outTexture)
 }
 
 /** Creates a constantbuffer object (Not registered inside) */
-XRESULT D3D11GraphicsEngineBase::CreateConstantBuffer(BaseConstantBuffer** outCB, void* data, int size)
+XRESULT D3D11GraphicsEngineBase::CreateConstantBuffer(D3D11ConstantBuffer** outCB, void* data, int size)
 {
 	*outCB = new D3D11ConstantBuffer(size, data);
 
@@ -633,7 +633,7 @@ XRESULT D3D11GraphicsEngineBase::DrawVertexArray(ExVertexStruct* vertices, unsig
 		delete TempVertexBuffer;
 		TempVertexBuffer = new D3D11VertexBuffer();
 
-		TempVertexBuffer->Init(NULL, stride * numVertices, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		TempVertexBuffer->Init(NULL, stride * numVertices, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 	}
 
 	// Send vertexdata to the GPU
@@ -816,7 +816,7 @@ void D3D11GraphicsEngineBase::SetupPerInstanceConstantBuffer(int slot)
 }
 
 /** Returns the transforms constantbuffer */
-BaseConstantBuffer* D3D11GraphicsEngineBase::GetTransformsCB()
+D3D11ConstantBuffer* D3D11GraphicsEngineBase::GetTransformsCB()
 {
 	return TransformsCB;
 }
@@ -857,7 +857,7 @@ XRESULT D3D11GraphicsEngineBase::CreateShadowedPointLight(ShadowedPointLight** o
 }
 
 /** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
-XRESULT D3D11GraphicsEngineBase::DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride)
+XRESULT D3D11GraphicsEngineBase::DrawVertexBufferFF(D3D11VertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride)
 {
 	SetupVS_ExMeshDrawCall();
 

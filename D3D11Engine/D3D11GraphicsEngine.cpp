@@ -297,10 +297,10 @@ XRESULT D3D11GraphicsEngine::Init()
 
 
 	TempVertexBuffer = new D3D11VertexBuffer();
-	TempVertexBuffer->Init(NULL, DRAWVERTEXARRAY_BUFFER_SIZE, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	TempVertexBuffer->Init(NULL, DRAWVERTEXARRAY_BUFFER_SIZE, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 
 	DynamicInstancingBuffer = new D3D11VertexBuffer();
-	DynamicInstancingBuffer->Init(NULL, INSTANCING_BUFFER_SIZE, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	DynamicInstancingBuffer->Init(NULL, INSTANCING_BUFFER_SIZE, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 
 
 	D3D11_SAMPLER_DESC samplerDesc;
@@ -401,9 +401,9 @@ XRESULT D3D11GraphicsEngine::Init()
 	InverseUnitSphereMesh->LoadMesh("system\\GD3D11\\meshes\\icoSphere.obj");
 
 	// Create distance-buffers
-	CreateConstantBuffer((BaseConstantBuffer **)&InfiniteRangeConstantBuffer, NULL, sizeof(float4));
-	CreateConstantBuffer((BaseConstantBuffer **)&OutdoorSmallVobsConstantBuffer, NULL, sizeof(float4));
-	CreateConstantBuffer((BaseConstantBuffer **)&OutdoorVobsConstantBuffer, NULL, sizeof(float4));
+	CreateConstantBuffer((D3D11ConstantBuffer **)&InfiniteRangeConstantBuffer, NULL, sizeof(float4));
+	CreateConstantBuffer((D3D11ConstantBuffer **)&OutdoorSmallVobsConstantBuffer, NULL, sizeof(float4));
+	CreateConstantBuffer((D3D11ConstantBuffer **)&OutdoorVobsConstantBuffer, NULL, sizeof(float4));
 
 	// Init inf-buffer now
 	InfiniteRangeConstantBuffer->UpdateBuffer(&D3DXVECTOR4(FLT_MAX, 0, 0, 0));
@@ -418,11 +418,11 @@ XRESULT D3D11GraphicsEngine::Init()
 
 	// Init quad buffers
 	Engine::GraphicsEngine->CreateVertexBuffer(&QuadVertexBuffer);
-	QuadVertexBuffer->Init(NULL, 6 * sizeof(ExVertexStruct), BaseVertexBuffer::EBindFlags::B_VERTEXBUFFER, BaseVertexBuffer::EUsageFlags::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	QuadVertexBuffer->Init(NULL, 6 * sizeof(ExVertexStruct), D3D11VertexBuffer::EBindFlags::B_VERTEXBUFFER, D3D11VertexBuffer::EUsageFlags::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 
 
 	Engine::GraphicsEngine->CreateVertexBuffer(&QuadIndexBuffer);
-	QuadIndexBuffer->Init(NULL, 6 * sizeof(VERTEX_INDEX), BaseVertexBuffer::EBindFlags::B_INDEXBUFFER, BaseVertexBuffer::EUsageFlags::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+	QuadIndexBuffer->Init(NULL, 6 * sizeof(VERTEX_INDEX), D3D11VertexBuffer::EBindFlags::B_INDEXBUFFER, D3D11VertexBuffer::EUsageFlags::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 	
 	ExVertexStruct vx[6];
 	ZeroMemory(vx, sizeof(vx));
@@ -802,21 +802,21 @@ XRESULT D3D11GraphicsEngine::Clear(const float4& color)
 }
 
 /** Creates a vertexbuffer object (Not registered inside) */
-XRESULT D3D11GraphicsEngine::CreateVertexBuffer(BaseVertexBuffer** outBuffer)
+XRESULT D3D11GraphicsEngine::CreateVertexBuffer(D3D11VertexBuffer** outBuffer)
 {
 	*outBuffer = new D3D11VertexBuffer;
 	return XR_SUCCESS;
 }
 
 /** Creates a texture object (Not registered inside) */
-XRESULT D3D11GraphicsEngine::CreateTexture(BaseTexture** outTexture)
+XRESULT D3D11GraphicsEngine::CreateTexture(D3D11Texture** outTexture)
 {
 	*outTexture = new D3D11Texture;
 	return XR_SUCCESS;
 }
 
 /** Creates a constantbuffer object (Not registered inside) */
-XRESULT D3D11GraphicsEngine::CreateConstantBuffer(BaseConstantBuffer** outCB, void* data, int size)
+XRESULT D3D11GraphicsEngine::CreateConstantBuffer(D3D11ConstantBuffer** outCB, void* data, int size)
 {
 	*outCB = new D3D11ConstantBuffer(size, data);
 	return XR_SUCCESS;
@@ -1026,7 +1026,7 @@ XRESULT D3D11GraphicsEngine::SetViewport(const ViewportInfo& viewportInfo)
 }
 
 /** Draws a vertexbuffer, non-indexed (World)*/
-XRESULT D3D11GraphicsEngine::DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int stride)
+XRESULT D3D11GraphicsEngine::DrawVertexBuffer(D3D11VertexBuffer* vb, unsigned int numVertices, unsigned int stride)
 {
 #ifdef RECORD_LAST_DRAWCALL
 	g_LastDrawCall.Type = DrawcallInfo::VB;
@@ -1051,7 +1051,7 @@ XRESULT D3D11GraphicsEngine::DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int
 }
 
 /** Draws a vertexbuffer, non-indexed (VOBs)*/
-XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexed(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset)
+XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexed(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset)
 {
 #ifdef RECORD_LAST_DRAWCALL
 	g_LastDrawCall.Type = DrawcallInfo::VB_IX;
@@ -1088,7 +1088,7 @@ XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexed(BaseVertexBuffer* vb, BaseV
 	return XR_SUCCESS;
 }
 
-XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexedUINT(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset)
+XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexedUINT(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset)
 {
 #ifdef RECORD_LAST_DRAWCALL
 	g_LastDrawCall.Type = DrawcallInfo::VB_IX_UINT;
@@ -1176,7 +1176,7 @@ XRESULT D3D11GraphicsEngine::DrawVertexArray(ExVertexStruct* vertices, unsigned 
 		delete TempVertexBuffer;
 		TempVertexBuffer = new D3D11VertexBuffer();
 
-		TempVertexBuffer->Init(NULL, stride * numVertices, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		TempVertexBuffer->Init(NULL, stride * numVertices, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 	}
 
 	TempVertexBuffer->UpdateBuffer(vertices, stride * numVertices);
@@ -1195,7 +1195,7 @@ XRESULT D3D11GraphicsEngine::DrawVertexArray(ExVertexStruct* vertices, unsigned 
 }
 
 /** Draws a vertexarray, indexed */
-XRESULT D3D11GraphicsEngine::DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int stride)
+XRESULT D3D11GraphicsEngine::DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int stride)
 {
 	UpdateRenderStates();
 	D3D11VShader* vShader = ActiveVS;//ShaderManager->GetVShader("VS_TransformedEx");
@@ -1218,7 +1218,7 @@ XRESULT D3D11GraphicsEngine::DrawIndexedVertexArray(ExVertexStruct* vertices, un
 		delete TempVertexBuffer;
 		TempVertexBuffer = new D3D11VertexBuffer();
 
-		TempVertexBuffer->Init(NULL, stride * numVertices, BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		TempVertexBuffer->Init(NULL, stride * numVertices, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 	}
 
 	TempVertexBuffer->UpdateBuffer(vertices, stride * numVertices);
@@ -1238,7 +1238,7 @@ XRESULT D3D11GraphicsEngine::DrawIndexedVertexArray(ExVertexStruct* vertices, un
 
 
 /** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
-XRESULT D3D11GraphicsEngine::DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride)
+XRESULT D3D11GraphicsEngine::DrawVertexBufferFF(D3D11VertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride)
 {
 	SetupVS_ExMeshDrawCall();
 
@@ -1260,7 +1260,7 @@ XRESULT D3D11GraphicsEngine::DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned i
 }
 
 /** Draws a skeletal mesh */
-XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness, SkeletalMeshVisualInfo* msh)
+XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness, SkeletalMeshVisualInfo* msh)
 {
 	Context->RSSetState(WorldRasterizerState);
 	Context->OMSetDepthStencilState(DefaultDepthStencilState, 0);
@@ -1410,7 +1410,7 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBu
 }
 
 /** Draws a batch of instanced geometry */
-XRESULT D3D11GraphicsEngine::DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride)
+XRESULT D3D11GraphicsEngine::DrawInstanced(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride)
 {
 	UpdateRenderStates();
 
@@ -1427,7 +1427,7 @@ XRESULT D3D11GraphicsEngine::DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffe
 		DynamicInstancingBuffer = new D3D11VertexBuffer();
 
 		// Put in some little extra space (16) so we don't need to recreate this every frame when approaching a field of stones or something.
-		DynamicInstancingBuffer->Init(NULL, instanceDataStride * (numInstances + 16), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+		DynamicInstancingBuffer->Init(NULL, instanceDataStride * (numInstances + 16), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 	}
 
 	// Update the vertexbuffer
@@ -1483,7 +1483,7 @@ XRESULT D3D11GraphicsEngine::DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffe
 }
 
 /** Draws a batch of instanced geometry */
-XRESULT D3D11GraphicsEngine::DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, BaseVertexBuffer* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride, unsigned int startInstanceNum, unsigned int indexOffset)
+XRESULT D3D11GraphicsEngine::DrawInstanced(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, D3D11VertexBuffer* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride, unsigned int startInstanceNum, unsigned int indexOffset)
 {
 	// Bind shader and pipeline flags
 	UINT offset[] = {0,0};
@@ -1862,7 +1862,7 @@ void D3D11GraphicsEngine::TestDrawWorldMesh()
 	for(std::list<WorldMeshSectionInfo*>::iterator itr = renderList.begin(); itr != renderList.end(); itr++)
 	{
 
-		for(std::map<BaseTexture *, std::vector<MeshInfo*>>::iterator it = (*itr)->WorldMeshesByCustomTexture.begin(); it != (*itr)->WorldMeshesByCustomTexture.end();it++)
+		for(std::map<D3D11Texture *, std::vector<MeshInfo*>>::iterator it = (*itr)->WorldMeshesByCustomTexture.begin(); it != (*itr)->WorldMeshesByCustomTexture.end();it++)
 		{
 			if((*it).first)
 			{
@@ -3408,7 +3408,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 			// Buffer too small, recreate it
 			delete DynamicInstancingBuffer;
 			DynamicInstancingBuffer = new D3D11VertexBuffer();
-			DynamicInstancingBuffer->Init(NULL, sizeof(VobInstanceInfo) * vobs.size(), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+			DynamicInstancingBuffer->Init(NULL, sizeof(VobInstanceInfo) * vobs.size(), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 		}*/
 
 
@@ -3418,7 +3418,7 @@ void D3D11GraphicsEngine::DrawWorldAround(const D3DXVECTOR3& position, int secti
 		byte* data;
 		UINT size;
 		UINT loc = 0;
-		DynamicInstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&data, &size);
+		DynamicInstancingBuffer->Map(D3D11VertexBuffer::M_WRITE_DISCARD, (void**)&data, &size);
 		static std::vector<VobInstanceInfo, AlignmentAllocator<VobInstanceInfo, 16> > s_InstanceData;
 		for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 		{
@@ -3604,13 +3604,13 @@ XRESULT D3D11GraphicsEngine::DrawVOBsInstanced()
 			// Buffer too small, recreate it
 			delete DynamicInstancingBuffer;
 			DynamicInstancingBuffer = new D3D11VertexBuffer();
-			DynamicInstancingBuffer->Init(NULL, sizeof(VobInstanceInfo) * vobs.size(), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+			DynamicInstancingBuffer->Init(NULL, sizeof(VobInstanceInfo) * vobs.size(), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 		}
 
 		byte* data;
 		UINT size;
 		UINT loc = 0;
-		DynamicInstancingBuffer->Map(BaseVertexBuffer::M_WRITE_DISCARD, (void**)&data, &size);
+		DynamicInstancingBuffer->Map(D3D11VertexBuffer::M_WRITE_DISCARD, (void**)&data, &size);
 		static std::vector<VobInstanceInfo, AlignmentAllocator<VobInstanceInfo, 16> > s_InstanceData;
 		for(std::unordered_map<zCProgMeshProto*, MeshVisualInfo*>::const_iterator it = vis.begin(); it != vis.end(); it++)
 		{
@@ -4064,13 +4064,13 @@ XRESULT D3D11GraphicsEngine::DrawSky()
 	SetupVS_ExConstantBuffer();
 
 	// Apply sky texture
-	BaseTexture* cloudsTex = Engine::GAPI->GetSky()->GetCloudTexture();
+	D3D11Texture* cloudsTex = Engine::GAPI->GetSky()->GetCloudTexture();
 	if(cloudsTex)
 	{
 		cloudsTex->BindToPixelShader(0);
 	}
 
-	BaseTexture* nightTex = Engine::GAPI->GetSky()->GetNightTexture();
+	D3D11Texture* nightTex = Engine::GAPI->GetSky()->GetNightTexture();
 	if(nightTex)
 	{
 		nightTex->BindToPixelShader(1);
@@ -5698,7 +5698,7 @@ void D3D11GraphicsEngine::DrawFrameParticles(std::map<zCTexture*, std::vector<Pa
 			delete TempVertexBuffer;
 			TempVertexBuffer = new D3D11VertexBuffer();
 
-			TempVertexBuffer->Init(NULL, sizeof(ParticleInstanceInfo) * instances.size(), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE);
+			TempVertexBuffer->Init(NULL, sizeof(ParticleInstanceInfo) * instances.size(), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 		}
 
 		TempVertexBuffer->UpdateBuffer(&instances[0], sizeof(ParticleInstanceInfo) * instances.size());

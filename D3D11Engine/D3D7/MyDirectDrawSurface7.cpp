@@ -5,7 +5,7 @@
 #include "../Engine.h"
 #include "../GothicAPI.h"
 #include "../BaseGraphicsEngine.h"
-#include "../BaseTexture.h"
+#include "../D3D11Texture.h"
 #include "../zCTexture.h"
 #include "../ModSpecific.h"
 
@@ -57,19 +57,19 @@ MyDirectDrawSurface7::~MyDirectDrawSurface7()
 }
 
 /** Returns the engine texture of this surface */
-BaseTexture* MyDirectDrawSurface7::GetEngineTexture()
+D3D11Texture* MyDirectDrawSurface7::GetEngineTexture()
 {
 	return EngineTexture;
 }
 
 /** Returns the engine texture of this surface */
-BaseTexture* MyDirectDrawSurface7::GetNormalmap()
+D3D11Texture* MyDirectDrawSurface7::GetNormalmap()
 {
 	return Normalmap;
 }
 
 /** Returns the fx-map for this surface */
-BaseTexture* MyDirectDrawSurface7::GetFxMap()
+D3D11Texture* MyDirectDrawSurface7::GetFxMap()
 {
 	return FxMap;
 }
@@ -127,8 +127,8 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 	if(!TextureName.size() || Normalmap || FxMap)
 		return;
 
-	BaseTexture* fxMapTexture = NULL;
-	BaseTexture* nrmmapTexture = NULL;
+	D3D11Texture* fxMapTexture = NULL;
+	D3D11Texture* nrmmapTexture = NULL;
 
 	// Check for normalmap in our mods folder first, then in the original games
 	std::string nrmFolder = ModSpecific::GetModNormalmapPackName();
@@ -740,16 +740,16 @@ HRESULT MyDirectDrawSurface7::SetSurfaceDesc( LPDDSURFACEDESC2 lpDDSurfaceDesc, 
 	int bpp = redBits + greenBits + blueBits + alphaBits;
 
 	// Find out format
-	BaseTexture::ETextureFormat format = BaseTexture::ETextureFormat::TF_R8G8B8A8;
+	D3D11Texture::ETextureFormat format = D3D11Texture::ETextureFormat::TF_R8G8B8A8;
 	switch(bpp)
 	{
 	case 16:
-		format = BaseTexture::ETextureFormat::TF_R8G8B8A8;
+		format = D3D11Texture::ETextureFormat::TF_R8G8B8A8;
 		break;
 
 	case 24:
 	case 32:
-		format = BaseTexture::ETextureFormat::TF_R8G8B8A8;
+		format = D3D11Texture::ETextureFormat::TF_R8G8B8A8;
 
 	case 0:
 		{
@@ -759,17 +759,17 @@ HRESULT MyDirectDrawSurface7::SetSurfaceDesc( LPDDSURFACEDESC2 lpDDSurfaceDesc, 
 				switch(lpDDSurfaceDesc->ddpfPixelFormat.dwFourCC)
 				{
 				case FOURCC_DXT1:
-					format = BaseTexture::ETextureFormat::TF_DXT1;
+					format = D3D11Texture::ETextureFormat::TF_DXT1;
 					break;
 
 				case FOURCC_DXT2:
 				case FOURCC_DXT3:
-					format = BaseTexture::ETextureFormat::TF_DXT3;
+					format = D3D11Texture::ETextureFormat::TF_DXT3;
 					break;
 
 				case FOURCC_DXT4:
 				case FOURCC_DXT5:
-					format = BaseTexture::ETextureFormat::TF_DXT5;
+					format = D3D11Texture::ETextureFormat::TF_DXT5;
 					break;
 				}
 			}

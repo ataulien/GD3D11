@@ -142,9 +142,9 @@ XRESULT D3D11Effect::DrawRain()
 		FillRandomRaindropData(particles);
 
 		// Create vertexbuffers
-		RainBufferInitial->Init(&particles[0], particles.size() * sizeof(ParticleInstanceInfo), (BaseVertexBuffer::EBindFlags)(BaseVertexBuffer::B_VERTEXBUFFER));
-		RainBufferDrawFrom->Init(&particles[0], particles.size() * sizeof(ParticleInstanceInfo), (BaseVertexBuffer::EBindFlags)(BaseVertexBuffer::B_VERTEXBUFFER | BaseVertexBuffer::B_STREAM_OUT));
-		RainBufferStreamTo->Init(&particles[0], particles.size() * sizeof(ParticleInstanceInfo), (BaseVertexBuffer::EBindFlags)(BaseVertexBuffer::B_VERTEXBUFFER | BaseVertexBuffer::B_STREAM_OUT));
+		RainBufferInitial->Init(&particles[0], particles.size() * sizeof(ParticleInstanceInfo), (D3D11VertexBuffer::EBindFlags)(D3D11VertexBuffer::B_VERTEXBUFFER));
+		RainBufferDrawFrom->Init(&particles[0], particles.size() * sizeof(ParticleInstanceInfo), (D3D11VertexBuffer::EBindFlags)(D3D11VertexBuffer::B_VERTEXBUFFER | D3D11VertexBuffer::B_STREAM_OUT));
+		RainBufferStreamTo->Init(&particles[0], particles.size() * sizeof(ParticleInstanceInfo), (D3D11VertexBuffer::EBindFlags)(D3D11VertexBuffer::B_VERTEXBUFFER | D3D11VertexBuffer::B_STREAM_OUT));
 
 		firstFrame = true;
 

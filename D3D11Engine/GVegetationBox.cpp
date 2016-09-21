@@ -6,7 +6,7 @@
 #include "zCBspTree.h"
 #include "BaseGraphicsEngine.h"
 #include "BaseLineRenderer.h"
-#include "BaseTexture.h"
+#include "D3D11Texture.h"
 #include "D3D11GraphicsEngine.h"
 #include "zCMaterial.h"
 

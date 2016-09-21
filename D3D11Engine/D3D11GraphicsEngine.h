@@ -65,13 +65,13 @@ public:
 	virtual XRESULT Clear(const float4& color);
 
 	/** Creates a vertexbuffer object (Not registered inside) */
-	virtual XRESULT CreateVertexBuffer(BaseVertexBuffer** outBuffer);
+	virtual XRESULT CreateVertexBuffer(D3D11VertexBuffer** outBuffer);
 
 	/** Creates a texture object (Not registered inside) */
-	virtual XRESULT CreateTexture(BaseTexture** outTexture);
+	virtual XRESULT CreateTexture(D3D11Texture** outTexture);
 
 	/** Creates a constantbuffer object (Not registered inside) */
-	virtual XRESULT CreateConstantBuffer(BaseConstantBuffer** outCB, void* data, int size);
+	virtual XRESULT CreateConstantBuffer(D3D11ConstantBuffer** outCB, void* data, int size);
 
 	/** Returns a list of available display modes */
 	virtual XRESULT GetDisplayModeList(std::vector<DisplayModeInfo>* modeList, bool includeSuperSampling = false);
@@ -83,14 +83,14 @@ public:
 	virtual void SaveScreenshot();
 
 	/** Draws a vertexbuffer, non-indexed */
-	virtual XRESULT DrawVertexBuffer(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int stride = sizeof(ExVertexStruct));
+	virtual XRESULT DrawVertexBuffer(D3D11VertexBuffer* vb, unsigned int numVertices, unsigned int stride = sizeof(ExVertexStruct));
 
 	/** Draws a vertexbuffer, non-indexed */
-	virtual XRESULT DrawVertexBufferIndexed(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset = 0);
-	virtual XRESULT DrawVertexBufferIndexedUINT(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset);
+	virtual XRESULT DrawVertexBufferIndexed(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset = 0);
+	virtual XRESULT DrawVertexBufferIndexedUINT(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int indexOffset);
 
 	/** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
-	virtual XRESULT DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct));
+	virtual XRESULT DrawVertexBufferFF(D3D11VertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct));
 
 	/** Binds viewport information to the given constantbuffer slot */
 	virtual XRESULT BindViewportInformation(const std::string& shader, int slot);
@@ -114,17 +114,17 @@ public:
 	void Setup_PNAEN(EPNAENRenderMode mode = PNAEN_Default);
 
 	/** Draws a skeletal mesh */
-	virtual XRESULT DrawSkeletalMesh(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness = 1.0f, SkeletalMeshVisualInfo* msh= NULL);
+	virtual XRESULT DrawSkeletalMesh(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, const std::vector<D3DXMATRIX>& transforms, float fatness = 1.0f, SkeletalMeshVisualInfo* msh= NULL);
 
 	/** Draws a vertexarray, non-indexed */
 	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct));
 
 	/** Draws a vertexarray, indexed */
-	virtual XRESULT DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, BaseVertexBuffer* ib, unsigned int numIndices, unsigned int stride = sizeof(ExVertexStruct));
+	virtual XRESULT DrawIndexedVertexArray(ExVertexStruct* vertices, unsigned int numVertices, D3D11VertexBuffer* ib, unsigned int numIndices, unsigned int stride = sizeof(ExVertexStruct));
 
 	/** Draws a batch of instanced geometry */
-	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct));
-	virtual XRESULT DrawInstanced(BaseVertexBuffer* vb, BaseVertexBuffer* ib, unsigned int numIndices, BaseVertexBuffer* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct), unsigned int startInstanceNum = 0, unsigned int indexOffset = 0);
+	virtual XRESULT DrawInstanced(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, void* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct));
+	virtual XRESULT DrawInstanced(D3D11VertexBuffer* vb, D3D11VertexBuffer* ib, unsigned int numIndices, D3D11VertexBuffer* instanceData, unsigned int instanceDataStride, unsigned int numInstances, unsigned int vertexStride = sizeof(ExVertexStruct), unsigned int startInstanceNum = 0, unsigned int indexOffset = 0);
 
 	/** Called when a vob was removed from the world */
 	virtual XRESULT OnVobRemovedFromWorld(zCVob* vob);
@@ -328,9 +328,9 @@ protected:
 
 	/** Sky */
 	RenderToTextureBuffer* CloudBuffer;
-	BaseTexture* DistortionTexture;
-	BaseTexture* NoiseTexture;
-	BaseTexture* WhiteTexture;
+	D3D11Texture* DistortionTexture;
+	D3D11Texture* NoiseTexture;
+	D3D11Texture* WhiteTexture;
 
 	/** Lighting */
 	GMesh* InverseUnitSphereMesh;
@@ -364,8 +364,8 @@ protected:
 	D3D11ConstantBuffer* OutdoorVobsConstantBuffer;
 
 	/** Quads for decals/particles */
-	BaseVertexBuffer* QuadVertexBuffer;
-	BaseVertexBuffer* QuadIndexBuffer;
+	D3D11VertexBuffer* QuadVertexBuffer;
+	D3D11VertexBuffer* QuadIndexBuffer;
 
 	/** Occlusion query manager */
 	D3D11OcclusionQuerry* Occlusion;

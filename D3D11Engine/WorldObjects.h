@@ -1,17 +1,17 @@
 #pragma once
 #include "pch.h"
 #include "GothicGraphicsState.h"
-#include "BaseConstantBuffer.h"
-#include "BaseTexture.h"
+#include "D3D11ConstantBuffer.h"
+#include "D3D11Texture.h"
 #include "zTypes.h"
 #include "ConstantBufferStructs.h"
 #include "zCPolygon.h"
 #include "ShadowedPointLight.h"
-#include "BaseVertexBuffer.h"
+#include "D3D11VertexBuffer.h"
 
 class zCMaterial;
 class zCPolygon;
-class BaseVertexBuffer;
+class D3D11VertexBuffer;
 class zCVob;
 class zCTexture;
 class zCLightmap;
@@ -89,7 +89,7 @@ struct VisualTesselationSettings
 	/** creates/updates the constantbuffer */
 	void UpdateConstantbuffer();
 
-	BaseConstantBuffer* Constantbuffer;
+	D3D11ConstantBuffer* Constantbuffer;
 	std::string TesselationShader;
 	Buffer buffer;
 };
@@ -113,20 +113,20 @@ struct MeshInfo
 	/** Creates buffers for this mesh info */
 	XRESULT Create(ExVertexStruct* vertices, unsigned int numVertices, VERTEX_INDEX* indices, unsigned int numIndices);
 
-	BaseVertexBuffer* MeshVertexBuffer;
-	BaseVertexBuffer* MeshIndexBuffer;
+	D3D11VertexBuffer* MeshVertexBuffer;
+	D3D11VertexBuffer* MeshIndexBuffer;
 	std::vector<ExVertexStruct> Vertices;
 	std::vector<VERTEX_INDEX> Indices;	
 
-	BaseVertexBuffer* MeshIndexBufferPNAEN;
+	D3D11VertexBuffer* MeshIndexBufferPNAEN;
 	std::vector<VERTEX_INDEX> IndicesPNAEN;	
 	std::vector<ExVertexStruct> VerticesPNAEN;
 	unsigned int BaseIndexLocation;
 
 	unsigned int VertexBufferOffset;
 	unsigned int IndexBufferOffset;
-	BaseVertexBuffer* WrappedVB;
-	BaseVertexBuffer* WrappedIB;
+	D3D11VertexBuffer* WrappedVB;
+	D3D11VertexBuffer* WrappedIB;
 };
 
 struct WorldMeshInfo : public MeshInfo
@@ -161,7 +161,7 @@ struct QuadMarkInfo
 		delete Mesh;
 	}
 
-	BaseVertexBuffer* Mesh;
+	D3D11VertexBuffer* Mesh;
 	int NumVertices;
 
 	zCQuadMark* Visual;
@@ -182,12 +182,12 @@ struct SkeletalMeshInfo
 
 	~SkeletalMeshInfo();
 
-	BaseVertexBuffer* MeshVertexBuffer;
-	BaseVertexBuffer* MeshIndexBuffer;
+	D3D11VertexBuffer* MeshVertexBuffer;
+	D3D11VertexBuffer* MeshIndexBuffer;
 	std::vector<ExSkelVertexStruct> Vertices;
 	std::vector<VERTEX_INDEX> Indices;
 
-	BaseVertexBuffer* MeshIndexBufferPNAEN;
+	D3D11VertexBuffer* MeshIndexBufferPNAEN;
 	std::vector<VERTEX_INDEX> IndicesPNAEN;	
 
 	/** Actual visual containing this */
@@ -352,7 +352,7 @@ struct VobInfo : public BaseVobInfo
 	void UpdateVobConstantBuffer();
 
 	/** Constantbuffer which holds this vobs world matrix */
-	BaseConstantBuffer* VobConstantBuffer;
+	D3D11ConstantBuffer* VobConstantBuffer;
 
 	/** Position the vob was at while being rendered last time */
 	D3DXVECTOR3 LastRenderPosition;
@@ -446,7 +446,7 @@ struct SkeletalVobInfo : public BaseVobInfo
 	void UpdateVobConstantBuffer();
 
 	/** Constantbuffer which holds this vobs world matrix */
-	BaseConstantBuffer* VobConstantBuffer;
+	D3D11ConstantBuffer* VobConstantBuffer;
 
 	/** Map of visuals attached to nodes */
 	std::map<int, std::vector<MeshVisualInfo *>> NodeAttachments;
@@ -477,11 +477,11 @@ struct SectionInstanceCache
 	void ClearCacheForStatic(MeshVisualInfo* pm);
 
 	std::map<MeshVisualInfo *, std::vector<VS_ExConstantBuffer_PerInstance>> InstanceCacheData;
-	std::map<MeshVisualInfo *, BaseVertexBuffer*> InstanceCache;
+	std::map<MeshVisualInfo *, D3D11VertexBuffer*> InstanceCache;
 
 };
 
-class BaseTexture;
+class D3D11Texture;
 
 /** Describes a world-section for the renderer */
 struct WorldMeshSectionInfo
@@ -507,7 +507,7 @@ struct WorldMeshSectionInfo
 		}
 		SuppressedMeshes.clear();
 		
-		for(std::map<BaseTexture *, std::vector<MeshInfo*>>::iterator it = WorldMeshesByCustomTexture.begin(); it != WorldMeshesByCustomTexture.end(); it++)
+		for(std::map<D3D11Texture *, std::vector<MeshInfo*>>::iterator it = WorldMeshesByCustomTexture.begin(); it != WorldMeshesByCustomTexture.end(); it++)
 		{
 			delete (*it).first; // Meshes are stored in "WorldMeshes". Only delete the texture
 		}
@@ -540,7 +540,7 @@ struct WorldMeshSectionInfo
 	void LoadMeshInfos(const std::string& worldName, INT2 sectionPos);
 
 	std::map<MeshKey, WorldMeshInfo*, cmpMeshKey> WorldMeshes;
-	std::map<BaseTexture *, std::vector<MeshInfo*>> WorldMeshesByCustomTexture;
+	std::map<D3D11Texture *, std::vector<MeshInfo*>> WorldMeshesByCustomTexture;
 	std::map<zCMaterial *, std::vector<MeshInfo*>> WorldMeshesByCustomTextureOriginal;
 	std::map<MeshKey, MeshInfo*, cmpMeshKey> SuppressedMeshes;
 	std::list<VobInfo*> Vobs;

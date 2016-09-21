@@ -2,7 +2,7 @@
 #include "D3D11LineRenderer.h"
 #include "D3D11GraphicsEngineBase.h"
 #include "Engine.h"
-#include "BaseVertexBuffer.h"
+#include "D3D11VertexBuffer.h"
 #include "GothicAPI.h"
 #include "D3D11VertexBuffer.h"
 
@@ -46,7 +46,7 @@ XRESULT D3D11LineRenderer::Flush()
 		delete LineBuffer;
 
 		XLE(engine->CreateVertexBuffer(&LineBuffer));
-		XLE(LineBuffer->Init(&LineCache[0], LineCache.size() * sizeof(LineVertex), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_DYNAMIC, BaseVertexBuffer::CA_WRITE));
+		XLE(LineBuffer->Init(&LineCache[0], LineCache.size() * sizeof(LineVertex), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE));
 		LineBufferSize = LineCache.size();
 	}else
 	{

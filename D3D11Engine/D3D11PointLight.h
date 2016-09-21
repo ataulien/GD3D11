@@ -11,7 +11,7 @@ struct RenderToDepthStencilBuffer;
 struct RenderToTextureBuffer;
 struct VobInfo;
 struct SkeletalVobInfo;
-class BaseConstantBuffer;
+class D3D11ConstantBuffer;
 class D3D11PointLight : public ShadowedPointLight
 {
 public:
@@ -59,7 +59,7 @@ protected:
 	D3DXMATRIX CubeMapViewMatrices[6];
 	D3DXVECTOR3 LastUpdatePosition;
 	DWORD LastUpdateColor;
-	BaseConstantBuffer* ViewMatricesCB;
+	D3D11ConstantBuffer* ViewMatricesCB;
 	bool DynamicLight;
 	bool InitDone;
 	bool DrawnOnce;

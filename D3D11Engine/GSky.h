@@ -29,7 +29,7 @@ enum ESkyTexture
 class zCSkyLayer;
 class zCSkyState;
 class GMesh;
-class BaseTexture;
+class D3D11Texture;
 class GSky
 {
 public:
@@ -43,7 +43,7 @@ public:
 	XRESULT RenderSky();
 
 	/** Returns the sky-texture for the passed daytime (0..1) */
-	void GetTextureOfDaytime(float time, BaseTexture** t1, BaseTexture** t2, float* factor);
+	void GetTextureOfDaytime(float time, D3D11Texture** t1, D3D11Texture** t2, float* factor);
 
 	/** Returns the loaded sky-Dome */
 	GMesh* GetSkyDome();
@@ -67,10 +67,10 @@ public:
 	float4 GetSkylightColor();
 
 	/** Returns the cloud texture */
-	BaseTexture* GetCloudTexture();
+	D3D11Texture* GetCloudTexture();
 
 	/** Returns the night texture */
-	BaseTexture* GetNightTexture();
+	D3D11Texture* GetNightTexture();
 
 	/** Returns the current sun color */
 	float3 GetSunColor();
@@ -92,12 +92,12 @@ protected:
 		1=0	0.25	0.5	  0.75	  1=0
 		Day	Evening	Night Morning Day
 	*/
-	std::vector<BaseTexture*> SkyTextures;
+	std::vector<D3D11Texture*> SkyTextures;
 
-	BaseTexture* CloudTexture;
-	BaseTexture* NightTexture;
+	D3D11Texture* CloudTexture;
+	D3D11Texture* NightTexture;
 
-	BaseVertexBuffer* SkyPlaneVertexBuffer;
+	D3D11VertexBuffer* SkyPlaneVertexBuffer;
 	ExVertexStruct SkyPlaneVertices[6];
 
 	/** Atmospheric variables */

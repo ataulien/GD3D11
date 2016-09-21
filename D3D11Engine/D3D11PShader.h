@@ -1,12 +1,10 @@
 #pragma once
-#include "BasePShader.h"
 
 class D3D11ConstantBuffer;
 
-class D3D11PShader : public BasePShader
+class D3D11PShader
 {
 public:
-	
 
 	D3D11PShader(void);
 	~D3D11PShader(void);
@@ -18,7 +16,7 @@ public:
 	XRESULT Apply();
 
 	/** Returns a reference to the constantBuffer vector*/
-	std::vector<BaseConstantBuffer*>& GetConstantBuffer();
+	std::vector<D3D11ConstantBuffer*>& GetConstantBuffer();
 
 	/** Returns the shader */
 	ID3D11PixelShader* GetShader(){return PixelShader;}
@@ -32,7 +30,7 @@ private:
 	HRESULT CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut, std::vector<D3D10_SHADER_MACRO>& makros);
 
 	ID3D11PixelShader* PixelShader;
-	std::vector<BaseConstantBuffer*> ConstantBuffers;
+	std::vector<D3D11ConstantBuffer*> ConstantBuffers;
 
 	std::string File;
 

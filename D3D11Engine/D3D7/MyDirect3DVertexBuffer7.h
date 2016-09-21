@@ -7,7 +7,7 @@
 #include "../Logger.h"
 #include <vector>
 #include "../BaseGraphicsEngine.h"
-#include "../BaseVertexBuffer.h"
+#include "../D3D11VertexBuffer.h"
 #include "../Engine.h"
 
 
@@ -24,7 +24,7 @@ public:
 		XLE(Engine::GraphicsEngine->CreateVertexBuffer(&VertexBuffer));
 
 		// Initialize it
-		XLE(VertexBuffer->Init(NULL, OriginalDesc.dwNumVertices * ComputeFVFSize(OriginalDesc.dwFVF), BaseVertexBuffer::EBindFlags::B_VERTEXBUFFER, BaseVertexBuffer::EUsageFlags::U_DYNAMIC, BaseVertexBuffer::ECPUAccessFlags::CA_WRITE));
+		XLE(VertexBuffer->Init(NULL, OriginalDesc.dwNumVertices * ComputeFVFSize(OriginalDesc.dwFVF), D3D11VertexBuffer::EBindFlags::B_VERTEXBUFFER, D3D11VertexBuffer::EUsageFlags::U_DYNAMIC, D3D11VertexBuffer::ECPUAccessFlags::CA_WRITE));
 
 		// Start with 1 reference
 		RefCount = 1;
@@ -75,7 +75,7 @@ public:
 
 		// Pass the lock-call through to our engine
 		UINT size = 0;
-		VertexBuffer->Map(BaseVertexBuffer::EMapFlags::M_WRITE_DISCARD, lplpData, &size);
+		VertexBuffer->Map(D3D11VertexBuffer::EMapFlags::M_WRITE_DISCARD, lplpData, &size);
 		if(lpdwSize)*lpdwSize = size;
 
         return S_OK;
@@ -112,7 +112,7 @@ public:
 	}
 
 	/** Returns the actual vertex buffer */
-	BaseVertexBuffer* GetVertexBuffer()
+	D3D11VertexBuffer* GetVertexBuffer()
 	{
 		return VertexBuffer;
 	}
@@ -123,7 +123,7 @@ private:
 	D3DVERTEXBUFFERDESC OriginalDesc;
 
 	/** Our own vertex buffer */
-	BaseVertexBuffer* VertexBuffer;
+	D3D11VertexBuffer* VertexBuffer;
 
 	/** Referencecount on this */
 	int RefCount;

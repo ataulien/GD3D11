@@ -1,7 +1,7 @@
 #pragma once
 
 class zCMaterial;
-class BaseTexture;
+class D3D11Texture;
 class GMaterial
 {
 public:
@@ -9,7 +9,7 @@ public:
 	~GMaterial(void);
 
 	/** Returns the currently active texture on this */
-	BaseTexture* GetTexture();
+	D3D11Texture* GetTexture();
 protected:
 	/** Source material this operates on */
 	zCMaterial* SourceMaterial;

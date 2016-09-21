@@ -171,13 +171,13 @@ public:
 	virtual XRESULT Clear(const float4& color);
 
 	/** Creates a vertexbuffer object (Not registered inside) */
-	virtual XRESULT CreateVertexBuffer(BaseVertexBuffer** outBuffer);
+	virtual XRESULT CreateVertexBuffer(D3D11VertexBuffer** outBuffer);
 
 	/** Creates a texture object (Not registered inside) */
-	virtual XRESULT CreateTexture(BaseTexture** outTexture);
+	virtual XRESULT CreateTexture(D3D11Texture** outTexture);
 
 	/** Creates a constantbuffer object (Not registered inside) */
-	virtual XRESULT CreateConstantBuffer(BaseConstantBuffer** outCB, void* data, int size);
+	virtual XRESULT CreateConstantBuffer(D3D11ConstantBuffer** outCB, void* data, int size);
 
 	/** Creates a bufferobject for a shadowed point light */
 	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic = false);
@@ -210,7 +210,7 @@ public:
 	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct));
 
 	/** Draws a vertexbuffer, non-indexed, binding the FF-Pipe values */
-	virtual XRESULT DrawVertexBufferFF(BaseVertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct));
+	virtual XRESULT DrawVertexBufferFF(D3D11VertexBuffer* vb, unsigned int numVertices, unsigned int startVertex, unsigned int stride = sizeof(ExVertexStruct));
 
 	/** Binds viewport information to the given constantbuffer slot */
 	XRESULT D3D11GraphicsEngineBase::BindViewportInformation(const std::string& shader, int slot);
@@ -251,7 +251,7 @@ public:
 	virtual XRESULT SetActiveGShader(const std::string& shader);
 
 	/** Returns the transforms constantbuffer */
-	BaseConstantBuffer* GetTransformsCB();
+	D3D11ConstantBuffer* GetTransformsCB();
 
 	/** Updates the transformsCB with new values from the GAPI */
 	void UpdateTransformsCB();

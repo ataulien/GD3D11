@@ -1,17 +1,15 @@
 #pragma once
-#include "basetexturearray.h"
-class D3D11TextureArray :
-	public BaseTextureArray
+class D3D11TextureArray
 {
 public:
 	D3D11TextureArray(void);
 	~D3D11TextureArray(void);
 
 	/** Adds a texture with data to the array, returns the index of texture */
-	virtual int AddTexture(byte* data, unsigned int dataSize);
+	int AddTexture(byte* data, unsigned int dataSize);
 
 	/** Creates the texture array and deletes the cached data */
-	virtual void InitArray();
+	void InitArray();
 
 private:
 

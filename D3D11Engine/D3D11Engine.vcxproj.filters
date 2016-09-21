@@ -112,13 +112,7 @@
     <ClInclude Include="VertexTypes.h">
       <Filter>Types</Filter>
     </ClInclude>
-    <ClInclude Include="BaseVertexBuffer.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
     <ClInclude Include="BaseGraphicsEngine.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="BaseTexture.h">
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Toolbox.h">
@@ -427,9 +421,6 @@
     <ClInclude Include="GSpriteCloud.h">
       <Filter>Engine\GAPI\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="BaseConstantBuffer.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
     <ClInclude Include="zCLightmap.h">
       <Filter>ZenGin\Classes</Filter>
     </ClInclude>
@@ -529,12 +520,6 @@
     <ClInclude Include="win32ClipboardWrapper.h">
       <Filter>Librarys</Filter>
     </ClInclude>
-    <ClInclude Include="BaseVShader.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="BasePShader.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
     <ClInclude Include="GOcean.h">
       <Filter>Engine\GAPI\Objects</Filter>
     </ClInclude>
@@ -579,9 +564,6 @@
     </ClInclude>
     <ClInclude Include="D3D11TextureArray.h">
       <Filter>Engine\D3D11</Filter>
-    </ClInclude>
-    <ClInclude Include="BaseTextureArray.h">
-      <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="D2DVobSettingsDialog.h">
       <Filter>Engine\D2D\Views</Filter>
@@ -683,13 +665,7 @@
     <ClCompile Include="D3D7\MyDirectDrawSurface7.cpp">
       <Filter>D3D7</Filter>
     </ClCompile>
-    <ClCompile Include="BaseVertexBuffer.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="BaseGraphicsEngine.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="BaseTexture.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Toolbox.cpp">
@@ -791,9 +767,6 @@
     <ClCompile Include="GSpriteCloud.cpp">
       <Filter>Engine\GAPI\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="BaseConstantBuffer.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="D3D11LineRenderer.cpp">
       <Filter>Engine\D3D11</Filter>
     </ClCompile>
@@ -860,12 +833,6 @@
     <ClCompile Include="win32ClipboardWrapper.cpp">
       <Filter>Librarys</Filter>
     </ClCompile>
-    <ClCompile Include="BasePShader.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="BaseVShader.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="GOcean.cpp">
       <Filter>Engine\GAPI\Objects</Filter>
     </ClCompile>
@@ -889,9 +856,6 @@
     </ClCompile>
     <ClCompile Include="D3D11TextureArray.cpp">
       <Filter>Engine\D3D11</Filter>
-    </ClCompile>
-    <ClCompile Include="BaseTextureArray.cpp">
-      <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="D2DVobSettingsDialog.cpp">
       <Filter>Engine\D2D\Views</Filter>

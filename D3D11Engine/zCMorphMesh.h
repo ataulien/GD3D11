@@ -30,7 +30,7 @@ public:
 		XCALL(GothicMemoryLocations::zCMorphMesh::AdvanceAnis);
 	}
 
-	void UpdateBuffer(BaseVertexBuffer* buffer)
+	void UpdateBuffer(D3D11VertexBuffer* buffer)
 	{
 
 	}

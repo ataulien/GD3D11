@@ -2,7 +2,7 @@
 #include "WorldConverter.h"
 #include "Engine.h"
 #include "BaseGraphicsEngine.h"
-#include "BaseVertexBuffer.h"
+#include "D3D11VertexBuffer.h"
 #include "zCPolygon.h"
 #include "zCMaterial.h"
 #include "zCTexture.h"
@@ -14,12 +14,12 @@
 #include "zCMorphMesh.h"
 #include <set>
 #include "ConstantBufferStructs.h"
-#include "BaseConstantBuffer.h"
+#include "D3D11ConstantBuffer.h"
 #include "zCMesh.h"
 #include "zCLightmap.h"
 #include "GMesh.h"
 #include "MeshModifier.h"
-#include "BaseTexture.h"
+#include "D3D11Texture.h"
 #include "D3D7\MyDirectDrawSurface7.h"
 #include "zCQuadMark.h"
 
@@ -111,8 +111,8 @@ void WorldConverter::WorldMeshCollectPolyRange(const D3DXVECTOR3& position, floa
 		Engine::GraphicsEngine->CreateVertexBuffer(&(*it).second->MeshIndexBuffer);
 
 		// Init and fill them
-		(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-		(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+		(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+		(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 	}
 }
 
@@ -150,13 +150,13 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 
 	std::vector<MeshInfo *>& meshes = mesh->GetMeshes();
 	std::vector<std::string>& textures = mesh->GetTextures();
-	std::map<std::string, BaseTexture*> loadedTextures;
+	std::map<std::string, D3D11Texture*> loadedTextures;
 	std::set<std::string> missingTextures;
 
 	// run through meshes and pack them into sections
 	for(unsigned int m = 0;m<meshes.size();m++)
 	{
-		BaseTexture* customTexture = NULL;
+		D3D11Texture* customTexture = NULL;
 		zCMaterial* mat = Engine::GAPI->GetMaterialByTextureName(textures[m]);
 		MeshKey key;
 		key.Material = mat;
@@ -241,7 +241,7 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 					{
 						fclose(f);
 
-						BaseTexture* tx;
+						D3D11Texture* tx;
 						Engine::GraphicsEngine->CreateTexture(&tx);
 						if(XR_SUCCESS != tx->Init(rep))
 						{
@@ -328,8 +328,8 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 					sizeof(ExVertexStruct));
 
 				// Init and fill them
-				(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-				(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+				(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+				(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 				// Remember them, to wrap then up later
 				vertexBuffers.push_back(&(*it).second->Vertices);
@@ -375,8 +375,8 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 	Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshIndexBuffer);
 	
 	// Init and fill them
-	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	wmi->MeshIndexBuffer->Init(&wrappedIndices[0], wrappedIndices.size() * sizeof(unsigned int), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	wmi->MeshIndexBuffer->Init(&wrappedIndices[0], wrappedIndices.size() * sizeof(unsigned int), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 	*outWrappedMesh = wmi;
 
@@ -572,8 +572,8 @@ HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int nu
 				Engine::GraphicsEngine->CreateVertexBuffer(&(*it).second->MeshIndexBuffer);
 
 				// Init and fill them
-				(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-				(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+				(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+				(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 				// Remember them, to wrap then up later
 				vertexBuffers.push_back(&(*it).second->Vertices);
@@ -627,8 +627,8 @@ HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int nu
 	Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshIndexBuffer);
 	
 	// Init and fill them
-	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	wmi->MeshIndexBuffer->Init(&wrappedIndicesPNAEN[0], wrappedIndicesPNAEN.size() * sizeof(unsigned int), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	wmi->MeshIndexBuffer->Init(&wrappedIndicesPNAEN[0], wrappedIndicesPNAEN.size() * sizeof(unsigned int), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 	*outWrappedMesh = wmi;
 
@@ -823,8 +823,8 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 					sizeof(ExVertexStruct));
 
 				// Init and fill them
-				(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-				(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+				(*it).second->MeshVertexBuffer->Init(&(*it).second->Vertices[0], (*it).second->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+				(*it).second->MeshIndexBuffer->Init(&(*it).second->Indices[0], (*it).second->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 
 				// Remember them, to wrap then up later
@@ -872,8 +872,8 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 	LogInfo() << "Process took " << timeGetTime() - sStart << "ms";
 
 	// Init and fill them
-	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	wmi->MeshIndexBuffer->Init(&wrappedIndices[0], wrappedIndices.size() * sizeof(unsigned int), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	wmi->MeshIndexBuffer->Init(&wrappedIndices[0], wrappedIndices.size() * sizeof(unsigned int), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 	*outWrappedMesh = wmi;
 
@@ -982,10 +982,10 @@ void WorldConverter::GenerateFullSectionMesh(WorldMeshSectionInfo& section)
 		sizeof(ExVertexStruct));*/
 
 	// Init and fill them
-	section.FullStaticMesh->MeshVertexBuffer->Init(&section.FullStaticMesh->Vertices[0], section.FullStaticMesh->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	section.FullStaticMesh->MeshVertexBuffer->Init(&section.FullStaticMesh->Vertices[0], section.FullStaticMesh->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 	Engine::GAPI->GetRendererState()->RendererInfo.SkeletalVerticesDataSize += section.FullStaticMesh->Vertices.size() * sizeof(ExVertexStruct);
 	
-	//section.FullStaticMesh->MeshIndexBuffer->Init(&section.FullStaticMesh->Indices[0], section.FullStaticMesh->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	//section.FullStaticMesh->MeshIndexBuffer->Init(&section.FullStaticMesh->Indices[0], section.FullStaticMesh->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 }
 
 /** Returns what section the given position is in */
@@ -1111,7 +1111,7 @@ void WorldConverter::Extract3DSMeshFromVisual(zCProgMeshProto* visual, MeshVisua
 	
 		// Init and fill it
 		mi->MeshVertexBuffer->Init(&vertices[0], vertices.size() * sizeof(ExVertexStruct));
-		mi->MeshIndexBuffer->Init(&indices[0], indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER);
+		mi->MeshIndexBuffer->Init(&indices[0], indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER);
 
 		meshInfo->Meshes[mat].push_back(mi);
 	}
@@ -1236,8 +1236,8 @@ void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisu
 				sizeof(ExSkelVertexStruct));*/
 
 			// Init and fill it
-			mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExSkelVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-			mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+			mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExSkelVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+			mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 
 			MeshInfo* bmi = new MeshInfo;
@@ -1247,8 +1247,8 @@ void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisu
 			Engine::GraphicsEngine->CreateVertexBuffer(&bmi->MeshVertexBuffer);
 			Engine::GraphicsEngine->CreateVertexBuffer(&bmi->MeshIndexBuffer);
 
-			bmi->MeshVertexBuffer->Init(&bmi->Vertices[0], bmi->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-			bmi->MeshIndexBuffer->Init(&bmi->Indices[0], bmi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+			bmi->MeshVertexBuffer->Init(&bmi->Vertices[0], bmi->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+			bmi->MeshIndexBuffer->Init(&bmi->Indices[0], bmi->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 			
 
@@ -1396,8 +1396,8 @@ void WorldConverter::ExtractSkeletalMeshFromProto(zCModelMeshLib* model, Skeleta
 				sizeof(ExSkelVertexStruct));*/
 
 			// Init and fill it
-			mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExSkelVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-			mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+			mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExSkelVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+			mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 
 			MeshInfo* bmi = new MeshInfo;
@@ -1407,8 +1407,8 @@ void WorldConverter::ExtractSkeletalMeshFromProto(zCModelMeshLib* model, Skeleta
 			Engine::GraphicsEngine->CreateVertexBuffer(&bmi->MeshVertexBuffer);
 			Engine::GraphicsEngine->CreateVertexBuffer(&bmi->MeshIndexBuffer);
 
-			bmi->MeshVertexBuffer->Init(&bmi->Vertices[0], bmi->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-			bmi->MeshIndexBuffer->Init(&bmi->Indices[0], bmi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+			bmi->MeshVertexBuffer->Init(&bmi->Vertices[0], bmi->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+			bmi->MeshIndexBuffer->Init(&bmi->Indices[0], bmi->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 			
 
@@ -1566,8 +1566,8 @@ void WorldConverter::Extract3DSMeshFromVisual2PNAEN(zCProgMeshProto* visual, Mes
 		Engine::GraphicsEngine->CreateVertexBuffer(&mi->MeshIndexBuffer);
 	
 		// Init and fill it
-		mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-		mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+		mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+		mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 		Engine::GAPI->GetRendererState()->RendererInfo.VOBVerticesDataSize += mi->Vertices.size() * sizeof(ExVertexStruct);
 		Engine::GAPI->GetRendererState()->RendererInfo.VOBVerticesDataSize += mi->Indices.size() * sizeof(VERTEX_INDEX);
@@ -1616,8 +1616,8 @@ void WorldConverter::Extract3DSMeshFromVisual2PNAEN(zCProgMeshProto* visual, Mes
 
 
 	// Init and fill them
-	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	wmi->MeshIndexBuffer->Init(&wrappedIndicesPNAEN[0], wrappedIndicesPNAEN.size() * sizeof(unsigned int), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	wmi->MeshIndexBuffer->Init(&wrappedIndicesPNAEN[0], wrappedIndicesPNAEN.size() * sizeof(unsigned int), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 	meshInfo->FullMesh = wmi;
 
@@ -1721,8 +1721,8 @@ void WorldConverter::Extract3DSMeshFromVisual2(zCProgMeshProto* visual, MeshVisu
 
 	
 		// Init and fill it
-		mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-		mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+		mi->MeshVertexBuffer->Init(&mi->Vertices[0], mi->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+		mi->MeshIndexBuffer->Init(&mi->Indices[0], mi->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 		Engine::GAPI->GetRendererState()->RendererInfo.VOBVerticesDataSize += mi->Vertices.size() * sizeof(ExVertexStruct);
 		Engine::GAPI->GetRendererState()->RendererInfo.VOBVerticesDataSize += mi->Indices.size() * sizeof(VERTEX_INDEX);
@@ -1765,8 +1765,8 @@ void WorldConverter::Extract3DSMeshFromVisual2(zCProgMeshProto* visual, MeshVisu
 		Engine::GraphicsEngine->CreateVertexBuffer(&wmi->MeshIndexBuffer);
 
 		// Init and fill them
-		wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-		wmi->MeshIndexBuffer->Init(&wrappedIndices[0], wrappedIndices.size() * sizeof(unsigned int), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+		wmi->MeshVertexBuffer->Init(&wrappedVertices[0], wrappedVertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+		wmi->MeshIndexBuffer->Init(&wrappedIndices[0], wrappedIndices.size() * sizeof(unsigned int), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 		meshInfo->FullMesh = wmi;
 	}
@@ -2200,8 +2200,8 @@ void WorldConverter::CreatePNAENInfoFor(MeshInfo* mesh, bool softNormals)
 	mesh->VerticesPNAEN = mesh->Vertices;
 
 	MeshModifier::ComputePNAEN18Indices(mesh->VerticesPNAEN, mesh->Indices, mesh->IndicesPNAEN, true, softNormals);
-	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	mesh->MeshVertexBuffer->Init(&mesh->VerticesPNAEN[0], mesh->VerticesPNAEN.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	mesh->MeshVertexBuffer->Init(&mesh->VerticesPNAEN[0], mesh->VerticesPNAEN.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 }
 
 
@@ -2216,8 +2216,8 @@ void WorldConverter::CreatePNAENInfoFor(WorldMeshInfo* mesh, bool softNormals)
 	mesh->VerticesPNAEN = mesh->Vertices;
 
 	MeshModifier::ComputePNAEN18Indices(mesh->VerticesPNAEN, mesh->Indices, mesh->IndicesPNAEN, true, softNormals);
-	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	mesh->MeshVertexBuffer->Init(&mesh->VerticesPNAEN[0], mesh->VerticesPNAEN.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	mesh->MeshVertexBuffer->Init(&mesh->VerticesPNAEN[0], mesh->VerticesPNAEN.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 }
 
 /** Turns a MeshInfo into PNAEN */
@@ -2240,8 +2240,8 @@ void WorldConverter::CreatePNAENInfoFor(SkeletalMeshInfo* mesh, MeshInfo* bindPo
 	MeshModifier::ComputePNAEN18Indices(bindPoseMesh->VerticesPNAEN, mesh->Indices, mesh->IndicesPNAEN, true, softNormals);
 	bindPoseMesh->IndicesPNAEN = mesh->IndicesPNAEN;
 
-	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	bindPoseMesh->MeshIndexBufferPNAEN->Init(&bindPoseMesh->IndicesPNAEN[0], bindPoseMesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	bindPoseMesh->MeshIndexBufferPNAEN->Init(&bindPoseMesh->IndicesPNAEN[0], bindPoseMesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 	
 	for(unsigned int i=0;i<mesh->Vertices.size();i++)
@@ -2255,8 +2255,8 @@ void WorldConverter::CreatePNAENInfoFor(SkeletalMeshInfo* mesh, MeshInfo* bindPo
 
 	}*/
 
-	mesh->MeshVertexBuffer->Init(&mesh->Vertices[0], mesh->Vertices.size() * sizeof(ExSkelVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	bindPoseMesh->MeshVertexBuffer->Init(&bindPoseMesh->VerticesPNAEN[0], bindPoseMesh->VerticesPNAEN.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	mesh->MeshVertexBuffer->Init(&mesh->Vertices[0], mesh->Vertices.size() * sizeof(ExSkelVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	bindPoseMesh->MeshVertexBuffer->Init(&bindPoseMesh->VerticesPNAEN[0], bindPoseMesh->VerticesPNAEN.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 }
 
 /** Converts ExVertexStruct into a zCPolygon*-Attay */
@@ -2359,9 +2359,9 @@ void WorldConverter::TesselateMesh(WorldMeshInfo* mesh, int amount)
 	Engine::GraphicsEngine->CreateVertexBuffer(&mesh->MeshIndexBuffer);
 
 	// Init and fill them
-	mesh->MeshVertexBuffer->Init(&mesh->Vertices[0], mesh->Vertices.size() * sizeof(ExVertexStruct), BaseVertexBuffer::B_VERTEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
-	mesh->MeshIndexBuffer->Init(&mesh->Indices[0], mesh->Indices.size() * sizeof(VERTEX_INDEX), BaseVertexBuffer::B_INDEXBUFFER, BaseVertexBuffer::U_IMMUTABLE);
+	mesh->MeshVertexBuffer->Init(&mesh->Vertices[0], mesh->Vertices.size() * sizeof(ExVertexStruct), D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	mesh->MeshIndexBufferPNAEN->Init(&mesh->IndicesPNAEN[0], mesh->IndicesPNAEN.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
+	mesh->MeshIndexBuffer->Init(&mesh->Indices[0], mesh->Indices.size() * sizeof(VERTEX_INDEX), D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_IMMUTABLE);
 
 	mesh->TesselationSettings.buffer.VT_TesselationFactor = 1.0f;
 	mesh->TesselationSettings.buffer.VT_DisplacementStrength = 0.5f;

@@ -4,7 +4,7 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 
-D3D11ConstantBuffer::D3D11ConstantBuffer(int size, void* data) : BaseConstantBuffer(size, data)
+D3D11ConstantBuffer::D3D11ConstantBuffer(int size, void* data)
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 

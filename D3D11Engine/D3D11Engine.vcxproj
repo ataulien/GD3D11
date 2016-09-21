@@ -303,13 +303,8 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\vector3.h" />
     <ClInclude Include="assimp--3.0.1270-sdk\include\assimp\version.h" />
     <ClInclude Include="BaseAntTweakBar.h" />
-    <ClInclude Include="BaseConstantBuffer.h" />
     <ClInclude Include="BasePipelineStates.h" />
     <ClInclude Include="BaseLineRenderer.h" />
-    <ClInclude Include="BasePShader.h" />
-    <ClInclude Include="BaseTexture.h" />
-    <ClInclude Include="BaseTextureArray.h" />
-    <ClInclude Include="BaseVShader.h" />
     <ClInclude Include="BaseWidget.h" />
     <ClInclude Include="BasicTimer.h" />
     <ClInclude Include="CGameManager.h" />
@@ -442,7 +437,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="RenderToTextureBuffer.h" />
     <ClInclude Include="Toolbox.h" />
     <ClInclude Include="Types.h" />
-    <ClInclude Include="BaseVertexBuffer.h" />
     <ClInclude Include="VertexTypes.h" />
     <ClInclude Include="WorldConverter.h" />
     <ClInclude Include="zCBspTree.h" />
@@ -479,23 +473,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseAntTweakBar.cpp" />
-    <ClCompile Include="BaseConstantBuffer.cpp" />
     <ClCompile Include="BaseLineRenderer.cpp" />
-    <ClCompile Include="BasePShader.cpp" />
-    <ClCompile Include="BaseTexture.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <ClCompile Include="BaseTextureArray.cpp" />
-    <ClCompile Include="BaseVShader.cpp" />
     <ClCompile Include="BaseWidget.cpp" />
     <ClCompile Include="CSFFT\fft_512x512_c2c.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -617,7 +595,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="BaseVertexBuffer.cpp" />
     <ClCompile Include="ShadowedPointLight.cpp" />
     <ClCompile Include="SV_GMeshInfoView.cpp" />
     <ClCompile Include="squish-1.11\alpha.cpp">
