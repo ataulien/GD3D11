@@ -1,6 +1,5 @@
 ddraw.dll
 GFSDK_SSAO.win32.dll
-D3DCompiler_43.dll
 d3dcompiler_47.dll
 COPYING
 Assimp32.dll
