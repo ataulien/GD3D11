@@ -1792,8 +1792,9 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 				static bool done = false;
 				
 				if(!done)
-					LogErrorBox() << "FAULTY MODEL! PLEASE REPORT THIS TO DEGENERATED @ WOG!\nUseful info for him\n\nDraw Model: Visname: " << visName->c_str() << " Vobname: " << vobName->c_str() << "VobPos: " << float3(*pos).toString();
-		
+					LogErrorBox() << "Corrupted skeletal mesh error. m\n\nDraw Model: Visname: " << visName->c_str() << " Vobname: " << vobName->c_str() << "VobPos: " << float3(*pos).toString();
+				// TODO: see if "Faulty Model" happens again
+
 				Engine::GraphicsEngine->GetLineRenderer()->AddPointLocator(*pos, 50.0f, D3DXVECTOR4(1,0,0,1));
 
 				done = true;
