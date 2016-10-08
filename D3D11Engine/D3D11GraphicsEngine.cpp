@@ -1325,7 +1325,7 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(D3D11VertexBuffer* vb, D3D11Vertex
 	
 		if(RenderingStage == DES_MAIN)
 		{
-			if(tesselationEnabled && msh && msh->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
+			/*if(tesselationEnabled && msh->TesselationInfo.buffer.VT_TesselationFactor > 0.0f)
 			{
 				MyDirectDrawSurface7* surface = tex->GetSurface();
 				ID3D11ShaderResourceView* srv = surface->GetNormalmap() ? ((D3D11Texture *)surface->GetNormalmap())->GetShaderResourceView() : NULL;
@@ -1335,7 +1335,7 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh(D3D11VertexBuffer* vb, D3D11Vertex
 				Setup_PNAEN(PNAEN_Skeletal);
 				msh->TesselationInfo.Constantbuffer->BindToDomainShader(1);
 				msh->TesselationInfo.Constantbuffer->BindToHullShader(1);
-			}else if(ActiveHDS)
+			}else*/ if(ActiveHDS)
 			{
 				Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				Context->DSSetShader(NULL, NULL, NULL);
@@ -3988,6 +3988,10 @@ XRESULT D3D11GraphicsEngine::DrawSky()
 
 	if(!Engine::GAPI->GetRendererState()->RendererSettings.AtmosphericScattering)
 	{
+		Engine::GAPI->GetRendererState()->DepthState.DepthWriteEnabled = false;
+		Engine::GAPI->GetRendererState()->BlendState.SetDirty();
+		UpdateRenderStates();
+
 		Engine::GAPI->GetLoadedWorldInfo()->MainWorld->GetSkyControllerOutdoor()->RenderSkyPre();
 		Engine::GAPI->SetFarPlane(Engine::GAPI->GetRendererState()->RendererSettings.SectionDrawRadius * WORLD_SECTION_SIZE);
 		return XR_SUCCESS;

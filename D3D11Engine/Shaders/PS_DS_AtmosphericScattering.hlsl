@@ -257,7 +257,7 @@ void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inou
 	ApplyRainNormalDeformation(nrm, wsPosition, diffuse.rgb, wsNormal);
 	pixelWettnes *= 1 - pow(saturate(dot(wsNormal, float3(0,-1,0))), 4.0f);
 	
-	vsNormal = lerp(vsNormal, nrm, AC_RainFXWeight * pixelWettnes); // Only apply deformation if it's actually raining
+	vsNormal = lerp(vsNormal, nrm, AC_RainFXWeight * pixelWettnes * 0.5f); // Only apply deformation if it's actually raining
 	
 	// Get fresnel-effect
 	float fresnel = pow(1.0f - max(0.0f, dot(vsNormal, -vsDir)), 160.0f);
@@ -289,14 +289,14 @@ void ApplySceneWettness(float3 wsPosition, float3 vsPosition, float3 vsDir, inou
 	float spec3 = CalcBlinnPhongLighting(vsNormal, H_3);
 		
 	// power the reflection 
-	reflection = pow(reflection, 2.5f) * 1.39f;
+	reflection = pow(reflection, 2.5f) * 1.0f;
 	//reflection += fresnel * 0.1f;
 	
 	reflection += pow(spec1, specPower) * 0.7f + pow(spec2, specPower) * 0.7f + pow(spec3, specPower) * 0.6f;
 	
 	// Compute wet pixel color
 	float diffuseLum = dot(diffuse, float3(0.3333f,0.3333f,0.3333f));
-	float3 wetPixel = lerp(diffuseLum, diffuse, 0.6f) * 0.6f; // Desaturate and darken the scene a bit	
+	float3 wetPixel = lerp(diffuseLum, diffuse, 0.75f) * 0.75f; // Desaturate and darken the scene a bit	
 	
 	
 	

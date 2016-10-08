@@ -1076,7 +1076,12 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 	if(Engine::AntTweakBar->GetActive())
 		return true;
 
-	bool t = zCOption::GetOptions()->IsParameter("XNoDevMenu");
+	bool enableEditorPanel = zCOption::GetOptions()->IsParameter("XEnableEditorPanel");
+
+#if defined(BUILD_GOTHIC_1_08k) || !defined(PUBLIC_RELEASE)
+	// zCOptions not working for G1 yet
+	enableEditorPanel = true;
+#endif
 
 	// Always allow opening/closing the editor
 #ifdef BUILD_SPACER
@@ -1085,6 +1090,9 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 	if(msg == WM_KEYDOWN && (wParam == VK_F1))
 #endif
 	{
+		if (!enableEditorPanel)
+			return false;
+
 		IsEnabled = !IsEnabled;
 		Engine::GAPI->GetRendererState()->RendererSettings.DisableWatermark = false;
 

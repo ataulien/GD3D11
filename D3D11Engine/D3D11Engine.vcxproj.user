@@ -30,7 +30,7 @@
     <LocalDebuggerCommand>$(G2_SYSTEM_PATH)\Gothic2.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(G2_SYSTEM_PATH)</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerCommandArguments>-XNoUpdate -zWindow</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-XNoUpdate -zWindow -XEnableEditorPanel</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">
     <LocalDebuggerCommand>$(G1_SYSTEM_PATH)\gothicmod.exe</LocalDebuggerCommand>

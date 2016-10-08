@@ -69,22 +69,18 @@ class zCSkyController : public zCObject
 public:
 	void RenderSkyPre()
 	{
-#ifndef BUILD_GOTHIC_1_08k
 		int* vtbl = (int*)((int*)this)[0];
 
 		zCSkyControllerRenderSkyPre fn = (zCSkyControllerRenderSkyPre)vtbl[GothicMemoryLocations::zCSkyController::VTBL_RenderSkyPre];
 		fn(this);
-#endif
 	}
 
 	void RenderSkyPost()
 	{
-#ifndef BUILD_GOTHIC_1_08k
 		int* vtbl = (int*)((int*)this)[0];
 
 		zCSkyControllerRenderSkyPost fn = (zCSkyControllerRenderSkyPost)vtbl[GothicMemoryLocations::zCSkyController::VTBL_RenderSkyPost];
 		fn(this, 1);
-#endif
 	}
 
 	DWORD* PolyLightCLUTPtr;
@@ -111,13 +107,13 @@ public:
 		REPLACE_RANGE(GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPStart, GothicMemoryLocations::zCSkyController_Outdoor::LOC_ProcessRainFXNOPEnd - 1, INST_NOP);
 
 		// Replace the check for the lensflare with nops
-#ifdef BUILD_GOTHIC_2_6_fix
+
 		VirtualProtect((void *)GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleStart, 
 			GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleEnd - GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleStart, 
 			PAGE_EXECUTE_READWRITE, &dwProtect);
 		
 		REPLACE_RANGE(GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleStart, GothicMemoryLocations::zCSkyController_Outdoor::LOC_SunVisibleEnd-1, INST_NOP);
-#endif
+
 	}
 
 	/** Updates the rain-weight and sound-effects */
@@ -172,11 +168,7 @@ public:
 
 	int GetUnderwaterFX()
 	{
-#ifndef BUILD_GOTHIC_1_08k
 		XCALL(GothicMemoryLocations::zCSkyController_Outdoor::GetUnderwaterFX);
-#else
-		return 0;
-#endif
 	}
 
 	D3DXVECTOR3 GetOverrideColor()

@@ -30,25 +30,51 @@ struct VS_OUTPUT
 	float4 vPosition		: SV_POSITION;
 };
 
+/** Transforms a pre-transformed xyzrhw-coordinate into d3d11-space */
+float4 TransformXYZRHW(float4 xyzrhw)
+{
+	// MAGIC (:
+	
+	// Convert from viewport-coordinates to normalized device coordinates
+	float3 ndc;
+	ndc.x = ((2 * (xyzrhw.x - V_ViewportPos.x)) / V_ViewportSize.x) - 1;
+	ndc.y = 1 - ((2 * (xyzrhw.y - V_ViewportPos.y)) / V_ViewportSize.y);
+	ndc.z = xyzrhw.z;
+	
+	// Convert to clip-space. rhw is actually 1/w ("reciprocal"). So to undo the devide by w, devide by the given 1/w.
+	float actualW = 1.0f / xyzrhw.w;
+	float3 clipSpace = ndc.xyz * actualW;
+	
+	// Remove the stupid half-pixel offset from pre D3D10
+	clipSpace.xy -= 0.5f / V_ViewportSize;
+	
+	return float4(clipSpace, actualW);
+		
+	// Remove viewport-transformation
+	/*xyzrhw.xy -= FF_ViewportPos;
+	xyzrhw.xy = xyzrhw.xy * 2.0f - FF_ViewportSize;
+	
+	// We don't want this in pixels
+	xyzrhw.xy /= FF_ViewportSize; 
+	
+	// D3D11 will turn this upside down later, so counter that here!
+	xyzrhw.y = -xyzrhw.y;
+	
+	// Remove the stupid half-pixel offset from pre D3D10
+	xyzrhw.xy -= 0.5f / FF_ViewportSize;*/
+	
+	// Remove w-component, as it can mess things up when not 1. (Why? Not sure, sorry)
+	return float4(xyzrhw.xyz, xyzrhw.w);
+}
+
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 //--------------------------------------------------------------------------------------
 VS_OUTPUT VSMain( VS_INPUT Input )
 {
 	VS_OUTPUT Output;
-	
-	float3 p = Input.vPosition.xyz;
-
-	p.xy -= V_ViewportPos;
-
-	p.xy = p.xy * 2.0f - V_ViewportSize;
-	p.xy /= V_ViewportSize; 
-	
-	p.y = -p.y;
-	
-	//p.xy /= float2(1920,1080); 
-			
-	Output.vPosition = float4(p, 1);
+				
+	Output.vPosition = TransformXYZRHW(Input.vPosition);
 	
 	//Output.vPosition = mul( float4(Input.vPosition,1), M_WorldViewProj );
 	Output.vTexcoord2 = Input.vTexcoord;

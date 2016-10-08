@@ -688,6 +688,7 @@ public:
 					Gothic_XYZRHW_DIF_T1_Vertex* rhw = (Gothic_XYZRHW_DIF_T1_Vertex *)lpvVertices;
 
 					exv[i].Position = rhw[i].xyz;
+					exv[i].Normal.x = rhw[i].rhw;
 					exv[i].TexCoord = rhw[i].texCoord;
 					exv[i].Color = rhw[i].color;
 				}
@@ -705,6 +706,7 @@ public:
 					Gothic_XYZRHW_DIF_SPEC_T1_Vertex* rhw = (Gothic_XYZRHW_DIF_SPEC_T1_Vertex *)lpvVertices;
 
 					exv[i].Position = rhw[i].xyz;
+					exv[i].Normal.x = rhw[i].rhw;
 					exv[i].TexCoord = rhw[i].texCoord;
 					exv[i].Color = rhw[i].color;
 				}

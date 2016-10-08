@@ -107,7 +107,8 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "Draw ParticleEffects", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawParticleEffects, NULL);
 	//TwAddVarRW(Bar_General, "Draw Sky", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawSky, NULL);
 	TwAddVarRW(Bar_General, "Draw Fog", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawFog, NULL);	
-	
+	TwAddVarRW(Bar_General, "Tesselation", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation, NULL);
+
 	
 #ifndef PUBLIC_RELEASE
 	TwAddVarRW(Bar_General, "HDR (Broken!)", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableHDR, NULL);	
@@ -126,8 +127,7 @@ XRESULT BaseAntTweakBar::Init()
 	TwAddVarRW(Bar_General, "DrawShadowGeometry", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DrawShadowGeometry, NULL);
 	TwAddVarRW(Bar_General, "DoZPrepass", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.DoZPrepass, NULL);
 
-	TwAddVarRW(Bar_General, "Tesselation", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableTesselation, NULL);	
-
+	
 	TwAddVarRW(Bar_General, "VSync", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableVSync, NULL);
 	
 	TwAddVarRW(Bar_General, "OcclusionCulling", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState()->RendererSettings.EnableOcclusionCulling, NULL);

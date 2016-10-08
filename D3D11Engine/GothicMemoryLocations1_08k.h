@@ -83,17 +83,27 @@ struct GothicMemoryLocations
 		static const unsigned int Interpolate = 0x005E8C20;
 		static const unsigned int Offset_InitDone = 0x7C;
 		static const unsigned int Init = 0x005E6A00;*/
-
+		
+		static const unsigned int GetUnderwaterFX = 0x5baaa0;
 		static const unsigned int Offset_OverrideColor = 0x558;
 		static const unsigned int Offset_OverrideFlag = 0x564;
 
 		static const unsigned int SetCameraLocationHint = 0x005BC7D0;
+
+		static const unsigned int LOC_SunVisibleStart = 0x5C0D89;
+		static const unsigned int LOC_SunVisibleEnd = 0x5C0D95;
 
 		static const unsigned int LOC_ProcessRainFXNOPStart = 0x005C0FB0;
 		static const unsigned int LOC_ProcessRainFXNOPEnd = 0x005C107D;
 
 		static const unsigned int ProcessRainFX = 0x005C0DC0;
 		static const unsigned int Offset_OutdoorRainFXWeight = 0x66C;
+	};
+
+	struct zCSkyController
+	{
+		static const unsigned int VTBL_RenderSkyPre = 20; //0x50 / 4
+		static const unsigned int VTBL_RenderSkyPost = 21;
 	};
 
 	struct zCParticleEmitter

@@ -41,7 +41,7 @@
 #include "zCView.h"
 
 // Duration how long the scene will stay wet, in MS
-const DWORD SCENE_WETNESS_DURATION_MS = 60 * 5 * 1000;
+const DWORD SCENE_WETNESS_DURATION_MS = 60 * 2 * 1000;
 
 /** Writes this info to a file */
 void MaterialInfo::WriteToFile(const std::string& name)
@@ -4051,7 +4051,7 @@ XRESULT GothicAPI::SaveMenuSettings(const std::string& file)
 
 	GothicRendererSettings& s = RendererState.RendererSettings;
 
-	int version = 1;
+	int version = 2;
 	fwrite(&version, sizeof(version), 1, f);
 
 	fwrite(&s.EnableShadows, sizeof(s.EnableShadows), 1, f);
@@ -4169,6 +4169,9 @@ XRESULT GothicAPI::LoadMenuSettings(const std::string& file)
 
 	fread(&s.EnableGodRays, sizeof(s.EnableGodRays), 1, f);
 	fread(&s.EnableTesselation, sizeof(s.EnableTesselation), 1, f);
+
+	if (version == 1)
+		s.EnableTesselation = false;
 
 	fread(&s.EnableSMAA, sizeof(s.EnableSMAA), 1, f);
 
