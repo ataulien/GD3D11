@@ -163,7 +163,7 @@ void GothicAPI::OnGameStart()
 	if(!res.empty())
 	{
 		std::string x = res.substr(0, res.find_first_of(','));
-		std::string y = res.substr(res.find_first_of(','));
+		std::string y = res.substr(res.find_first_of(',') + 1);
 		RendererState.RendererSettings.LoadedResolution.x = atoi(x.c_str());
 		RendererState.RendererSettings.LoadedResolution.y = atoi(y.c_str());
 
