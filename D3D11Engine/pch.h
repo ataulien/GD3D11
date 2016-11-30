@@ -31,7 +31,7 @@
 #define stdext std
 #endif
 
-#define VERSION_NUMBER "17.4"
+#define VERSION_NUMBER "17.5"
 __declspec(selectany) const char* VERSION_NUMBER_STR = VERSION_NUMBER;
 
 /** D3D7-Call logging */
