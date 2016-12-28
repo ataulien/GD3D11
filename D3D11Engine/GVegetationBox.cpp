@@ -1,3 +1,4 @@
+#include <map>
 #include "pch.h"
 #include "GVegetationBox.h"
 #include "GMeshSimple.h"
@@ -607,23 +608,56 @@ void GVegetationBox::LoadFromFILE(FILE* f, int version)
 	bool hasMeshInfo = MeshPart != NULL;
 	fread(&hasMeshInfo, sizeof(hasMeshInfo), 1, f);
 
-
-
-	// Use any one grass-piece and trace straight down
-	D3DXVECTOR3 spot = D3DXVECTOR3(spots[0].x, spots[0].y, spots[0].z); 
-
-	// Little offset
-	spot.y += 1.0f;
-
-	// Try to find meshpart and texture
-	D3DXVECTOR3 hit;
 	MeshInfo* hitMesh = NULL;
 	zCMaterial* hitMaterial = NULL;
-	Engine::GAPI->TraceWorldMesh(spot, D3DXVECTOR3(0,-1,0), hit, NULL, NULL, &hitMesh, &hitMaterial);
+
+	std::unordered_map<MeshInfo*, int> hitMeshMap;
+	std::unordered_map<zCMaterial*, int> hitMaterialMap;
+
+	// 90% confidence level, 10% error margin, assuming sample distribution is very close to population distribution
+	// n without population size (see law of large numbers):
+	// float n = pow(1.6448f, 2) * 95 * (100 - 95) / pow(10, 2);
+	float n = 12.85f;
+	int j = floor(spots.size() / n);
+
+	for (unsigned int i = 0; i < spots.size(); i += j)
+	{
+		// Use grass-piece and trace straight down
+		D3DXVECTOR3 spot = D3DXVECTOR3(spots[i].x, spots[i].y, spots[i].z);
+
+		// Little offset
+		spot.y += 1.0f;
+
+		// Try to find meshpart and texture
+		D3DXVECTOR3 hit;
+		MeshInfo* hitMeshTrace = NULL;
+		zCMaterial* hitMaterialTrace = NULL;
+		Engine::GAPI->TraceWorldMesh(spot, D3DXVECTOR3(0, -1, 0), hit, NULL, NULL, &hitMeshTrace, &hitMaterialTrace);
+
+		// Save results
+		if (hitMeshTrace != NULL)
+			hitMeshMap[hitMeshTrace]++;
+		if (hitMaterialTrace != NULL)
+			hitMaterialMap[hitMaterialTrace]++;
+	}
 
 	// Set mesh and texture
-	if(hasMeshInfo)
+	if (hasMeshInfo)
+	{
+		for (auto it = hitMeshMap.begin(); it != hitMeshMap.end(); ++it)
+		{
+			if ((hitMesh == NULL) || (hitMeshMap[hitMesh] < it->second))
+				hitMesh = it->first;
+		}
+
 		MeshPart = hitMesh;
+	}
+
+	for (auto it = hitMaterialMap.begin(); it != hitMaterialMap.end(); ++it)
+	{
+		if ((hitMaterial == NULL) || (hitMaterialMap[hitMaterial] < it->second))
+			hitMaterial = it->first;
+	}
 
 	MeshTexture = hitMaterial != NULL ? hitMaterial->GetTexture() : NULL;
 
