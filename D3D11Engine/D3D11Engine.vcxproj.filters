@@ -73,9 +73,6 @@
     <Filter Include="Engine\GAPI\Update">
       <UniqueIdentifier>{10f4b86e-92b5-45f4-be3c-a1e2d9895e30}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Librarys\Effects11">
-      <UniqueIdentifier>{5afe5c22-98e1-4f74-bcae-9c12b3b0e25c}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -602,36 +599,6 @@
     <ClInclude Include="SV_NamedSlider.h">
       <Filter>Engine\D2D\Views\Controls</Filter>
     </ClInclude>
-    <ClInclude Include="Effects11\Inc\d3dx11dbg.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\Inc\d3dxGlobal.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\Binary\EffectBinaryFormat.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\EffectLoad.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\Binary\EffectStateBase11.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\Binary\SOParser.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\Inc\d3dx11effect.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\Binary\EffectStates11.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\Effect.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
-    <ClInclude Include="Effects11\pchfx.h">
-      <Filter>Librarys\Effects11</Filter>
-    </ClInclude>
     <ClInclude Include="VersionCheck.h">
       <Filter>DLLMain</Filter>
     </ClInclude>
@@ -872,27 +839,6 @@
     </ClCompile>
     <ClCompile Include="SV_NamedSlider.cpp">
       <Filter>Engine\D2D\Views\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="Effects11\d3dxGlobal.cpp">
-      <Filter>Librarys\Effects11</Filter>
-    </ClCompile>
-    <ClCompile Include="Effects11\EffectAPI.cpp">
-      <Filter>Librarys\Effects11</Filter>
-    </ClCompile>
-    <ClCompile Include="Effects11\EffectReflection.cpp">
-      <Filter>Librarys\Effects11</Filter>
-    </ClCompile>
-    <ClCompile Include="Effects11\EffectRuntime.cpp">
-      <Filter>Librarys\Effects11</Filter>
-    </ClCompile>
-    <ClCompile Include="Effects11\EffectLoad.cpp">
-      <Filter>Librarys\Effects11</Filter>
-    </ClCompile>
-    <ClCompile Include="Effects11\EffectNonRuntime.cpp">
-      <Filter>Librarys\Effects11</Filter>
-    </ClCompile>
-    <ClCompile Include="Effects11\d3dx11dbg.cpp">
-      <Filter>Librarys\Effects11</Filter>
     </ClCompile>
     <ClCompile Include="VersionCheck.cpp">
       <Filter>DLLMain</Filter>
