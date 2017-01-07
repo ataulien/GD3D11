@@ -10,11 +10,7 @@ class ThreadPool;
 
 __declspec( selectany ) const char* ENGINE_BASE_DIR = "system\\GD3D11\\";
 
-#if _MSC_VER < 1900
-__declspec( selectany ) const char* VERSION_STRING = "Version X" VERSION_NUMBER " ("__DATE__")";
-#else
-__declspec(selectany) const char* VERSION_STRING = "Version X" VERSION_NUMBER;
-#endif
+__declspec( selectany ) const char* VERSION_STRING = "Version X" VERSION_NUMBER " (" __DATE__ ")";
 
 namespace Engine
 {
