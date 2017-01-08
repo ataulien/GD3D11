@@ -75,7 +75,7 @@ void SV_Button::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 		r.right+=1;
 		r.bottom+=1;
 
-		MainView->DrawSmoothShadow(&r,-10.0f,0.7f/*,D2DObjects->BrushCollection.LinearGlowBrush,D2DObjects->BrushCollection.RadialGlowBrush*/);
+		MainView->DrawSmoothShadow(&r, -10.0f, 0.7f);
 		
 	}
 

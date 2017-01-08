@@ -497,14 +497,12 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 
 		delete[] dst;
 
-		//Engine::GAPI->EnterResourceCriticalSection();
 		EngineTexture->GenerateMipMaps();
 		
 		// We don't actuall load mipmaps for this type, so set this
 		// so that it says the texture is fully loaded
 		QueuedMipMaps = OriginalSurfaceDesc.dwMipMapCount - 1;
-
-		//Engine::GAPI->LeaveResourceCriticalSection();
+		
 	}else
 	{
 		/*unsigned char* convertedData = new unsigned char[OriginalSurfaceDesc.dwWidth * OriginalSurfaceDesc.dwHeight * 4];

@@ -1,11 +1,11 @@
 #pragma once
 
 struct BaseVobInfo;
-class ShadowedPointLight
+class BaseShadowedPointLight
 {
 public:
-	ShadowedPointLight(void);
-	virtual ~ShadowedPointLight(void);
+	BaseShadowedPointLight(void);
+	virtual ~BaseShadowedPointLight(void);
 
 	/** Called when a vob got removed from the world */
 	virtual void OnVobRemovedFromWorld(BaseVobInfo* vob){};

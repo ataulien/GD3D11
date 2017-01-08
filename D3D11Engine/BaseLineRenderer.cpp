@@ -168,7 +168,7 @@ void BaseLineRenderer::AddRingZ(const D3DXVECTOR3& location, float size, const D
 /** Draws a wireframe mesh */
 void BaseLineRenderer::AddWireframeMesh(const std::vector<ExVertexStruct>& vertices, const std::vector<VERTEX_INDEX>& indices, const D3DXVECTOR4& color, const D3DXMATRIX* world)
 {
-	for(int i=0;i<indices.size();i+=3)
+	for(size_t i=0;i<indices.size();i+=3)
 	{
 		D3DXVECTOR3 vx[3];
 		for(int v=0;v<3;v++)

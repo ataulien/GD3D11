@@ -20,7 +20,7 @@ void SV_ProgressBar::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 	MainView->GetRenderTarget()->SetTransform(D2D1::Matrix3x2F::Translation(clientRectAbs.left,clientRectAbs.top));
 
 	// Draw a shadow around the whole control
-	MainView->DrawSmoothShadow(&ViewRect,SV_DEF_SHADOW_RANGE,0.5f, 4);
+	MainView->DrawSmoothShadow(&ViewRect, 6, 0.5f, false, 2);
 
 	// Draw the background box
 	//float level=(float)Level*SF_DEF_LEVEL_COLOR_INC+SF_DEF_LEVEL_COLOR_BASE;

@@ -62,26 +62,6 @@ void D3D11ConstantBuffer::UpdateBuffer(void* data)
 	
 }
 
-/** Updates the buffer, threadsave */
-void D3D11ConstantBuffer::UpdateBufferDeferred(void* data)
-{
-	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
-	//engine->GetContext()->UpdateSubresource(Buffer, 0, nullptr, data, 0, 0);
-	
-	ID3D11DeviceContext* ctx = engine->GetDeferredContextByThread();
-
-	D3D11_MAPPED_SUBRESOURCE res;
-	if(XR_SUCCESS == ctx->Map(Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &res))
-	{
-		// Copy data
-		memcpy(res.pData, data, res.DepthPitch);
-
-		ctx->Unmap(Buffer, 0);
-
-		BufferDirty = true;
-	}
-}
-
 /** Binds the buffer */
 void D3D11ConstantBuffer::BindToVertexShader(int slot)
 {

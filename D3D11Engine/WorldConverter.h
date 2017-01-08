@@ -7,7 +7,7 @@
 #include "D3D11Texture.h"
 #include "GothicGraphicsState.h"
 //#include "zCPolygon.h"
-#include "ShadowedPointLight.h"
+#include "BaseShadowedPointLight.h"
 #include "WorldObjects.h"
 
 

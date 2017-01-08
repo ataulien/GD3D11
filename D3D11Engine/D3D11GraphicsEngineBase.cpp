@@ -292,27 +292,6 @@ XRESULT D3D11GraphicsEngineBase::OnResize(INT2 newSize)
 	return XR_SUCCESS;
 }
 
-/** Runs the deferred commandlists from the cached deferred contexts */
-void D3D11GraphicsEngineBase::ExecuteDeferredCommandLists()
-{
-	for(auto it=DeferredContextsByThread.begin();it != DeferredContextsByThread.end();it++)
-	{
-		ID3D11DeviceContext* ctx = (*it).second;
-		ID3D11CommandList* dc_cl = NULL;
-		ctx->FinishCommandList(true, &dc_cl);
-
-		if (dc_cl)
-		{
-			Context->ExecuteCommandList(dc_cl, true);
-			dc_cl->Release();
-		}
-	}
-
-	// Empty the current thread-pool contexts and restore the cache
-	DeferredContextsByThread.clear();
-	DeferredContextCache = DeferredContextsAll;
-}
-
 /** Called when the game wants to render a new frame */
 XRESULT D3D11GraphicsEngineBase::OnBeginFrame()
 {
@@ -815,21 +794,6 @@ void D3D11GraphicsEngineBase::SetupPerInstanceConstantBuffer(int slot)
 	ActiveVS->GetConstantBuffer()[1]->BindToVertexShader(slot);
 }
 
-/** Returns the transforms constantbuffer */
-D3D11ConstantBuffer* D3D11GraphicsEngineBase::GetTransformsCB()
-{
-	return TransformsCB;
-}
-
-/** Creates a pipeline state */
-PipelineState* D3D11GraphicsEngineBase::CreatePipelineState(const PipelineState* copy)
-{
-	if(copy)
-		return new D3D11PipelineState(*copy);
-	else
-		return new D3D11PipelineState;
-}
-
 /** Updates the transformsCB with new values from the GAPI */
 void D3D11GraphicsEngineBase::UpdateTransformsCB()
 {
@@ -846,7 +810,7 @@ void D3D11GraphicsEngineBase::UpdateTransformsCB()
 }
 
 /** Creates a bufferobject for a shadowed point light */
-XRESULT D3D11GraphicsEngineBase::CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic)
+XRESULT D3D11GraphicsEngineBase::CreateShadowedPointLight(BaseShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic)
 {
 	if(Engine::GAPI->GetRendererState()->RendererSettings.EnablePointlightShadows > 0)
 		*outPL = new D3D11PointLight(lightInfo, dynamic);
@@ -910,48 +874,6 @@ XRESULT D3D11GraphicsEngineBase::BindViewportInformation(const std::string& shad
 	}
 
 	return XR_SUCCESS;
-}
-
-/** Returns a deferred context for the calling thread ID. Creates a new one if there isn't one in cache.
-		Will be reset on present. */
-ID3D11DeviceContext* D3D11GraphicsEngineBase::GetDeferredContextByThread()
-{
-	int threadID = GetCurrentThreadId();
-	
-	if(threadID == Engine::GAPI->GetMainThreadID())
-		return Context;
-
-	DeferredContextsByThreadMutex.lock();
-
-	// Check if this already exists
-	auto it = DeferredContextsByThread.find(threadID);
-	if(it != DeferredContextsByThread.end())
-	{
-		DeferredContextsByThreadMutex.unlock();
-		return (*it).second;
-	}
-
-	// Check for exhausted cache
-	if(DeferredContextCache.empty())
-	{
-		// Cache exhausted, create a new context
-		HRESULT hr;
-		ID3D11DeviceContext* context;
-		LE(Device->CreateDeferredContext(0, &context));
-
-		// Add to total list
-		DeferredContextsAll.push_back(context);
-		DeferredContextCache.push_back(context);
-	}
-
-	// Get one from cache
-	ID3D11DeviceContext* context = DeferredContextCache.back();
-	DeferredContextsByThread[threadID] = context;
-	DeferredContextCache.pop_back();
-
-	DeferredContextsByThreadMutex.unlock();
-
-	return context;
 }
 
 /** Returns the graphics-device this is running on */

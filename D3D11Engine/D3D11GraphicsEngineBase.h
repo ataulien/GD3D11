@@ -10,93 +10,6 @@ class D3D11HDShader;
 class D3D11Texture;
 class D3D11GShader;
 
-struct D3D11PipelineState : public PipelineState
-{
-	D3D11PipelineState()
-	{
-		BlendState = NULL;
-		RasterizerState = NULL;
-		DepthStencilState = NULL;
-		SamplerState = NULL;
-		IndexBuffer = NULL;
-		VertexShader = NULL;
-		InputLayout = NULL;
-		PixelShader = NULL;
-		HullShader = NULL;
-		DomainShader = NULL;
-		GeometryShader = NULL;
-		DepthStencilView = NULL;
-		NumRenderTargetViews = 0;
-
-		ZeroMemory(RenderTargetViews, sizeof(RenderTargetViews));
-		ZeroMemory(Textures, sizeof(Textures));
-	}
-
-	D3D11PipelineState(const PipelineState& s) : PipelineState(s)
-	{
-		D3D11PipelineState& d = (D3D11PipelineState&)s;
-
-		// TODO: This is sooo ugly!
-		BlendState = d.BlendState;
-		RasterizerState = d.RasterizerState;
-		DepthStencilState = d.DepthStencilState;
-		SamplerState = d.SamplerState;
-		ConstantBuffersVS = d.ConstantBuffersVS;
-		ConstantBuffersPS = d.ConstantBuffersPS;
-		ConstantBuffersHDS = d.ConstantBuffersHDS;
-		ConstantBuffersGS = d.ConstantBuffersGS;
-		VertexBuffers = d.VertexBuffers;
-		IndexBuffer = d.IndexBuffer;
-		VertexShader = d.VertexShader;
-		InputLayout = d.InputLayout;
-		PixelShader = d.PixelShader;
-		HullShader = d.HullShader;
-		DomainShader = d.DomainShader;
-		GeometryShader = d.GeometryShader;
-		DepthStencilView = d.DepthStencilView;
-		NumRenderTargetViews = d.NumRenderTargetViews;
-		StructuredBuffersVS = d.StructuredBuffersVS;
-
-		memcpy(RenderTargetViews, d.RenderTargetViews, sizeof(RenderTargetViews));
-		memcpy(Textures, d.Textures, sizeof(Textures));
-	}
-
-	/** State objects */
-	ID3D11BlendState* BlendState;
-	ID3D11RasterizerState* RasterizerState;
-	ID3D11DepthStencilState* DepthStencilState;
-	ID3D11SamplerState* SamplerState;
-
-	/** Buffers */
-	std::vector<ID3D11Buffer*> ConstantBuffersVS;
-	std::vector<ID3D11Buffer*> ConstantBuffersPS;
-	std::vector<ID3D11Buffer*> ConstantBuffersHDS;
-	std::vector<ID3D11Buffer*> ConstantBuffersGS;
-
-	/** Vertex-buffers */
-	std::vector<ID3D11Buffer*> VertexBuffers;
-	std::vector<ID3D11ShaderResourceView*> StructuredBuffersVS;
-
-	/** Index-buffer */
-	ID3D11Buffer* IndexBuffer;
-
-	/** Shaders */
-	ID3D11VertexShader* VertexShader;
-	ID3D11InputLayout* InputLayout;
-	ID3D11PixelShader* PixelShader;
-	ID3D11HullShader* HullShader;
-	ID3D11DomainShader* DomainShader;
-	ID3D11GeometryShader* GeometryShader;
-
-	/** Rendertargets */
-	ID3D11RenderTargetView* RenderTargetViews[8];
-	byte NumRenderTargetViews;
-	ID3D11DepthStencilView* DepthStencilView;
-
-	/** Texture samplers */
-	ID3D11ShaderResourceView* Textures[8];
-};
-
 namespace D3D11ObjectIDs
 {
 	/** Map to get a texture by ID */
@@ -180,7 +93,7 @@ public:
 	virtual XRESULT CreateConstantBuffer(D3D11ConstantBuffer** outCB, void* data, int size);
 
 	/** Creates a bufferobject for a shadowed point light */
-	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic = false);
+	virtual XRESULT CreateShadowedPointLight(BaseShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic = false);
 
 	/** Returns a list of available display modes */
 	virtual XRESULT GetDisplayModeList(std::vector<DisplayModeInfo>* modeList, bool includeSuperSampling = false);
@@ -196,9 +109,6 @@ public:
 
 	/** Returns the graphics-device this is running on */
 	virtual std::string GetGraphicsDeviceName();
-
-	/** Creates a pipeline state */
-	virtual PipelineState* CreatePipelineState(const PipelineState* copy = NULL);
 
 	/** Saves a screenshot */
 	virtual void SaveScreenshot(){}
@@ -219,10 +129,6 @@ public:
 	ID3D11Device* GetDevice(){return Device;}
 	ID3D11DeviceContext* GetContext(){return Context;}
 	ID3D11DeviceContext* GetDeferredMediaContext(){return DeferredContext;}
-
-	/** Returns a deferred context for the calling thread ID. Creates a new one if there isn't one in cache.
-		Will be reset on present and called on ExecuteDeferredCommandLists. */
-	ID3D11DeviceContext* GetDeferredContextByThread();
 
 	/** Returns the current resolution */
 	virtual INT2 GetResolution(){return Resolution;};
@@ -250,15 +156,11 @@ public:
 	virtual XRESULT SetActiveHDShader(const std::string& shader);
 	virtual XRESULT SetActiveGShader(const std::string& shader);
 
-	/** Returns the transforms constantbuffer */
-	D3D11ConstantBuffer* GetTransformsCB();
+protected:
 
 	/** Updates the transformsCB with new values from the GAPI */
 	void UpdateTransformsCB();
 
-	/** Runs the deferred commandlists from the cached deferred contexts */
-	void ExecuteDeferredCommandLists();
-protected:
 	/** Device-objects */
 	IDXGIFactory* DXGIFactory;
 	IDXGIAdapter* DXGIAdapter;

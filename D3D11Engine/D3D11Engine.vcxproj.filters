@@ -616,9 +616,6 @@
       <Filter>Engine\D3D11</Filter>
     </ClInclude>
     <ClInclude Include="D3D11RenderPipe.h" />
-    <ClInclude Include="GWorldMesh.h" />
-    <ClInclude Include="D3D11WorldMesh.h" />
-    <ClInclude Include="GMaterial.h" />
     <ClInclude Include="D3D11GraphicsEngineBase.h" />
     <ClInclude Include="ModSpecific.h" />
     <ClInclude Include="D3D11GodRayEffect.h">
@@ -633,7 +630,6 @@
     <ClInclude Include="D3D11PointLight.h">
       <Filter>Engine\D3D11</Filter>
     </ClInclude>
-    <ClInclude Include="ShadowedPointLight.h" />
     <ClInclude Include="GothicMemoryLocations2_6_fix_Spacer.h">
       <Filter>ZenGin</Filter>
     </ClInclude>
@@ -656,6 +652,7 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="GMeshSimple.h" />
+    <ClInclude Include="BaseShadowedPointLight.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -903,9 +900,6 @@
       <Filter>Engine\D3D11</Filter>
     </ClCompile>
     <ClCompile Include="D3D11RenderPipe.cpp" />
-    <ClCompile Include="GWorldMesh.cpp" />
-    <ClCompile Include="D3D11WorldMesh.cpp" />
-    <ClCompile Include="GMaterial.cpp" />
     <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
     <ClCompile Include="ModSpecific.cpp" />
     <ClCompile Include="D3D11GodRayEffect.cpp">
@@ -920,7 +914,6 @@
     <ClCompile Include="D3D11PointLight.cpp">
       <Filter>Engine\D3D11</Filter>
     </ClCompile>
-    <ClCompile Include="ShadowedPointLight.cpp" />
     <ClCompile Include="WidgetContainer.cpp">
       <Filter>Engine\D2D\Views\Editor</Filter>
     </ClCompile>
@@ -937,6 +930,7 @@
       <Filter>Engine\GAPI</Filter>
     </ClCompile>
     <ClCompile Include="GMeshSimple.cpp" />
+    <ClCompile Include="BaseShadowedPointLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

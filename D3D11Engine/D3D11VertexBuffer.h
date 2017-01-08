@@ -47,9 +47,6 @@ public:
 	XRESULT UpdateBuffer(void* data, UINT size = 0);
 
 	/** Updates the vertexbuffer with the given data */
-	XRESULT UpdateBufferDeferred(void* data, UINT size = 0);
-
-	/** Updates the vertexbuffer with the given data */
 	XRESULT UpdateBufferAligned16(void* data, UINT size = 0);
 
 	/** Maps the buffer */
@@ -57,12 +54,6 @@ public:
 
 	/** Unmaps the buffer */
 	XRESULT Unmap();
-
-	/** Maps the buffer */
-	XRESULT MapDeferred(int flags, void** dataPtr, UINT* size);
-
-	/** Unmaps the buffer */
-	XRESULT UnmapDeferred();
 
 	/** Optimizes the given set of vertices */
 	XRESULT OptimizeVertices(VERTEX_INDEX* indices, byte* vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride);

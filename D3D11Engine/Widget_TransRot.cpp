@@ -197,8 +197,8 @@ void Widget_TransRot::DoHoverTest(HWND hw)
 	Pos = Engine::GAPI->GetCameraPosition();
 
 	// Check the trans widget
-	float Width = 0.15;
-	float Eps = 0.01;
+	float Width = 0.15f;
+	float Eps = 0.01f;
 
 	
 	D3D11PShader* ColorShader = ((D3D11GraphicsEngineBase *)Engine::GraphicsEngine)->GetShaderManager()->GetPShader("PS_Lines");

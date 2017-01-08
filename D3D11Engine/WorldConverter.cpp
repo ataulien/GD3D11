@@ -1871,7 +1871,7 @@ void WorldConverter::IndexVertices(ExVertexStruct* input, unsigned int numInputV
 	// Check for overlaying triangles and throw them out
 	// Some mods do that for the worldmesh for example
 	std::set<std::tuple<VERTEX_INDEX,VERTEX_INDEX,VERTEX_INDEX>> triangles;
-	for(int i=0;i<outIndices.size();i+=3)
+	for(size_t i=0;i<outIndices.size();i+=3)
 	{
 		// Insert every combination of indices here. Duplicates will be ignored
 		triangles.insert(std::make_tuple(outIndices[i+0], outIndices[i+1], outIndices[i+2]));
@@ -2262,7 +2262,7 @@ void WorldConverter::CreatePNAENInfoFor(SkeletalMeshInfo* mesh, MeshInfo* bindPo
 /** Converts ExVertexStruct into a zCPolygon*-Attay */
 void WorldConverter::ConvertExVerticesTozCPolygons(const std::vector<ExVertexStruct>& vertices, const std::vector<VERTEX_INDEX>& indices, zCMaterial* material, std::vector<zCPolygon *>& polyArray)
 {
-	for(int i=0;i<indices.size();i+=3)
+	for(size_t i=0;i<indices.size();i+=3)
 	{
 		// Create and init polyong
 		zCPolygon* poly = new zCPolygon();

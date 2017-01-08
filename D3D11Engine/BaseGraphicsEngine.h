@@ -47,209 +47,8 @@ struct ViewportInfo
 	float MaxZ;
 };
 
-
-struct PipelineState
-{
-	PipelineState()
-	{
-		ZeroMemory(BaseState.ConstantBuffersPS, sizeof(BaseState.ConstantBuffersPS));
-		ZeroMemory(BaseState.ConstantBuffersVS, sizeof(BaseState.ConstantBuffersVS));
-		ZeroMemory(BaseState.ConstantBuffersHDS, sizeof(BaseState.ConstantBuffersHDS));
-		ZeroMemory(BaseState.ConstantBuffersGS, sizeof(BaseState.ConstantBuffersGS));
-		ZeroMemory(BaseState.VertexBuffers, sizeof(BaseState.VertexBuffers));
-		ZeroMemory(BaseState.StructuredBuffersVS, sizeof(BaseState.StructuredBuffersVS));
-		
-		BaseState.GShaderID = 0xFF;
-		BaseState.HDShaderID = 0xFF;
-		BaseState.VShaderID = 0xFF;
-		BaseState.PShaderID = 0xFF;
-
-		BaseState.TranspacenyMode = 0;
-		BaseState.Depth = 0;
-		BaseState.BlendStateID = 0xFF;
-		BaseState.RasterizerStateID = 0xFF;
-		BaseState.DepthStencilID = 0xFF;
-
-		BaseState.NumIndices = 0;
-		BaseState.NumVertices = 0;
-		BaseState.NumTextures = 0;
-		BaseState.NumInstances = 0;
-		BaseState.BSPSkipState = false;
-		BaseState.InstanceOffset = 0;
-
-		memset(BaseState.TextureIDs, 0xFF, sizeof(BaseState.TextureIDs));
-
-		ZeroMemory(BaseState.VertexStride, sizeof(BaseState.VertexStride));
-		BaseState.IndexOffset = 0;
-		BaseState.DrawCallType = DCT_DrawIndexed;
-
-		SortItem.AssociatedState = this;
-
-		TransientState = false;
-	}
-
-	PipelineState(const PipelineState& s)
-	{
-		BaseState = s.BaseState;
-		SortItem = s.SortItem;
-		SortItem.AssociatedState = this;
-
-		TransientState = s.TransientState;
-	}
-
-	virtual ~PipelineState(){}
-
-	enum EDrawCallType
-	{
-		DCT_DrawTriangleList,
-		DCT_DrawIndexed,
-		DCT_DrawInstanced,
-		DCT_DrawIndexedInstanced
-	};
-
-	enum ETransparencyMode
-	{
-		TM_NONE = 0,
-		TM_MASKED = 1,
-		TM_BLEND = 2
-	};
-
-	/** Called after this state got drawn */
-	void StateWasDrawn()
-	{
-		BaseState.BSPSkipState = false;
-
-		// Free memory if wanted on draw
-		if(TransientState)
-			delete this;
-	}
-
-	struct BaseState_s
-	{
-		/** Sets a constantbuffer to all shaders */
-		void SetCB(int slot, D3D11ConstantBuffer* cb)
-		{
-			ConstantBuffersPS[slot] = cb;
-			ConstantBuffersVS[slot] = cb;
-			ConstantBuffersHDS[slot] = cb;
-			ConstantBuffersGS[slot] = cb;
-		}
-
-		/** If true, this won't be rendered
-			This is a special flag for the BSP-Tree, so that vobs at the border
-			of a node won't be drawn multiple times */
-		bool BSPSkipState;
-
-		// Texture IDs of this state
-		UINT16 TextureIDs[8];
-		byte NumTextures;
-
-		/** Buffers */
-		D3D11ConstantBuffer* ConstantBuffersPS[8];
-		D3D11ConstantBuffer* ConstantBuffersVS[8];
-		D3D11ConstantBuffer* ConstantBuffersHDS[8];
-		D3D11ConstantBuffer* ConstantBuffersGS[8];
-
-		/** Vertex-buffers */
-		D3D11VertexBuffer* VertexBuffers[2];
-		D3D11VertexBuffer* StructuredBuffersVS[1];
-		UINT VertexStride[2];
-		UINT IndexOffset;
-		EDrawCallType DrawCallType;
-		UINT IndexStride;
-
-		UINT NumIndices;
-		UINT NumVertices;
-		UINT NumInstances;
-		UINT InstanceOffset;
-
-		/** Index-buffer */
-		D3D11VertexBuffer* IndexBuffer;
-
-		UINT8 PShaderID;
-		UINT8 VShaderID;
-		UINT8 HDShaderID;
-		UINT8 GShaderID;
-
-		UINT8 TranspacenyMode;
-
-		UINT16 Depth;
-
-		UINT16 BlendStateID;
-		UINT16 RasterizerStateID;
-		UINT16 DepthStencilID;
-	} BaseState;
-
-	struct State {
-		UINT64 Build(const BaseState_s& state)
-		{
-			/*Depth = state.Depth & 0xFFFF;
-			textureID = state.TextureIDs[0] & 0xFFFF;
-			psID = state.PShaderID & 0xFF;
-			vsID = state.VShaderID & 0xFF;
-			blendID = state.BlendStateID & 0xFF;
-			rastID = state.RasterizerStateID & 0xFF;
-			depthStencilID = state.DepthStencilID & 0xFF;
-			transparency = state.TranspacenyMode & 3;
-			vertexBufferID = 0;//state.VertexBuffers[0]->G // TODO
-			padding = 0;*/
-
-			/*UINT64 v =  (transparency & 3 << 62) |
-						(textureID & 0xFF << 46) |
-						(vertexBufferID & 0xF << 38) |
-						(Depth & 0xFFF << 14);
-						//(psID & 0xF << 46) |
-						//(vsID & 0xF << 46) |
-						//(blendID & 0xF << 46) |
-						//(rastID & 0xF << 46) |
-						//(depthStencilID & 0xF << 46);*/
-
-			UINT64 v = 0;//((state.TextureIDs[0] & 0xFFFF) << 32) | ((UINT32)state.VertexBuffers[0]);
-			return v;
-		}
-
-		UINT padding : 6;
-		UINT transparency : 2;
-		UINT textureID : 16;
-
-		UINT vertexBufferID : 8;
-
-		UINT Depth : 24;
-
-		UINT psID : 8;
-		UINT vsID : 8;
-
-		UINT blendID : 8;
-		UINT rastID : 8;
-		UINT depthStencilID : 8;	
-	};
-
-	struct PipelineSortItem
-	{
-		static bool cmp(const PipelineSortItem* x, const PipelineSortItem* y)
-		{
-			return y->stateValue < x->stateValue;
-		}
-
-		UINT64 Build(const BaseState_s& state);
-
-		/** Bitfield to describe the state */
-		UINT64 stateValue;
-
-		/** The state associated with this info */
-		PipelineState* AssociatedState;
-	};
-
-	/** Structure for sorting this using the state-key */
-	PipelineSortItem SortItem;
-
-	/** If true, memory will be freed after this state was drawn */
-	bool TransientState;
-};
-
-
 class zCTexture;
-class ShadowedPointLight;
+class BaseShadowedPointLight;
 
 /** Base graphics engine */
 class BaseGraphicsEngine
@@ -295,7 +94,7 @@ public:
 	virtual XRESULT CreateConstantBuffer(D3D11ConstantBuffer** outCB, void* data, int size) = 0;
 
 	/** Creates a bufferobject for a shadowed point light */
-	virtual XRESULT CreateShadowedPointLight(ShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic = false){return XR_SUCCESS;}
+	virtual XRESULT CreateShadowedPointLight(BaseShadowedPointLight** outPL, VobLightInfo* lightInfo, bool dynamic = false){return XR_SUCCESS;}
 
 	/** Returns a list of available display modes */
 	virtual XRESULT GetDisplayModeList(std::vector<DisplayModeInfo>* modeList, bool includeSuperSampling = false) = 0;
@@ -314,30 +113,6 @@ public:
 
 	/** Draws a vertexarray, used for rendering gothics UI */
 	virtual XRESULT DrawVertexArray(ExVertexStruct* vertices, unsigned int numVertices, unsigned int startVertex = 0, unsigned int stride = sizeof(ExVertexStruct)) = 0;
-
-	/** Fills the associated state object using the given IDs */
-	virtual void FillPipelineStateObject(PipelineState* state){};
-
-	/** Draws a single pipeline-state */
-	virtual void DrawPipelineState(const PipelineState* state){}
-
-	/** Pushes a single pipeline-state into the renderqueue */
-	virtual void PushPipelineState(PipelineState* state){}
-
-	/** Flushes the renderqueue */
-	virtual void FlushRenderQueue(bool sortQueue = true){};
-
-	/** Clears the renderingqueue */
-	virtual void ClearRenderingQueue(){}
-
-	/** Returns the rendering-queue */
-	virtual std::vector<PipelineState::PipelineSortItem*>& GetRenderQueue(){static std::vector<PipelineState::PipelineSortItem*> s; return s;}
-
-	/** Creates a pipeline state */
-	virtual PipelineState* CreatePipelineState(const PipelineState* copy = NULL){return NULL;}
-
-	/** Binds a pipeline-state */
-	virtual void BindPipelineState(const PipelineState* state){}
 
 	/** Puts the current world matrix into a CB and binds it to the given slot */
 	virtual void SetupPerInstanceConstantBuffer(int slot=1){};
@@ -396,9 +171,6 @@ public:
 	
 	/** Returns the data of the backbuffer */
 	virtual void GetBackbufferData(byte** data, int& pixelsize){};
-
-	/** Fills a pipeline-state with the default value for the current stage */
-	virtual void SetupPipelineForStage(int stage, PipelineState* state){};
 
 	/** Returns the textures drawn this frame */
 	virtual const std::set<zCTexture*> GetFrameTextures(){return std::set<zCTexture*>();};

@@ -351,7 +351,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="D3D11TextureArray.h" />
     <ClInclude Include="D3D11VertexBuffer.h" />
     <ClInclude Include="D3D11VShader.h" />
-    <ClInclude Include="D3D11WorldMesh.h" />
     <ClInclude Include="D3D7\FakeDirectDrawSurface7.h" />
     <ClInclude Include="D3D7\MyClipper.h" />
     <ClInclude Include="D3D7\MyDirect3D7.h" />
@@ -365,7 +364,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="GCamera.h" />
     <ClInclude Include="GFSDK_SSAO.h" />
     <ClInclude Include="GInventory.h" />
-    <ClInclude Include="GMaterial.h" />
     <ClInclude Include="GMesh.h" />
     <ClInclude Include="GMeshSimple.h" />
     <ClInclude Include="GOcean.h" />
@@ -378,7 +376,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="GSky.h" />
     <ClInclude Include="GSpriteCloud.h" />
     <ClInclude Include="GVegetationBox.h" />
-    <ClInclude Include="GWorldMesh.h" />
     <ClInclude Include="GothicMemoryLocations2_6_fix_Spacer.h" />
     <ClInclude Include="HookExceptionFilter.h" />
     <ClInclude Include="HookedFunctions.h" />
@@ -393,7 +390,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="oCNPC.h" />
     <ClInclude Include="oCSpawnManager.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="ShadowedPointLight.h" />
+    <ClInclude Include="BaseShadowedPointLight.h" />
     <ClInclude Include="SV_GMeshInfoView.h" />
     <ClInclude Include="squish-1.11\alpha.h" />
     <ClInclude Include="squish-1.11\clusterfit.h" />
@@ -522,7 +519,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11TextureArray.cpp" />
     <ClCompile Include="D3D11Vertexbuffer.cpp" />
     <ClCompile Include="D3D11VShader.cpp" />
-    <ClCompile Include="D3D11WorldMesh.cpp" />
     <ClCompile Include="D3D7\FakeDirectDrawSurface7.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">../pch.h</PrecompiledHeaderFile>
@@ -555,7 +551,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="FileDownloader.cpp" />
     <ClCompile Include="GCamera.cpp" />
     <ClCompile Include="GInventory.cpp" />
-    <ClCompile Include="GMaterial.cpp" />
     <ClCompile Include="GMesh.cpp" />
     <ClCompile Include="GMeshSimple.cpp" />
     <ClCompile Include="GOcean.cpp" />
@@ -563,7 +558,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="GSky.cpp" />
     <ClCompile Include="GSpriteCloud.cpp" />
     <ClCompile Include="GVegetationBox.cpp" />
-    <ClCompile Include="GWorldMesh.cpp" />
     <ClCompile Include="HookedFunctions.cpp" />
     <ClCompile Include="IkarusBindings.cpp" />
     <ClCompile Include="lodepng.cpp">
@@ -595,7 +589,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="ShadowedPointLight.cpp" />
+    <ClCompile Include="BaseShadowedPointLight.cpp" />
     <ClCompile Include="SV_GMeshInfoView.cpp" />
     <ClCompile Include="squish-1.11\alpha.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>

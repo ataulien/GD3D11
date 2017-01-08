@@ -108,30 +108,6 @@ XRESULT D3D11VertexBuffer::UpdateBuffer(void* data, UINT size)
 }
 
 /** Updates the vertexbuffer with the given data */
-XRESULT D3D11VertexBuffer::UpdateBufferDeferred(void* data, UINT size)
-{
-	void* mappedData;
-	UINT bsize;
-
-	if(SizeInBytes < size)
-		size = SizeInBytes;
-
-	if (XR_SUCCESS == MapDeferred(EMapFlags::M_WRITE_DISCARD, &mappedData, &bsize))
-	{
-		if (size)
-			bsize = size;
-		// Copy data
-		memcpy(mappedData, data, bsize);
-
-		UnmapDeferred();
-
-		return XR_SUCCESS;
-	}
-
-	return XR_FAILED;
-}
-
-/** Updates the vertexbuffer with the given data */
 XRESULT D3D11VertexBuffer::UpdateBufferAligned16(void* data, UINT size)
 {
 	void* mappedData;
@@ -174,33 +150,6 @@ XRESULT D3D11VertexBuffer::Unmap()
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	engine->GetContext()->Unmap(VertexBuffer, 0);
-
-	return XR_SUCCESS;
-}
-
-/** Maps the buffer */
-XRESULT D3D11VertexBuffer::MapDeferred(int flags, void** dataPtr, UINT* size)
-{
-	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
-	ID3D11DeviceContext* ctx = engine->GetDeferredContextByThread();
-
-	D3D11_MAPPED_SUBRESOURCE res;
-	if (FAILED(ctx->Map(VertexBuffer, 0, (D3D11_MAP)flags, 0, &res)))
-		return XR_FAILED;
-
-	*dataPtr = res.pData;
-	*size = res.DepthPitch;
-
-	return XR_SUCCESS;
-}
-
-/** Unmaps the buffer */
-XRESULT D3D11VertexBuffer::UnmapDeferred()
-{
-	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
-	ID3D11DeviceContext* ctx = engine->GetDeferredContextByThread();
-
-	ctx->Unmap(VertexBuffer, 0);
 
 	return XR_SUCCESS;
 }
