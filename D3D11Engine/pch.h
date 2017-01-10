@@ -18,6 +18,7 @@
 #include <hash_map>
 #include <hash_set>
 #include <list>
+#include <algorithm>
 
 #include <set>
 #include <signal.h>
