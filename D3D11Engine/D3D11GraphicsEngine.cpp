@@ -4167,7 +4167,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights)
 		{
 			// Create shadowmap in case we should have one but haven't got it yet
 			if(!(*itv)->LightShadowBuffers && (*itv)->UpdateShadows)
-				Engine::GraphicsEngine->CreateShadowedPointLight(&(*itv)->LightShadowBuffers, (*itv));
+				Engine::GraphicsEngine->CreateShadowedPointLight((*itv));
 		
 			if((*itv)->LightShadowBuffers)
 			{

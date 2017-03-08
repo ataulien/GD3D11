@@ -652,7 +652,6 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="GMeshSimple.h" />
-    <ClInclude Include="BaseShadowedPointLight.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -930,7 +929,6 @@
       <Filter>Engine\GAPI</Filter>
     </ClCompile>
     <ClCompile Include="GMeshSimple.cpp" />
-    <ClCompile Include="BaseShadowedPointLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

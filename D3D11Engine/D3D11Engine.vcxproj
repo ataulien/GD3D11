@@ -390,7 +390,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="oCNPC.h" />
     <ClInclude Include="oCSpawnManager.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="BaseShadowedPointLight.h" />
     <ClInclude Include="SV_GMeshInfoView.h" />
     <ClInclude Include="squish-1.11\alpha.h" />
     <ClInclude Include="squish-1.11\clusterfit.h" />
@@ -589,7 +588,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="BaseShadowedPointLight.cpp" />
     <ClCompile Include="SV_GMeshInfoView.cpp" />
     <ClCompile Include="squish-1.11\alpha.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">NotUsing</PrecompiledHeader>

@@ -530,6 +530,7 @@ void GothicAPI::ResetVobs()
 	for(std::unordered_map<zCVobLight*, VobLightInfo*>::iterator it = VobLightMap.begin(); it != VobLightMap.end(); it++)
 	{
 		Engine::GraphicsEngine->OnVobRemovedFromWorld((*it).first);
+		Engine::GraphicsEngine->DeleteShadowedPointLight((*it).second);
 		delete (*it).second;
 	}
 	VobLightMap.clear();
@@ -3347,7 +3348,7 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 
 							// Create shadow-buffers for these lights since it was dynamically added to the world
 							if(RendererState.RendererSettings.EnablePointlightShadows >= GothicRendererSettings::PLS_STATIC_ONLY)
-								Engine::GraphicsEngine->CreateShadowedPointLight(&(*vi)->LightShadowBuffers, *vi, true); // Also flag as dynamic
+								Engine::GraphicsEngine->CreateShadowedPointLight(*vi, true); // Also flag as dynamic
 						}
 
 						if(!(*vi)->VisibleInRenderPass && (*vi)->Vob->IsEnabled())
@@ -3513,7 +3514,7 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 						&& vi->Vob->GetLightRange() > minDynamicUpdateLightRange)
 					{
 						// Create shadowcubemap, if wanted
-						Engine::GraphicsEngine->CreateShadowedPointLight(&vi->LightShadowBuffers, vi);
+						Engine::GraphicsEngine->CreateShadowedPointLight(vi);
 					}
 
 					if(((zCVob *)vi->Vob)->GetGroundPoly() && ((zCVob *)vi->Vob)->GetGroundPoly()->GetLightmap())
