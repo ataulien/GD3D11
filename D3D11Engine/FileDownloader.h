@@ -24,42 +24,42 @@ typedef void (__cdecl* DownloadProgressCallback)(FileDownloader*, void*, Downloa
 
 class DownloadProgress : public IBindStatusCallback {
 public:
-	HRESULT __stdcall QueryInterface(const IID &,void **) { 
+	HRESULT __stdcall QueryInterface(const IID &,void **) override { 
 		return E_NOINTERFACE;
 	}
-	ULONG STDMETHODCALLTYPE AddRef(void) { 
+	ULONG STDMETHODCALLTYPE AddRef(void) override { 
 		return 1;
 	}
-	ULONG STDMETHODCALLTYPE Release(void) {
+	ULONG STDMETHODCALLTYPE Release(void) override {
 		return 1;
 	}
-	HRESULT STDMETHODCALLTYPE OnStartBinding(DWORD dwReserved, IBinding *pib) {
+	HRESULT STDMETHODCALLTYPE OnStartBinding(DWORD dwReserved, IBinding *pib) override {
 
 		lastProgress = 0;
 		lastProgressMax = 0;
 		isDone = false;
 		return E_NOTIMPL;
 	}
-	virtual HRESULT STDMETHODCALLTYPE GetPriority(LONG *pnPriority) {
+	virtual HRESULT STDMETHODCALLTYPE GetPriority(LONG *pnPriority) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT STDMETHODCALLTYPE OnLowResource(DWORD reserved) {
+	virtual HRESULT STDMETHODCALLTYPE OnLowResource(DWORD reserved) override {
 		return S_OK;
 	}
-	virtual HRESULT STDMETHODCALLTYPE OnStopBinding(HRESULT hresult, LPCWSTR szError) {
+	virtual HRESULT STDMETHODCALLTYPE OnStopBinding(HRESULT hresult, LPCWSTR szError) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT STDMETHODCALLTYPE GetBindInfo(DWORD *grfBINDF, BINDINFO *pbindinfo) {
+	virtual HRESULT STDMETHODCALLTYPE GetBindInfo(DWORD *grfBINDF, BINDINFO *pbindinfo) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT STDMETHODCALLTYPE OnDataAvailable(DWORD grfBSCF, DWORD dwSize, FORMATETC *pformatetc, STGMEDIUM *pstgmed) {
+	virtual HRESULT STDMETHODCALLTYPE OnDataAvailable(DWORD grfBSCF, DWORD dwSize, FORMATETC *pformatetc, STGMEDIUM *pstgmed) override {
 		return E_NOTIMPL;
 	}        
-	virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable(REFIID riid, IUnknown *punk) {
+	virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable(REFIID riid, IUnknown *punk) override {
 		return E_NOTIMPL;
 	}
 
-	virtual HRESULT __stdcall OnProgress(ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText);
+	HRESULT __stdcall OnProgress(ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText) override;
 
 
 	bool isDone;

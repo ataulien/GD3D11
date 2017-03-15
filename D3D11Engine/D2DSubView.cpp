@@ -97,11 +97,11 @@ void D2DSubView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 	// Draw children
 	for(std::list<D2DSubView*>::iterator it = Children.begin();it != Children.end();it++)
 	{
-		D2D1_RECT_F cr;
-		cr.left = clientRectAbs.left + (*it)->GetRect().left;
-		cr.top = clientRectAbs.top + (*it)->GetRect().top;
-		cr.right = clientRectAbs.left + (*it)->GetRect().right;
-		cr.bottom = clientRectAbs.top + (*it)->GetRect().bottom;
+		//D2D1_RECT_F cr;
+		//cr.left = clientRectAbs.left + (*it)->GetRect().left;
+		//cr.top = clientRectAbs.top + (*it)->GetRect().top;
+		//cr.right = clientRectAbs.left + (*it)->GetRect().right;
+		//cr.bottom = clientRectAbs.top + (*it)->GetRect().bottom;
 
 		//MainView->GetRenderTarget()->SetTransform(D2D1::Matrix3x2F::Translation(clientRectAbs.left,clientRectAbs.top));
 

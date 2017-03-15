@@ -20,16 +20,16 @@ public:
 	void RenderCubemap(bool forceUpdate = false);
 
 	/** Binds the shadowmap to the pixelshader */
-	void OnRenderLight();
+	void OnRenderLight() const;
 
 	/** Debug-draws the cubemap to the screen */
-	void DebugDrawCubeMap();
+	void DebugDrawCubeMap() const;
 
 	/** Returns if this light needs an update */
 	bool NeedsUpdate();
 
 	/** Returns true if the light could need an update, but it's not very important */
-	bool WantsUpdate();
+	bool WantsUpdate() const;
 
 	/** Returns true if this is the first time that light is being rendered */
 	bool NotYetDrawn();
@@ -39,7 +39,7 @@ public:
 
 protected:
 	/** Renders the scene with the given view-proj-matrices */
-	void RenderCubemapFace(const D3DXMATRIX& view, const D3DXMATRIX& proj, UINT faceIdx);
+	void RenderCubemapFace(const D3DXMATRIX& view, const D3DXMATRIX& proj, UINT faceIdx) const;
 
 	/** Renders all cubemap faces at once, using the geometry shader */
 	void RenderFullCubemap();

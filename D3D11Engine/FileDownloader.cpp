@@ -93,7 +93,7 @@ void FileDownloader::DownloadThreadFunc(FileDownloader* dl, const std::string& u
 	DeleteUrlCacheEntry(url.c_str());
 
 	// Start download
-	HRESULT hr = URLDownloadToFile(NULL, url.c_str(), targetFile.c_str(), 0, &dl->Progress);
+	HRESULT hr = URLDownloadToFile(nullptr, url.c_str(), targetFile.c_str(), 0, &dl->Progress);
 
 	if(FAILED(hr))
 	{
@@ -107,7 +107,7 @@ void FileDownloader::DownloadThreadFunc(FileDownloader* dl, const std::string& u
 	info.ulProgress = 0;
 	info.ulProgressMax = 0;
 	info.ulStatusCode = 0;
-	info.szStatusText = 0;
+	info.szStatusText = nullptr;
 	info.targetFile = targetFile;
 
 	dl->Progress.isDone = true;

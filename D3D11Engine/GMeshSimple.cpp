@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "GMeshSimple.h"
-#include "assimp--3.0.1270-sdk\include\assimp\Importer.hpp"
-#include "assimp--3.0.1270-sdk\include\assimp\scene.h"
-#include "assimp--3.0.1270-sdk\include\assimp\postprocess.h"
-#include "assimp--3.0.1270-sdk\include\assimp\material.h"
+#include "assimp--3.0.1270-sdk/include/assimp/Importer.hpp"
+#include "assimp--3.0.1270-sdk/include/assimp/scene.h"
+#include "assimp--3.0.1270-sdk/include/assimp/postprocess.h"
+#include "assimp--3.0.1270-sdk/include/assimp/material.h"
 #include "Engine.h"
 #include "BaseGraphicsEngine.h"
 #include "GothicAPI.h"
@@ -15,8 +15,8 @@ using namespace Assimp;
 
 GMeshSimple::GMeshSimple(void)
 {
-	VertexBuffer = NULL;
-	IndexBuffer = NULL;
+	VertexBuffer = nullptr;
+	IndexBuffer = nullptr;
 }
 
 
@@ -122,13 +122,13 @@ XRESULT GMeshSimple::LoadMesh(const std::string& file)
 }
 
 /** Draws all buffers this holds */
-void GMeshSimple::DrawMesh()
+void GMeshSimple::DrawMesh() const
 {
 	Engine::GraphicsEngine->DrawVertexBufferIndexed(VertexBuffer, IndexBuffer, NumIndices);
 }
 
 /** Draws a batch of instances */
-void GMeshSimple::DrawBatch(D3D11VertexBuffer* instances, int numInstances, int instanceDataStride)
+void GMeshSimple::DrawBatch(D3D11VertexBuffer* instances, int numInstances, int instanceDataStride) const
 {
 	Engine::GraphicsEngine->DrawInstanced(VertexBuffer, IndexBuffer, NumIndices, instances, instanceDataStride, numInstances, sizeof(SimpleObjectVertexStruct));
 }

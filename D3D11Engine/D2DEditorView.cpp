@@ -49,16 +49,16 @@ D2DEditorView::D2DEditorView(D2DView* view, D2DSubView* parent) : D2DSubView(vie
 
 	Selection.Reset();
 
-	MPrevCursor = NULL;
-	TracedMesh = NULL;
-	TracedMaterial = NULL;
-	TracedVobInfo = NULL;
-	TracedSkeletalVobInfo = NULL;
+	MPrevCursor = nullptr;
+	TracedMesh = nullptr;
+	TracedMaterial = nullptr;
+	TracedVobInfo = nullptr;
+	TracedSkeletalVobInfo = nullptr;
 	CPitch = 0.0f;
 	CYaw = 0.0f;
 	VegLastUniformScale = 1.0f;
 
-	TracedVegetationBox = NULL;
+	TracedVegetationBox = nullptr;
 
 	CStartMousePosition.x = CStartMousePosition.y = 0;
 	MMovedAfterClick = false;
@@ -363,11 +363,11 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 	{
 #ifdef PUBLIC_RELEASE
 		if(deltaTime == 0.0f) // Don't show it in menus
-			p.x = -(MainPanel->GetSize().width + 50.0f);
+			//p.x = -(MainPanel->GetSize().width + 50.0f);
 		else
 #endif
 		{
-			p.x = Toolbox::lerp(MainPanel->GetPosition().x, -(MainPanel->GetSize().width + 50.0f), std::min(deltaTime * 5.0f, 1.0f));
+			//p.x = Toolbox::lerp(MainPanel->GetPosition().x, -(MainPanel->GetSize().width + 50.0f), std::min(deltaTime * 5.0f, 1.0f));
 			SetHidden(GetRect().right < 0);
 			Parent->SetHidden(IsHidden());
 		}
@@ -484,7 +484,7 @@ void D2DEditorView::DoVegetationRemove()
 
 	if(Selection.SelectedVegetationBox)
 	{
-		if(Engine::GAPI->TraceWorldMesh(Engine::GAPI->GetCameraPosition(), wDir, hit, NULL, hitTri))
+		if(Engine::GAPI->TraceWorldMesh(Engine::GAPI->GetCameraPosition(), wDir, hit, nullptr, hitTri))
 		{
 			D3DXVECTOR4 p;
 			D3DXVec3Cross((D3DXVECTOR3 *)&p, &(hitTri[1] - hitTri[0]), &(hitTri[2] - hitTri[0]));
@@ -502,7 +502,7 @@ void D2DEditorView::DoVegetationRemove()
 				if(Selection.SelectedVegetationBox->IsEmpty())
 				{
 					Engine::GAPI->RemoveVegetationBox(Selection.SelectedVegetationBox);
-					Selection.SelectedVegetationBox = NULL;
+					Selection.SelectedVegetationBox = nullptr;
 				}
 
 				c = D3DXVECTOR4(1,0,0,1);
@@ -526,7 +526,7 @@ void D2DEditorView::DoVegetationPlacement()
 	TracedTexture = "";
 
 	// Check for restricted by texture
-	std::string* rtp = NULL;
+	std::string* rtp = nullptr;
 	if(VegRestrictByTextureCheckBox->GetChecked())
 		rtp = &TracedTexture;
 
@@ -554,7 +554,7 @@ GVegetationBox* D2DEditorView::FindVegetationFromMeshInfo(MeshInfo* info)
 			return (*it);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
@@ -566,15 +566,15 @@ void D2DEditorView::DoSelection()
 	D3DXVECTOR3 hitVob(FLT_MAX,FLT_MAX,FLT_MAX), hitSkel(FLT_MAX,FLT_MAX,FLT_MAX), hitWorld(FLT_MAX,FLT_MAX,FLT_MAX);
 	D3DXVECTOR3 hitTri[3];
 	MeshInfo* hitMesh;
-	zCMaterial* hitMaterial = NULL, *hitMaterialVob = NULL;
+	zCMaterial* hitMaterial = nullptr, *hitMaterialVob = nullptr;
 	TracedTexture = "";
 
-	VobInfo* tVob = NULL;
-	SkeletalVobInfo* tSkelVob = NULL;
+	VobInfo* tVob = nullptr;
+	SkeletalVobInfo* tSkelVob = nullptr;
 
-	TracedSkeletalVobInfo = NULL;
-	TracedVobInfo = NULL;
-	TracedMaterial = NULL;
+	TracedSkeletalVobInfo = nullptr;
+	TracedVobInfo = nullptr;
+	TracedMaterial = nullptr;
 
 	// Trace mesh-less vegetationboxes
 	TracedVegetationBox = TraceVegetationBoxes(Engine::GAPI->GetCameraPosition(), wDir);
@@ -842,7 +842,7 @@ void D2DEditorView::OnMouseClick(int button)
 
 				// Trick the slider into not updating the just selected volume
 				float d = Selection.SelectedVegetationBox->GetDensity();
-				Selection.SelectedVegetationBox = NULL;
+				Selection.SelectedVegetationBox = nullptr;
 				SelectedVegAmountSlider->SetValue(d);
 				Selection.SelectedVegetationBox = TracedVegetationBox;
 			}else // Vegetation has priority over mesh
@@ -899,7 +899,7 @@ void D2DEditorView::UpdateSelectionPanel()
 		if(Selection.SelectedMaterial)
 			mi = Engine::GAPI->GetMaterialInfoFrom(Selection.SelectedMaterial->GetTexture());
 		else
-			mi = NULL;
+			mi = nullptr;
 
 		// Get settings from MI, if possible
 		if(mi)
@@ -949,7 +949,7 @@ void D2DEditorView::ResetEditorCamera()
 void D2DEditorView::DoEditorMovement()
 {
 	// Hide cursor
-	SetCursor(NULL);
+	SetCursor(nullptr);
 
 	// Get current cursor pos
 	POINT p; GetCursorPos(&p);
@@ -1170,7 +1170,7 @@ bool D2DEditorView::OnWindowMessage(HWND hWnd, unsigned int msg, WPARAM wParam, 
 			MMovedAfterClick = true;
 
 			// Hide cursor during movement
-			MPrevCursor = SetCursor(NULL);
+			MPrevCursor = SetCursor(nullptr);
 
 			//if(Mode != EM_???)
 			{
@@ -1235,7 +1235,7 @@ void D2DEditorView::OnDelete()
 		// Delete all attachments to this mesh
 		Engine::GAPI->RemoveVegetationBox(Selection.SelectedVegetationBox);
 
-		Selection.SelectedVegetationBox = NULL;
+		Selection.SelectedVegetationBox = nullptr;
 		return;
 	}
 
@@ -1276,7 +1276,7 @@ void D2DEditorView::AddVegButtonPressed(SV_Button* sender, void* userdata)
 GVegetationBox* D2DEditorView::TraceVegetationBoxes(const D3DXVECTOR3& wPos, const D3DXVECTOR3& wDir)
 {
 	float nearest = FLT_MAX;
-	GVegetationBox* b = NULL;
+	GVegetationBox* b = nullptr;
 
 	for(std::list<GVegetationBox *>::const_iterator it = Engine::GAPI->GetVegetationBoxes().begin(); it != Engine::GAPI->GetVegetationBoxes().end();it++)
 	{
@@ -1324,7 +1324,7 @@ void D2DEditorView::FillVegButtonPressed(SV_Button* sender, void* userdata)
 /** Tab in main tab-control was switched */
 void D2DEditorView::MainTabSwitched(SV_TabControl* sender, void* userdata)
 {
-	D2DEditorView* v = (D2DEditorView *)userdata;
+	//D2DEditorView* v = (D2DEditorView *)userdata;
 
 	//v->SetEditorMode(D2DEditorView::EM_SELECT_POLY);
 
@@ -1551,15 +1551,15 @@ void D2DEditorView::SmoothMesh(WorldMeshInfo* mesh, bool tesselate)
 /** Called when a vob was removed from the world */
 XRESULT D2DEditorView::OnVobRemovedFromWorld(zCVob* vob)
 {
-	bool reset = false;
+	//bool reset = false;
 	if(TracedSkeletalVobInfo && TracedSkeletalVobInfo->Vob == vob)
 	{
-		TracedSkeletalVobInfo = NULL;
+		TracedSkeletalVobInfo = nullptr;
 	}
 
 	if(TracedVobInfo && TracedVobInfo->Vob == vob)
 	{
-		TracedVobInfo = NULL;
+		TracedVobInfo = nullptr;
 	}
 
 	if( (Selection.SelectedSkeletalVob && Selection.SelectedSkeletalVob->Vob == vob) ||

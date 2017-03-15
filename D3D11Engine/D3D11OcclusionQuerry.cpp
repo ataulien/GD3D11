@@ -30,7 +30,7 @@ unsigned int D3D11OcclusionQuerry::AddPredicationObject()
 	D3D11GraphicsEngine* g = (D3D11GraphicsEngine *)Engine::GraphicsEngine;
 
 	HRESULT hr;
-	ID3D11Predicate* p = NULL;
+	ID3D11Predicate* p = nullptr;
 
 	// Create new predication-object
 	D3D11_QUERY_DESC qd;
@@ -114,7 +114,7 @@ void D3D11OcclusionQuerry::DoOcclusionForBSP(BspInfo* root)
 
 		// Check if there is data available from the last query
 		if( root->OcclusionInfo.LastVisitedFrameID != 0 && // Always do the first query
-			S_OK != g->GetContext()->GetData(p, NULL, 0, D3D11_ASYNC_GETDATA_DONOTFLUSH))
+			S_OK != g->GetContext()->GetData(p, nullptr, 0, D3D11_ASYNC_GETDATA_DONOTFLUSH))
 		{
 			c = D3DXVECTOR4(0,0,1,1);
 
@@ -182,9 +182,9 @@ void D3D11OcclusionQuerry::BeginOcclusionPass()
 	g->SetupVS_ExConstantBuffer();
 
 	// Unbind not needed shaders
-	g->GetContext()->PSSetShader(NULL, NULL, NULL);
-	g->GetContext()->HSSetShader(NULL, NULL, NULL);
-	g->GetContext()->DSSetSamplers(NULL, NULL, NULL);
+	g->GetContext()->PSSetShader(nullptr, nullptr, NULL);
+	g->GetContext()->HSSetShader(nullptr, nullptr, NULL);
+	g->GetContext()->DSSetSamplers(NULL, NULL, nullptr);
 }
 
 /** Ends the occlusion-checks */
@@ -273,7 +273,7 @@ void D3D11OcclusionQuerry::DebugVisualizeNodeMesh(MeshInfo* m, const D3DXVECTOR4
 }
 
 /** Marks the entire subtree visible */
-void D3D11OcclusionQuerry::MarkTreeVisible(BspInfo* root, bool visible)
+void D3D11OcclusionQuerry::MarkTreeVisible(BspInfo* root, bool visible) const
 {
 	if(!root || !root->OriginalNode)
 		return;

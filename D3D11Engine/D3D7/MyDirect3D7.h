@@ -43,7 +43,7 @@ public:
         HRESULT hr = S_OK;
 
         if (SUCCEEDED(hr)) {
-            *lplpD3DDevice = new MyDirect3DDevice7(this, NULL);
+            *lplpD3DDevice = new MyDirect3DDevice7(this, nullptr);
         }
 
         return hr;

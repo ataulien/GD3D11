@@ -73,11 +73,11 @@ namespace Engine
 	{
 		LogInfo() << "Shutting down...";
 
-		delete Engine::RenderingThreadPool; Engine::RenderingThreadPool = NULL;
-		delete Engine::AntTweakBar;	Engine::AntTweakBar = NULL;
-		delete Engine::GAPI; Engine::GAPI = NULL;
-		delete Engine::GraphicsEngine; Engine::GraphicsEngine = NULL;
-		delete Engine::WorkerThreadPool; Engine::WorkerThreadPool = NULL;
+		delete Engine::RenderingThreadPool; Engine::RenderingThreadPool = nullptr;
+		delete Engine::AntTweakBar;	Engine::AntTweakBar = nullptr;
+		delete Engine::GAPI; Engine::GAPI = nullptr;
+		delete Engine::GraphicsEngine; Engine::GraphicsEngine = nullptr;
+		delete Engine::WorkerThreadPool; Engine::WorkerThreadPool = nullptr;
 	}
 
 };

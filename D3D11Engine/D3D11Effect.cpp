@@ -12,7 +12,6 @@
 #include "GSky.h"
 #include <D3DX9.h>
 #include <D3DX11.h>
-#include <D3DX11tex.h>
 #include "RenderToTextureBuffer.h"
 
 // TODO: Remove this!
@@ -20,12 +19,12 @@
 
 D3D11Effect::D3D11Effect(void)
 {
-	RainBufferDrawFrom = NULL;
-	RainBufferStreamTo = NULL;
-	RainBufferInitial = NULL;
-	RainShadowmap = NULL;
-	RainTextureArray = NULL;
-	RainTextureArraySRV = NULL;
+	RainBufferDrawFrom = nullptr;
+	RainBufferStreamTo = nullptr;
+	RainBufferInitial = nullptr;
+	RainShadowmap = nullptr;
+	RainTextureArray = nullptr;
+	RainTextureArraySRV = nullptr;
 }
 
 
@@ -44,7 +43,7 @@ D3D11Effect::~D3D11Effect(void)
 HRESULT LoadTextureArray( ID3D11Device* pd3dDevice, ID3D11DeviceContext* context, char* sTexturePrefix, int iNumTextures, ID3D11Texture2D** ppTex2D, ID3D11ShaderResourceView** ppSRV);
 
 /** Fills a vector of random raindrop data */
-void D3D11Effect::FillRandomRaindropData(std::vector<ParticleInstanceInfo>& data)
+void D3D11Effect::FillRandomRaindropData(std::vector<ParticleInstanceInfo>& data) const
 {
 	/** Base taken from Nvidias Rain-Sample **/
 
@@ -158,14 +157,14 @@ XRESULT D3D11Effect::DrawRain()
 		if(!RainShadowmap)
 		{
 			const int s = 2048;
-			RainShadowmap = new RenderToDepthStencilBuffer(e->GetDevice(), s, s, DXGI_FORMAT_R32_TYPELESS, NULL, DXGI_FORMAT_D32_FLOAT, DXGI_FORMAT_R32_FLOAT);
+			RainShadowmap = new RenderToDepthStencilBuffer(e->GetDevice(), s, s, DXGI_FORMAT_R32_TYPELESS, nullptr, DXGI_FORMAT_D32_FLOAT, DXGI_FORMAT_R32_FLOAT);
 		}
 	}
 
 	lastHeight = state.RendererSettings.RainHeightRange;
 	lastRadius = state.RendererSettings.RainRadiusRange;
 
-	D3D11VertexBuffer* b = NULL;
+	D3D11VertexBuffer* b = nullptr;
 
 	// Use initial-data if we don't have something in the stream-buffers yet
 	if(firstFrame || state.RendererSettings.RainUseInitialSet || Engine::GAPI->IsGamePaused())
@@ -211,8 +210,8 @@ XRESULT D3D11Effect::DrawRain()
 	e->GetContext()->Draw(numParticles, 0);
 
 	// Unset streamout target
-	bobjStream = NULL;
-	e->GetContext()->SOSetTargets(1, &bobjStream, 0);
+	bobjStream = nullptr;
+	e->GetContext()->SOSetTargets(1, &bobjStream, nullptr);
 
 	// Swap buffers
 	std::swap(RainBufferDrawFrom, RainBufferStreamTo);
@@ -269,7 +268,7 @@ XRESULT D3D11Effect::DrawRain()
 
 	// Reset this
 	e->GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	e->GetContext()->GSSetShader(NULL, 0, 0);
+	e->GetContext()->GSSetShader(nullptr, nullptr, 0);
 
 	e->SetDefaultStates();
 	return XR_SUCCESS;
@@ -343,7 +342,7 @@ XRESULT D3D11Effect::DrawRainShadowmap()
 	e->SetDefaultStates();
 
 	// Restore gothics camera
-	Engine::GAPI->SetCameraReplacementPtr(NULL);
+	Engine::GAPI->SetCameraReplacementPtr(nullptr);
 
 	return XR_SUCCESS;
 }
@@ -364,7 +363,7 @@ HRESULT LoadTextureArray( ID3D11Device* pd3dDevice, ID3D11DeviceContext* context
 	{
 		sprintf(str, "%s%.4d.dds", sTexturePrefix, i); 
 
-		ID3D11Resource *pRes = NULL;
+		ID3D11Resource *pRes = nullptr;
 		D3DX11_IMAGE_LOAD_INFO loadInfo;
 		ZeroMemory( &loadInfo, sizeof( D3DX11_IMAGE_LOAD_INFO ) );
 		loadInfo.Width = D3DX_FROM_FILE;
@@ -410,7 +409,7 @@ HRESULT LoadTextureArray( ID3D11Device* pd3dDevice, ID3D11DeviceContext* context
 
 				context->UpdateSubresource(		(*ppTex2D), 
 					D3D11CalcSubresource( iMip, i, desc.MipLevels ),
-					NULL,
+					nullptr,
 					mappedTex2D.pData,
 					mappedTex2D.RowPitch,
 					0 );

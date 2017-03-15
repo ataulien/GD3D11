@@ -20,8 +20,8 @@ D3D11PointLight::D3D11PointLight(VobLightInfo* info, bool dynamicLight)
 
 	LastUpdatePosition = LightInfo->Vob->GetPositionWorld();
 
-	DepthCubemap = NULL;
-	ViewMatricesCB = NULL;
+	DepthCubemap = nullptr;
+	ViewMatricesCB = nullptr;
 
 	if(!dynamicLight)
 	{
@@ -69,13 +69,13 @@ void D3D11PointLight::InitResources()
 		POINTLIGHT_SHADOWMAP_SIZE,
 		POINTLIGHT_SHADOWMAP_SIZE,
 		DXGI_FORMAT_R32_TYPELESS,
-		NULL,
+		nullptr,
 		DXGI_FORMAT_D32_FLOAT,
 		DXGI_FORMAT_R32_FLOAT,
 		6);
 
 	// Create constantbuffer for the view-matrices
-	engine->CreateConstantBuffer(&ViewMatricesCB, NULL, sizeof(CubemapGSConstantBuffer));
+	engine->CreateConstantBuffer(&ViewMatricesCB, nullptr, sizeof(CubemapGSConstantBuffer));
 
 	// Generate worldmesh cache if we aren't a dynamically added light
 	if(!DynamicLight)
@@ -111,7 +111,7 @@ bool D3D11PointLight::NeedsUpdate()
 }
 
 /** Returns true if the light could need an update, but it's not very important */
-bool D3D11PointLight::WantsUpdate()
+bool D3D11PointLight::WantsUpdate() const
 {
 	// If dynamic, update colorchanging lights too, because they are mostly lamps and campfires
 	// They wouldn't need an update just because of the colorchange, but most of them are dominant lights so it looks better
@@ -146,8 +146,8 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
 		vEyePt.z += (float4(LastUpdateColor).y - 0.5f) * LIGHT_COLORCHANGE_POS_MOD;
 	}*/
 
-    D3DXVECTOR3 vLookDir;
-    D3DXVECTOR3 vUpDir;
+	D3DXVECTOR3 vLookDir;
+	D3DXVECTOR3 vUpDir;
 
 	if(!NeedsUpdate() && !WantsUpdate())
 	{
@@ -176,30 +176,30 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
 	const bool dbg = false;
 
 	// Generate cubemap view-matrices
-    vLookDir = D3DXVECTOR3( 1.0f, 0.0f, 0.0f ) + vEyePt;
-    vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+	vLookDir = D3DXVECTOR3( 1.0f, 0.0f, 0.0f ) + vEyePt;
+	vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
 	if(dbg)Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(vEyePt, float4(1.0f,0,0,1)), LineVertex((vLookDir - vEyePt) * 50.0f + vEyePt, float4(1.0f,1.0f,0,1)));
-    D3DXMatrixLookAtLH( &CubeMapViewMatrices[0], &vEyePt, &vLookDir, &vUpDir );
-    vLookDir = D3DXVECTOR3( -1.0f, 0.0f, 0.0f ) + vEyePt;
-    vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+	D3DXMatrixLookAtLH( &CubeMapViewMatrices[0], &vEyePt, &vLookDir, &vUpDir );
+	vLookDir = D3DXVECTOR3( -1.0f, 0.0f, 0.0f ) + vEyePt;
+	vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
 	if(dbg)Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(vEyePt, float4(1.0f,0,0,1)), LineVertex((vLookDir - vEyePt) * 50.0f + vEyePt, float4(1.0f,1.0f,0,1)));
-    D3DXMatrixLookAtLH( &CubeMapViewMatrices[1], &vEyePt, &vLookDir, &vUpDir );
-    vLookDir = D3DXVECTOR3( 0.0f, 0.0f + 1.0f, 0.0f ) + vEyePt;
-    vUpDir = D3DXVECTOR3( 0.0f, 0.0f, -1.0f );
+	D3DXMatrixLookAtLH( &CubeMapViewMatrices[1], &vEyePt, &vLookDir, &vUpDir );
+	vLookDir = D3DXVECTOR3( 0.0f, 0.0f + 1.0f, 0.0f ) + vEyePt;
+	vUpDir = D3DXVECTOR3( 0.0f, 0.0f, -1.0f );
 	if(dbg)Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(vEyePt, float4(1.0f,0,0,1)), LineVertex((vLookDir - vEyePt) * 50.0f + vEyePt, float4(1.0f,1.0f,0,1)));
-    D3DXMatrixLookAtLH( &CubeMapViewMatrices[2], &vEyePt, &vLookDir, &vUpDir );
-    vLookDir = D3DXVECTOR3( 0.0f, 0.0f - 1.0f, 0.0f ) + vEyePt;
-    vUpDir = D3DXVECTOR3( 0.0f, 0.0f, 1.0f );
+	D3DXMatrixLookAtLH( &CubeMapViewMatrices[2], &vEyePt, &vLookDir, &vUpDir );
+	vLookDir = D3DXVECTOR3( 0.0f, 0.0f - 1.0f, 0.0f ) + vEyePt;
+	vUpDir = D3DXVECTOR3( 0.0f, 0.0f, 1.0f );
 	if(dbg)Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(vEyePt, float4(1.0f,0,0,1)), LineVertex((vLookDir - vEyePt) * 50.0f + vEyePt, float4(1.0f,1.0f,0,1)));
-    D3DXMatrixLookAtLH( &CubeMapViewMatrices[3], &vEyePt, &vLookDir, &vUpDir );
-    vLookDir = D3DXVECTOR3( 0.0f, 0.0f, 1.0f ) + vEyePt;
-    vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+	D3DXMatrixLookAtLH( &CubeMapViewMatrices[3], &vEyePt, &vLookDir, &vUpDir );
+	vLookDir = D3DXVECTOR3( 0.0f, 0.0f, 1.0f ) + vEyePt;
+	vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
 	if(dbg)Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(vEyePt, float4(1.0f,0,0,1)), LineVertex((vLookDir - vEyePt) * 50.0f + vEyePt, float4(1.0f,1.0f,0,1)));
-    D3DXMatrixLookAtLH( &CubeMapViewMatrices[4], &vEyePt, &vLookDir, &vUpDir );
-    vLookDir = D3DXVECTOR3( 0.0f, 0.0f, -1.0f ) + vEyePt;
-    vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+	D3DXMatrixLookAtLH( &CubeMapViewMatrices[4], &vEyePt, &vLookDir, &vUpDir );
+	vLookDir = D3DXVECTOR3( 0.0f, 0.0f, -1.0f ) + vEyePt;
+	vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
 	if(dbg)Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(vEyePt, float4(1.0f,0,0,1)), LineVertex((vLookDir - vEyePt) * 50.0f + vEyePt, float4(1.0f,1.0f,0,1)));
-    D3DXMatrixLookAtLH( &CubeMapViewMatrices[5], &vEyePt, &vLookDir, &vUpDir );
+	D3DXMatrixLookAtLH( &CubeMapViewMatrices[5], &vEyePt, &vLookDir, &vUpDir );
 
 	for(int i=0;i<6;i++)
 		D3DXMatrixTranspose(&CubeMapViewMatrices[i], &CubeMapViewMatrices[i]);
@@ -207,7 +207,7 @@ void D3D11PointLight::RenderCubemap(bool forceUpdate)
 	// Create the projection matrix
 	float zNear = 15.0f;
 	float zFar = LightInfo->Vob->GetLightRange() * 2.0f;
-    D3DXMatrixPerspectiveFovLH( &proj, ((float)D3DX_PI * 0.5f), 1.0f, zNear, zFar );
+	D3DXMatrixPerspectiveFovLH( &proj, ((float)D3DX_PI * 0.5f), 1.0f, zNear, zFar );
 	D3DXMatrixTranspose(&proj, &proj);
 
 	// Setup near/far-planes. We need linear viewspace depth for the cubic shadowmaps.
@@ -268,15 +268,15 @@ void D3D11PointLight::RenderFullCubemap()
 
 	// Don't use the cache if we have moved
 	if(WorldCacheInvalid)
-		wc = NULL;
+		wc = nullptr;
 
-	engine->RenderShadowCube(LightInfo->Vob->GetPositionWorld(), range, DepthCubemap, NULL, NULL, false, LightInfo->IsIndoorVob, noNPCs, &VobCache, &SkeletalVobCache, wc);
+	engine->RenderShadowCube(LightInfo->Vob->GetPositionWorld(), range, DepthCubemap, nullptr, nullptr, false, LightInfo->IsIndoorVob, noNPCs, &VobCache, &SkeletalVobCache, wc);
 
 	//Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes = oldDrawSkel;
 }
 
 /** Renders the scene with the given view-proj-matrices */
-void D3D11PointLight::RenderCubemapFace(const D3DXMATRIX& view, const D3DXMATRIX& proj, UINT faceIdx)
+void D3D11PointLight::RenderCubemapFace(const D3DXMATRIX& view, const D3DXMATRIX& proj, UINT faceIdx) const
 {
 	D3D11GraphicsEngineBase* engineBase = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 	D3D11GraphicsEngine* engine = (D3D11GraphicsEngine *) engineBase; // TODO: Remove and use newer system!
@@ -299,17 +299,17 @@ void D3D11PointLight::RenderCubemapFace(const D3DXMATRIX& view, const D3DXMATRIX
 	float range = LightInfo->Vob->GetLightRange() * 1.1f;
 
 	// Draw cubemap face
-	ID3D11RenderTargetView* debugRTV = engine->GetDummyCubeRT() != NULL ? engine->GetDummyCubeRT()->GetRTVCubemapFace(faceIdx) : NULL;
+	ID3D11RenderTargetView* debugRTV = engine->GetDummyCubeRT() != nullptr ? engine->GetDummyCubeRT()->GetRTVCubemapFace(faceIdx) : nullptr;
 	engine->RenderShadowCube(cr.PositionReplacement, range, DepthCubemap, DepthCubemap->GetDSVCubemapFace(faceIdx), debugRTV, false);
 
 	//Engine::GAPI->GetRendererState()->RendererSettings.DrawSkeletalMeshes = oldDrawSkel;
 
 	// Reset settings
-	Engine::GAPI->SetCameraReplacementPtr(NULL);
+	Engine::GAPI->SetCameraReplacementPtr(nullptr);
 }
 
 /** Binds the shadowmap to the pixelshader */
-void D3D11PointLight::OnRenderLight()
+void D3D11PointLight::OnRenderLight() const
 {	
 	if(!InitDone)
 		return;
@@ -318,7 +318,7 @@ void D3D11PointLight::OnRenderLight()
 }
 
 /** Debug-draws the cubemap to the screen */
-void D3D11PointLight::DebugDrawCubeMap()
+void D3D11PointLight::DebugDrawCubeMap() const
 {
 	if(!InitDone)
 		return;

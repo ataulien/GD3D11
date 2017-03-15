@@ -27,7 +27,7 @@ public:
 protected:
 
 	/** Fills a vector of random raindrop data */
-	void FillRandomRaindropData(std::vector<ParticleInstanceInfo>& data);
+	void FillRandomRaindropData(std::vector<ParticleInstanceInfo>& data) const;
 
 	/** Rain */
 	D3D11VertexBuffer* RainBufferInitial;

@@ -198,8 +198,8 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID) {
 
 			HookedFunctions::OriginalFunctions.InitHooks();
 
-			Engine::GAPI = NULL;
-			Engine::GraphicsEngine = NULL;
+			Engine::GAPI = nullptr;
+			Engine::GraphicsEngine = nullptr;
 
 			// Create GothicAPI here to make all hooks work
 			Engine::CreateGothicAPI();

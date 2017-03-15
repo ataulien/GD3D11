@@ -12,10 +12,10 @@ public:
 	XRESULT LoadMesh(const std::string& file);
 
 	/** Draws all buffers this holds */
-	void DrawMesh();
+	void DrawMesh() const;
 
 	/** Draws a batch of instances */
-	void DrawBatch(D3D11VertexBuffer* instances, int numInstances, int instanceDataStride);
+	void DrawBatch(D3D11VertexBuffer* instances, int numInstances, int instanceDataStride) const;
 
 private:
 	D3D11VertexBuffer* VertexBuffer;

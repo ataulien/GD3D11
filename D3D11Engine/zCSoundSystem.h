@@ -1,8 +1,6 @@
 #pragma once
 #include "pch.h"
 #include "HookedFunctions.h"
-#include "Engine.h"
-#include "GothicAPI.h"
 
 class zCSoundSystem
 {

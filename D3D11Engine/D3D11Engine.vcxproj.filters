@@ -562,9 +562,6 @@
     <ClInclude Include="zCQuadMark.h">
       <Filter>ZenGin\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="D3D11TextureArray.h">
-      <Filter>Engine\D3D11</Filter>
-    </ClInclude>
     <ClInclude Include="D2DVobSettingsDialog.h">
       <Filter>Engine\D2D\Views</Filter>
     </ClInclude>
@@ -618,9 +615,6 @@
     <ClInclude Include="D3D11RenderPipe.h" />
     <ClInclude Include="D3D11GraphicsEngineBase.h" />
     <ClInclude Include="ModSpecific.h" />
-    <ClInclude Include="D3D11GodRayEffect.h">
-      <Filter>Engine\D3D11</Filter>
-    </ClInclude>
     <ClInclude Include="D3D11GShader.h">
       <Filter>Engine\D3D11</Filter>
     </ClInclude>
@@ -850,9 +844,6 @@
     <ClCompile Include="D3D11PFX_SMAA.cpp">
       <Filter>Engine\D3D11\PFX\Effects</Filter>
     </ClCompile>
-    <ClCompile Include="D3D11TextureArray.cpp">
-      <Filter>Engine\D3D11</Filter>
-    </ClCompile>
     <ClCompile Include="D2DVobSettingsDialog.cpp">
       <Filter>Engine\D2D\Views</Filter>
     </ClCompile>
@@ -901,9 +892,6 @@
     <ClCompile Include="D3D11RenderPipe.cpp" />
     <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
     <ClCompile Include="ModSpecific.cpp" />
-    <ClCompile Include="D3D11GodRayEffect.cpp">
-      <Filter>Engine\D3D11</Filter>
-    </ClCompile>
     <ClCompile Include="D3D11GShader.cpp">
       <Filter>Engine\D3D11</Filter>
     </ClCompile>

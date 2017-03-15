@@ -472,7 +472,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 
 						for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
 						{
-							VShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+							VShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], nullptr));
 						}
 					}
 				}else
@@ -483,7 +483,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 					XLE(VShaders[Shaders[i].name]->LoadShader(("system\\GD3D11\\shaders\\" + Shaders[i].fileName).c_str(), Shaders[i].layout, Shaders[i].shaderMakros));
 					for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
 					{
-						VShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+						VShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], nullptr));
 					}
 				}
 			}
@@ -506,7 +506,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 
 						for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
 						{
-							PShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+							PShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], nullptr));
 						}
 					}
 				}else
@@ -515,7 +515,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 					XLE(PShaders[Shaders[i].name]->LoadShader(("system\\GD3D11\\shaders\\" + Shaders[i].fileName).c_str(), Shaders[i].shaderMakros));
 					for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
 					{
-						PShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+						PShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], nullptr));
 					}
 				}
 			}else if (Shaders[i].type == "g")
@@ -537,7 +537,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 
 						for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
 						{
-							GShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+							GShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], nullptr));
 						}
 					}
 				}else
@@ -546,7 +546,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 					XLE(GShaders[Shaders[i].name]->LoadShader(("system\\GD3D11\\shaders\\" + Shaders[i].fileName).c_str(), Shaders[i].shaderMakros, Shaders[i].layout != 0, Shaders[i].layout));
 					for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
 					{
-						GShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+						GShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], nullptr));
 					}
 				}
 			}
@@ -575,7 +575,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 
 					for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
 					{
-						HDShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+						HDShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], nullptr));
 					}
 				}
 			}else
@@ -585,7 +585,7 @@ XRESULT D3D11ShaderManager::LoadShaders()
 					("system\\GD3D11\\shaders\\" + Shaders[i].fileName).c_str()));
 				for (unsigned int j = 0; j < Shaders[i].cBufferSizes.size(); j++)
 				{
-					HDShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], NULL));
+					HDShaders[Shaders[i].name]->GetConstantBuffer().push_back(new D3D11ConstantBuffer(Shaders[i].cBufferSizes[j], nullptr));
 				}
 			}
 		}

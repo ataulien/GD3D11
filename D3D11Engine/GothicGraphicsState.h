@@ -240,22 +240,22 @@ struct GothicBlendStateInfo : public GothicPipelineState
 	enum EBlendFunc
 	{
 		BF_ZERO	= 1,
-        BF_ONE	= 2,
-        BF_SRC_COLOR	= 3,
-        BF_INV_SRC_COLOR	= 4,
-        BF_SRC_ALPHA	= 5,
-        BF_INV_SRC_ALPHA	= 6,
-        BF_DEST_ALPHA	= 7,
-        BF_INV_DEST_ALPHA	= 8,
-        BF_DEST_COLOR	= 9,
-        BF_INV_DEST_COLOR	= 10,
-        BF_SRC_ALPHA_SAT	= 11,
-        BF_BLEND_FACTOR	= 14,
-        BF_INV_BLEND_FACTOR	= 15,
-        BF_SRC1_COLOR	= 16,
-        BF_INV_SRC1_COLOR	= 17,
-        BF_SRC1_ALPHA	= 18,
-        BF_INV_SRC1_ALPHA	= 19
+		BF_ONE	= 2,
+		BF_SRC_COLOR	= 3,
+		BF_INV_SRC_COLOR	= 4,
+		BF_SRC_ALPHA	= 5,
+		BF_INV_SRC_ALPHA	= 6,
+		BF_DEST_ALPHA	= 7,
+		BF_INV_DEST_ALPHA	= 8,
+		BF_DEST_COLOR	= 9,
+		BF_INV_DEST_COLOR	= 10,
+		BF_SRC_ALPHA_SAT	= 11,
+		BF_BLEND_FACTOR	= 14,
+		BF_INV_BLEND_FACTOR	= 15,
+		BF_SRC1_COLOR	= 16,
+		BF_INV_SRC1_COLOR	= 17,
+		BF_SRC1_ALPHA	= 18,
+		BF_INV_SRC1_ALPHA	= 19
 	};
 
 	/** Layed out for D3D11 */

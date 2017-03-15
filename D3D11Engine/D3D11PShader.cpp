@@ -8,7 +8,7 @@
 
 D3D11PShader::D3D11PShader(void)
 {
-	PixelShader = NULL;
+	PixelShader = nullptr;
 
 	// Insert into state-map
 	ID = D3D11ObjectIDs::Counters.PShadersCounter++;
@@ -57,12 +57,12 @@ HRESULT D3D11PShader::CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEnt
 	m.insert(m.begin(), makros.begin(), makros.end());
 
 	ID3DBlob* pErrorBlob;
-	hr = D3DX11CompileFromFileA(szFileName, &m[0], NULL, szEntryPoint, szShaderModel,
-		dwShaderFlags, 0, NULL, ppBlobOut, &pErrorBlob, NULL);
+	hr = D3DX11CompileFromFileA(szFileName, &m[0], nullptr, szEntryPoint, szShaderModel,
+		dwShaderFlags, 0, nullptr, ppBlobOut, &pErrorBlob, nullptr);
 	if (FAILED(hr))
 	{
 		LogInfo() << "Shader compilation failed!";
-		if (pErrorBlob != NULL)
+		if (pErrorBlob != nullptr)
 		{
 
 			LogErrorBox() << (char*)pErrorBlob->GetBufferPointer() << "\n\n (You can ignore the next error from Gothic about too small video memory!)";
@@ -116,11 +116,11 @@ XRESULT D3D11PShader::LoadShader(const char* pixelShader, std::vector<D3D10_SHAD
 }
 
 /** Applys the shaders */
-XRESULT D3D11PShader::Apply()
+XRESULT D3D11PShader::Apply() const
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
-	engine->GetContext()->PSSetShader(PixelShader, NULL, 0);
+	engine->GetContext()->PSSetShader(PixelShader, nullptr, 0);
 
 	return XR_SUCCESS;
 }

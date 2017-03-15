@@ -8,6 +8,6 @@ public:
 	~D3D11AntTweakBar(void);
 
 	/** Creates the resources */
-	virtual XRESULT Init();
+	XRESULT Init() override;
 };
 

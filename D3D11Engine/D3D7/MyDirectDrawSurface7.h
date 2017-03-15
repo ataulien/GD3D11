@@ -104,7 +104,7 @@ public:
 	bool IsSurfaceReady(){return IsReady;}
 
 	/** Returns true if this surface is used to render a movie to */
-	bool IsMovieSurface(){return LockedData != NULL;}
+	bool IsMovieSurface(){return LockedData != nullptr;}
 
 	/** Adds one to the queued mipmap count */
 	void IncreaseQueuedMipMapCount();

@@ -67,12 +67,12 @@ public:
     
 
 
-    float GetTotal() 
+    float GetTotal() const
 	{  
 		return m_total;
 	}
     
-    float GetDelta() 
+    float GetDelta() const
 	{ 
 		return m_delta;
 	}

@@ -13,14 +13,12 @@
 #include "zCModel.h"
 #include "zCMorphMesh.h"
 #include <set>
-#include "ConstantBufferStructs.h"
-#include "D3D11ConstantBuffer.h"
 #include "zCMesh.h"
 #include "zCLightmap.h"
 #include "GMesh.h"
 #include "MeshModifier.h"
 #include "D3D11Texture.h"
-#include "D3D7\MyDirectDrawSurface7.h"
+#include "D3D7/MyDirectDrawSurface7.h"
 #include "zCQuadMark.h"
 
 
@@ -40,9 +38,9 @@ void WorldConverter::WorldMeshCollectPolyRange(const D3DXVECTOR3& position, floa
 {
 	INT2 s = GetSectionOfPos(position);
 	MeshKey opaqueKey;
-	opaqueKey.Material = NULL;
-	opaqueKey.Info = NULL;
-	opaqueKey.Texture = NULL;
+	opaqueKey.Material = nullptr;
+	opaqueKey.Info = nullptr;
+	opaqueKey.Texture = nullptr;
 
 	WorldMeshInfo* opaqueMesh = new WorldMeshInfo;
 	outMeshes[opaqueKey] = opaqueMesh;
@@ -117,7 +115,7 @@ void WorldConverter::WorldMeshCollectPolyRange(const D3DXVECTOR3& position, floa
 }
 
 /** Converts a loaded custommesh to be the worldmesh */
-XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<int, std::map<int, WorldMeshSectionInfo>>* outSections, WorldInfo* info, MeshInfo** outWrappedMesh)
+XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<int, std::map<int, WorldMeshSectionInfo>>* outSections, WorldInfo* worldInfo, MeshInfo** outWrappedMesh)
 {
 	GMesh* mesh = new GMesh();
 
@@ -156,11 +154,11 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 	// run through meshes and pack them into sections
 	for(unsigned int m = 0;m<meshes.size();m++)
 	{
-		D3D11Texture* customTexture = NULL;
+		//D3D11Texture* customTexture = nullptr;
 		zCMaterial* mat = Engine::GAPI->GetMaterialByTextureName(textures[m]);
 		MeshKey key;
 		key.Material = mat;
-		key.Texture = mat != NULL ? mat->GetTexture() : NULL;
+		key.Texture = mat != nullptr ? mat->GetTexture() : nullptr;
 		
 		// Save missing textures
 		if(!mat)
@@ -383,14 +381,14 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 	// Calculate the approx midpoint of the world
 	avgSections /= (float)numSections;
 
-	if(info)
+	if(worldInfo)
 	{
-		WorldInfo i;
-		i.MidPoint = avgSections * WORLD_SECTION_SIZE;
-		i.LowestVertex = 0;
-		i.HighestVertex = 0;
+		WorldInfo info;
+		info.MidPoint = avgSections * WORLD_SECTION_SIZE;
+		info.LowestVertex = 0;
+		info.HighestVertex = 0;
 
-		memcpy(info, &i, sizeof(WorldInfo));
+		memcpy(worldInfo, &info, sizeof(WorldInfo));
 	}
 
 
@@ -398,7 +396,7 @@ XRESULT WorldConverter::LoadWorldMeshFromFile(const std::string& file, std::map<
 }
 
 /** Converts the worldmesh into a PNAEN-buffer */
-HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int numPolygons, std::map<int, std::map<int, WorldMeshSectionInfo>>* outSections, WorldInfo* info, MeshInfo** outWrappedMesh)
+HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int numPolygons, std::map<int, std::map<int, WorldMeshSectionInfo>>* outSections, WorldInfo* worldInfo, MeshInfo** outWrappedMesh)
 {
 	// Go through every polygon and put it into it's section
 	for(unsigned int i=0;i<numPolygons;i++)
@@ -426,7 +424,7 @@ HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int nu
 		D3DXVECTOR3& bbmin = (*outSections)[section.x][section.y].BoundingBox.Min;
 		D3DXVECTOR3& bbmax = (*outSections)[section.x][section.y].BoundingBox.Max;
 
-		DWORD sectionColor = float4((section.x % 2) + 0.5f, (section.x % 2) + 0.5f, 1, 1).ToDWORD();
+		//DWORD sectionColor = float4((section.x % 2) + 0.5f, (section.x % 2) + 0.5f, 1, 1).ToDWORD();
 
 		if(poly->GetNumPolyVertices() < 3)
 		{
@@ -480,7 +478,7 @@ HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int nu
 
 		zCMaterial* mat = poly->GetMaterial();
 		MeshKey key;
-		key.Texture = mat != NULL ? mat->GetTexture() : NULL;
+		key.Texture = mat != nullptr ? mat->GetTexture() : nullptr;
 		key.Material = mat;
 		
 		//key.Lightmap = poly->GetLightmap();
@@ -635,18 +633,18 @@ HRESULT WorldConverter::ConvertWorldMeshPNAEN(zCPolygon** polys, unsigned int nu
 	// Calculate the approx midpoint of the world
 	avgSections /= (float)numSections;
 
-	if(info)
+	if(worldInfo)
 	{
-		info->MidPoint = avgSections * WORLD_SECTION_SIZE;
-		info->LowestVertex = 0;
-		info->HighestVertex = 0;	
+		worldInfo->MidPoint = avgSections * WORLD_SECTION_SIZE;
+		worldInfo->LowestVertex = 0;
+		worldInfo->HighestVertex = 0;	
 	}
 
 	return XR_SUCCESS;
 }
 
 /** Converts the worldmesh into a more usable format */
-HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPolygons, std::map<int, std::map<int, WorldMeshSectionInfo>>* outSections, WorldInfo* info, MeshInfo** outWrappedMesh)
+HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPolygons, std::map<int, std::map<int, WorldMeshSectionInfo>>* outSections, WorldInfo* worldInfo, MeshInfo** outWrappedMesh)
 {
 	// Go through every polygon and put it into it's section
 	for(unsigned int i=0;i<numPolygons;i++)
@@ -675,7 +673,7 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 		D3DXVECTOR3& bbmin = (*outSections)[section.x][section.y].BoundingBox.Min;
 		D3DXVECTOR3& bbmax = (*outSections)[section.x][section.y].BoundingBox.Max;
 
-		DWORD sectionColor = float4((section.x % 2) + 0.5f, (section.x % 2) + 0.5f, 1, 1).ToDWORD();
+		//DWORD sectionColor = float4((section.x % 2) + 0.5f, (section.x % 2) + 0.5f, 1, 1).ToDWORD();
 
 		if(poly->GetNumPolyVertices() < 3)
 		{
@@ -729,7 +727,7 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 
 		zCMaterial* mat = poly->GetMaterial();
 		MeshKey key;
-		key.Texture = mat != NULL ? mat->GetTexture() : NULL;
+		key.Texture = mat != nullptr ? mat->GetTexture() : nullptr;
 		key.Material = mat;
 		
 		//key.Lightmap = poly->GetLightmap();
@@ -880,18 +878,18 @@ HRESULT WorldConverter::ConvertWorldMesh(zCPolygon** polys, unsigned int numPoly
 	// Calculate the approx midpoint of the world
 	avgSections /= (float)numSections;
 
-	if(info)
+	if(worldInfo)
 	{
 		/*WorldInfo i;
 		i.MidPoint = avgSections * WORLD_SECTION_SIZE;
 		i.LowestVertex = 0;
 		i.HighestVertex = 0;
 
-		memcpy(info, &i, sizeof(WorldInfo));*/
+		memcpy(worldInfo, &i, sizeof(WorldInfo));*/
 
-		info->MidPoint = avgSections * WORLD_SECTION_SIZE;
-		info->LowestVertex = 0;
-		info->HighestVertex = 0;	
+		worldInfo->MidPoint = avgSections * WORLD_SECTION_SIZE;
+		worldInfo->LowestVertex = 0;
+		worldInfo->HighestVertex = 0;	
 	}
 	//SaveSectionsToObjUnindexed("Test.obj", (*outSections));
 
@@ -1260,7 +1258,7 @@ void WorldConverter::ExtractSkeletalMeshFromVob(zCModel* model, SkeletalMeshVisu
 		}
 	}
 
-	static int s_NoMeshesNum = 0;
+	//static int s_NoMeshesNum = 0;
 
 	skeletalMeshInfo->VisualName = model->GetVisualName();
 	/*if(skeletalMeshInfo->VisualName.empty())
@@ -1420,7 +1418,7 @@ void WorldConverter::ExtractSkeletalMeshFromProto(zCModelMeshLib* model, Skeleta
 		}
 	}
 
-	static int s_NoMeshesNum = 0;
+	//static int s_NoMeshesNum = 0;
 
 	skeletalMeshInfo->VisualName = model->GetVisualName();
 
@@ -1499,8 +1497,8 @@ void WorldConverter::ExtractNodeVisual(int index, zCModelNodeInst* node, std::ma
 /** Extracts a 3DS-Mesh from a zCVisual */
 void WorldConverter::Extract3DSMeshFromVisual2PNAEN(zCProgMeshProto* visual, MeshVisualInfo* meshInfo)
 {
-	D3DXVECTOR3 tri0, tri1, tri2;
-	D3DXVECTOR2	uv0, uv1, uv2;
+	//D3DXVECTOR3 tri0, tri1, tri2;
+	//D3DXVECTOR2	uv0, uv1, uv2;
 	D3DXVECTOR3 bbmin, bbmax;
 	bbmin = D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
 	bbmax = D3DXVECTOR3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -1636,8 +1634,8 @@ void WorldConverter::Extract3DSMeshFromVisual2PNAEN(zCProgMeshProto* visual, Mes
 /** Extracts a 3DS-Mesh from a zCVisual */
 void WorldConverter::Extract3DSMeshFromVisual2(zCProgMeshProto* visual, MeshVisualInfo* meshInfo)
 {
-	D3DXVECTOR3 tri0, tri1, tri2;
-	D3DXVECTOR2	uv0, uv1, uv2;
+	//D3DXVECTOR3 tri0, tri1, tri2;
+	//D3DXVECTOR2	uv0, uv1, uv2;
 	D3DXVECTOR3 bbmin, bbmax;
 	bbmin = D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
 	bbmax = D3DXVECTOR3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -1795,8 +1793,8 @@ const float eps = 0.001f;
 
 struct CmpClass // class comparing vertices in the set
 {
-    bool operator() (const std::pair<ExVertexStruct, int>& p1, const std::pair<ExVertexStruct, int>& p2) const
-    {
+	bool operator() (const std::pair<ExVertexStruct, int>& p1, const std::pair<ExVertexStruct, int>& p2) const
+	{
 		/*if(p1.first.Position.x < p2.first.Position.x)
 			return true;
 		if(p1.first.Position.y < p2.first.Position.y)
@@ -1812,15 +1810,15 @@ struct CmpClass // class comparing vertices in the set
 
 		return false;*/
 
-        if (fabs(p1.first.Position.x-p2.first.Position.x) > eps) return p1.first.Position.x < p2.first.Position.x;
-        if (fabs(p1.first.Position.y-p2.first.Position.y) > eps) return p1.first.Position.y < p2.first.Position.y;
-        if (fabs(p1.first.Position.z-p2.first.Position.z) > eps) return p1.first.Position.z < p2.first.Position.z;
+		if (fabs(p1.first.Position.x-p2.first.Position.x) > eps) return p1.first.Position.x < p2.first.Position.x;
+		if (fabs(p1.first.Position.y-p2.first.Position.y) > eps) return p1.first.Position.y < p2.first.Position.y;
+		if (fabs(p1.first.Position.z-p2.first.Position.z) > eps) return p1.first.Position.z < p2.first.Position.z;
 
 		if (fabs(p1.first.TexCoord.x-p2.first.TexCoord.x) > eps) return p1.first.TexCoord.x < p2.first.TexCoord.x;
 		if (fabs(p1.first.TexCoord.y-p2.first.TexCoord.y) > eps) return p1.first.TexCoord.y < p2.first.TexCoord.y;
 
-        return false;
-    }
+		return false;
+	}
 };
 
 
@@ -1831,21 +1829,21 @@ void WorldConverter::IndexVertices(ExVertexStruct* input, unsigned int numInputV
 	std::set<std::pair<ExVertexStruct, int>, CmpClass> vertices;
 	int index = 0;
 
-    for (unsigned int i=0; i<numInputVertices; i++)
-    {
-        std::set<std::pair<ExVertexStruct, int>>::iterator it = vertices.find(std::make_pair(input[i], 0/*this value doesn't matter*/));
-        if (it!=vertices.end()) outIndices.push_back(it->second);
-        else
-        {
+	for (unsigned int i=0; i<numInputVertices; i++)
+	{
+		std::set<std::pair<ExVertexStruct, int>>::iterator it = vertices.find(std::make_pair(input[i], 0/*this value doesn't matter*/));
+		if (it!=vertices.end()) outIndices.push_back(it->second);
+		else
+		{
 			/*char* c = (char *)&input[i].color;
 			c[0] = rand() % 255;
 			c[1] = rand() % 255;
 			c[2] = rand() % 255;*/
 
-            vertices.insert(std::make_pair(input[i], index));
-            outIndices.push_back(index++);
-        }
-    }
+			vertices.insert(std::make_pair(input[i], index));
+			outIndices.push_back(index++);
+		}
+	}
 
 	// TODO: Remove this and fix it properly!
 	/*for (std::set<std::pair<ExVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
@@ -1889,18 +1887,18 @@ void WorldConverter::IndexVertices(ExVertexStruct* input, unsigned int numInputV
 		outIndices.push_back(std::get<2>((*it)));
 	}
 
-    // Notice that the vertices in the set are not sorted by the index
-    // so you'll have to rearrange them like this:
+	// Notice that the vertices in the set are not sorted by the index
+	// so you'll have to rearrange them like this:
 	outVertices.clear();
-    outVertices.resize(vertices.size());
-    for (std::set<std::pair<ExVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
+	outVertices.resize(vertices.size());
+	for (std::set<std::pair<ExVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
 	{
 		if((unsigned int)it->second >= vertices.size())
 		{
 			continue;
 		}
 
-        outVertices[it->second] = it->first;
+		outVertices[it->second] = it->first;
 	}
 }
 
@@ -1909,29 +1907,29 @@ void WorldConverter::IndexVertices(ExVertexStruct* input, unsigned int numInputV
 	std::set<std::pair<ExVertexStruct, int>, CmpClass> vertices;
 	unsigned int index = 0;
 
-    for (unsigned int i=0; i<numInputVertices; i++)
-    {
-        std::set<std::pair<ExVertexStruct, int>>::iterator it = vertices.find(std::make_pair(input[i], 0/*this value doesn't matter*/));
-        if (it!=vertices.end()) outIndices.push_back(it->second);
-        else
-        {
-            vertices.insert(std::make_pair(input[i], index));
-            outIndices.push_back(index++);
-        }
-    }
+	for (unsigned int i=0; i<numInputVertices; i++)
+	{
+		std::set<std::pair<ExVertexStruct, int>>::iterator it = vertices.find(std::make_pair(input[i], 0/*this value doesn't matter*/));
+		if (it!=vertices.end()) outIndices.push_back(it->second);
+		else
+		{
+			vertices.insert(std::make_pair(input[i], index));
+			outIndices.push_back(index++);
+		}
+	}
 
-    // Notice that the vertices in the set are not sorted by the index
-    // so you'll have to rearrange them like this:
+	// Notice that the vertices in the set are not sorted by the index
+	// so you'll have to rearrange them like this:
 	outVertices.clear();
-    outVertices.resize(vertices.size());
-    for (std::set<std::pair<ExVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
-        outVertices[it->second] = it->first;
+	outVertices.resize(vertices.size());
+	for (std::set<std::pair<ExVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
+		outVertices[it->second] = it->first;
 }
 
 struct CmpClassSkel // class comparing vertices in the set
 {
-    bool operator() (const std::pair<ExSkelVertexStruct, int>& p1, const std::pair<ExSkelVertexStruct, int>& p2) const
-    {
+	bool operator() (const std::pair<ExSkelVertexStruct, int>& p1, const std::pair<ExSkelVertexStruct, int>& p2) const
+	{
 		for(int i=0;i<4;i++)
 		{
 			if (fabs(p1.first.Position[i].x-p2.first.Position[i].x) > eps) return p1.first.Position[i].x < p2.first.Position[i].x;
@@ -1942,8 +1940,8 @@ struct CmpClassSkel // class comparing vertices in the set
 		if (fabs(p1.first.TexCoord.x-p2.first.TexCoord.x) > eps) return p1.first.TexCoord.x < p2.first.TexCoord.x;
 		if (fabs(p1.first.TexCoord.y-p2.first.TexCoord.y) > eps) return p1.first.TexCoord.y < p2.first.TexCoord.y;
 
-        return false;
-    }
+		return false;
+	}
 };
 
 void WorldConverter::IndexVertices(ExSkelVertexStruct* input, unsigned int numInputVertices, std::vector<ExSkelVertexStruct>& outVertices, std::vector<VERTEX_INDEX>& outIndices)
@@ -1951,27 +1949,27 @@ void WorldConverter::IndexVertices(ExSkelVertexStruct* input, unsigned int numIn
 	std::set<std::pair<ExSkelVertexStruct, int>, CmpClassSkel> vertices;
 	int index = 0;
 
-    for (unsigned int i=0; i<numInputVertices; i++)
-    {
-        std::set<std::pair<ExSkelVertexStruct, int>>::iterator it = vertices.find(std::make_pair(input[i], 0/*this value doesn't matter*/));
-        if (it!=vertices.end()) outIndices.push_back(it->second);
-        else
-        {
+	for (unsigned int i=0; i<numInputVertices; i++)
+	{
+		std::set<std::pair<ExSkelVertexStruct, int>>::iterator it = vertices.find(std::make_pair(input[i], 0/*this value doesn't matter*/));
+		if (it!=vertices.end()) outIndices.push_back(it->second);
+		else
+		{
 			/*char* c = (char *)&input[i].color;
 			c[0] = rand() % 255;
 			c[1] = rand() % 255;
 			c[2] = rand() % 255;*/
 
-            vertices.insert(std::make_pair(input[i], index));
-            outIndices.push_back(index++);
-        }
-    }
+			vertices.insert(std::make_pair(input[i], index));
+			outIndices.push_back(index++);
+		}
+	}
 
-    // Notice that the vertices in the set are not sorted by the index
-    // so you'll have to rearrange them like this:
-    outVertices.resize(vertices.size());
-    for (std::set<std::pair<ExSkelVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
-        outVertices[it->second] = it->first;
+	// Notice that the vertices in the set are not sorted by the index
+	// so you'll have to rearrange them like this:
+	outVertices.resize(vertices.size());
+	for (std::set<std::pair<ExSkelVertexStruct, int>>::iterator it=vertices.begin(); it!=vertices.end(); it++)
+		outVertices[it->second] = it->first;
 }
 
 /** Computes vertex normals for a mesh with face normals */
@@ -2178,7 +2176,7 @@ void WorldConverter::UpdateQuadMarkInfo(QuadMarkInfo* info, zCQuadMark* mark, co
 	if(quadVertices.empty())
 		return;
 
-	delete info->Mesh; info->Mesh = NULL;
+	delete info->Mesh; info->Mesh = nullptr;
 	Engine::GraphicsEngine->CreateVertexBuffer(&info->Mesh);
 
 	// Init and fill it

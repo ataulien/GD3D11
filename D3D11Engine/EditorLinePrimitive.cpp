@@ -9,19 +9,19 @@
 
 EditorLinePrimitive::EditorLinePrimitive(void)
 {
-	Vertices = NULL;
-	PrimVB = NULL;
-	PrimShader = NULL;
+	Vertices = nullptr;
+	PrimVB = nullptr;
+	PrimShader = nullptr;
 	Location = D3DXVECTOR3(0, 0, 0);
 	Rotation = D3DXVECTOR3(0, 0, 0);
 	Scale = D3DXVECTOR3(1, 1, 1);
 	RecalcTransforms();
 	bHidden=false;
 
-	SolidPrimShader = NULL;
-	SolidVertices = NULL;
+	SolidPrimShader = nullptr;
+	SolidVertices = nullptr;
 	NumSolidVertices = 0;
-	SolidPrimVB = NULL;
+	SolidPrimVB = nullptr;
 
 	NumVertices = 0;
 
@@ -311,14 +311,14 @@ HRESULT EditorLinePrimitive::CreateSolidPrimitive(LineVertex* PrimVerts, UINT Nu
 	
 	//Create the vertex buffer
 	D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.ByteWidth = NumVertices * sizeof(LineVertex);
-    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
+	bufferDesc.ByteWidth = NumVertices * sizeof(LineVertex);
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.CPUAccessFlags = 0;
+	bufferDesc.MiscFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem = &SolidVertices[0];
+	InitData.pSysMem = &SolidVertices[0];
 	InitData.SysMemPitch = 0;
 	InitData.SysMemSlicePitch = 0;
 
@@ -588,7 +588,7 @@ float EditorLinePrimitive::IntersectPrimitive(D3DXVECTOR3* RayOrigin, D3DXVECTOR
 
 	// Bring the ray into object space
 	D3DXMATRIX invWorld;
-	D3DXMatrixInverse(&invWorld, NULL, &WorldMatrix);
+	D3DXMatrixInverse(&invWorld, nullptr, &WorldMatrix);
 
 	D3DXVECTOR3 Origin;
 	D3DXVECTOR3 Dir;
@@ -643,56 +643,56 @@ float EditorLinePrimitive::IntersectPrimitive(D3DXVECTOR3* RayOrigin, D3DXVECTOR
 }
 
 bool EditorLinePrimitive::IntersectTriangle( const D3DXVECTOR3* orig, const D3DXVECTOR3* dir,
-                        D3DXVECTOR3& v0, D3DXVECTOR3& v1, D3DXVECTOR3& v2,
-                        FLOAT* t, FLOAT* u, FLOAT* v )
+						D3DXVECTOR3& v0, D3DXVECTOR3& v1, D3DXVECTOR3& v2,
+						FLOAT* t, FLOAT* u, FLOAT* v )
 {
-    // Find vectors for two edges sharing vert0
-    D3DXVECTOR3 edge1 = v1 - v0;
-    D3DXVECTOR3 edge2 = v2 - v0;
+	// Find vectors for two edges sharing vert0
+	D3DXVECTOR3 edge1 = v1 - v0;
+	D3DXVECTOR3 edge2 = v2 - v0;
 
-    // Begin calculating determinant - also used to calculate U parameter
-    D3DXVECTOR3 pvec;
-    D3DXVec3Cross( &pvec, dir, &edge2 );
+	// Begin calculating determinant - also used to calculate U parameter
+	D3DXVECTOR3 pvec;
+	D3DXVec3Cross( &pvec, dir, &edge2 );
 
-    // If determinant is near zero, ray lies in plane of triangle
-    FLOAT det = D3DXVec3Dot( &edge1, &pvec );
+	// If determinant is near zero, ray lies in plane of triangle
+	FLOAT det = D3DXVec3Dot( &edge1, &pvec );
 
-    D3DXVECTOR3 tvec;
-    if( det > 0 )
-    {
-        tvec = (*orig) - v0;
-    }
-    else
-    {
-        tvec = v0 - (*orig);
-        det = -det;
-    }
+	D3DXVECTOR3 tvec;
+	if( det > 0 )
+	{
+		tvec = (*orig) - v0;
+	}
+	else
+	{
+		tvec = v0 - (*orig);
+		det = -det;
+	}
 
-    if( det < 0.0001f )
-        return FALSE;
+	if( det < 0.0001f )
+		return FALSE;
 
-    // Calculate U parameter and test bounds
-    *u = D3DXVec3Dot( &tvec, &pvec );
-    if( *u < 0.0f || *u > det )
-        return FALSE;
+	// Calculate U parameter and test bounds
+	*u = D3DXVec3Dot( &tvec, &pvec );
+	if( *u < 0.0f || *u > det )
+		return FALSE;
 
-    // Prepare to test V parameter
-    D3DXVECTOR3 qvec;
-    D3DXVec3Cross( &qvec, &tvec, &edge1 );
+	// Prepare to test V parameter
+	D3DXVECTOR3 qvec;
+	D3DXVec3Cross( &qvec, &tvec, &edge1 );
 
-    // Calculate V parameter and test bounds
-    *v = D3DXVec3Dot( dir, &qvec );
-    if( *v < 0.0f || *u + *v > det )
-        return FALSE;
+	// Calculate V parameter and test bounds
+	*v = D3DXVec3Dot( dir, &qvec );
+	if( *v < 0.0f || *u + *v > det )
+		return FALSE;
 
-    // Calculate t, scale parameters, ray intersects triangle
-    *t = D3DXVec3Dot( &edge2, &qvec );
-    FLOAT fInvDet = 1.0f / det;
-    *t *= fInvDet;
-    *u *= fInvDet;
-    *v *= fInvDet;
+	// Calculate t, scale parameters, ray intersects triangle
+	*t = D3DXVec3Dot( &edge2, &qvec );
+	FLOAT fInvDet = 1.0f / det;
+	*t *= fInvDet;
+	*u *= fInvDet;
+	*v *= fInvDet;
 
-    return TRUE;
+	return TRUE;
 }
 
 
@@ -875,7 +875,9 @@ void EditorLinePrimitive::RecalcTransforms()
 /** Creates the buffers and sets up the rest od the object */
 HRESULT EditorLinePrimitive::CreatePrimitive(LineVertex* PrimVerts, UINT NumVertices, D3D11_PRIMITIVE_TOPOLOGY Topology)
 {
-	HRESULT hr=S_OK;
+	// TODO: wrong Resharper warning, report bug
+	// ReSharper disable once CppInitializedValueIsAlwaysRewritten
+	HRESULT hr = S_OK;
 
 	// Clean up previous data
 	DeleteContent();
@@ -887,14 +889,14 @@ HRESULT EditorLinePrimitive::CreatePrimitive(LineVertex* PrimVerts, UINT NumVert
 	
 	//Create the vertex buffer
 	D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.ByteWidth = NumVertices * sizeof(LineVertex);
-    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
+	bufferDesc.ByteWidth = NumVertices * sizeof(LineVertex);
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.CPUAccessFlags = 0;
+	bufferDesc.MiscFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem = &Vertices[0];
+	InitData.pSysMem = &Vertices[0];
 	InitData.SysMemPitch = 0;
 	InitData.SysMemSlicePitch = 0;
 
@@ -945,7 +947,7 @@ void EditorLinePrimitive::RenderVertexBuffer(ID3D11Buffer* VB, UINT NumVertices,
 	UINT stride = sizeof( LineVertex);
 	UINT offset = 0;
 	engine->GetContext()->IASetVertexBuffers( 0, 1, &VB, &stride, &offset );
-	engine->GetContext()->IASetIndexBuffer(NULL, DXGI_FORMAT_UNKNOWN, NULL );
+	engine->GetContext()->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, NULL );
 	
 	engine->GetContext()->IASetPrimitiveTopology( Topology );
 

@@ -8,8 +8,8 @@
 
 D3D11VertexBuffer::D3D11VertexBuffer(void)
 {
-	VertexBuffer = NULL;
-	ShaderResourceView = NULL;
+	VertexBuffer = nullptr;
+	ShaderResourceView = nullptr;
 }
 
 
@@ -46,7 +46,7 @@ XRESULT D3D11VertexBuffer::Init(void* initData, unsigned int sizeInBytes, EBindF
 		bufferDesc.MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 
 	// In case we dont have data, allocate some to satisfy D3D11
-	char* data = NULL;
+	char* data = nullptr;
 	if (!initData)
 	{
 		data = new char[bufferDesc.ByteWidth];
@@ -130,7 +130,7 @@ XRESULT D3D11VertexBuffer::UpdateBufferAligned16(void* data, UINT size)
 }
 
 /** Maps the buffer */
-XRESULT D3D11VertexBuffer::Map(int flags, void** dataPtr, UINT* size)
+XRESULT D3D11VertexBuffer::Map(int flags, void** dataPtr, UINT* size) const
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
@@ -145,7 +145,7 @@ XRESULT D3D11VertexBuffer::Map(int flags, void** dataPtr, UINT* size)
 }
 
 /** Unmaps the buffer */
-XRESULT D3D11VertexBuffer::Unmap()
+XRESULT D3D11VertexBuffer::Unmap() const
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
@@ -155,7 +155,7 @@ XRESULT D3D11VertexBuffer::Unmap()
 }
 
 /** Returns the D3D11-Buffer object */
-ID3D11Buffer* D3D11VertexBuffer::GetVertexBuffer()
+ID3D11Buffer* D3D11VertexBuffer::GetVertexBuffer() const
 {
 	return VertexBuffer;
 }
@@ -222,13 +222,13 @@ XRESULT D3D11VertexBuffer::OptimizeFaces(VERTEX_INDEX* indices, byte* vertices, 
 }
 
 /** Returns the size in bytes of this buffer */
-unsigned int D3D11VertexBuffer::GetSizeInBytes()
+unsigned int D3D11VertexBuffer::GetSizeInBytes() const
 {
 	return SizeInBytes;
 }
 
 /** Returns the SRV of this buffer, if it represents a structured buffer */
-ID3D11ShaderResourceView* D3D11VertexBuffer::GetShaderResourceView()
+ID3D11ShaderResourceView* D3D11VertexBuffer::GetShaderResourceView() const
 {
 	return ShaderResourceView;
 }

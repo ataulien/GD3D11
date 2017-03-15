@@ -1,4 +1,3 @@
-#include <map>
 #include "pch.h"
 #include "GVegetationBox.h"
 #include "GMeshSimple.h"
@@ -13,12 +12,12 @@
 
 GVegetationBox::GVegetationBox(void)
 {
-	VegetationMesh = NULL;
-	VegetationTexture = NULL;
-	InstancingBuffer = NULL;
-	GrassCB = NULL;
-	MeshTexture = NULL;
-	MeshPart = NULL;
+	VegetationMesh = nullptr;
+	VegetationTexture = nullptr;
+	InstancingBuffer = nullptr;
+	GrassCB = nullptr;
+	MeshTexture = nullptr;
+	MeshPart = nullptr;
 	DrawBoundingBox = false;
 	Modified = false;
 	Density = 1.0f;
@@ -64,7 +63,7 @@ XRESULT GVegetationBox::InitVegetationBox(  MeshInfo* mesh,
 	if(XR_SUCCESS != VegetationMesh->LoadMesh("system\\GD3D11\\Meshes\\grass02.3ds"))
 	{
 		delete VegetationMesh;
-		VegetationMesh = NULL;
+		VegetationMesh = nullptr;
 		return XR_FAILED;
 	}
 
@@ -237,8 +236,8 @@ void GVegetationBox::InitSpotsRandom(const std::vector<D3DXVECTOR3>& trisInside,
 	D3DXVECTOR3 bs = (BoxMax - BoxMin);
 	float rad = std::min(bs.x, bs.z) / 2.0f;
 
-	delete InstancingBuffer; InstancingBuffer = NULL;
-	delete GrassCB; GrassCB = NULL;
+	delete InstancingBuffer; InstancingBuffer = nullptr;
+	delete GrassCB; GrassCB = nullptr;
 	VegetationSpots.clear();
 
 	// Find random spots on the polygons (TODO: This is still based off the size of the polygons!)
@@ -313,7 +312,7 @@ void GVegetationBox::InitSpotsRandom(const std::vector<D3DXVECTOR3>& trisInside,
 	InstancingBuffer->Init(&VegetationSpots[0], VegetationSpots.size() * sizeof(D3DXMATRIX));
 
 	// Create constant buffer
-	Engine::GraphicsEngine->CreateConstantBuffer(&GrassCB, NULL, sizeof(GrassConstantBuffer));
+	Engine::GraphicsEngine->CreateConstantBuffer(&GrassCB, nullptr, sizeof(GrassConstantBuffer));
 
 	RefitBoundingBox();
 
@@ -472,7 +471,7 @@ void GVegetationBox::RemoveVegetationAt(const D3DXVECTOR3& position, float range
 
 	// Recreate instancing buffer
 	delete InstancingBuffer;
-	InstancingBuffer = NULL;
+	InstancingBuffer = nullptr;
 
 	if(!IsEmpty())
 	{
@@ -565,7 +564,7 @@ void GVegetationBox::SaveToFILE(FILE* f, int version)
 	fwrite(&TrisInside[0], sizeof(D3DXVECTOR3) * tsize, 1, f);
 
 	// Save wether this was using a mesh info or not
-	bool hasMeshInfo = MeshPart != NULL;
+	bool hasMeshInfo = MeshPart != nullptr;
 	fwrite(&hasMeshInfo, sizeof(hasMeshInfo), 1, f);
 }
 
@@ -605,11 +604,11 @@ void GVegetationBox::LoadFromFILE(FILE* f, int version)
 	fread(&TrisInside[0], sizeof(D3DXVECTOR3) * tsize, 1, f);
 
 	// Save wether this was using a mesh info or not
-	bool hasMeshInfo = MeshPart != NULL;
+	bool hasMeshInfo = MeshPart != nullptr;
 	fread(&hasMeshInfo, sizeof(hasMeshInfo), 1, f);
 
-	MeshInfo* hitMesh = NULL;
-	zCMaterial* hitMaterial = NULL;
+	MeshInfo* hitMesh = nullptr;
+	zCMaterial* hitMaterial = nullptr;
 
 	std::unordered_map<MeshInfo*, int> hitMeshMap;
 	std::unordered_map<zCMaterial*, int> hitMaterialMap;
@@ -630,14 +629,14 @@ void GVegetationBox::LoadFromFILE(FILE* f, int version)
 
 		// Try to find meshpart and texture
 		D3DXVECTOR3 hit;
-		MeshInfo* hitMeshTrace = NULL;
-		zCMaterial* hitMaterialTrace = NULL;
-		Engine::GAPI->TraceWorldMesh(spot, D3DXVECTOR3(0, -1, 0), hit, NULL, NULL, &hitMeshTrace, &hitMaterialTrace);
+		MeshInfo* hitMeshTrace = nullptr;
+		zCMaterial* hitMaterialTrace = nullptr;
+		Engine::GAPI->TraceWorldMesh(spot, D3DXVECTOR3(0, -1, 0), hit, nullptr, nullptr, &hitMeshTrace, &hitMaterialTrace);
 
 		// Save results
-		if (hitMeshTrace != NULL)
+		if (hitMeshTrace != nullptr)
 			hitMeshMap[hitMeshTrace]++;
-		if (hitMaterialTrace != NULL)
+		if (hitMaterialTrace != nullptr)
 			hitMaterialMap[hitMaterialTrace]++;
 	}
 
@@ -646,7 +645,7 @@ void GVegetationBox::LoadFromFILE(FILE* f, int version)
 	{
 		for (auto it = hitMeshMap.begin(); it != hitMeshMap.end(); ++it)
 		{
-			if ((hitMesh == NULL) || (hitMeshMap[hitMesh] < it->second))
+			if ((hitMesh == nullptr) || (hitMeshMap[hitMesh] < it->second))
 				hitMesh = it->first;
 		}
 
@@ -655,11 +654,11 @@ void GVegetationBox::LoadFromFILE(FILE* f, int version)
 
 	for (auto it = hitMaterialMap.begin(); it != hitMaterialMap.end(); ++it)
 	{
-		if ((hitMaterial == NULL) || (hitMaterialMap[hitMaterial] < it->second))
+		if ((hitMaterial == nullptr) || (hitMaterialMap[hitMaterial] < it->second))
 			hitMaterial = it->first;
 	}
 
-	MeshTexture = hitMaterial != NULL ? hitMaterial->GetTexture() : NULL;
+	MeshTexture = hitMaterial != nullptr ? hitMaterial->GetTexture() : NULL;
 
 	RefitBoundingBox();
 
@@ -668,7 +667,7 @@ void GVegetationBox::LoadFromFILE(FILE* f, int version)
 	InstancingBuffer->Init(&VegetationSpots[0], VegetationSpots.size() * sizeof(D3DXMATRIX));
 
 	// Create constant buffer
-	Engine::GraphicsEngine->CreateConstantBuffer(&GrassCB, NULL, sizeof(GrassConstantBuffer));
+	Engine::GraphicsEngine->CreateConstantBuffer(&GrassCB, nullptr, sizeof(GrassConstantBuffer));
 
 	// TODO: Make resource-load method!
 	if(VegetationMesh)

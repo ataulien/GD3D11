@@ -104,7 +104,7 @@ void D3D11ConstantBuffer::BindToGeometryShader(int slot)
 }
 
 /** Returns whether this buffer has been updated since the last bind */
-bool D3D11ConstantBuffer::IsDirty()
+bool D3D11ConstantBuffer::IsDirty() const
 {
 	return BufferDirty;
 }

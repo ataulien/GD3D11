@@ -322,7 +322,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="ConstantBufferStructs.h" />
     <ClInclude Include="D3D11Effect.h" />
     <ClInclude Include="D3D11FullscreenQuad.h" />
-    <ClInclude Include="D3D11GodRayEffect.h" />
     <ClInclude Include="D3D11GraphicsEngine.h" />
     <ClInclude Include="D3D11GraphicsEngineBase.h" />
     <ClInclude Include="D3D11GShader.h" />
@@ -348,7 +347,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="D3D11RenderPipe.h" />
     <ClInclude Include="D3D11ShaderManager.h" />
     <ClInclude Include="D3D11Texture.h" />
-    <ClInclude Include="D3D11TextureArray.h" />
     <ClInclude Include="D3D11VertexBuffer.h" />
     <ClInclude Include="D3D11VShader.h" />
     <ClInclude Include="D3D7\FakeDirectDrawSurface7.h" />
@@ -490,7 +488,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11ConstantBuffer.cpp" />
     <ClCompile Include="D3D11Effect.cpp" />
     <ClCompile Include="D3D11FullscreenQuad.cpp" />
-    <ClCompile Include="D3D11GodRayEffect.cpp" />
     <ClCompile Include="D3D11GraphicsEngine.cpp" />
     <ClCompile Include="D3D11GraphicsEngineBase.cpp" />
     <ClCompile Include="D3D11GShader.cpp" />
@@ -515,7 +512,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11RenderPipe.cpp" />
     <ClCompile Include="D3D11ShaderManager.cpp" />
     <ClCompile Include="D3D11Texture.cpp" />
-    <ClCompile Include="D3D11TextureArray.cpp" />
     <ClCompile Include="D3D11Vertexbuffer.cpp" />
     <ClCompile Include="D3D11VShader.cpp" />
     <ClCompile Include="D3D7\FakeDirectDrawSurface7.cpp">

@@ -11,7 +11,7 @@
 FakeDirectDrawSurface7::FakeDirectDrawSurface7()
 {
 	RefCount = 1;
-	Data = NULL;
+	Data = nullptr;
 }
 
 void FakeDirectDrawSurface7::InitFakeSurface(const DDSURFACEDESC2* desc, MyDirectDrawSurface7* Resource, int mipLevel)
@@ -267,7 +267,7 @@ HRESULT FakeDirectDrawSurface7::Unlock( LPRECT lpRect )
 	}
 
 	delete[] Data;
-	Data = NULL;
+	Data = nullptr;
 
 	return S_OK;
 }

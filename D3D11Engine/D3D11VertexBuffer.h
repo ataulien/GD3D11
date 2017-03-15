@@ -50,10 +50,10 @@ public:
 	XRESULT UpdateBufferAligned16(void* data, UINT size = 0);
 
 	/** Maps the buffer */
-	XRESULT Map(int flags, void** dataPtr, UINT* size);
+	XRESULT Map(int flags, void** dataPtr, UINT* size) const;
 
 	/** Unmaps the buffer */
-	XRESULT Unmap();
+	XRESULT Unmap() const;
 
 	/** Optimizes the given set of vertices */
 	XRESULT OptimizeVertices(VERTEX_INDEX* indices, byte* vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride);
@@ -62,13 +62,13 @@ public:
 	XRESULT OptimizeFaces(VERTEX_INDEX* indices, byte* vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride);
 
 	/** Returns the D3D11-Buffer object */
-	ID3D11Buffer* GetVertexBuffer();
+	ID3D11Buffer* GetVertexBuffer() const;
 
 	/** Returns the size in bytes of this buffer */
-	unsigned int GetSizeInBytes();
+	unsigned int GetSizeInBytes() const;
 
 	/** Returns the SRV of this buffer, if it represents a structured buffer */
-	ID3D11ShaderResourceView* GetShaderResourceView();
+	ID3D11ShaderResourceView* GetShaderResourceView() const;
 private:
 	/** Vertex buffer object */
 	ID3D11Buffer* VertexBuffer;

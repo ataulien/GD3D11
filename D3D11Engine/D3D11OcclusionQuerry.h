@@ -14,25 +14,25 @@ public:
 	void AdvanceFrameCounter();
 
 	/** Begins the occlusion-checks */
-	void BeginOcclusionPass();
+	static void BeginOcclusionPass();
 
 	/** Checks the BSP-Tree for visibility */
 	void DoOcclusionForBSP(BspInfo* root);
 
 	/** Ends the occlusion-checks */
-	void EndOcclusionPass();
+	static void EndOcclusionPass();
 
 	/** Creates a new predication-object and returns its ID */
 	unsigned int AddPredicationObject();
 
 	/** Creates the occlusion-node-mesh for the specific bsp-node */
-	void CreateOcclusionNodeMeshFor(BspInfo* node);
+	static void CreateOcclusionNodeMeshFor(BspInfo* node);
 private:
 
 	/** Marks the entire subtree visible */
-	void MarkTreeVisible(BspInfo* root, bool visible);
+	void MarkTreeVisible(BspInfo* root, bool visible) const;
 
-	void DebugVisualizeNodeMesh(MeshInfo* m, const D3DXVECTOR4& color);
+	static void DebugVisualizeNodeMesh(MeshInfo* m, const D3DXVECTOR4& color);
 
 	/** Simple box predicate */
 	std::vector<ID3D11Predicate*> Predicates;

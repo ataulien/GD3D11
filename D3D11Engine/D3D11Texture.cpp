@@ -8,9 +8,9 @@
 
 D3D11Texture::D3D11Texture(void)
 {
-	Texture = NULL;
-	ShaderResourceView = NULL;
-	Thumbnail = NULL;
+	Texture = nullptr;
+	ShaderResourceView = nullptr;
+	Thumbnail = nullptr;
 
 	// Insert into state-map
 	ID = D3D11ObjectIDs::Counters.TextureCounter++;
@@ -106,7 +106,7 @@ XRESULT D3D11Texture::UpdateData(void* data, int mip)
 
 	// Enter the critical section for safety while executing the deferred command list
 	Engine::GAPI->EnterResourceCriticalSection();
-	engine->GetContext()->UpdateSubresource(Texture, mip, NULL, data, GetRowPitchBytes(mip), GetSizeInBytes(mip));
+	engine->GetContext()->UpdateSubresource(Texture, mip, nullptr, data, GetRowPitchBytes(mip), GetSizeInBytes(mip));
 	Engine::GAPI->LeaveResourceCriticalSection();
 
 	return XR_SUCCESS;
@@ -121,7 +121,7 @@ XRESULT D3D11Texture::UpdateDataDeferred(void* data, int mip, bool noLock)
 	if(!noLock)
 		Engine::GAPI->EnterResourceCriticalSection();
 
-	engine->GetDeferredMediaContext()->UpdateSubresource(Texture, mip, NULL, data, GetRowPitchBytes(mip), GetSizeInBytes(mip));
+	engine->GetDeferredMediaContext()->UpdateSubresource(Texture, mip, nullptr, data, GetRowPitchBytes(mip), GetSizeInBytes(mip));
 
 	if(!noLock)
 		Engine::GAPI->LeaveResourceCriticalSection();
@@ -130,7 +130,7 @@ XRESULT D3D11Texture::UpdateDataDeferred(void* data, int mip, bool noLock)
 }
 
 /** Returns the RowPitch-Bytes */
-UINT D3D11Texture::GetRowPitchBytes(int mip)
+UINT D3D11Texture::GetRowPitchBytes(int mip) const
 {
 	int px = (int)std::max(1.0f, floor(TextureSize.x / pow(2.0f, mip)));
 	int py = (int)std::max(1.0f, floor(TextureSize.y / pow(2.0f, mip)));
@@ -149,7 +149,7 @@ UINT D3D11Texture::GetRowPitchBytes(int mip)
 }
 
 /** Returns the size of the texture in bytes */
-UINT D3D11Texture::GetSizeInBytes(int mip)
+UINT D3D11Texture::GetSizeInBytes(int mip) const
 {
 	int px = (int)std::max(1.0f, floor(TextureSize.x / pow(2.0f, mip)));
 	int py = (int)std::max(1.0f, floor(TextureSize.y / pow(2.0f, mip)));
@@ -168,7 +168,7 @@ UINT D3D11Texture::GetSizeInBytes(int mip)
 }
 
 /** Binds this texture to a pixelshader */
-XRESULT D3D11Texture::BindToPixelShader(int slot)
+XRESULT D3D11Texture::BindToPixelShader(int slot) const
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
@@ -179,7 +179,7 @@ XRESULT D3D11Texture::BindToPixelShader(int slot)
 }
 
 /** Binds this texture to a pixelshader */
-XRESULT D3D11Texture::BindToVertexShader(int slot)
+XRESULT D3D11Texture::BindToVertexShader(int slot) const
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
@@ -191,7 +191,7 @@ XRESULT D3D11Texture::BindToVertexShader(int slot)
 }
 
 /** Binds this texture to a domainshader */
-XRESULT D3D11Texture::BindToDomainShader(int slot)
+XRESULT D3D11Texture::BindToDomainShader(int slot) const
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
@@ -235,7 +235,7 @@ XRESULT D3D11Texture::CreateThumbnail()
 
 	engine->GetContext()->OMGetRenderTargets(2, oldRTV, &oldDSV);
 
-	engine->GetContext()->OMSetRenderTargets(1, &tempRTV, NULL);
+	engine->GetContext()->OMSetRenderTargets(1, &tempRTV, nullptr);
 	engine->DrawQuad(INT2(0,0), INT2(256,256));
 
 	engine->GetContext()->OMSetRenderTargets(2, oldRTV, oldDSV);
@@ -249,13 +249,13 @@ XRESULT D3D11Texture::CreateThumbnail()
 }
 
 /** Returns the thumbnail of this texture. If this returns NULL, you need to create one first */
-ID3D11Texture2D* D3D11Texture::GetThumbnail()
+ID3D11Texture2D* D3D11Texture::GetThumbnail() const
 {
 	return Thumbnail;
 }
 
 /** Generates mipmaps for this texture (may be slow!) */
-XRESULT D3D11Texture::GenerateMipMaps()
+XRESULT D3D11Texture::GenerateMipMaps() const
 {
 	if(MipMapCount == 1)
 		return XR_SUCCESS;
@@ -264,9 +264,9 @@ XRESULT D3D11Texture::GenerateMipMaps()
 
 	Engine::GAPI->EnterResourceCriticalSection();
 
-	RenderToTextureBuffer* b = new RenderToTextureBuffer(engine->GetDevice(), TextureSize.x, TextureSize.y, DXGI_FORMAT_R8G8B8A8_UNORM, NULL, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN, MipMapCount);
+	RenderToTextureBuffer* b = new RenderToTextureBuffer(engine->GetDevice(), TextureSize.x, TextureSize.y, DXGI_FORMAT_R8G8B8A8_UNORM, nullptr, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN, MipMapCount);
 
-	engine->GetDeferredMediaContext()->CopySubresourceRegion(b->GetTexture(), 0, 0, 0, 0, Texture, 0, NULL);
+	engine->GetDeferredMediaContext()->CopySubresourceRegion(b->GetTexture(), 0, 0, 0, 0, Texture, 0, nullptr);
 
 	// Generate mips
 	engine->GetDeferredMediaContext()->GenerateMips(b->GetShaderResView());

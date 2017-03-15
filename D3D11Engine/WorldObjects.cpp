@@ -11,7 +11,7 @@ const int WORLDMESHINFO_VERSION = 5;
 const int VISUALINFO_VERSION = 5;
 
 /** Saves the info for this visual */
-void WorldMeshInfo::SaveWorldMeshInfo(const std::string& name)
+void WorldMeshInfo::SaveWorldMeshInfo(const std::string& name) const
 {
 	FILE* f = fopen(("system\\GD3D11\\meshes\\infos\\" + name + ".wi").c_str(), "wb");
 
@@ -136,7 +136,7 @@ void SkeletalMeshVisualInfo::ClearPNAENInfo()
 		for(unsigned int i=0;i<(*it).second.size();i++)
 		{
 			delete (*it).second[i]->MeshIndexBufferPNAEN;
-			(*it).second[i]->MeshIndexBufferPNAEN = NULL;
+			(*it).second[i]->MeshIndexBufferPNAEN = nullptr;
 
 			(*it).second[i]->IndicesPNAEN.clear();	
 		}
@@ -166,7 +166,7 @@ void BaseVisualInfo::ClearPNAENInfo()
 		for(unsigned int i=0;i<(*it).second.size();i++)
 		{
 			delete (*it).second[i]->MeshIndexBufferPNAEN;
-			(*it).second[i]->MeshIndexBufferPNAEN = NULL;
+			(*it).second[i]->MeshIndexBufferPNAEN = nullptr;
 
 			(*it).second[i]->VerticesPNAEN.clear();
 			(*it).second[i]->IndicesPNAEN.clear();	
@@ -257,23 +257,10 @@ void SectionInstanceCache::ClearCacheForStatic(MeshVisualInfo* pm)
 	{
 		D3D11VertexBuffer* vb = InstanceCache[pm];
 		delete vb;
-		InstanceCache[pm] = NULL;
+		InstanceCache[pm] = nullptr;
 		InstanceCacheData[pm].clear();
 	}
 }
-
-/** Saves this sections mesh to a file */
-void WorldMeshSectionInfo::SaveSectionMeshToFile(const std::string& name)
-{
-	FILE* f;
-	fopen_s(&f, name.c_str(), "wb");
-
-	if(!f)
-		return;
-
-
-}
-
 
 /** Saves the mesh infos for this section */
 void WorldMeshSectionInfo::SaveMeshInfos(const std::string& worldName, INT2 sectionPos)

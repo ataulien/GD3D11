@@ -2,23 +2,18 @@
 #include "D2DVobSettingsDialog.h"
 #include "D2DView.h"
 #include "SV_Label.h"
-#include "SV_Checkbox.h"
 #include "SV_Panel.h"
 #include "SV_Slider.h"
-#include "Engine.h"
-#include "GothicAPI.h"
-#include "BaseGraphicsEngine.h"
 #include "SV_GMeshInfoView.h"
 #include "zCMaterial.h"
 #include "SV_NamedSlider.h"
-#include "zCVisual.h"
 
 D2DVobSettingsDialog::D2DVobSettingsDialog(D2DView* view, D2DSubView* parent) : D2DDialog(view, parent)
 {
 	SetPositionCentered(D2D1::Point2F(view->GetRenderTarget()->GetSize().width / 2, view->GetRenderTarget()->GetSize().height / 2), D2D1::SizeF(700, 450));
 	Header->SetCaption("VOB Settings");
 
-	Vob = NULL;
+	Vob = nullptr;
 
 	InitControls();
 }
@@ -107,7 +102,7 @@ void D2DVobSettingsDialog::SliderDragged(SV_Slider* sender, void* userdata)
 	if(!d->Vob)
 		return;
 
-	VisualTesselationSettings* ts = NULL;
+	VisualTesselationSettings* ts = nullptr;
 	if(d->Vob)
 		ts = &d->Vob->VisualInfo->TesselationInfo;
 
@@ -166,7 +161,7 @@ void D2DVobSettingsDialog::SetVobInfo(BaseVobInfo* vob)
 	return;
 #endif
 
-	Vob = NULL; // Reset the dialog first without messing with the vobs settings
+	Vob = nullptr; // Reset the dialog first without messing with the vobs settings
 
 	std::map<zCTexture*, MeshInfo*> meshes;
 

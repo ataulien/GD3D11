@@ -229,7 +229,7 @@ public:
 			DDSURFACEDESC2 desc = *lpDDSurfaceDesc2;
 
 			// First level was already created above
-			FakeDirectDrawSurface7* lastMip = NULL;
+			FakeDirectDrawSurface7* lastMip = nullptr;
 			int level = 1;
 			while(desc.dwMipMapCount > 1)
 			{

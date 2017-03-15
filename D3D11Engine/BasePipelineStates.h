@@ -1,5 +1,4 @@
 #pragma once
-#include "GothicGraphicsState.h"
 
 struct GothicDepthBufferStateInfo;
 class BaseDepthBufferState

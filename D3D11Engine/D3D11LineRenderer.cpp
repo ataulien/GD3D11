@@ -8,7 +8,7 @@
 
 D3D11LineRenderer::D3D11LineRenderer(void)
 {
-	LineBuffer = NULL;
+	LineBuffer = nullptr;
 	LineBufferSize = 0;
 }
 

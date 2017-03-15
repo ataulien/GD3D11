@@ -8,13 +8,15 @@
 #include "FileDownloader.h"
 #include "ZipArchive.h"
 #include "ModSpecific.h"
+#include "Engine.h"
+#include "GothicAPI.h"
 
 /** TODO: This file has hardcoded URLs, create a config or something else for this! */
 
 D2DContentDownloadDialog::D2DContentDownloadDialog(D2DView* view, D2DSubView* parent, EDownloadType type, const std::list<DownloadJob>& jobs ) : D2DDialog(view, parent)
 {
-	Downloader = NULL;
-	Zip = NULL;
+	Downloader = nullptr;
+	Zip = nullptr;
 
 	NextJobs = jobs;
 
@@ -88,8 +90,8 @@ void D2DContentDownloadDialog::UnzipDoneCallback(const std::string& zipname, voi
 void D2DContentDownloadDialog::RunNextJob()
 {
 	// Clean up potential done job
-	delete Zip; Zip = NULL;
-	delete Downloader; Downloader = NULL;
+	delete Zip; Zip = nullptr;
+	delete Downloader; Downloader = nullptr;
 
 	if(NextJobs.empty())
 	{
@@ -119,7 +121,7 @@ void D2DContentDownloadDialog::RunNextJob()
 			std::string pck = ModSpecific::GetModNormalmapPackName();
 
 			Header->SetCaption("Downloading...");
-			CreateDirectory(Job.TargetPath.c_str(), NULL);
+			CreateDirectory(Job.TargetPath.c_str(), nullptr);
 			TargetFolder = Job.TargetPath.c_str();
 		}
 		break;

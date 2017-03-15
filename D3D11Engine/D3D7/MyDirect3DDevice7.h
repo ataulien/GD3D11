@@ -32,8 +32,8 @@ const int DRAW_PRIM_INDEX_BUFFER_SIZE = 4096 * sizeof(VERTEX_INDEX);
 
 class MyDirect3DDevice7 : public IDirect3DDevice7 {
 public:
-    MyDirect3DDevice7(IDirect3D7* direct3D7, IDirect3DDevice7* direct3DDevice7){
-        DebugWrite("MyDirect3DDevice7::MyDirect3DDevice7");
+	MyDirect3DDevice7(IDirect3D7* direct3D7, IDirect3DDevice7* direct3DDevice7){
+		DebugWrite("MyDirect3DDevice7::MyDirect3DDevice7");
 
 		RefCount = 1;
 
@@ -56,39 +56,39 @@ public:
 
 		// Create DrawPrimIndexBuffer
 		Engine::GraphicsEngine->CreateVertexBuffer(&DrawPrimIndexBuffer);
-		DrawPrimIndexBuffer->Init(NULL, DRAW_PRIM_INDEX_BUFFER_SIZE, D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
-    }
+		DrawPrimIndexBuffer->Init(nullptr, DRAW_PRIM_INDEX_BUFFER_SIZE, D3D11VertexBuffer::B_INDEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
+	}
 
 	~MyDirect3DDevice7()
 	{
 		delete DrawPrimIndexBuffer;
 	}
 
-    /*** IUnknown methods ***/
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObj) {
-        DebugWrite("MyDirect3DDevice7::QueryInterface");
-        return S_OK; //return this->direct3DDevice7->QueryInterface(riid, ppvObj);
-    }
+	/*** IUnknown methods ***/
+	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObj) {
+		DebugWrite("MyDirect3DDevice7::QueryInterface");
+		return S_OK; //return this->direct3DDevice7->QueryInterface(riid, ppvObj);
+	}
 
-    ULONG STDMETHODCALLTYPE AddRef() {
-        DebugWrite("MyDirect3DDevice7::AddRef");
+	ULONG STDMETHODCALLTYPE AddRef() {
+		DebugWrite("MyDirect3DDevice7::AddRef");
 		RefCount++;
-        return S_OK; //return this->direct3DDevice7->AddRef();
-    }
+		return S_OK; //return this->direct3DDevice7->AddRef();
+	}
 
-    ULONG STDMETHODCALLTYPE Release() {
-        DebugWrite("MyDirect3DDevice7::Release");
-        if (0 == RefCount) {
-            delete this;
+	ULONG STDMETHODCALLTYPE Release() {
+		DebugWrite("MyDirect3DDevice7::Release");
+		if (0 == RefCount) {
+			delete this;
 			return 0;
-        }
+		}
 
-        return RefCount;
-    }
+		return RefCount;
+	}
 
-    /*** IDirect3DDevice7 methods ***/
-    HRESULT STDMETHODCALLTYPE GetCaps(LPD3DDEVICEDESC7 lpD3DDevDesc ) {
-        DebugWrite("MyDirect3DDevice7::GetCaps");
+	/*** IDirect3DDevice7 methods ***/
+	HRESULT STDMETHODCALLTYPE GetCaps(LPD3DDEVICEDESC7 lpD3DDevDesc ) {
+		DebugWrite("MyDirect3DDevice7::GetCaps");
 
 		/*ZeroMemory(lpD3DDevDesc, sizeof(D3DDEVICEDESC7));
 		lpD3DDevDesc->dwDevCaps = D3DDEVCAPS_DRAWPRIMTLVERTEX | D3DDEVCAPS_FLOATTLVERTEX;
@@ -99,66 +99,66 @@ public:
 		// Tell Gothic what it wants to hear
 		*lpD3DDevDesc = FakeDeviceDesc;
 
-        return S_OK; //return this->direct3DDevice7->GetCaps(lpD3DDevDesc);
-    }
+		return S_OK; //return this->direct3DDevice7->GetCaps(lpD3DDevDesc);
+	}
 
-    HRESULT STDMETHODCALLTYPE GetClipPlane(DWORD Index,float* pPlane) {
-        DebugWrite("MyDirect3DDevice7::GetClipPlane");
-        return S_OK; //return this->direct3DDevice7->GetClipPlane(Index, pPlane);
-    }
+	HRESULT STDMETHODCALLTYPE GetClipPlane(DWORD Index,float* pPlane) {
+		DebugWrite("MyDirect3DDevice7::GetClipPlane");
+		return S_OK; //return this->direct3DDevice7->GetClipPlane(Index, pPlane);
+	}
 
-    HRESULT STDMETHODCALLTYPE SetClipPlane(DWORD dwIndex, D3DVALUE* pPlaneEquation) {
-        DebugWrite("MyDirect3DDevice7::SetClipPlane");
-        return S_OK; //return this->direct3DDevice7->SetClipPlane(dwIndex, pPlaneEquation);
-    }
+	HRESULT STDMETHODCALLTYPE SetClipPlane(DWORD dwIndex, D3DVALUE* pPlaneEquation) {
+		DebugWrite("MyDirect3DDevice7::SetClipPlane");
+		return S_OK; //return this->direct3DDevice7->SetClipPlane(dwIndex, pPlaneEquation);
+	}
 
-    HRESULT STDMETHODCALLTYPE GetClipStatus(LPD3DCLIPSTATUS lpD3DClipStatus) {
-        DebugWrite("MyDirect3DDevice7::GetClipStatus");
-        return S_OK; //return this->direct3DDevice7->GetClipStatus(lpD3DClipStatus);
-    }
+	HRESULT STDMETHODCALLTYPE GetClipStatus(LPD3DCLIPSTATUS lpD3DClipStatus) {
+		DebugWrite("MyDirect3DDevice7::GetClipStatus");
+		return S_OK; //return this->direct3DDevice7->GetClipStatus(lpD3DClipStatus);
+	}
 
-    HRESULT STDMETHODCALLTYPE SetClipStatus(LPD3DCLIPSTATUS lpD3DClipStatus) {
-        DebugWrite("MyDirect3DDevice7::SetClipStatus");
-        return S_OK; 
-    }
+	HRESULT STDMETHODCALLTYPE SetClipStatus(LPD3DCLIPSTATUS lpD3DClipStatus) {
+		DebugWrite("MyDirect3DDevice7::SetClipStatus");
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE GetDirect3D(IDirect3D7** ppD3D) {
-        DebugWrite("MyDirect3DDevice7::GetDirect3D");
-        *ppD3D = NULL;
-        return S_OK;
-    }
+	HRESULT STDMETHODCALLTYPE GetDirect3D(IDirect3D7** ppD3D) {
+		DebugWrite("MyDirect3DDevice7::GetDirect3D");
+		*ppD3D = nullptr;
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE GetInfo(DWORD dwDevInfoID, LPVOID pDevInfoStruct, DWORD dwSize) {
-        DebugWrite("MyDirect3DDevice7::GetInfo");
-        return S_OK;
-    }
+	HRESULT STDMETHODCALLTYPE GetInfo(DWORD dwDevInfoID, LPVOID pDevInfoStruct, DWORD dwSize) {
+		DebugWrite("MyDirect3DDevice7::GetInfo");
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE GetLight(DWORD dwLightIndex, LPD3DLIGHT7 lpLight) {
-        DebugWrite("MyDirect3DDevice7::GetLight");
-        return S_OK;
-    }
+	HRESULT STDMETHODCALLTYPE GetLight(DWORD dwLightIndex, LPD3DLIGHT7 lpLight) {
+		DebugWrite("MyDirect3DDevice7::GetLight");
+		return S_OK;
+	}
 
 
 
-    HRESULT STDMETHODCALLTYPE GetLightEnable(DWORD Index,BOOL* pEnable) {
-        DebugWrite("MyDirect3DDevice7::GetLightEnable");
-        return S_OK; 
-    }
+	HRESULT STDMETHODCALLTYPE GetLightEnable(DWORD Index,BOOL* pEnable) {
+		DebugWrite("MyDirect3DDevice7::GetLightEnable");
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE GetMaterial(LPD3DMATERIAL7 lpMaterial) {
-        DebugWrite("MyDirect3DDevice7::GetMaterial");
-        return S_OK;
-    }
+	HRESULT STDMETHODCALLTYPE GetMaterial(LPD3DMATERIAL7 lpMaterial) {
+		DebugWrite("MyDirect3DDevice7::GetMaterial");
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE SetMaterial(LPD3DMATERIAL7 lpMaterial) {
-        DebugWrite("MyDirect3DDevice7::SetMaterial");
-        return S_OK; 
-    }
+	HRESULT STDMETHODCALLTYPE SetMaterial(LPD3DMATERIAL7 lpMaterial) {
+		DebugWrite("MyDirect3DDevice7::SetMaterial");
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE GetRenderState(D3DRENDERSTATETYPE State,DWORD* pValue) {
-        DebugWrite("MyDirect3DDevice7::GetRenderState");
-        return S_OK;
-    }
+	HRESULT STDMETHODCALLTYPE GetRenderState(D3DRENDERSTATETYPE State,DWORD* pValue) {
+		DebugWrite("MyDirect3DDevice7::GetRenderState");
+		return S_OK;
+	}
 
 
 
@@ -166,7 +166,7 @@ public:
 #define LOG_RENDERSTATE_COLOR(s, v) if(State == s){LogInfo() << "Set " #s " to value " << v << " (uint), " << LogColorHelper(v) << " (D3DCOLOR)";}
 #define LOG_UNIMPLMENTED_RENDERSTATE(x) {LogWarn() << "Unimplemented Renderstate : " << #x << " (uint: " << Value << ")";}
 
-    HRESULT STDMETHODCALLTYPE SetRenderState(D3DRENDERSTATETYPE State,DWORD Value) {
+	HRESULT STDMETHODCALLTYPE SetRenderState(D3DRENDERSTATETYPE State,DWORD Value) {
 		//DebugWrite("MyDirect3DDevice7::SetRenderState");
 
 		GothicRendererState* state = Engine::GAPI->GetRendererState();
@@ -271,31 +271,31 @@ public:
 		case D3DRENDERSTATE_ALPHAFUNC          		: LOG_UNIMPLMENTED_RENDERSTATE(D3DRENDERSTATE_ALPHAFUNC);break;*/
 		}
 
-        return S_OK; 
-    }
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE GetRenderTarget(LPDIRECTDRAWSURFACE7 *lplpRenderTarget ) {
-        DebugWrite("MyDirect3DDevice7::GetRenderTarget");
+	HRESULT STDMETHODCALLTYPE GetRenderTarget(LPDIRECTDRAWSURFACE7 *lplpRenderTarget ) {
+		DebugWrite("MyDirect3DDevice7::GetRenderTarget");
 
 		LogWarn() << "GetRenderTarget not supported!";
-		*lplpRenderTarget = NULL;
+		*lplpRenderTarget = nullptr;
 
-        return S_OK; 
-    }
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE SetRenderTarget(LPDIRECTDRAWSURFACE7 lpNewRenderTarget, DWORD dwFlags) {
-        DebugWrite("MyDirect3DDevice7::SetRenderTarget");
-        return S_OK;
-    }
+	HRESULT STDMETHODCALLTYPE SetRenderTarget(LPDIRECTDRAWSURFACE7 lpNewRenderTarget, DWORD dwFlags) {
+		DebugWrite("MyDirect3DDevice7::SetRenderTarget");
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE GetTexture(DWORD dwStage, LPDIRECTDRAWSURFACE7 *lplpTexture) {
-        DebugWrite("MyDirect3DDevice7::GetTexture");
+	HRESULT STDMETHODCALLTYPE GetTexture(DWORD dwStage, LPDIRECTDRAWSURFACE7 *lplpTexture) {
+		DebugWrite("MyDirect3DDevice7::GetTexture");
 		LogWarn() << "GetTexture not supported!";
-        return S_OK; 
-    }
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE SetTexture(DWORD dwStage, LPDIRECTDRAWSURFACE7 lplpTexture) {
-        DebugWrite("MyDirect3DDevice7::SetTexture");
+	HRESULT STDMETHODCALLTYPE SetTexture(DWORD dwStage, LPDIRECTDRAWSURFACE7 lplpTexture) {
+		DebugWrite("MyDirect3DDevice7::SetTexture");
 		
 		// Bind the texture
 		MyDirectDrawSurface7* surface = (MyDirectDrawSurface7 *)lplpTexture;
@@ -308,16 +308,16 @@ public:
 			//Engine::GraphicsEngine->UnbindTexture(dwStage);
 		}
 
-        return S_OK; 
+		return S_OK; 
 	}
 
-    HRESULT STDMETHODCALLTYPE GetTextureStageState(DWORD Stage,D3DTEXTURESTAGESTATETYPE Type,DWORD* pValue) {
-        DebugWrite("MyDirect3DDevice7::GetTextureStageState");
-        return S_OK; 
+	HRESULT STDMETHODCALLTYPE GetTextureStageState(DWORD Stage,D3DTEXTURESTAGESTATETYPE Type,DWORD* pValue) {
+		DebugWrite("MyDirect3DDevice7::GetTextureStageState");
+		return S_OK; 
 	}
 
-    HRESULT STDMETHODCALLTYPE SetTextureStageState(DWORD Stage,D3DTEXTURESTAGESTATETYPE Type,DWORD Value) {
-        DebugWrite("MyDirect3DDevice7::SetTextureStageState");
+	HRESULT STDMETHODCALLTYPE SetTextureStageState(DWORD Stage,D3DTEXTURESTAGESTATETYPE Type,DWORD Value) {
+		DebugWrite("MyDirect3DDevice7::SetTextureStageState");
 
 		// Update stateblock
 		
@@ -520,16 +520,16 @@ public:
 			case D3DTSS_TEXTURETRANSFORMFLAGS: 
 				break;
 			}
-        return S_OK; //return this->direct3DDevice7->SetTextureStageState(Stage, Type, Value);
-    }
+		return S_OK; //return this->direct3DDevice7->SetTextureStageState(Stage, Type, Value);
+	}
 
-    HRESULT STDMETHODCALLTYPE GetTransform(D3DTRANSFORMSTATETYPE State,D3DMATRIX* pMatrix) {
-        DebugWrite("MyDirect3DDevice7::GetTransform");
-        return S_OK; //return this->direct3DDevice7->GetTransform(State, pMatrix);
-    }
+	HRESULT STDMETHODCALLTYPE GetTransform(D3DTRANSFORMSTATETYPE State,D3DMATRIX* pMatrix) {
+		DebugWrite("MyDirect3DDevice7::GetTransform");
+		return S_OK; //return this->direct3DDevice7->GetTransform(State, pMatrix);
+	}
 
-    HRESULT STDMETHODCALLTYPE SetTransform(D3DTRANSFORMSTATETYPE dtstTransformStateType, LPD3DMATRIX lpD3DMatrix) {
-        DebugWrite("MyDirect3DDevice7::SetTransform");
+	HRESULT STDMETHODCALLTYPE SetTransform(D3DTRANSFORMSTATETYPE dtstTransformStateType, LPD3DMATRIX lpD3DMatrix) {
+		DebugWrite("MyDirect3DDevice7::SetTransform");
 
 		//LogInfo() << "SetTransform: " << dtstTransformStateType;
 
@@ -551,15 +551,15 @@ public:
 
  
 		return S_OK; //return this->direct3DDevice7->SetTransform(dtstTransformStateType, lpD3DMatrix);
-    }
+	}
 
-    HRESULT STDMETHODCALLTYPE GetViewport(LPD3DVIEWPORT7 lpViewport) {
-        DebugWrite("MyDirect3DDevice7::GetViewport");
-        return S_OK; //return this->direct3DDevice7->GetViewport(lpViewport);
-    }
+	HRESULT STDMETHODCALLTYPE GetViewport(LPD3DVIEWPORT7 lpViewport) {
+		DebugWrite("MyDirect3DDevice7::GetViewport");
+		return S_OK; //return this->direct3DDevice7->GetViewport(lpViewport);
+	}
 
-    HRESULT STDMETHODCALLTYPE SetViewport(LPD3DVIEWPORT7 lpViewport) {
-        DebugWrite("MyDirect3DDevice7::SetViewport");
+	HRESULT STDMETHODCALLTYPE SetViewport(LPD3DVIEWPORT7 lpViewport) {
+		DebugWrite("MyDirect3DDevice7::SetViewport");
 
 		float scale = std::max(0.1f, Engine::GAPI->GetRendererState()->RendererSettings.GothicUIScale);
 
@@ -584,36 +584,36 @@ public:
 
 		Engine::GraphicsEngine->SetViewport(vp);
 
-        return S_OK;
-    }
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE ApplyStateBlock(DWORD dwBlockHandle) {
-        DebugWrite("MyDirect3DDevice7::ApplyStateBlock");
+	HRESULT STDMETHODCALLTYPE ApplyStateBlock(DWORD dwBlockHandle) {
+		DebugWrite("MyDirect3DDevice7::ApplyStateBlock");
 
 		return S_OK;
-    }
+	}
 
-    HRESULT STDMETHODCALLTYPE BeginScene() {
-        DebugWrite("MyDirect3DDevice7::BeginScene");
+	HRESULT STDMETHODCALLTYPE BeginScene() {
+		DebugWrite("MyDirect3DDevice7::BeginScene");
 
 		Engine::GraphicsEngine->OnBeginFrame();
-        return S_OK; 
-    }
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE BeginStateBlock() {
-        DebugWrite("MyDirect3DDevice7::BeginStateBlock");
+	HRESULT STDMETHODCALLTYPE BeginStateBlock() {
+		DebugWrite("MyDirect3DDevice7::BeginStateBlock");
 
-        return S_OK; 
-    }
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE CaptureStateBlock(DWORD dwBlockHandle) {
-        DebugWrite("MyDirect3DDevice7::CaptureStateBlock");
+	HRESULT STDMETHODCALLTYPE CaptureStateBlock(DWORD dwBlockHandle) {
+		DebugWrite("MyDirect3DDevice7::CaptureStateBlock");
 
-        return S_OK;
-    }
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE Clear(DWORD dwCount, LPD3DRECT lpRects, DWORD dwFlags, D3DCOLOR dwColor, D3DVALUE dvZ, DWORD dwStencil) {
-        DebugWrite("MyDirect3DDevice7::Clear");
+	HRESULT STDMETHODCALLTYPE Clear(DWORD dwCount, LPD3DRECT lpRects, DWORD dwFlags, D3DCOLOR dwColor, D3DVALUE dvZ, DWORD dwStencil) {
+		DebugWrite("MyDirect3DDevice7::Clear");
 
 		BYTE a = dwColor >> 24;
 		BYTE r = (dwColor >> 16) & 0xFF;
@@ -621,40 +621,40 @@ public:
 		BYTE b = dwColor & 0xFF;
 
 		Engine::GraphicsEngine->Clear(float4(r / 255.0f, g/ 255.0f, b / 255.0f, a / 255.0f));
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE ComputeSphereVisibility(LPD3DVECTOR lpCenters, LPD3DVALUE lpRadii, DWORD dwNumSpheres, DWORD dwFlags, LPDWORD lpdwReturnValues) {
-        DebugWrite("MyDirect3DDevice7::ComputeSphereVisibility");
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE CreateStateBlock(D3DSTATEBLOCKTYPE d3dsbType, LPDWORD lpdwBlockHandle) {
-        DebugWrite("MyDirect3DDevice7::CreateStateBlock");
 		return S_OK;
-    }
+	}
 
-    HRESULT STDMETHODCALLTYPE DeleteStateBlock(DWORD dwBlockHandle) {
-        DebugWrite("MyDirect3DDevice7::DeleteStateBlock");
+	HRESULT STDMETHODCALLTYPE ComputeSphereVisibility(LPD3DVECTOR lpCenters, LPD3DVALUE lpRadii, DWORD dwNumSpheres, DWORD dwFlags, LPDWORD lpdwReturnValues) {
+		DebugWrite("MyDirect3DDevice7::ComputeSphereVisibility");
 		return S_OK;
-    }
+	}
 
-    HRESULT STDMETHODCALLTYPE DrawIndexedPrimitive(D3DPRIMITIVETYPE dptPrimitiveType, DWORD dwVertexTypeDesc, LPVOID lpvVertices, DWORD dwVertexCount, LPWORD lpwIndices, DWORD dwIndexCount, DWORD dwFlags) {
-        DebugWrite("MyDirect3DDevice7::DrawIndexedPrimitive");
+	HRESULT STDMETHODCALLTYPE CreateStateBlock(D3DSTATEBLOCKTYPE d3dsbType, LPDWORD lpdwBlockHandle) {
+		DebugWrite("MyDirect3DDevice7::CreateStateBlock");
+		return S_OK;
+	}
+
+	HRESULT STDMETHODCALLTYPE DeleteStateBlock(DWORD dwBlockHandle) {
+		DebugWrite("MyDirect3DDevice7::DeleteStateBlock");
+		return S_OK;
+	}
+
+	HRESULT STDMETHODCALLTYPE DrawIndexedPrimitive(D3DPRIMITIVETYPE dptPrimitiveType, DWORD dwVertexTypeDesc, LPVOID lpvVertices, DWORD dwVertexCount, LPWORD lpwIndices, DWORD dwIndexCount, DWORD dwFlags) {
+		DebugWrite("MyDirect3DDevice7::DrawIndexedPrimitive");
 		//((ReferenceD3D11GraphicsEngine *)Engine::GraphicsEngine)->DrawTriangle();
-        return S_OK;
-    }
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE DrawIndexedPrimitiveStrided(D3DPRIMITIVETYPE dptPrimitiveType, DWORD dwVertexTypeDesc, LPD3DDRAWPRIMITIVESTRIDEDDATA lpVertexArray, DWORD dwVertexCount, LPWORD lpwIndices, DWORD dwIndexCount, DWORD dwFlags) {
-        DebugWrite("MyDirect3DDevice7::DrawIndexedPrimitiveStrided");
+	HRESULT STDMETHODCALLTYPE DrawIndexedPrimitiveStrided(D3DPRIMITIVETYPE dptPrimitiveType, DWORD dwVertexTypeDesc, LPD3DDRAWPRIMITIVESTRIDEDDATA lpVertexArray, DWORD dwVertexCount, LPWORD lpwIndices, DWORD dwIndexCount, DWORD dwFlags) {
+		DebugWrite("MyDirect3DDevice7::DrawIndexedPrimitiveStrided");
 
-        return S_OK; 
-    }
+		return S_OK; 
+	}
 
 
-    HRESULT STDMETHODCALLTYPE DrawIndexedPrimitiveVB(D3DPRIMITIVETYPE d3dptPrimitiveType, LPDIRECT3DVERTEXBUFFER7 lpd3dVertexBuffer, DWORD dwStartVertex, DWORD dwNumVertices, LPWORD lpwIndices, DWORD dwIndexCount, DWORD dwFlags) {
-        DebugWrite("MyDirect3DDevice7::DrawIndexedPrimitiveVB");
-        
+	HRESULT STDMETHODCALLTYPE DrawIndexedPrimitiveVB(D3DPRIMITIVETYPE d3dptPrimitiveType, LPDIRECT3DVERTEXBUFFER7 lpd3dVertexBuffer, DWORD dwStartVertex, DWORD dwNumVertices, LPWORD lpwIndices, DWORD dwIndexCount, DWORD dwFlags) {
+		DebugWrite("MyDirect3DDevice7::DrawIndexedPrimitiveVB");
+		
 		if(d3dptPrimitiveType == D3DPRIMITIVETYPE::D3DPT_TRIANGLEFAN)
 			return S_OK;
 
@@ -662,11 +662,11 @@ public:
 
 		//Engine::GraphicsEngine->DrawVOBDirect(((MyDirect3DVertexBuffer7 *)lpd3dVertexBuffer)->GetVertexBuffer(), DrawPrimIndexBuffer, dwIndexCount, dwStartVertex);
 			
-        return S_OK;
-    }
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE DrawPrimitive(D3DPRIMITIVETYPE dptPrimitiveType, DWORD dwVertexTypeDesc, LPVOID lpvVertices, DWORD dwVertexCount, DWORD dwFlags) {
-        DebugWrite("MyDirect3DDevice7::DrawPrimitive");
+	HRESULT STDMETHODCALLTYPE DrawPrimitive(D3DPRIMITIVETYPE dptPrimitiveType, DWORD dwVertexTypeDesc, LPVOID lpvVertices, DWORD dwVertexCount, DWORD dwFlags) {
+		DebugWrite("MyDirect3DDevice7::DrawPrimitive");
 		
 		//return S_OK;
 
@@ -740,18 +740,18 @@ public:
 		exv.clear(); // static, keep the memory allocated
 		 
 
-       return S_OK;
-    }
+	   return S_OK;
+	}
 
 	// Not used by Gothic!
-    HRESULT STDMETHODCALLTYPE DrawPrimitiveStrided(D3DPRIMITIVETYPE dptPrimitiveType, DWORD dwVertexTypeDesc, LPD3DDRAWPRIMITIVESTRIDEDDATA lpVertexArray, DWORD dwVertexCount, DWORD dwFlags) {
-        DebugWrite("MyDirect3DDevice7::DrawPrimitiveStrided");
-        return S_OK;
-    }
+	HRESULT STDMETHODCALLTYPE DrawPrimitiveStrided(D3DPRIMITIVETYPE dptPrimitiveType, DWORD dwVertexTypeDesc, LPD3DDRAWPRIMITIVESTRIDEDDATA lpVertexArray, DWORD dwVertexCount, DWORD dwFlags) {
+		DebugWrite("MyDirect3DDevice7::DrawPrimitiveStrided");
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE DrawPrimitiveVB(D3DPRIMITIVETYPE d3dptPrimitiveType, LPDIRECT3DVERTEXBUFFER7 lpd3dVertexBuffer, DWORD dwStartVertex, DWORD dwNumVertices, DWORD dwFlags) {
-        DebugWrite("MyDirect3DDevice7::DrawPrimitiveVB");
-       
+	HRESULT STDMETHODCALLTYPE DrawPrimitiveVB(D3DPRIMITIVETYPE d3dptPrimitiveType, LPDIRECT3DVERTEXBUFFER7 lpd3dVertexBuffer, DWORD dwStartVertex, DWORD dwNumVertices, DWORD dwFlags) {
+		DebugWrite("MyDirect3DDevice7::DrawPrimitiveVB");
+	   
 		if(d3dptPrimitiveType < 4) // Handle lines here
 		{
 			return S_OK;
@@ -778,11 +778,11 @@ public:
 				return S_OK;
 			}
 
-        return S_OK;
-    }
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE EndScene() {
-        DebugWrite("MyDirect3DDevice7::EndScene");
+	HRESULT STDMETHODCALLTYPE EndScene() {
+		DebugWrite("MyDirect3DDevice7::EndScene");
 		hook_infunc
 		
 		Engine::GraphicsEngine->OnEndFrame();
@@ -799,7 +799,7 @@ public:
 			__asm{	mov pStack, esp} 
 			__asm{mov pBase, ebp} 
 			
-			CONTEXT* context = NULL;
+			CONTEXT* context = nullptr;
 			for(UINT32 i = pStack; i > pStack - 0x1000; i--)
 			{
 				if(*(UINT32 *)i == 0x0001003f || *(UINT32 *)i == 0x0001001f )
@@ -819,12 +819,12 @@ public:
 	} */
 	//hook_outfunc
 	return S_OK;
-    }
+	}
 
-    HRESULT STDMETHODCALLTYPE EndStateBlock(LPDWORD lpdwBlockHandle) {
-        DebugWrite("MyDirect3DDevice7::EndStateBlock");
-        return S_OK; 
-    }
+	HRESULT STDMETHODCALLTYPE EndStateBlock(LPDWORD lpdwBlockHandle) {
+		DebugWrite("MyDirect3DDevice7::EndStateBlock");
+		return S_OK; 
+	}
 
 	struct DeviceEnumInfo
 	{
@@ -846,8 +846,8 @@ public:
 		return (*fn)(fmt, ((DeviceEnumInfo *)lpContext)->originalUserArg);
 	}
 
-    HRESULT STDMETHODCALLTYPE EnumTextureFormats(LPD3DENUMPIXELFORMATSCALLBACK lpd3dEnumPixelProc, LPVOID lpArg) {
-        DebugWrite("MyDirect3DDevice7::EnumTextureFormats");
+	HRESULT STDMETHODCALLTYPE EnumTextureFormats(LPD3DENUMPIXELFORMATSCALLBACK lpd3dEnumPixelProc, LPVOID lpArg) {
+		DebugWrite("MyDirect3DDevice7::EnumTextureFormats");
 
 		//FILE* f = fopen("system\\GD3D11\\data\\FormatEnum.bin", "wb");
 		//fclose(f);
@@ -864,42 +864,42 @@ public:
 
 		fclose(f);
 
-        return S_OK;
-    }
+		return S_OK;
+	}
 
 
 
-    HRESULT STDMETHODCALLTYPE Load(LPDIRECTDRAWSURFACE7 lpDestTex, LPPOINT lpDestPoint, LPDIRECTDRAWSURFACE7 lpSrcTex, LPRECT lprcSrcRect, DWORD dwFlags) {
-        DebugWrite("MyDirect3DDevice7::Load");
-        return S_OK; 
-    }
+	HRESULT STDMETHODCALLTYPE Load(LPDIRECTDRAWSURFACE7 lpDestTex, LPPOINT lpDestPoint, LPDIRECTDRAWSURFACE7 lpSrcTex, LPRECT lprcSrcRect, DWORD dwFlags) {
+		DebugWrite("MyDirect3DDevice7::Load");
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE MultiplyTransform(D3DTRANSFORMSTATETYPE dtstTransformStateType, LPD3DMATRIX lpD3DMatrix) {
-        DebugWrite("MyDirect3DDevice7::MultiplyTransform");
-        return S_OK; 
-    }
+	HRESULT STDMETHODCALLTYPE MultiplyTransform(D3DTRANSFORMSTATETYPE dtstTransformStateType, LPD3DMATRIX lpD3DMatrix) {
+		DebugWrite("MyDirect3DDevice7::MultiplyTransform");
+		return S_OK; 
+	}
 
-    HRESULT STDMETHODCALLTYPE PreLoad(LPDIRECTDRAWSURFACE7 lpddsTexture) {
-        DebugWrite("MyDirect3DDevice7::PreLoad");
-        return S_OK;
-    }
+	HRESULT STDMETHODCALLTYPE PreLoad(LPDIRECTDRAWSURFACE7 lpddsTexture) {
+		DebugWrite("MyDirect3DDevice7::PreLoad");
+		return S_OK;
+	}
 
-    HRESULT STDMETHODCALLTYPE ValidateDevice(DWORD* pNumPasses) {
-        DebugWrite("MyDirect3DDevice7::ValidateDevice");
-        return S_OK; 
-    }
+	HRESULT STDMETHODCALLTYPE ValidateDevice(DWORD* pNumPasses) {
+		DebugWrite("MyDirect3DDevice7::ValidateDevice");
+		return S_OK; 
+	}
 
 	HRESULT STDMETHODCALLTYPE LightEnable(DWORD Index,BOOL Enable) {
-        DebugWrite("MyDirect3DDevice7::LightEnable");
+		DebugWrite("MyDirect3DDevice7::LightEnable");
 
-        return S_OK;
-    }
+		return S_OK;
+	}
 
 	HRESULT STDMETHODCALLTYPE SetLight(DWORD dwLightIndex, LPD3DLIGHT7 lpLight) {
-        DebugWrite("MyDirect3DDevice7::SetLight");
+		DebugWrite("MyDirect3DDevice7::SetLight");
 
-        return S_OK;
-    }
+		return S_OK;
+	}
 	
 private:
 	D3DDEVICEDESC7 FakeDeviceDesc;

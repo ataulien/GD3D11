@@ -10,13 +10,13 @@ public:
 	~D3D11LineRenderer(void);
 
 	/** Adds a line to the list */
-	virtual XRESULT AddLine(const LineVertex& v1, const LineVertex& v2);
+	XRESULT AddLine(const LineVertex& v1, const LineVertex& v2) override;
 
 	/** Flushes the cached lines */
-	virtual XRESULT Flush();
+	XRESULT Flush() override;
 
 	/** Clears the line cache */
-	virtual XRESULT ClearCache();
+	XRESULT ClearCache() override;
 
 
 private:

@@ -294,7 +294,7 @@ struct CubemapGSConstantBuffer
 struct ParticleGSInfoConstantBuffer
 {
 	float3 CameraPosition;
-    float PGS_RainFxWeight;
+	float PGS_RainFxWeight;
 	float PGS_RainHeight;
 	float3 PGS_Pad;
 };

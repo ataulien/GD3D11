@@ -4,7 +4,7 @@
 
 ZipArchive::ZipArchive(void)
 {
-	UnzipThread = NULL;
+	UnzipThread = nullptr;
 }
 
 

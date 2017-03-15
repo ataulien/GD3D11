@@ -25,20 +25,20 @@ const int INSTANCING_BUFFER_SIZE = sizeof(VobInstanceInfo) * 2048;
 
 D3D11GraphicsEngineBase::D3D11GraphicsEngineBase(void)
 {
-	TempVertexBuffer = NULL;
-	DeferredContext = NULL;
-	Context = NULL;
-	Device = NULL;
-	DXGIAdapter = NULL;
-	DXGIFactory = NULL;
-	ShaderManager = NULL;
-	SwapChain = NULL;
-	Backbuffer = NULL;
-	DepthStencilBuffer = NULL;
-	HDRBackBuffer = NULL;
-	DefaultSamplerState = NULL;
-	LineRenderer = NULL;
-	TransformsCB = NULL;
+	TempVertexBuffer = nullptr;
+	DeferredContext = nullptr;
+	Context = nullptr;
+	Device = nullptr;
+	DXGIAdapter = nullptr;
+	DXGIFactory = nullptr;
+	ShaderManager = nullptr;
+	SwapChain = nullptr;
+	Backbuffer = nullptr;
+	DepthStencilBuffer = nullptr;
+	HDRBackBuffer = nullptr;
+	DefaultSamplerState = nullptr;
+	LineRenderer = nullptr;
+	TransformsCB = nullptr;
 	PresentPending = false;
 
 	// Match the resolution with the current desktop resolution
@@ -154,9 +154,9 @@ XRESULT D3D11GraphicsEngineBase::Init()
 	Context->HSSetSamplers(0, 1, &DefaultSamplerState);
 
 	TempVertexBuffer = new D3D11VertexBuffer();
-	TempVertexBuffer->Init(NULL, DRAWVERTEXARRAY_BUFFER_SIZE, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
+	TempVertexBuffer->Init(nullptr, DRAWVERTEXARRAY_BUFFER_SIZE, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 
-	TransformsCB = new D3D11ConstantBuffer(sizeof(VS_ExConstantBuffer_PerFrame), NULL);
+	TransformsCB = new D3D11ConstantBuffer(sizeof(VS_ExConstantBuffer_PerFrame), nullptr);
 
 	LineRenderer = new D3D11LineRenderer();
 
@@ -190,10 +190,10 @@ XRESULT D3D11GraphicsEngineBase::OnResize(INT2 newSize)
 
 	RECT desktopRect;
 	GetClientRect(GetDesktopWindow(), &desktopRect);
-	SetWindowPos(OutputWindow, NULL, 0, 0, desktopRect.right, desktopRect.bottom, 0);
+	SetWindowPos(OutputWindow, nullptr, 0, 0, desktopRect.right, desktopRect.bottom, 0);
 
-	delete Backbuffer; Backbuffer = NULL;
-	delete DepthStencilBuffer; DepthStencilBuffer = NULL;
+	delete Backbuffer; Backbuffer = nullptr;
+	delete DepthStencilBuffer; DepthStencilBuffer = nullptr;
 
 	if (!SwapChain)
 	{
@@ -250,7 +250,7 @@ XRESULT D3D11GraphicsEngineBase::OnResize(INT2 newSize)
 	}
 
 	// Successfully resized swapchain, re-get buffers
-	ID3D11Texture2D* backbuffer = NULL;
+	ID3D11Texture2D* backbuffer = nullptr;
 	SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void **)&backbuffer);
 
 	// Recreate RenderTargetView
@@ -263,7 +263,7 @@ XRESULT D3D11GraphicsEngineBase::OnResize(INT2 newSize)
 
 	// Recreate DepthStencilBuffer
 	delete DepthStencilBuffer;
-	DepthStencilBuffer = new RenderToDepthStencilBuffer(Device, Resolution.x, Resolution.y, DXGI_FORMAT_R32_TYPELESS, NULL, DXGI_FORMAT_D32_FLOAT, DXGI_FORMAT_R32_FLOAT);
+	DepthStencilBuffer = new RenderToDepthStencilBuffer(Device, Resolution.x, Resolution.y, DXGI_FORMAT_R32_TYPELESS, nullptr, DXGI_FORMAT_D32_FLOAT, DXGI_FORMAT_R32_FLOAT);
 
 	// Bind our newly created resources
 	Context->OMSetRenderTargets(1, Backbuffer->GetRenderTargetViewPtr(), DepthStencilBuffer->GetDepthStencilView());
@@ -297,7 +297,7 @@ XRESULT D3D11GraphicsEngineBase::OnBeginFrame()
 {
 	// Enter the critical section for safety while executing the deferred command list
 	Engine::GAPI->EnterResourceCriticalSection();
-	ID3D11CommandList* dc_cl = NULL;
+	ID3D11CommandList* dc_cl = nullptr;
 	DeferredContext->FinishCommandList(true, &dc_cl);
 
 	// Copy list of textures we are operating on
@@ -397,7 +397,7 @@ XRESULT D3D11GraphicsEngineBase::GetDisplayModeList(std::vector<DisplayModeInfo>
 {
 	HRESULT hr;
 	UINT numModes = 0;
-	DXGI_MODE_DESC* displayModes = NULL;
+	DXGI_MODE_DESC* displayModes = nullptr;
 	DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	IDXGIOutput* output;
 
@@ -413,7 +413,7 @@ XRESULT D3D11GraphicsEngineBase::GetDisplayModeList(std::vector<DisplayModeInfo>
 	if(!output)
 		return XR_FAILED;
 
-	hr = output->GetDisplayModeList(format, 0, &numModes, NULL);
+	hr = output->GetDisplayModeList(format, 0, &numModes, nullptr);
 
 	displayModes = new DXGI_MODE_DESC[numModes];
 
@@ -612,7 +612,7 @@ XRESULT D3D11GraphicsEngineBase::DrawVertexArray(ExVertexStruct* vertices, unsig
 		delete TempVertexBuffer;
 		TempVertexBuffer = new D3D11VertexBuffer();
 
-		TempVertexBuffer->Init(NULL, stride * numVertices, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
+		TempVertexBuffer->Init(nullptr, stride * numVertices, D3D11VertexBuffer::B_VERTEXBUFFER, D3D11VertexBuffer::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 	}
 
 	// Send vertexdata to the GPU
@@ -710,8 +710,8 @@ void D3D11GraphicsEngineBase::ConstructShaderMakroList(std::vector<D3D10_SHADER_
 	m.Definition = s.EnableSoftShadows ? "1" : "0";
 	list.push_back(m);
 
-	m.Name = NULL;
-	m.Definition = NULL;
+	m.Name = nullptr;
+	m.Definition = nullptr;
 	list.push_back(m);
 }
 

@@ -15,7 +15,7 @@ public:
 	XRESULT LoadShader(const char* hullShader, const char* domainShader);
 
 	/** Applys the shader */
-	XRESULT Apply();
+	XRESULT Apply() const;
 
 	/** Unbinds the currently bound hull/domain shaders */
 	static void Unbind();
@@ -24,17 +24,17 @@ public:
 	std::vector<D3D11ConstantBuffer*>& GetConstantBuffer();
 
 	/** Returns the shader */
-	ID3D11HullShader* GetHShader(){return HullShader;}
+	ID3D11HullShader* GetHShader() const {return HullShader;}
 
 	/** Returns the shader */
-	ID3D11DomainShader* GetDShader(){return DomainShader;}
+	ID3D11DomainShader* GetDShader() const {return DomainShader;}
 	
 	/** Returns this textures ID */
-	UINT16 GetID(){return ID;};
+	UINT16 GetID() const {return ID;};
 private:
 
 	/** Compiles the shader from file and outputs error messages if needed */
-	HRESULT CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
+	static HRESULT CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 
 	ID3D11HullShader* HullShader;
 	ID3D11DomainShader* DomainShader;

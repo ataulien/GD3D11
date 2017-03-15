@@ -16,11 +16,11 @@ const std::string LEAF_SUBSTR[] = {"Treetop","Bush", "Leaf"};
 MyDirectDrawSurface7::MyDirectDrawSurface7()
 {
 	refCount = 1;
-	EngineTexture = NULL;
-	Normalmap = NULL;
-	FxMap = NULL;
-	LockedData = NULL;
-	GothicTexture = NULL;
+	EngineTexture = nullptr;
+	Normalmap = nullptr;
+	FxMap = nullptr;
+	LockedData = nullptr;
+	GothicTexture = nullptr;
 	IsReady = false;
 	TextureType = ETextureType::TX_UNDEF;
 
@@ -115,20 +115,20 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 	if(Normalmap)
 	{
 		delete Normalmap;
-		Normalmap = NULL;
+		Normalmap = nullptr;
 	}
 
 	if(FxMap)
 	{
 		delete FxMap;
-		FxMap = NULL;
+		FxMap = nullptr;
 	}
 
 	if(!TextureName.size() || Normalmap || FxMap)
 		return;
 
-	D3D11Texture* fxMapTexture = NULL;
-	D3D11Texture* nrmmapTexture = NULL;
+	D3D11Texture* fxMapTexture = nullptr;
+	D3D11Texture* nrmmapTexture = nullptr;
 
 	// Check for normalmap in our mods folder first, then in the original games
 	std::string nrmFolder = ModSpecific::GetModNormalmapPackName();
@@ -145,7 +145,7 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 			if(XR_SUCCESS != nrmmapTexture->Init(normalmap))
 			{
 				delete nrmmapTexture;
-				nrmmapTexture = NULL;
+				nrmmapTexture = nullptr;
 				LogWarn() << "Failed to load normalmap!";
 			}
 
@@ -169,7 +169,7 @@ void MyDirectDrawSurface7::LoadAdditionalResources(zCTexture* ownedTexture)
 			if(XR_SUCCESS != fxMapTexture->Init(fxMap))
 			{
 				delete fxMapTexture;
-				fxMapTexture = NULL;
+				fxMapTexture = nullptr;
 				LogWarn() << "Failed to load normalmap!";
 			}
 
@@ -420,7 +420,7 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
 	}else
 	{
 		// Allocate some temporary data
-		delete[] LockedData; LockedData = NULL;
+		delete[] LockedData; LockedData = nullptr;
 		LockedData = new unsigned char[EngineTexture->GetSizeInBytes(0) / divisor];
 	}
 
@@ -442,13 +442,13 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 	{
 		// Clean up
 		delete[] LockedData;
-		LockedData = NULL;
+		LockedData = nullptr;
 
 		return S_OK;
 	}
 
 	// Textureslot 7 is filled only on load-time. This is used to get the zCTexture from this Surface.
-	if(Engine::GAPI->GetBoundTexture(7) != NULL)
+	if(Engine::GAPI->GetBoundTexture(7) != nullptr)
 	{
 		// Comming from LoadResourceData
 		LoadAdditionalResources(Engine::GAPI->GetBoundTexture(7));
@@ -625,7 +625,7 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect )
 	{
 		// Clean up if not a movie frame
 		delete[] LockedData;
-		LockedData = NULL;
+		LockedData = nullptr;
 	}
 
 	return S_OK;
@@ -783,7 +783,7 @@ HRESULT MyDirectDrawSurface7::SetSurfaceDesc( LPDDSURFACEDESC2 lpDDSurfaceDesc, 
 	}
 
 	// Create the texture
-	EngineTexture->Init(INT2(lpDDSurfaceDesc->dwWidth, lpDDSurfaceDesc->dwHeight), format, mipMapCount, NULL);
+	EngineTexture->Init(INT2(lpDDSurfaceDesc->dwWidth, lpDDSurfaceDesc->dwHeight), format, mipMapCount, nullptr);
 
 	return S_OK;
 }

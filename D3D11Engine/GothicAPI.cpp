@@ -13,7 +13,6 @@
 #include "zCCamera.h"
 #include "oCGame.h"
 #include "zCModel.h"
-//#include "ReferenceD3D11GraphicsEngine.h"
 #include "zCMorphMesh.h"
 #include "zCParticleFX.h"
 #include "GSky.h"
@@ -25,20 +24,18 @@
 #include "zCInput.h"
 #include "zCBspTree.h"
 #include "BaseLineRenderer.h"
-#include "D3D7\MyDirect3DDevice7.h"
+#include "D3D7/MyDirect3DDevice7.h"
 #include "GVegetationBox.h"
 #include "oCNPC.h"
-#include "zCMeshSoftSkin.h"
 #include "GOcean.h"
 #include "zCVobLight.h"
 #include "UpdateCheck.h"
 #include "zCQuadMark.h"
 #include "zCOption.h"
-#include "zCRndD3D.h"
 #include "win32ClipboardWrapper.h"
 #include "zCSoundSystem.h"
-#include "ModSpecific.h"
 #include "zCView.h"
+#include "D3D11PointLight.h"
 
 // Duration how long the scene will stay wet, in MS
 const DWORD SCENE_WETNESS_DURATION_MS = 60 * 2 * 1000;
@@ -126,14 +123,14 @@ GothicAPI::GothicAPI(void)
 
 	ZeroMemory(BoundTextures, sizeof(BoundTextures));
 
-	CameraReplacementPtr = NULL;
-	WrappedWorldMesh = NULL;
-	Ocean = NULL;
-	CurrentCamera = NULL;
+	CameraReplacementPtr = nullptr;
+	WrappedWorldMesh = nullptr;
+	Ocean = nullptr;
+	CurrentCamera = nullptr;
 
 	MainThreadID = GetCurrentThreadId();
 
-	PendingMovieFrame = NULL;
+	PendingMovieFrame = nullptr;
 
 	//RenderThread = new GRenderThread;
 	//XLE(RenderThread->InitThreads());
@@ -291,7 +288,7 @@ bool GothicAPI::IsCameraIndoor()
 	if(!oCGame::GetGame() || !oCGame::GetGame()->_zCSession_camVob || !oCGame::GetGame()->_zCSession_camVob->GetGroundPoly())
 		return false;
 
-	return oCGame::GetGame()->_zCSession_camVob->GetGroundPoly()->GetLightmap() != NULL;
+	return oCGame::GetGame()->_zCSession_camVob->GetGroundPoly()->GetLightmap() != nullptr;
 }
 
 /** Returns global time */
@@ -466,7 +463,7 @@ void GothicAPI::ResetWorld()
 	ResetVobs();
 
 	delete WrappedWorldMesh;
-	WrappedWorldMesh = NULL;
+	WrappedWorldMesh = nullptr;
 
 	// Clear inventory too?
 }
@@ -681,12 +678,12 @@ void GothicAPI::OnWorldLoaded()
 void GothicAPI::TraverseVobTree(zCTree<zCVob>* tree)
 {
 	// Iterate through the nodes
-	if(tree->FirstChild != NULL)
+	if(tree->FirstChild != nullptr)
 	{
 		TraverseVobTree(tree->FirstChild);
 	}
 
-	if(tree->Next != NULL)
+	if(tree->Next != nullptr)
 	{
 		TraverseVobTree(tree->Next);
 	}
@@ -805,7 +802,7 @@ void GothicAPI::DrawWorldMeshNaive()
 				continue;
 
 			// Indoor? // TODO: Double-check if this is really a simple getter. Also, is this even valid for NPCs?
-			(*it)->IndoorVob = (*it)->Vob->GetGroundPoly() && ((*it)->Vob->GetGroundPoly()->GetLightmap() != 0);
+			(*it)->IndoorVob = (*it)->Vob->GetGroundPoly() && ((*it)->Vob->GetGroundPoly()->GetLightmap() != nullptr);
 
 			zCModel* model = (zCModel *)(*it)->Vob->GetVisual();
 
@@ -1108,7 +1105,7 @@ void GothicAPI::OnVisualDeleted(zCVisual* visual)
 
 				if((*it).second->VisualInfo->Visual == (zCProgMeshProto *)visual)
 				{
-					(*it).second->VisualInfo = NULL;
+					(*it).second->VisualInfo = nullptr;
 				}
 			}
 
@@ -1127,7 +1124,7 @@ void GothicAPI::OnVisualDeleted(zCVisual* visual)
 				{
 					if((*it)->VisualInfo && ((zCModel *)(*it)->VisualInfo->Visual)->GetMeshSoftSkinList()->Array[0] == ((zCModel *)visual)->GetMeshSoftSkinList()->Array[0])
 					{			
-						(*it)->VisualInfo = NULL;
+						(*it)->VisualInfo = nullptr;
 					}
 				}
 			}
@@ -1292,7 +1289,7 @@ void GothicAPI::OnRemovedVob(zCVob* vob, zCWorld* world)
 	VobLightMap.erase((zCVobLight*)vob);
 
 	// Remove from BSP-Cache
-	std::vector<BspInfo*>* nodes = NULL;
+	std::vector<BspInfo*>* nodes = nullptr;
 	if(vi)
 		nodes = &vi->ParentBSPNodes;
 	else if(li)
@@ -1568,7 +1565,7 @@ void GothicAPI::OnAddVob(zCVob* vob, zCWorld* world)
 				vi->VobSection = &WorldSections[section.x][section.y];
 	
 				// Create this constantbuffer only for non-inventory vobs because it would be recreated for each vob every frame
-				Engine::GraphicsEngine->CreateConstantBuffer(&vi->VobConstantBuffer, NULL, sizeof(VS_ExConstantBuffer_PerInstance));
+				Engine::GraphicsEngine->CreateConstantBuffer(&vi->VobConstantBuffer, nullptr, sizeof(VS_ExConstantBuffer_PerInstance));
 				vi->UpdateVobConstantBuffer();
 
 				if(!BspLeafVobLists.empty()) // Check if this is the initial loading
@@ -1810,7 +1807,7 @@ void GothicAPI::DrawSkeletalMeshVob(SkeletalVobInfo* vi, float distance)
 				// This will probably cause a memoryleak, but it will keep the game running until this is fixed
 				// Better than nothing...
 				// TODO: FIXME
-				vi->VisualInfo = NULL;
+				vi->VisualInfo = nullptr;
 				LogInfo() << "Failed to draw a skeletal-mesh. Removing its visual to (hopefully) keep the game running.";
 			}
 		}
@@ -2069,7 +2066,7 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 		//zCMaterial* mat = fx->GetPartMeshQuad()->GetPolygons()[0]->GetMaterial();
 
 		// Get texture
-		zCTexture* texture = NULL;
+		zCTexture* texture = nullptr;
 		if(fx->GetEmitter())
 		{
 			texture = fx->GetEmitter()->GetVisTexture();
@@ -2106,8 +2103,8 @@ void GothicAPI::DrawParticleFX(zCVob* source, zCParticleFX* fx, ParticleFrameDat
 		std::vector<ParticleInstanceInfo>& part = FrameParticles[texture];
 
 		// Check for kill
-		zTParticle*	kill = NULL;
-		zTParticle*	p = NULL;
+		zTParticle*	kill = nullptr;
+		zTParticle*	p = nullptr;
 
 		for (;;) 
 		{
@@ -2233,7 +2230,7 @@ void GothicAPI::DrawTriangle()
 {
 	D3D11VertexBuffer* vxb;
 	Engine::GraphicsEngine->CreateVertexBuffer(&vxb);
-	vxb->Init(NULL, 6 * sizeof(ExVertexStruct), D3D11VertexBuffer::EBindFlags::B_VERTEXBUFFER, D3D11VertexBuffer::EUsageFlags::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
+	vxb->Init(nullptr, 6 * sizeof(ExVertexStruct), D3D11VertexBuffer::EBindFlags::B_VERTEXBUFFER, D3D11VertexBuffer::EUsageFlags::U_DYNAMIC, D3D11VertexBuffer::CA_WRITE);
 	
 	ExVertexStruct vx[6];
 	ZeroMemory(vx, sizeof(vx));
@@ -2369,16 +2366,16 @@ VobInfo* GothicAPI::TraceStaticMeshVobsBB(const D3DXVECTOR3& origin, const D3DXV
 	// Now trace the actual triangles to find the real hit
 
 	closest = FLT_MAX;
-	zCMaterial* closestMaterial = NULL;
-	VobInfo* closestVob = NULL;
+	zCMaterial* closestMaterial = nullptr;
+	VobInfo* closestVob = nullptr;
 	for(auto it = hitBBs.begin(); it != hitBBs.end(); it++)
 	{
 		D3DXMATRIX invWorld; D3DXMatrixTranspose(&invWorld, (*it)->Vob->GetWorldMatrixPtr());
-		D3DXMatrixInverse(&invWorld, NULL, &invWorld);
+		D3DXMatrixInverse(&invWorld, nullptr, &invWorld);
 		D3DXVECTOR3 localOrigin; D3DXVec3TransformCoord(&localOrigin, &origin, &invWorld);
 		D3DXVECTOR3 localDir; D3DXVec3TransformNormal(&localDir, &dir, &invWorld);
 
-		zCMaterial* hitMat = NULL;
+		zCMaterial* hitMat = nullptr;
 		float t = TraceVisualInfo(localOrigin, localDir, (*it)->VisualInfo, &hitMat);
 		if(t > 0.0f && t < closest)
 		{
@@ -2389,7 +2386,7 @@ VobInfo* GothicAPI::TraceStaticMeshVobsBB(const D3DXVECTOR3& origin, const D3DXV
 	}
 
 	if(closest == FLT_MAX)
-		return NULL;
+		return nullptr;
 
 	if(hitMaterial)
 		*hitMaterial = closestMaterial;
@@ -2402,7 +2399,7 @@ VobInfo* GothicAPI::TraceStaticMeshVobsBB(const D3DXVECTOR3& origin, const D3DXV
 SkeletalVobInfo* GothicAPI::TraceSkeletalMeshVobsBB(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, D3DXVECTOR3& hit)
 {
 	float closest = FLT_MAX;
-	SkeletalVobInfo* vob = NULL;
+	SkeletalVobInfo* vob = nullptr;
 
 	for(auto it = SkeletalMeshVobs.begin(); it != SkeletalMeshVobs.end(); it++)
 	{
@@ -2419,7 +2416,7 @@ SkeletalVobInfo* GothicAPI::TraceSkeletalMeshVobsBB(const D3DXVECTOR3& origin, c
 	}
 
 	if(closest == FLT_MAX)
-		return NULL;
+		return nullptr;
 
 	hit = origin + dir * closest;
 
@@ -2614,7 +2611,7 @@ void GothicAPI::GetInverseViewMatrix(D3DXMATRIX* invView)
 {
 	if(CameraReplacementPtr)
 	{
-		D3DXMatrixInverse(invView, NULL, &CameraReplacementPtr->ViewReplacement);	
+		D3DXMatrixInverse(invView, nullptr, &CameraReplacementPtr->ViewReplacement);	
 		return;
 	}
 
@@ -3325,7 +3322,7 @@ void GothicAPI::CollectVisibleVobsHelper(BspInfo* base, zTBBox3D boxCell, int cl
 			{
 				// Add dynamic lights
 				float minDynamicUpdateLightRange = Engine::GAPI->GetRendererState()->RendererSettings.MinLightShadowUpdateRange;
-				D3DXVECTOR3 playerPosition = Engine::GAPI->GetPlayerVob() != NULL ? Engine::GAPI->GetPlayerVob()->GetPositionWorld() : D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
+				D3DXVECTOR3 playerPosition = Engine::GAPI->GetPlayerVob() != nullptr ? Engine::GAPI->GetPlayerVob()->GetPositionWorld() : D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX);
 
 				// Take cameraposition if we are freelooking
 				if(zCCamera::IsFreeLookActive())
@@ -3431,8 +3428,8 @@ void GothicAPI::BuildBspVobMapCacheHelper(zCBspBase* base)
 		zCBspLeaf* leaf = (zCBspLeaf *)base;
 
 		
-		bvi.Front = NULL;
-		bvi.Back = NULL;
+		bvi.Front = nullptr;
+		bvi.Back = nullptr;
 		
 
 		for(int i=0;i<leaf->LeafVobList.NumInArray;i++)
@@ -3655,7 +3652,7 @@ zCMaterial* GothicAPI::GetMaterialByTextureName(const std::string& name)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void GothicAPI::GetMaterialListByTextureName(const std::string& name, std::list<zCMaterial*>& list)
@@ -3756,7 +3753,7 @@ zCTexture* GothicAPI::GetTextureBySurface(MyDirectDrawSurface7* surface)
 			return (*it)->GetTexture();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 /** Resets all vob-stats drawn this frame */
@@ -4360,7 +4357,7 @@ bool GothicAPI::IsUnderWater()
 }
 
 /** Saves all sections information */
-void GothicAPI::SaveSectionInfos()
+void GothicAPI::SaveSectionInfos() const
 {
 	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
 	{
@@ -4375,7 +4372,7 @@ void GothicAPI::SaveSectionInfos()
 }
 
 /** Loads all sections information */
-void GothicAPI::LoadSectionInfos()
+void GothicAPI::LoadSectionInfos() const
 {
 	for(std::map<int, std::map<int, WorldMeshSectionInfo>>::iterator itx = Engine::GAPI->GetWorldSections().begin(); itx != Engine::GAPI->GetWorldSections().end(); itx++)
 	{
@@ -4410,7 +4407,7 @@ void GothicAPI::ReloadTextures()
 
 	// This throws all texture out of the cache
 	if(resman)
-		resman->PurgeCaches(NULL);
+		resman->PurgeCaches(nullptr);
 }
 
 /** Gets the int-param from the ini. String must be UPPERCASE. */
@@ -4459,7 +4456,7 @@ bool GothicAPI::CheckNormalmapFilesOld()
 
 	// Inform the user that Normalmaps are in another folder since X16. 
 	// Also quickly copy them over to the new location so they don't have to redownload everything
-	MessageBox(NULL, "Normalmaps are now handled differently. They are now stored in 'GD3D11\\Textures\\replacements\\Normalmaps_MODNAME' and "
+	MessageBox(nullptr, "Normalmaps are now handled differently. They are now stored in 'GD3D11\\Textures\\replacements\\Normalmaps_MODNAME' and "
 		"will automatically be downloaded from our servers in the game.\n"
 		"\n"
 		"The old normalmaps will be moved to the new location. You should however go and delete everything in the replacements-folder"

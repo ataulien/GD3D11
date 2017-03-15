@@ -8,8 +8,8 @@
 
 D3D11VShader::D3D11VShader(void)
 {
-	VertexShader = NULL;
-	InputLayout = NULL;
+	VertexShader = nullptr;
+	InputLayout = nullptr;
 
 	// Insert into state-map
 	ID = D3D11ObjectIDs::Counters.VShadersCounter++;
@@ -59,12 +59,12 @@ HRESULT D3D11VShader::CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEnt
 	m.insert(m.begin(), makros.begin(), makros.end());
 
 	ID3DBlob* pErrorBlob;
-	hr = D3DX11CompileFromFileA(szFileName, &m[0], NULL, szEntryPoint, szShaderModel,
-		dwShaderFlags, 0, NULL, ppBlobOut, &pErrorBlob, NULL);
+	hr = D3DX11CompileFromFileA(szFileName, &m[0], nullptr, szEntryPoint, szShaderModel,
+		dwShaderFlags, 0, nullptr, ppBlobOut, &pErrorBlob, nullptr);
 	if (FAILED(hr))
 	{
 		LogInfo() << "Shader compilation failed!";
-		if (pErrorBlob != NULL)
+		if (pErrorBlob != nullptr)
 		{
 
 			LogErrorBox() << (char*)pErrorBlob->GetBufferPointer() << "\n\n (You can ignore the next error from Gothic about too small video memory!)";
@@ -300,12 +300,12 @@ XRESULT D3D11VShader::LoadShader(const char* vertexShader, int layout, std::vect
 }
 
 /** Applys the shaders */
-XRESULT D3D11VShader::Apply()
+XRESULT D3D11VShader::Apply() const
 {
 	D3D11GraphicsEngineBase* engine = (D3D11GraphicsEngineBase *)Engine::GraphicsEngine;
 
 	engine->GetContext()->IASetInputLayout(InputLayout);
-	engine->GetContext()->VSSetShader(VertexShader, NULL, 0);
+	engine->GetContext()->VSSetShader(VertexShader, nullptr, 0);
 
 	return XR_SUCCESS;
 }

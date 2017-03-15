@@ -2,7 +2,6 @@
 #include "pch.h"
 #include "GothicGraphicsState.h"
 #include "WorldConverter.h"
-#include "zCTree.h"
 #include "zTypes.h"
 
 #define START_TIMING Engine::GAPI->GetRendererState()->RendererInfo.Timing.Start
@@ -18,9 +17,9 @@ struct BspInfo
 	BspInfo()
 	{
 		NumStaticLights = 0;
-		OriginalNode = NULL;
-		Front = NULL;
-		Back = NULL;
+		OriginalNode = nullptr;
+		Front = nullptr;
+		Back = nullptr;
 
 		OcclusionInfo.VisibleLastFrame = false;
 		OcclusionInfo.LastVisitedFrameID = 0;
@@ -28,7 +27,7 @@ struct BspInfo
 		OcclusionInfo.QueryInProgress = false;
 		OcclusionInfo.LastCameraClipType = 0;
 
-		OcclusionInfo.NodeMesh = NULL;
+		OcclusionInfo.NodeMesh = nullptr;
 	}
 
 	~BspInfo()
@@ -99,7 +98,7 @@ struct MaterialInfo
 		buffer.DisplacementFactor = 1.0f;
 		buffer.Color = 0xFFFFFFFF;
 
-		Constantbuffer = NULL;
+		Constantbuffer = nullptr;
 
 		MaterialType = MT_None;
 
@@ -305,10 +304,10 @@ public:
 	void RemoveQuadMark(zCQuadMark* mark);
 
 	/** Saves all sections information */
-	void SaveSectionInfos();
+	void SaveSectionInfos() const;
 
 	/** Loads all sections information */
-	void LoadSectionInfos();
+	void LoadSectionInfos() const;
 
 	/** Returns wether the camera is underwater or not */
 	bool IsUnderWater();
@@ -351,14 +350,14 @@ public:
 	D3DXVECTOR3 UnprojectCursor();
 
 	/** Traces the worldmesh and returns the hit-location */
-	bool TraceWorldMesh(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, D3DXVECTOR3& hit, std::string* hitTextureName = NULL, D3DXVECTOR3* hitTriangle = NULL, MeshInfo** hitMesh = NULL, zCMaterial** hitMaterial = NULL);
+	bool TraceWorldMesh(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, D3DXVECTOR3& hit, std::string* hitTextureName = nullptr, D3DXVECTOR3* hitTriangle = nullptr, MeshInfo** hitMesh = nullptr, zCMaterial** hitMaterial = nullptr);
 
 	/** Traces vobs with static mesh visual */
-	VobInfo* TraceStaticMeshVobsBB(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, D3DXVECTOR3& hit, zCMaterial** hitMaterial = NULL);
+	VobInfo* TraceStaticMeshVobsBB(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, D3DXVECTOR3& hit, zCMaterial** hitMaterial = nullptr);
 	SkeletalVobInfo* TraceSkeletalMeshVobsBB(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, D3DXVECTOR3& hit);
 
 	/** Traces a visual info. Returns -1 if not hit, distance otherwise */
-	float TraceVisualInfo(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, BaseVisualInfo* visual, zCMaterial** hitMaterial = NULL);
+	float TraceVisualInfo(const D3DXVECTOR3& origin, const D3DXVECTOR3& dir, BaseVisualInfo* visual, zCMaterial** hitMaterial = nullptr);
 
 	/** Applies tesselation-settings for all mesh-parts using the given info */
 	void ApplyTesselationSettingsForAllMeshPartsUsing(MaterialInfo* info, int amount = 1);

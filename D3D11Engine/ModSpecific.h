@@ -1,6 +1,5 @@
 #pragma once
 #include "pch.h"
-#include "zCOption.h"
 
 /** List of mods which supply a normalmap-package */ // TODO: Don't hardcode this!
 enum ELoadedMod

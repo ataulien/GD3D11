@@ -17,10 +17,10 @@ public:
 	void BindToGeometryShader(int slot);
 	
 	/** Binds the constantbuffer */
-	ID3D11Buffer* Get(){ return Buffer; }
+	ID3D11Buffer* Get() const { return Buffer; }
 
 	/** Returns whether this buffer has been updated since the last bind */
-	bool IsDirty();
+	bool IsDirty() const;
 
 private:
 	ID3D11Buffer* Buffer;

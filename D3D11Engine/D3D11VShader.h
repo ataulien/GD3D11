@@ -14,23 +14,23 @@ public:
 	XRESULT LoadShader(const char* vertexShader, int layoput = 1, std::vector<D3D10_SHADER_MACRO>& makros = std::vector<D3D10_SHADER_MACRO>());
 
 	/** Applys the shader */
-	XRESULT Apply();
+	XRESULT Apply() const;
 
 	/** Returns a reference to the constantBuffer vector*/
 	std::vector<D3D11ConstantBuffer*>& GetConstantBuffer();
 
 	/** Returns the shader */
-	ID3D11VertexShader* GetShader(){return VertexShader;}
+	ID3D11VertexShader* GetShader() const {return VertexShader;}
 
 	/** Returns the inputlayout */
-	ID3D11InputLayout* GetInputLayout(){return InputLayout;}
+	ID3D11InputLayout* GetInputLayout() const {return InputLayout;}
 	
 	/** Returns this textures ID */
-	UINT16 GetID(){return ID;};
+	UINT16 GetID() const {return ID;};
 private:
 
 	/** Compiles a shader from file and outputs error messages if needed */
-	HRESULT CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut, std::vector<D3D10_SHADER_MACRO>& makros);
+	static HRESULT CompileShaderFromFile(const CHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut, std::vector<D3D10_SHADER_MACRO>& makros);
 
 	ID3D11VertexShader* VertexShader;
 	ID3D11InputLayout* InputLayout;

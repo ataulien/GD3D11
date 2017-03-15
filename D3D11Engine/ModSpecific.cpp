@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ModSpecific.h"
+#include "zCOption.h"
 
 namespace ModSpecific
 {
