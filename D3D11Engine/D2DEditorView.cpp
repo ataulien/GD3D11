@@ -362,9 +362,9 @@ void D2DEditorView::Draw(const D2D1_RECT_F& clientRectAbs, float deltaTime)
 	if(!IsEnabled)
 	{
 #ifdef PUBLIC_RELEASE
-		if(deltaTime == 0.0f) // Don't show it in menus
+		//if(deltaTime == 0.0f) // Don't show it in menus
 			//p.x = -(MainPanel->GetSize().width + 50.0f);
-		else
+		//else
 #endif
 		{
 			//p.x = Toolbox::lerp(MainPanel->GetPosition().x, -(MainPanel->GetSize().width + 50.0f), std::min(deltaTime * 5.0f, 1.0f));
