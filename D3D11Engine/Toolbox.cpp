@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include <errno.h>
 #include "Toolbox.h"
 #include "zTypes.h"
 
@@ -319,14 +320,18 @@ namespace Toolbox
 	/** Returns whether the given file exists */
 	bool FileExists(const std::string& file)
 	{
+		errno = 0;
 		FILE* f = fopen(file.c_str(), "rb");
 
 		if(f)
 		{
 			fclose(f);
 			return true;
+		} else
+		{
+			LogInfo() << "File at '"<< file <<"' could not be opened: " << strerror(errno);
+			return false;
 		}
-		return false;
 	}
 
 	/** Saves a std::string to a FILE* */
