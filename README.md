@@ -1,3 +1,6 @@
+__An improved fork of this project can be found here:__  
+https://github.com/Kirides/GD3D11
+
 # GD3D11
 
 With this mod for the games "Gothic" and "Gothic 2", I want to bring the engine of those games into a more modern state. Through an own implementation of the DirectDraw-API and using hooking and assemblercode-modifications of gothics intern engine calls, I have managed to completely replace gothics old rendering architecture with a new one, which is able to utilize more of the current GPU generations power for rendering.
